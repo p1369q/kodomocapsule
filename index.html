@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>コドモノート</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory:   '#FDFAF5',
+            kraft:   '#E8D9C0',
+            sage:    '#7C9E87',
+            coral:   '#E07A5F',
+            ink:     '#3D3530',
+            muted:   '#9B8B80',
+            cardBg:  '#FFFDF8',
+          },
+          fontFamily: {
+            display: ['Nunito', 'sans-serif'],
+            body:    ['Noto Sans JP', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* ── Global ── */
+    * { box-sizing: border-box; }
+    body {
+      background-color: #FDFAF5;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #3D3530;
+      min-height: 100vh;
+    }
+
+    /* ── Notebook rule lines on cards ── */
+    .notebook-card {
+      background-color: #FFFDF8;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 27px,
+        #E8D9C0 27px,
+        #E8D9C0 28px
+      );
+      background-attachment: local;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: linear-gradient(135deg, #7C9E87 0%, #5d8570 100%);
+      box-shadow: 0 2px 12px rgba(124,158,135,0.25);
+    }
+    .logo-text {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .logo-sub {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      background: #fff;
+      border-top: 1.5px solid #E8D9C0;
+      box-shadow: 0 -4px 16px rgba(61,53,48,0.07);
+    }
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 0.65rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #9B8B80;
+      cursor: pointer;
+      transition: color 0.15s;
+      flex: 1;
+      padding: 8px 0;
+      border: none;
+      background: transparent;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-btn.active { color: #7C9E87; }
+    .nav-btn svg { width: 22px; height: 22px; }
+
+    /* ── FAB ── */
+    .fab {
+      background: linear-gradient(135deg, #E07A5F, #c96344);
+      box-shadow: 0 4px 18px rgba(224,122,95,0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fab:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(224,122,95,0.3); }
+
+    /* ── Cards ── */
+    .work-card {
+      background: #FFFDF8;
+      border: 1.5px solid #E8D9C0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(61,53,48,0.06);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .work-card:active { transform: scale(0.98); }
+    .work-card .thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+      background: #E8D9C0;
+    }
+    .work-card .no-thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #F0E8D8, #E8D9C0);
+      font-size: 2.5rem;
+    }
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-family: 'Nunito', sans-serif;
+    }
+    .badge-art    { background: #FDE8E1; color: #C0553A; }
+    .badge-study  { background: #E1EDE4; color: #4A7A58; }
+    .badge-other  { background: #EDE9E4; color: #6B5F56; }
+
+    /* ── Filter chips ── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 1.5px solid #E8D9C0;
+      background: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'Nunito', sans-serif;
+      color: #9B8B80;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip.active {
+      background: #7C9E87;
+      border-color: #7C9E87;
+      color: #fff;
+    }
+
+    /* ── Drawer / Modal ── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(61,53,48,0.45);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .drawer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #FDFAF5;
+      border-radius: 24px 24px 0 0;
+      z-index: 50;
+      padding: 0 0 env(safe-area-inset-bottom);
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+      max-height: 92vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .drawer.open { transform: translateY(0); }
+    .drawer-handle {
+      width: 36px; height: 4px;
+      background: #D5C9BE;
+      border-radius: 99px;
+      margin: 12px auto 0;
+    }
+
+    /* ── Form ── */
+    .form-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #6B5F56;
+      font-family: 'Nunito', sans-serif;
+      letter-spacing: 0.02em;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #E8D9C0;
+      border-radius: 12px;
+      background: #fff;
+      font-size: 0.9rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      color: #3D3530;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: #7C9E87; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239B8B80' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    /* ── Media preview ── */
+    #mediaPreview {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      border-radius: 12px;
+      display: none;
+      background: #E8D9C0;
+    }
+    #mediaPreview.visible { display: block; }
+    .media-picker-area {
+      border: 2px dashed #D5C9BE;
+      border-radius: 12px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: #FFFDF8;
+    }
+    .media-picker-area:active { background: #F5EFE6; border-color: #7C9E87; }
+
+    /* ── Detail modal ── */
+    .detail-modal {
+      position: fixed; inset: 0;
+      background: rgba(61,53,48,0.55);
+      z-index: 60;
+      display: none;
+      align-items: flex-end;
+    }
+    .detail-modal.open { display: flex; }
+    .detail-inner {
+      background: #FDFAF5;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      text-align: center;
+      gap: 12px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 88px;
+      left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #3D3530;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 600;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D5C9BE; border-radius: 99px; }
+
+    /* ── Pencil rule on form section ── */
+    .ruled-section {
+      background-image: repeating-linear-gradient(
+        to bottom, transparent, transparent 35px,
+        #EDE5D8 35px, #EDE5D8 36px
+      );
+    }
+  </style>
+</head>
+<body class="bg-ivory">
+
+  <!-- ════════════════════════════════
+       HEADER
+  ════════════════════════════════ -->
+  <header class="app-header sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <!-- Pencil icon -->
+      <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-xl">✏️</div>
+      <div>
+        <div class="logo-text text-white text-lg leading-tight">コドモノート</div>
+        <div class="logo-sub text-white/80">KODOMONOTE</div>
+      </div>
+    </div>
+    <div id="recordCount" class="text-white/80 text-xs font-display font-700"></div>
+  </header>
+
+  <!-- ════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════ -->
+  <main class="pb-28 px-4 pt-4 max-w-lg mx-auto">
+
+    <!-- Filter chips -->
+    <div class="flex gap-2 overflow-x-auto pb-3 mb-4 hide-scrollbar" style="scrollbar-width:none">
+      <button class="chip active" data-filter="all" onclick="setFilter(this,'all')">📚 すべて</button>
+      <button class="chip" data-filter="art"   onclick="setFilter(this,'art')">🎨 絵・工作</button>
+      <button class="chip" data-filter="study" onclick="setFilter(this,'study')">📝 テスト・ノート</button>
+      <button class="chip" data-filter="other" onclick="setFilter(this,'other')">🌟 その他</button>
+    </div>
+
+    <!-- Cards grid -->
+    <div id="cardGrid" class="grid grid-cols-2 gap-3"></div>
+
+    <!-- Empty state -->
+    <div id="emptyState" class="empty-state hidden">
+      <div class="text-6xl">📂</div>
+      <p class="font-display font-700 text-ink text-lg">まだ作品がありません</p>
+      <p class="text-muted text-sm leading-relaxed">右下の＋ボタンから<br>最初の作品を登録しましょう！</p>
+    </div>
+
+  </main>
+
+  <!-- ════════════════════════════════
+       FAB（登録ボタン）
+  ════════════════════════════════ -->
+  <button
+    class="fab fixed bottom-20 right-4 w-14 h-14 rounded-full z-30 flex items-center justify-center text-white text-3xl font-300 shadow-xl"
+    onclick="openDrawer()"
+    aria-label="作品を登録"
+  >＋</button>
+
+  <!-- ════════════════════════════════
+       BOTTOM NAV
+  ════════════════════════════════ -->
+  <nav class="bottom-nav fixed bottom-0 left-0 right-0 z-30 flex">
+    <button class="nav-btn active" id="navHome">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      ホーム
+    </button>
+    <button class="nav-btn" id="navStats" onclick="showStats()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      ギャラリー
+    </button>
+  </nav>
+
+  <!-- ════════════════════════════════
+       DRAWER（登録フォーム）
+  ════════════════════════════════ -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-handle"></div>
+    <div class="px-5 pt-4 pb-6">
+      <h2 class="font-display font-800 text-ink text-xl mb-5">✏️ 作品を登録する</h2>
+
+      <!-- Media picker -->
+      <div class="mb-4">
+        <label class="form-label block mb-2">📷 写真・動画</label>
+        <div class="media-picker-area" id="mediaPicker" onclick="document.getElementById('mediaInput').click()">
+          <div class="text-4xl mb-2">📸</div>
+          <p class="text-muted text-sm font-600 font-display">タップして写真を選ぶ</p>
+          <p class="text-muted/70 text-xs mt-1">カメラロール・撮影どちらでもOK</p>
+        </div>
+        <img id="mediaPreview" src="" alt="プレビュー" />
+        <video id="videoPreview" class="w-full rounded-xl mt-2 hidden" controls></video>
+        <input type="file" id="mediaInput" accept="image/*,video/*" capture="environment" class="hidden" onchange="handleMediaInput(event)" />
+        <button id="clearMediaBtn" class="hidden mt-2 text-xs text-muted underline" onclick="clearMedia()">画像をクリア</button>
+      </div>
+
+      <!-- Title -->
+      <div class="mb-4">
+        <label class="form-label block mb-2">📌 タイトル</label>
+        <input type="text" id="inputTitle" class="form-input" placeholder="例：さんすうのノート" maxlength="50" />
+      </div>
+
+      <!-- Grade -->
+      <div class="mb-4">
+        <label class="form-label block mb-2">🎒 学年・時期</label>
+        <select id="inputGrade" class="form-input form-select">
+          <option value="">選んでください</option>
+          <optgroup label="幼稚園・保育園">
+            <option value="年少">年少</option>
+            <option value="年中">年中</option>
+            <option value="年長">年長</option>
+          </optgroup>
+          <optgroup label="小学校">
+            <option value="小1・1学期">小1・1学期</option>
+            <option value="小1・2学期">小1・2学期</option>
+            <option value="小1・3学期">小1・3学期</option>
+            <option value="小2・1学期">小2・1学期</option>
+            <option value="小2・2学期">小2・2学期</option>
+            <option value="小2・3学期">小2・3学期</option>
+            <option value="小3・1学期">小3・1学期</option>
+            <option value="小3・2学期">小3・2学期</option>
+            <option value="小3・3学期">小3・3学期</option>
+            <option value="小4・1学期">小4・1学期</option>
+            <option value="小4・2学期">小4・2学期</option>
+            <option value="小4・3学期">小4・3学期</option>
+            <option value="小5・1学期">小5・1学期</option>
+            <option value="小5・2学期">小5・2学期</option>
+            <option value="小5・3学期">小5・3学期</option>
+            <option value="小6・1学期">小6・1学期</option>
+            <option value="小6・2学期">小6・2学期</option>
+            <option value="小6・3学期">小6・3学期</option>
+          </optgroup>
+          <optgroup label="中学校">
+            <option value="中1">中1</option>
+            <option value="中2">中2</option>
+            <option value="中3">中3</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Date -->
+      <div class="mb-4">
+        <label class="form-label block mb-2">📅 日付</label>
+        <input type="date" id="inputDate" class="form-input" />
+      </div>
+
+      <!-- Category -->
+      <div class="mb-4">
+        <label class="form-label block mb-2">🗂 カテゴリー</label>
+        <div class="flex gap-2">
+          <button class="chip flex-1 justify-center active" data-cat="art" onclick="selectCategory(this,'art')">🎨 絵・工作</button>
+          <button class="chip flex-1 justify-center" data-cat="study" onclick="selectCategory(this,'study')">📝 テスト・ノート</button>
+          <button class="chip flex-1 justify-center" data-cat="other" onclick="selectCategory(this,'other')">🌟 その他</button>
+        </div>
+      </div>
+
+      <!-- Memo -->
+      <div class="mb-6">
+        <label class="form-label block mb-2">💬 メモ</label>
+        <textarea id="inputMemo" class="form-input" rows="3" placeholder="子どものコメントや親の感想など…" maxlength="200" style="resize:none"></textarea>
+        <p class="text-right text-muted text-xs mt-1" id="memoCount">0/200</p>
+      </div>
+
+      <!-- Submit -->
+      <button
+        onclick="saveWork()"
+        class="w-full py-3.5 rounded-2xl text-white font-display font-800 text-base tracking-wide"
+        style="background: linear-gradient(135deg, #E07A5F, #c96344); box-shadow: 0 4px 16px rgba(224,122,95,0.35);"
+      >💾 保存する</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       DETAIL MODAL
+  ════════════════════════════════ -->
+  <div class="detail-modal" id="detailModal">
+    <div class="detail-inner">
+      <div class="drawer-handle"></div>
+      <div id="detailContent" class="px-5 pt-4 pb-8"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ════════════════════════════════
+       JAVASCRIPT
+  ════════════════════════════════ -->
+  <script>
+  // ─── Constants ───────────────────────────────
+  const STORAGE_KEY = 'kodomonote_works_v1';
+  const MAX_IMAGE_SIZE = 800;      // px (longest side)
+  const JPEG_QUALITY   = 0.72;     // 0–1
+  const MAX_VIDEO_SIZE = 3.5 * 1024 * 1024; // 3.5 MB
+
+  // ─── State ────────────────────────────────────
+  let works       = [];
+  let currentFilter = 'all';
+  let selectedCategory = 'art';
+  let pendingMediaDataUrl = null;  // compressed dataURL
+  let pendingMediaType    = null;  // 'image' | 'video'
+
+  // ─── LocalStorage helpers ─────────────────────
+  function loadWorks() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      works = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      works = [];
+    }
+  }
+
+  function saveWorks() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
+    } catch (e) {
+      // Storage quota exceeded
+      showToast('⚠️ 保存容量が不足しています。古い作品を削除してください。');
+    }
+  }
+
+  // ─── Image compression ────────────────────────
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE) {
+            if (width > height) { height = Math.round(height * MAX_IMAGE_SIZE / width); width = MAX_IMAGE_SIZE; }
+            else { width = Math.round(width * MAX_IMAGE_SIZE / height); height = MAX_IMAGE_SIZE; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width  = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+          resolve(dataUrl);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ─── Media input handler ─────────────────────
+  async function handleMediaInput(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Reset previous
+    clearMedia(false);
+
+    if (file.type.startsWith('image/')) {
+      showToast('⏳ 画像を圧縮中…');
+      try {
+        const dataUrl = await compressImage(file);
+        pendingMediaDataUrl = dataUrl;
+        pendingMediaType = 'image';
+        const preview = document.getElementById('mediaPreview');
+        preview.src = dataUrl;
+        preview.classList.add('visible');
+        preview.classList.add('mt-2');
+        document.getElementById('mediaPicker').style.display = 'none';
+        document.getElementById('clearMediaBtn').classList.remove('hidden');
+        showToast('✅ 画像を読み込みました');
+      } catch (err) {
+        showToast('❌ 画像の読み込みに失敗しました');
+      }
+    } else if (file.type.startsWith('video/')) {
+      if (file.size > MAX_VIDEO_SIZE) {
+        showToast('⚠️ 動画は3.5MB以下にしてください');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        pendingMediaDataUrl = e.target.result;
+        pendingMediaType = 'video';
+        const vid = document.getElementById('videoPreview');
+        vid.src = e.target.result;
+        vid.classList.remove('hidden');
+        document.getElementById('mediaPicker').style.display = 'none';
+        document.getElementById('clearMediaBtn').classList.remove('hidden');
+        showToast('✅ 動画を読み込みました');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearMedia(resetInput = true) {
+    pendingMediaDataUrl = null;
+    pendingMediaType    = null;
+    const preview = document.getElementById('mediaPreview');
+    preview.src = '';
+    preview.classList.remove('visible', 'mt-2');
+    const vid = document.getElementById('videoPreview');
+    vid.src = '';
+    vid.classList.add('hidden');
+    document.getElementById('mediaPicker').style.display = '';
+    document.getElementById('clearMediaBtn').classList.add('hidden');
+    if (resetInput) document.getElementById('mediaInput').value = '';
+  }
+
+  // ─── Drawer ───────────────────────────────────
+  function openDrawer() {
+    document.getElementById('drawerOverlay').classList.add('open');
+    document.getElementById('drawer').classList.add('open');
+    // Set today's date as default
+    if (!document.getElementById('inputDate').value) {
+      document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ─── Category selector ────────────────────────
+  function selectCategory(btn, cat) {
+    document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCategory = cat;
+  }
+
+  // ─── Save work ────────────────────────────────
+  function saveWork() {
+    const title = document.getElementById('inputTitle').value.trim();
+    const grade = document.getElementById('inputGrade').value;
+    const date  = document.getElementById('inputDate').value;
+    const memo  = document.getElementById('inputMemo').value.trim();
+
+    if (!title) { showToast('📌 タイトルを入力してください'); return; }
+
+    const work = {
+      id:        Date.now().toString(),
+      title,
+      grade:     grade || '未設定',
+      date:      date  || new Date().toISOString().slice(0, 10),
+      category:  selectedCategory,
+      memo,
+      mediaUrl:  pendingMediaDataUrl,
+      mediaType: pendingMediaType,
+      createdAt: Date.now(),
+    };
+
+    works.unshift(work);
+    saveWorks();
+    renderCards();
+    closeDrawer();
+    resetForm();
+    showToast('🎉 作品を保存しました！');
+  }
+
+  function resetForm() {
+    document.getElementById('inputTitle').value = '';
+    document.getElementById('inputGrade').value = '';
+    document.getElementById('inputDate').value  = '';
+    document.getElementById('inputMemo').value  = '';
+    document.getElementById('memoCount').textContent = '0/200';
+    clearMedia();
+    // Reset category chips
+    document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-cat="art"]').classList.add('active');
+    selectedCategory = 'art';
+  }
+
+  // ─── Delete work ─────────────────────────────
+  function deleteWork(id) {
+    if (!confirm('この作品を削除しますか？')) return;
+    works = works.filter(w => w.id !== id);
+    saveWorks();
+    renderCards();
+    closeDetailModal();
+    showToast('🗑 削除しました');
+  }
+
+  // ─── Filter ───────────────────────────────────
+  function setFilter(btn, filter) {
+    currentFilter = filter;
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCards();
+  }
+
+  function getFilteredWorks() {
+    if (currentFilter === 'all') return works;
+    return works.filter(w => w.category === currentFilter);
+  }
+
+  // ─── Render cards ─────────────────────────────
+  function renderCards() {
+    const grid = document.getElementById('cardGrid');
+    const empty = document.getElementById('emptyState');
+    const filtered = getFilteredWorks();
+
+    // Update count
+    const countEl = document.getElementById('recordCount');
+    countEl.textContent = works.length > 0 ? `${works.length}点` : '';
+
+    if (filtered.length === 0) {
+      grid.innerHTML  = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    const catInfo = {
+      art:   { label: '🎨 絵・工作',      cls: 'badge-art'   },
+      study: { label: '📝 テスト・ノート', cls: 'badge-study' },
+      other: { label: '🌟 その他',         cls: 'badge-other' },
+    };
+
+    grid.innerHTML = filtered.map(w => {
+      const info = catInfo[w.category] || catInfo.other;
+      const thumb = w.mediaUrl && w.mediaType === 'image'
+        ? `<img class="thumb" src="${w.mediaUrl}" alt="${escHtml(w.title)}" loading="lazy" />`
+        : w.mediaUrl && w.mediaType === 'video'
+        ? `<div class="no-thumb"><span>🎬</span></div>`
+        : `<div class="no-thumb">${categoryEmoji(w.category)}</div>`;
+
+      return `
+        <div class="work-card cursor-pointer" onclick="openDetail('${w.id}')">
+          ${thumb}
+          <div class="p-2.5">
+            <span class="category-badge ${info.cls} mb-1.5">${info.label}</span>
+            <p class="font-display font-700 text-ink text-sm leading-tight line-clamp-2 mb-1">${escHtml(w.title)}</p>
+            <p class="text-muted text-xs">${escHtml(w.grade)}</p>
+            <p class="text-muted text-xs">${formatDate(w.date)}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ─── Detail modal ─────────────────────────────
+  function openDetail(id) {
+    const w = works.find(x => x.id === id);
+    if (!w) return;
+
+    const catInfo = {
+      art:   { label: '🎨 絵・工作',      cls: 'badge-art'   },
+      study: { label: '📝 テスト・ノート', cls: 'badge-study' },
+      other: { label: '🌟 その他',         cls: 'badge-other' },
+    };
+    const info = catInfo[w.category] || catInfo.other;
+
+    let mediaHtml = '';
+    if (w.mediaUrl && w.mediaType === 'image') {
+      mediaHtml = `<img src="${w.mediaUrl}" alt="${escHtml(w.title)}" class="w-full rounded-2xl mb-4 object-cover" style="max-height:55vw;" />`;
+    } else if (w.mediaUrl && w.mediaType === 'video') {
+      mediaHtml = `<video src="${w.mediaUrl}" controls class="w-full rounded-2xl mb-4"></video>`;
+    }
+
+    document.getElementById('detailContent').innerHTML = `
+      ${mediaHtml}
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <h3 class="font-display font-800 text-ink text-xl leading-tight flex-1">${escHtml(w.title)}</h3>
+        <span class="category-badge ${info.cls} mt-1 flex-shrink-0">${info.label}</span>
+      </div>
+      <div class="flex gap-4 text-sm text-muted mb-4 font-display font-600">
+        <span>🎒 ${escHtml(w.grade)}</span>
+        <span>📅 ${formatDate(w.date)}</span>
+      </div>
+      ${w.memo ? `
+        <div class="notebook-card rounded-xl p-3 mb-4 pt-2">
+          <p class="text-xs font-display font-700 text-muted mb-1">💬 メモ</p>
+          <p class="text-ink text-sm leading-relaxed">${escHtml(w.memo)}</p>
+        </div>
+      ` : ''}
+      <div class="flex gap-3 pt-2">
+        <button onclick="closeDetailModal()" class="flex-1 py-3 rounded-2xl border-2 border-kraft font-display font-700 text-muted text-sm">とじる</button>
+        <button onclick="deleteWork('${w.id}')" class="flex-1 py-3 rounded-2xl font-display font-700 text-sm text-white" style="background:linear-gradient(135deg,#E07A5F,#c96344);">🗑 削除する</button>
+      </div>
+    `;
+
+    document.getElementById('detailModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetailModal() {
+    document.getElementById('detailModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Close detail by tapping backdrop
+  document.getElementById('detailModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('detailModal')) closeDetailModal();
+  });
+
+  // ─── Gallery (stats) view ─────────────────────
+  function showStats() {
+    const total = works.length;
+    const byCategory = { art: 0, study: 0, other: 0 };
+    works.forEach(w => { if (byCategory[w.category] !== undefined) byCategory[w.category]++; });
+
+    document.getElementById('detailContent').innerHTML = `
+      <h3 class="font-display font-800 text-ink text-xl mb-4">📊 作品のまとめ</h3>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        ${statCard('📚 合計', total + '点')}
+        ${statCard('🎨 絵・工作', byCategory.art + '点')}
+        ${statCard('📝 テスト・ノート', byCategory.study + '点')}
+        ${statCard('🌟 その他', byCategory.other + '点')}
+      </div>
+      ${works.length === 0 ? `<p class="text-muted text-sm text-center py-4">まだ作品がありません</p>` : `
+        <p class="form-label mb-2">📅 最近の作品</p>
+        <div class="flex flex-col gap-2">
+          ${works.slice(0,5).map(w => `
+            <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-kraft cursor-pointer" onclick="closeDetailModal();openDetail('${w.id}')">
+              ${w.mediaUrl && w.mediaType==='image'
+                ? `<img src="${w.mediaUrl}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" />`
+                : `<div class="w-12 h-12 rounded-lg bg-kraft flex items-center justify-center text-xl flex-shrink-0">${categoryEmoji(w.category)}</div>`
+              }
+              <div class="min-w-0">
+                <p class="font-display font-700 text-ink text-sm truncate">${escHtml(w.title)}</p>
+                <p class="text-muted text-xs">${escHtml(w.grade)} · ${formatDate(w.date)}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+      <button onclick="closeDetailModal()" class="w-full mt-4 py-3 rounded-2xl border-2 border-kraft font-display font-700 text-muted text-sm">とじる</button>
+    `;
+
+    document.getElementById('detailModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function statCard(label, value) {
+    return `
+      <div class="notebook-card rounded-xl p-3 text-center">
+        <p class="text-xs text-muted font-display font-600 mb-1">${label}</p>
+        <p class="font-display font-800 text-ink text-2xl">${value}</p>
+      </div>
+    `;
+  }
+
+  // ─── Utils ────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatDate(str) {
+    if (!str) return '';
+    const [y, m, d] = str.split('-');
+    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+  }
+
+  function categoryEmoji(cat) {
+    return { art: '🎨', study: '📝', other: '🌟' }[cat] || '📂';
+  }
+
+  // ─── Toast ────────────────────────────────────
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  // ─── Memo char count ─────────────────────────
+  document.getElementById('inputMemo').addEventListener('input', function() {
+    document.getElementById('memoCount').textContent = `${this.value.length}/200`;
+  });
+
+  // ─── Init ─────────────────────────────────────
+  loadWorks();
+  renderCards();
+  </script>
+</body>
+</html>
