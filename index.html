@@ -581,7 +581,7 @@
       document.getElementById('mediaPlaceholder').classList.remove('hidden');
     };
 
-    // Submit Work
+    // 🌟 【修正済】作品の保存・編集処理
     window.handleWorkSubmit = async function(e) {
       e.preventDefault();
       const editingId = document.getElementById('editingWorkId').value;
@@ -592,93 +592,77 @@
       const category = document.querySelector('input[name="inputCategory"]:checked').value;
       const memo = document.getElementById('inputMemo').value.trim();
 
-if (!selectedMediaBase64 && !editingId) { alert("写真または動画を選択してください"); return; }
+      const submitBtn = document.getElementById('workSubmitBtn');
+      const submitText = document.getElementById('submitBtnText');
+      const submitSpinner = document.getElementById('submitBtnSpinner');
+      
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.textContent = "送信中...";
+      if (submitSpinner) submitSpinner.classList.remove('hidden');
 
-  // ーーー 修正箇所 ーーー
-  // 不要なローディング表示を完全に無効化
-  // const loadingSpinner = document.getElementById('submitBtnSpinner');
-  // ーーーーーーーーーーーー
-
-  const childObj = localChildren.find(c => c.id === childId);
-  const childName = childObj ? childObj.name : '不明';
-
-  if (currentUser) {
-    try {
-      let mediaUrl = "";
-      if (selectedMediaBase64) {
-        const blob = base64ToBlob(selectedMediaBase64);
-        const fileExt = selectedFileName.split('.').pop() || 'jpg';
-        const storagePath = `works/${currentUser.uid}/${Date.now()}.${fileExt}`;
+      try {
+        let mediaUrl = "";
         
-        // 💡 ここを「storage」に修正済み
-        const storageRef = firebaseStorage.ref(firebaseStorage.getStorage(), storagePath);
-        
-        await firebaseStorage.uploadBytes(storageRef, blob);
-        mediaUrl = await firebaseStorage.getDownloadURL(storageRef);
-      }
-        const dataPayload = {
-          title, childId, childName, date, grade, category, memo,
-          updatedAt: Date.now()
-        };
-        if (selectedMediaBase64) {
-          dataPayload.media = finalMediaUrl;
-          dataPayload.mediaType = selectedMediaType;
+        // 1. 新規登録時の画像・動画アップロード
+        if (selectedMediaBase64 && !editingId) {
+          const fileExt = selectedMediaType === 'video' ? 'mp4' : 'jpg';
+          const storagePath = `families/${currentUser ? currentUser.uid : 'demo'}/artworks/${Date.now()}.${fileExt}`;
+          const storageRef = ref(storage, storagePath);
+          
+          await uploadString(storageRef, selectedMediaBase64, 'data_url');
+          mediaUrl = await getDownloadURL(storageRef);
         }
 
-        try {
+        // 2. クラウド/ローカルへのデータ保存
+        if (currentUser) {
+          const familyId = currentUser.uid;
           if (editingId) {
-            await updateDoc(doc(db, "families", familyId, "artworks", editingId), dataPayload);
-            showToast("おもいでを更新しました✏️");
+            const docRef = doc(db, "families", familyId, "artworks", editingId);
+            await updateDoc(docRef, { title, childId, date, grade, category, memo });
+            showToast("おもいでを更新しました！✨");
           } else {
-            dataPayload.createdAt = Date.now();
-            dataPayload.likes = { heart: 0, clap: 0, star: 0 };
-            dataPayload.comments = [];
-            await addDoc(collection(db, "families", familyId, "artworks"), dataPayload);
-            showToast("おもいでをクラウドにきろくしました！✨");
+            const colRef = collection(db, "families", familyId, "artworks");
+            await addDoc(colRef, {
+              title, childId, date, grade, category, memo,
+              mediaUrl, mediaType: selectedMediaType,
+              stamps: { heart: 0, clap: 0, star: 0 },
+              comments: [],
+              createdAt: new Date().toISOString()
+            });
+            showToast("おもいでをクラウドに保存しました！💾");
           }
-        } catch(err) {
-          console.error("Firestore save error:", err);
-          showToast("作品の保存に失敗しました");
-        }
-      } else {
-        // LocalStorage Mode
-        if (editingId) {
-          localWorks = localWorks.map(w => {
-            if (w.id === editingId) {
-              const updated = { ...w, title, childId, childName, date, grade, category, memo };
-              if (selectedMediaBase64) { updated.media = selectedMediaBase64; updated.mediaType = selectedMediaType; }
-              return updated;
-            }
-            return w;
-          });
-          showToast("おもいでを更新しました(ローカル)");
         } else {
-          localWorks.push({
-            id: 'work-' + Date.now(), title, childId, childName, date, grade, category, memo,
-            media: selectedMediaBase64, mediaType: selectedMediaType, createdAt: Date.now(),
-            likes: { heart: 0, clap: 0, star: 0 }, comments: []
-          });
-          showToast("おもいでをブラウザに保存しました！");
+          if (editingId) {
+            const idx = localWorks.findIndex(w => w.id === editingId);
+            if (idx !== -1) {
+              localWorks[idx] = { ...localWorks[idx], title, childId, date, grade, category, memo };
+            }
+          } else {
+            localWorks.push({
+              id: 'work-' + Date.now(), title, childId, date, grade, category, memo,
+              mediaUrl: selectedMediaBase64, mediaType: selectedMediaType,
+              stamps: { heart: 0, clap: 0, star: 0 }, comments: []
+            });
+          }
+          localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
+          renderCards();
+          showToast("保存しました（デモモード）");
         }
-        localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
-        renderCards();
-      }
 
-      resetSubmitButton();
-      closeDrawer('work');
-      if (editingId && activeDetailId === editingId) {
-        const up = localWorks.find(w => w.id === editingId);
-        if(up) updateDetailModalContent(up);
+        closeDrawer('work');
+        clearMediaSelection();
+        document.getElementById('workForm').reset();
+      } catch (error) {
+        console.error("保存失敗:", error);
+        alert("エラーが発生しました: " + error.message);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.textContent = "保存する";
+        if (submitSpinner) submitSpinner.classList.add('hidden');
       }
     };
 
-    function resetSubmitButton() {
-    //  document.getElementById('submitBtnSpinner').classList.add('hidden');
-    //  document.getElementById('submitBtnText').textContent = "保存する";
-    //  document.getElementById('workSubmitBtn').disabled = false;
-    }
-
-    // Submit Child
+    // 👦 こどもの追加・管理
     window.handleChildSubmit = async function(e) {
       e.preventDefault();
       const editingId = document.getElementById('editingChildId').value;
@@ -687,39 +671,35 @@ if (!selectedMediaBase64 && !editingId) { alert("写真または動画を選択�
 
       if (currentUser) {
         const familyId = currentUser.uid;
-        const childRef = collection(db, "families", familyId, "children");
-        try {
-          if (editingId) {
-            await updateDoc(doc(db, "families", familyId, "children", editingId), { name, birthday });
-            showToast("プロフィールを更新しました");
-          } else {
-            await addDoc(childRef, { name, birthday });
-            showToast("新しいこどもを追加しました");
-          }
-        } catch(err) { console.error(err); }
+        if (editingId) {
+          await updateDoc(doc(db, "families", familyId, "children", editingId), { name, birthday });
+          showToast("こどもの情報を更新しました 🌱");
+        } else {
+          await addDoc(collection(db, "families", familyId, "children"), { name, birthday });
+          showToast("新しいこどもを追加しました 🎉");
+        }
       } else {
         if (editingId) {
-          localChildren = localChildren.map(c => c.id === editingId ? { ...c, name, birthday } : c);
-          showToast("プロフィールを更新しました");
+          const idx = localChildren.findIndex(c => c.id === editingId);
+          if (idx !== -1) localChildren[idx] = { id: editingId, name, birthday };
         } else {
           localChildren.push({ id: 'child-' + Date.now(), name, birthday });
-          showToast("こどもを追加しました");
         }
         localStorage.setItem('kodomonote_children', JSON.stringify(localChildren));
         refreshChildControls();
-        renderCards();
+        showToast("こども設定を保存しました");
       }
       cancelChildEdit();
     };
 
-    window.startChildEdit = function(id) {
+    window.triggerChildEdit = function(id) {
       const target = localChildren.find(c => c.id === id);
-      if(!target) return;
+      if (!target) return;
       document.getElementById('editingChildId').value = target.id;
       document.getElementById('childName').value = target.name;
       document.getElementById('childBirthday').value = target.birthday;
-      document.getElementById('childFormSubTitle').textContent = "✏️ プロフィールを修正";
-      document.getElementById('childSubmitBtn').textContent = "修正を保存";
+      document.getElementById('childFormSubTitle').textContent = "✏️ こどもの情報を編集";
+      document.getElementById('childSubmitBtn').textContent = "更新する";
       document.getElementById('childCancelEditBtn').classList.remove('hidden');
     };
 
@@ -731,331 +711,351 @@ if (!selectedMediaBase64 && !editingId) { alert("写真または動画を選択�
       document.getElementById('childCancelEditBtn').classList.add('hidden');
     };
 
-    window.deleteChildProfile = async function(id) {
-      if(localChildren.length <= 1) { alert("最低1人のこどもの登録が必要です"); return; }
-      if(!confirm("このこどものプロフィールを削除しますか？(作品データは削除されません)")) return;
-      if (currentUser) { await deleteDoc(doc(db, "families", currentUser.uid, "children", id)); showToast("削除しました"); }
-      else {
+    window.triggerChildDelete = async function(id) {
+      if (localChildren.length <= 1) {
+        alert("最低1人のこども登録が必要です。");
+        return;
+      }
+      if (!confirm("このこどもを削除しますか？紐づく作品の表示に影響が出る場合があります。")) return;
+
+      if (currentUser) {
+        await deleteDoc(doc(db, "families", currentUser.uid, "children", id));
+      } else {
         localChildren = localChildren.filter(c => c.id !== id);
         localStorage.setItem('kodomonote_children', JSON.stringify(localChildren));
-        refreshChildControls(); renderCards(); showToast("削除しました");
+        if (currentChildFilter === id) currentChildFilter = 'all';
+        refreshChildControls();
       }
-      cancelChildEdit();
+      showToast("こどもを削除しました");
     };
 
-    // Communication
-    window.handleStampClick = async function(type) {
-      if(!activeDetailId) return;
-      if (currentUser) {
-        await updateDoc(doc(db, "families", currentUser.uid, "artworks", activeDetailId), { [`likes.${type}`]: increment(1) });
-      } else {
-        localWorks = localWorks.map(w => {
-          if (w.id === activeDetailId) {
-            const likes = w.likes || { heart:0, clap:0, star:0 }; likes[type] = (likes[type] || 0) + 1; return { ...w, likes };
-          }
-          return w;
-        });
-        localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
-        const matched = localWorks.find(w => w.id === activeDetailId);
-        if(matched) updateDetailModalContent(matched);
-        renderCards();
-      }
-      showToast("スタンプをおしました！");
+    // 🎨 ギャラリー描画・フィルター処理
+    window.renderChildTabs = function() {
+      const container = document.getElementById('childTabsContainer');
+      let html = `<button onclick="setChildFilter('all')" class="child-tab btn-bounce px-4 py-1.5 rounded-full text-xs font-bold shadow-sm whitespace-nowrap ${currentChildFilter === 'all' ? 'active' : 'bg-white border border-kraft text-ink'}">全員</button>`;
+      
+      localChildren.forEach(child => {
+        const isActive = currentChildFilter === child.id;
+        html += `<button onclick="setChildFilter('${child.id}')" class="child-tab btn-bounce px-4 py-1.5 rounded-full text-xs font-bold shadow-sm whitespace-nowrap ${isActive ? 'active' : 'bg-white border border-kraft text-ink'}">👦 ${child.name}</button>`;
+      });
+      container.innerHTML = html;
     };
 
-    window.submitComment = async function() {
-      const txt = document.getElementById('commentInput').value.trim();
-      if(!txt || !activeDetailId) return;
-      const userName = currentUser ? (currentUser.displayName || "家族") : "パパ・ママ";
-      const newComment = { author: userName, text: txt, createdAt: Date.now() };
-
-      if (currentUser) {
-        await updateDoc(doc(db, "families", currentUser.uid, "artworks", activeDetailId), { comments: arrayUnion(newComment) });
-      } else {
-        localWorks = localWorks.map(w => {
-          if (w.id === activeDetailId) { const comments = w.comments || []; comments.push(newComment); return { ...w, comments }; }
-          return w;
-        });
-        localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
-        const matched = localWorks.find(w => w.id === activeDetailId);
-        if(matched) updateDetailModalContent(matched);
-      }
-      document.getElementById('commentInput').value = "";
-      showToast("コメントを投稿しました💬");
+    window.populateChildSelectOptions = function() {
+      const select = document.getElementById('inputWorkChild');
+      let html = "";
+      localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
+      select.innerHTML = html;
     };
 
-    // Filter & Render
-    window.setChildFilter = function(id) {
-      currentChildFilter = id;
-      document.querySelectorAll('.child-tab').forEach(t => t.classList.remove('active'));
-      const activeTab = document.getElementById(`tab-${id}`);
-      if(activeTab) activeTab.classList.add('active');
-      renderCards();
-    };
-
+    window.setChildFilter = function(cid) { currentChildFilter = cid; renderChildTabs(); renderCards(); };
     window.setCategoryFilter = function(cat) {
       currentCategoryFilter = cat;
-      document.querySelectorAll('.cat-chip').forEach(c => {
-        c.classList.remove('bg-ink', 'text-white', 'active'); c.classList.add('bg-white', 'text-ink', 'border-kraft');
+      document.querySelectorAll('.cat-chip').forEach(btn => {
+        btn.classList.remove('active', 'bg-ink', 'text-white');
+        btn.classList.add('bg-white', 'border', 'border-kraft', 'text-ink');
       });
-      const target = document.getElementById(`cat-${cat}`);
-      target.classList.remove('bg-white', 'text-ink', 'border-kraft'); target.classList.add('bg-ink', 'text-white', 'active');
-      renderCards();
-    };
-
-    window.toggleSort = function() {
-      currentSortOrder = currentSortOrder === 'new' ? 'old' : 'new';
-      document.getElementById('sortBtnText').textContent = currentSortOrder === 'new' ? '新しい順' : '古い順';
+      const targetBtn = document.getElementById(`cat-${cat}`);
+      targetBtn.classList.remove('bg-white', 'border', 'text-ink');
+      targetBtn.classList.add('active', 'bg-ink', 'text-white');
       renderCards();
     };
 
     window.triggerFilter = function() { renderCards(); };
+    window.toggleSort = function() {
+      currentSortOrder = currentSortOrder === 'new' ? 'old' : 'new';
+      document.getElementById('sortBtnText').textContent = currentSortOrder === 'new' ? "新しい順" : "古い順";
+      renderCards();
+    };
 
-    function renderCards() {
+    const gradeMap = { preschool: "小学校前", g1: "小学1年生", g2: "小学2年生", g3: "小学3年生", g4: "小学4年生", g5: "小学5年生", g6: "小学6年生" };
+    const catBadgeMap = { art: { text: "絵・工作", icon: "🎨" }, study: { text: "テスト・プリント", icon: "📝" }, other: { text: "その他", icon: "🌟" } };
+
+    window.renderCards = function() {
       const grid = document.getElementById('galleryGrid');
-      const empty = document.getElementById('emptyState');
-      grid.innerHTML = "";
-      const query = document.getElementById('searchBar').value.toLowerCase().trim();
+      const emptyState = document.getElementById('emptyState');
+      const searchWord = document.getElementById('searchBar').value.toLowerCase().trim();
       const gradeSel = document.getElementById('gradeFilter').value;
 
       let filtered = localWorks.filter(w => {
         if (currentChildFilter !== 'all' && w.childId !== currentChildFilter) return false;
         if (currentCategoryFilter !== 'all' && w.category !== currentCategoryFilter) return false;
         if (gradeSel !== 'all' && w.grade !== gradeSel) return false;
-        if (query) {
-          const matchTitle = w.title && w.title.toLowerCase().includes(query);
-          const matchMemo = w.memo && w.memo.toLowerCase().includes(query);
-          if(!matchTitle && !matchMemo) return false;
+        if (searchWord) {
+          const matchTitle = w.title && w.title.toLowerCase().includes(searchWord);
+          const matchMemo = w.memo && w.memo.toLowerCase().includes(searchWord);
+          if (!matchTitle && !matchMemo) return false;
         }
         return true;
       });
 
       filtered.sort((a, b) => {
-        const dateA = new Date(a.date || 0).getTime();
-        const dateB = new Date(b.date || 0).getTime();
-        return currentSortOrder === 'new' ? dateB - dateA : dateA - dateB;
+        const dA = new Date(a.date || 0).getTime();
+        const dB = new Date(b.date || 0).getTime();
+        return currentSortOrder === 'new' ? dB - dA : dA - dB;
       });
 
-      if (filtered.length === 0) { grid.classList.add('hidden'); empty.classList.remove('hidden'); return; }
-      grid.classList.remove('hidden'); empty.classList.add('hidden');
+      if (filtered.length === 0) {
+        grid.innerHTML = ""; emptyState.classList.remove('hidden'); return;
+      }
+      emptyState.classList.add('hidden');
 
-      filtered.forEach(item => {
-        const card = document.createElement('div');
-        card.className = "btn-bounce bg-cardBg border border-kraft/70 rounded-2xl overflow-hidden shadow-sm flex flex-col cursor-pointer";
-        card.onclick = () => openDetailModal(item.id);
+      let html = "";
+      filtered.forEach(w => {
+        const childObj = localChildren.find(c => c.id === w.childId);
+        const childName = childObj ? childObj.name : "だれか";
+        const catObj = catBadgeMap[w.category] || { text: "その他", icon: "🌟" };
+        
+        let mediaHtml = `<div class="w-full h-32 bg-kraft/20 flex items-center justify-center text-2xl">🎨</div>`;
+        if (w.mediaUrl) {
+          if (w.mediaType === 'video') {
+            mediaHtml = `<div class="w-full h-32 bg-black relative flex items-center justify-center"><video src="${w.mediaUrl}" class="w-full h-full object-cover"></video><span class="absolute bottom-2 right-2 bg-ink/70 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold flex items-center gap-0.5">▶ 🎬</span></div>`;
+          } else {
+            mediaHtml = `<img src="${w.mediaUrl}" class="w-full h-32 object-cover" alt="" loading="lazy" />`;
+          }
+        }
 
-        const mediaHtml = item.mediaType === 'video' 
-          ? `<div class="w-full aspect-square bg-ink/5 flex items-center justify-center relative"><video src="${item.media}" class="w-full h-full object-cover"></video><span class="absolute bottom-2 right-2 bg-ink/60 text-white text-[10px] px-1.5 py-0.5 rounded">▶ 動画</span></div>`
-          : `<img src="${item.media}" class="w-full aspect-square object-cover" alt="Thumb" />`;
+        const totalStamps = (w.stamps?.heart || 0) + (w.stamps?.clap || 0) + (w.stamps?.star || 0);
 
-        card.innerHTML = `
-          ${mediaHtml}
-          <div class="p-3 flex-1 flex flex-col justify-between">
+        html += `
+          <div onclick="openDetailModal('${w.id}')" class="bg-cardBg border border-kraft/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition active:scale-[0.99] cursor-pointer flex flex-col justify-between">
             <div>
-              <div class="flex items-center gap-1 mb-1">
-                <span class="text-[9px] font-bold text-white bg-sage px-1.5 py-0.2 rounded">${escHtml(item.childName)}</span>
-                <span class="text-[9px] text-muted truncate font-medium">${formatGrade(item.grade)}</span>
-              </div>
-              <h3 class="text-xs font-bold text-ink line-clamp-2 leading-tight">${escHtml(item.title)}</h3>
-            </div>
-            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-kraft/30 text-[10px] text-muted font-medium">
-              <span>${formatDateSimple(item.date)}</span>
-              <div class="flex items-center gap-1.5">
-                <span>❤️ ${item.likes?.heart || 0}</span>
-                <span>💬 ${item.comments?.length || 0}</span>
+              ${mediaHtml}
+              <div class="p-2.5">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <span class="text-[9px] font-bold text-white bg-sage px-1.5 py-0.5 rounded-md">${childName}</span>
+                  <span class="text-[9px] font-medium text-muted bg-kraft/30 px-1.5 py-0.5 rounded-md">${catObj.icon} ${catObj.text}</span>
+                </div>
+                <h3 class="font-bold text-ink text-xs mt-1.5 line-clamp-1">${w.title || '無題'}</h3>
+                <p class="text-[10px] text-muted font-medium mt-0.5">${w.date ? w.date.replace(/-/g, '/') : ''}</p>
               </div>
             </div>
+            ${totalStamps > 0 || (w.comments && w.comments.length > 0) ? `
+              <div class="px-2.5 pb-2.5 pt-0 flex items-center gap-2 text-[10px] font-bold text-muted border-t border-kraft/10 mt-1">
+                ${totalStamps > 0 ? `<span>❤️ ${totalStamps}</span>` : ''}
+                ${w.comments && w.comments.length > 0 ? `<span>💬 ${w.comments.length}</span>` : ''}
+              </div>
+            ` : ''}
           </div>
         `;
-        grid.appendChild(card);
       });
-    }
-
-    function renderChildTabs() {
-      const container = document.getElementById('childTabsContainer');
-      container.innerHTML = "";
-      const allTab = document.createElement('button');
-      allTab.id = "tab-all"; allTab.onclick = () => setChildFilter('all');
-      allTab.className = `child-tab btn-bounce bg-white border border-kraft text-ink rounded-xl px-4 py-1.5 text-xs font-bold shadow-sm whitespace-nowrap ${currentChildFilter === 'all' ? 'active' : ''}`;
-      allTab.textContent = "👦👧 全員"; container.appendChild(allTab);
-
-      localChildren.forEach(child => {
-        const tab = document.createElement('button');
-        tab.id = `tab-${child.id}`; tab.onclick = () => setChildFilter(child.id);
-        tab.className = `child-tab btn-bounce bg-white border border-kraft text-ink rounded-xl px-4 py-1.5 text-xs font-bold shadow-sm whitespace-nowrap ${currentChildFilter === child.id ? 'active' : ''}`;
-        tab.textContent = child.name; container.appendChild(tab);
-      });
-    }
-
-    function populateChildSelectOptions() {
-      const select = document.getElementById('inputWorkChild');
-      select.innerHTML = "";
-      localChildren.forEach(child => {
-        const opt = document.createElement('option'); opt.value = child.id; opt.textContent = child.name; select.appendChild(opt);
-      });
-
-      const managerList = document.getElementById('childManagerList');
-      managerList.innerHTML = "";
-      localChildren.forEach(child => {
-        const ageStr = calculateAgeStr(child.birthday);
-        const item = document.createElement('div');
-        item.className = "flex items-center justify-between p-3 bg-white border border-kraft/40 rounded-xl shadow-sm text-xs";
-        item.innerHTML = `
-          <div>
-            <p class="font-bold text-ink">${escHtml(child.name)}</p>
-            <p class="text-[10px] text-muted mt-0.5">${formatDate(child.birthday)}生まれ (${ageStr})</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="startChildEdit('${child.id}')" class="text-sage font-bold p-1">修正</button>
-            <button onclick="deleteChildProfile('${child.id}')" class="text-coral font-bold p-1">削除</button>
-          </div>
-        `;
-        managerList.appendChild(item);
-      });
-    }
-
-    // Modal Control
-    window.openDetailModal = function(id) {
-      activeDetailId = id;
-      const target = localWorks.find(w => w.id === id);
-      if(!target) return;
-      updateDetailModalContent(target);
-      document.getElementById('modalBackdrop').classList.add('open');
-      document.getElementById('detailModal').classList.add('open');
-      document.body.style.overflow = 'hidden';
+      grid.innerHTML = html;
     };
 
-    function updateDetailModalContent(work) {
-      const catName = { art: '絵・工作', study: 'テスト・プリント', other: 'その他' }[work.category] || '📂';
-      const catIcon = { art: '🎨', study: '📝', other: '🌟' }[work.category] || '📂';
-      document.getElementById('detailBadgeIcon').textContent = catIcon;
-      document.getElementById('detailBadgeText').textContent = catName;
-      document.getElementById('detailChildTag').textContent = work.childName;
-      document.getElementById('detailTitle').textContent = work.title;
-      document.getElementById('detailDate').textContent = formatDate(work.date);
-      document.getElementById('detailGrade').textContent = formatGrade(work.grade);
-      
-      if(work.memo) { document.getElementById('detailMemoContainer').classList.remove('hidden'); document.getElementById('detailMemo').textContent = work.memo; }
-      else { document.getElementById('detailMemoContainer').classList.add('hidden'); }
+    // 🔍 詳細モーダル・インタラクション
+    window.openDetailModal = function(id) {
+      const work = localWorks.find(w => w.id === id);
+      if (!work) return;
+      activeDetailId = id;
+      updateDetailModalContent(work);
 
-      const imgEl = document.getElementById('detailImage');
-      const vidEl = document.getElementById('detailVideo');
-      if (work.mediaType === 'video') { imgEl.classList.add('hidden'); vidEl.classList.remove('hidden'); vidEl.src = work.media; }
-      else { vidEl.classList.add('hidden'); imgEl.classList.remove('hidden'); imgEl.src = work.media; }
-
-      document.getElementById('stamp-heart-count').textContent = work.likes?.heart || 0;
-      document.getElementById('stamp-clap-count').textContent = work.likes?.clap || 0;
-      document.getElementById('stamp-star-count').textContent = work.likes?.star || 0;
-
-      const board = document.getElementById('commentBoard');
-      board.innerHTML = "";
-      const comms = work.comments || [];
-      if(comms.length === 0) {
-        board.innerHTML = `<p class="text-muted italic text-[11px] py-1 text-center">まだコメントはありません🌱</p>`;
-      } else {
-        comms.forEach(c => {
-          const row = document.createElement('div');
-          row.className = "bg-white p-2 border border-kraft/30 rounded-xl shadow-sm";
-          row.innerHTML = `
-            <div class="flex justify-between text-[10px] text-muted mb-0.5">
-              <span class="font-bold text-sage">${escHtml(c.author)}</span>
-              <span>${formatDateTime(c.createdAt)}</span>
-            </div>
-            <p class="text-ink font-medium leading-tight">${escHtml(c.text)}</p>
-          `;
-          board.appendChild(row);
-        });
-        setTimeout(() => board.scrollTop = board.scrollHeight, 50);
-      }
-    }
+      document.getElementById('modalBackdrop').classList.add('open');
+      document.getElementById('detailModal').classList.add('open');
+    };
 
     window.closeDetailModal = function() {
       activeDetailId = null;
       document.getElementById('detailModal').classList.remove('open');
-      if(!document.getElementById('workDrawer').classList.contains('open') && !document.getElementById('childDrawer').classList.contains('open')) {
-        document.getElementById('modalBackdrop').classList.remove('open');
-        document.body.style.overflow = '';
+      document.getElementById('modalBackdrop').classList.remove('open');
+      document.getElementById('detailImage').src = "";
+      document.getElementById('detailVideo').src = "";
+    };
+
+    function updateDetailModalContent(work) {
+      const childObj = localChildren.find(c => c.id === work.childId);
+      document.getElementById('detailChildTag').textContent = childObj ? childObj.name : "だれか";
+      document.getElementById('detailTitle').textContent = work.title || "無題のおもいで";
+      document.getElementById('detailDate').textContent = work.date ? work.date.replace(/(\d{4})-(\d{2})-(\d{2})/, '$1年$2月$3日') : "日付不明";
+      document.getElementById('detailGrade').textContent = gradeMap[work.grade] || "未設定";
+
+      const catObj = catBadgeMap[work.category] || { text: "その他", icon: "🌟" };
+      document.getElementById('detailBadgeIcon').textContent = catObj.icon;
+      document.getElementById('detailBadgeText').textContent = catObj.text;
+
+      const imgEl = document.getElementById('detailImage');
+      const vidEl = document.getElementById('detailVideo');
+      if (work.mediaUrl) {
+        if (work.mediaType === 'video') { imgEl.classList.add('hidden'); vidEl.classList.remove('hidden'); vidEl.src = work.mediaUrl; }
+        else { vidEl.classList.add('hidden'); imgEl.classList.remove('hidden'); imgEl.src = work.mediaUrl; }
+      } else {
+        vidEl.classList.add('hidden'); imgEl.classList.remove('hidden'); imgEl.src = "";
       }
+
+      if (work.memo) {
+        document.getElementById('detailMemoContainer').classList.remove('hidden');
+        document.getElementById('detailMemo').textContent = work.memo;
+      } else {
+        document.getElementById('detailMemoContainer').classList.add('hidden');
+      }
+
+      document.getElementById('stamp-heart-count').textContent = work.stamps?.heart || 0;
+      document.getElementById('stamp-clap-count').textContent = work.stamps?.clap || 0;
+      document.getElementById('stamp-star-count').textContent = work.stamps?.star || 0;
+
+      const board = document.getElementById('commentBoard');
+      board.innerHTML = "";
+      if (work.comments && work.comments.length > 0) {
+        let cHtml = "";
+        work.comments.forEach(c => {
+          cHtml += `<div class="bg-kraft/20 p-2 rounded-xl"><div class="flex justify-between text-[9px] text-muted font-bold"><span>👪 家族のメンバー</span><span>${c.time || ''}</span></div><p class="text-ink mt-0.5 font-medium">${c.text}</p></div>`;
+        });
+        board.innerHTML = cHtml;
+        board.scrollTop = board.scrollHeight;
+      } else {
+        board.innerHTML = `<p class="text-[10px] text-muted/60 text-center py-2 font-medium">まだコメントはありません</p>`;
+      }
+    }
+
+    window.handleStampClick = async function(type) {
+      if (!activeDetailId) return;
+      if (currentUser) {
+        const docRef = doc(db, "families", currentUser.uid, "artworks", activeDetailId);
+        await updateDoc(docRef, { [`stamps.${type}`]: increment(1) });
+      } else {
+        const work = localWorks.find(w => w.id === activeDetailId);
+        if (work) {
+          if (!work.stamps) work.stamps = { heart: 0, clap: 0, star: 0 };
+          work.stamps[type] = (work.stamps[type] || 0) + 1;
+          localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
+          updateDetailModalContent(work);
+          renderCards();
+        }
+      }
+    };
+
+    window.submitComment = async function() {
+      const input = document.getElementById('commentInput');
+      const text = input.value.trim();
+      if (!text || !activeDetailId) return;
+
+      const dateStr = new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const newComment = { text, time: dateStr };
+
+      if (currentUser) {
+        const docRef = doc(db, "families", currentUser.uid, "artworks", activeDetailId);
+        await updateDoc(docRef, { comments: arrayUnion(newComment) });
+      } else {
+        const work = localWorks.find(w => w.id === activeDetailId);
+        if (work) {
+          if (!work.comments) work.comments = [];
+          work.comments.push(newComment);
+          localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
+          updateDetailModalContent(work);
+          renderCards();
+        }
+      }
+      input.value = "";
     };
 
     window.triggerEditFromDetail = function() {
-      const id = activeDetailId;
+      const work = localWorks.find(w => w.id === activeDetailId);
+      if (!work) return;
       closeDetailModal();
-      setTimeout(() => {
-        const target = localWorks.find(w => w.id === id);
-        if(!target) return;
-        openDrawer('work');
-        document.getElementById('workDrawerTitle').textContent = "✏️ おもいでを修正";
-        document.getElementById('editingWorkId').value = target.id;
-        document.getElementById('inputTitle').value = target.title;
-        document.getElementById('inputWorkChild').value = target.childId;
-        document.getElementById('inputDate').value = target.date;
-        document.getElementById('inputGrade').value = target.grade;
-        document.getElementById('inputMemo').value = target.memo || "";
-        document.getElementById('workSubmitBtn').textContent = "変更を保存する";
-        selectedMediaBase64 = target.media;
-        selectedMediaType = target.mediaType || 'image';
-        showMediaPreview(target.media, selectedMediaType);
-        document.getElementById('memoCount').textContent = `${target.memo?.length || 0} / 140`;
-        document.querySelectorAll('input[name="inputCategory"]').forEach(r => { if(r.value === target.category) r.checked = true; });
-      }, 350);
+
+      document.getElementById('editingWorkId').value = work.id;
+      document.getElementById('inputTitle').value = work.title || "";
+      document.getElementById('inputWorkChild').value = work.childId;
+      document.getElementById('inputDate').value = work.date || "";
+      document.getElementById('inputGrade').value = work.grade || "preschool";
+      document.getElementById('inputMemo').value = work.memo || "";
+      
+      const categoryRadios = document.querySelectorAll('input[name="inputCategory"]');
+      categoryRadios.forEach(r => { r.checked = r.value === work.category; });
+
+      if (work.mediaUrl) {
+        showMediaPreview(work.mediaUrl, work.mediaType);
+      } else {
+        clearMediaSelection();
+      }
+
+      document.getElementById('workDrawerTitle').textContent = "✏️ おもいでを編集";
+      document.getElementById('workSubmitBtn').querySelector('#submitBtnText').textContent = "更新する";
+      openDrawer('work');
     };
 
     window.triggerDeleteFromDetail = async function() {
-      if(!activeDetailId) return;
-      if(!confirm("このおもいでデータを完全に削除しますか？")) return;
-      const id = activeDetailId;
+      if (!confirm("このおもいでを削除しますか？戻すことはできません。")) return;
+      const deleteId = activeDetailId;
       closeDetailModal();
+
       if (currentUser) {
-        await deleteDoc(doc(db, "families", currentUser.uid, "artworks", id));
-        showToast("おもいでを削除しました");
+        await deleteDoc(doc(db, "families", currentUser.uid, "artworks", deleteId));
+        showToast("削除しました");
       } else {
-        localWorks = localWorks.filter(w => w.id !== id);
+        localWorks = localWorks.filter(w => w.id !== deleteId);
         localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
-        renderCards(); showToast("おもいでを削除しました(ローカル)");
+        renderCards();
+        showToast("削除しました（デモモード）");
       }
     };
 
-    // Drawer Control
+    // 📐 UI Drawer・パネル制御
     window.openDrawer = function(type) {
       document.getElementById('modalBackdrop').classList.add('open');
-      document.body.style.overflow = 'hidden';
-      if(type === 'work') {
+      if (type === 'work') {
         document.getElementById('workDrawer').classList.add('open');
-        if(!document.getElementById('editingWorkId').value) {
-          document.getElementById('workForm').reset();
-          document.getElementById('workDrawerTitle').textContent = "🎨 おもいでをきろく";
-          document.getElementById('workSubmitBtn').textContent = "保存する";
-          document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
-          clearMediaSelection();
-        }
-      } else { document.getElementById('childDrawer').classList.add('open'); cancelChildEdit(); }
+      } else if (type === 'child') {
+        renderChildManagerList();
+        document.getElementById('childDrawer').classList.add('open');
+      }
     };
 
     window.closeDrawer = function(type) {
-      if(type === 'work') { document.getElementById('workDrawer').classList.remove('open'); setTimeout(() => { document.getElementById('editingWorkId').value = ""; }, 400); }
-      else { document.getElementById('childDrawer').classList.remove('open'); }
-      if(!document.getElementById('detailModal').classList.contains('open')) { document.getElementById('modalBackdrop').classList.remove('open'); document.body.style.overflow = ''; }
+      if (type === 'work') {
+        document.getElementById('workDrawer').classList.remove('open');
+        document.getElementById('workForm').reset();
+        document.getElementById('editingWorkId').value = "";
+        document.getElementById('workDrawerTitle').textContent = "🎨 おもいでをきろく";
+        document.getElementById('workSubmitBtn').querySelector('#submitBtnText').textContent = "保存する";
+        clearMediaSelection();
+      } else if (type === 'child') {
+        document.getElementById('childDrawer').classList.remove('open');
+        cancelChildEdit();
+      }
+      if (!document.getElementById('detailModal').classList.contains('open')) {
+        document.getElementById('modalBackdrop').classList.remove('open');
+      }
     };
 
-    window.closeAllPanels = function() { closeDrawer('work'); closeDrawer('child'); closeDetailModal(); };
+    window.closeAllPanels = function() {
+      closeDrawer('work'); closeDrawer('child'); closeDetailModal();
+    };
 
-    // Utils
-    function escHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-    function formatDate(str) { if (!str) return ''; const parts = str.split('-'); if (parts.length < 3) return str; return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`; }
-    function formatDateSimple(str) { if (!str) return ''; const parts = str.split('-'); if (parts.length < 3) return str; return `${parseInt(parts[1])}/${parseInt(parts[2])}`; }
-    function formatGrade(code) { return { preschool: '小学校前', g1: '小学1年生', g2: '小学2年生', g3: '小学3年生', g4: '小学4年生', g5: '小学5年生', g6: '小学6年生' }[code] || code; }
-    function formatDateTime(ts) { if (!ts) return ''; const d = new Date(ts); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-    function calculateAgeStr(bdStr) { if(!bdStr) return ''; const bd = new Date(bdStr); const today = new Date(); let age = today.getFullYear() - bd.getFullYear(); let m = today.getMonth() - bd.getMonth(); if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) { age--; m = 12 + m; } if(age < 0) return '0さい'; return age > 0 ? `${age}さい` : `${m}ヶ月`; }
-
-    let toastTimer = null;
-    function showToast(msg) {
-      const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
-      if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    function renderChildManagerList() {
+      const listContainer = document.getElementById('childManagerList');
+      let html = "";
+      localChildren.forEach(c => {
+        html += `
+          <div class="flex items-center justify-between bg-ivory border border-kraft/50 rounded-xl px-3 py-2 text-xs">
+            <div>
+              <span class="font-bold text-ink">👦 ${c.name}</span>
+              <span class="text-[10px] text-muted ml-2">${c.birthday ? c.birthday.replace(/-/g, '/') : ''}生まれ</span>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="triggerChildEdit('${c.id}')" class="text-sage font-bold px-1.5 py-0.5 bg-sage/5 rounded">編集</button>
+              <button onclick="triggerChildDelete('${c.id}')" class="text-coral font-bold px-1.5 py-0.5 bg-coral/5 rounded">削除</button>
+            </div>
+          </div>
+        `;
+      });
+      listContainer.innerHTML = html;
     }
 
-    document.getElementById('inputMemo').addEventListener('input', function() { document.getElementById('memoCount').textContent = `${this.value.length} / 140`; });
+    // 文字数カウント
+    const memoArea = document.getElementById('inputMemo');
+    if(memoArea) {
+      memoArea.addEventListener('input', (e) => {
+        document.getElementById('memoCount').textContent = `${e.target.value.length} / 140`;
+      });
+    }
 
+    window.showToast = function(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg; el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2500);
+    };
+
+    // 初期起動
     refreshAppView();
   </script>
 </body>
