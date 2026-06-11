@@ -595,9 +595,9 @@
       if (!selectedMediaBase64 && !editingId) { alert("写真または動画を選択してください"); return; }
 
       // ローディング開始
-      document.getElementById('submitBtnSpinner').classList.remove('hidden');
-      document.getElementById('submitBtnText').textContent = "送信中...";
-      document.getElementById('workSubmitBtn').disabled = true;
+      //document.getElementById('submitBtnSpinner').classList.remove('hidden');
+      //document.getElementById('submitBtnText').textContent = "送信中...";
+      //document.getElementById('workSubmitBtn').disabled = true;
 
       const childObj = localChildren.find(c => c.id === childId);
       const childName = childObj ? childObj.name : '不明';
