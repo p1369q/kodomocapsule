@@ -99,8 +99,7 @@
       </div>
     </section>
 
-    <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-2 no-scrollbar" id="childTabsContainer">
-      </div>
+    <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-2 no-scrollbar" id="childTabsContainer"></div>
 
     <div class="flex items-center gap-2 mb-4">
       <button onclick="setCategoryFilter('all')" id="cat-all" class="cat-chip btn-bounce active bg-ink text-white rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm">すべて</button>
@@ -109,8 +108,7 @@
       <button onclick="setCategoryFilter('other')" id="cat-other" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm">🌟 その他</button>
     </div>
 
-    <div id="galleryGrid" class="grid grid-cols-2 gap-3.5">
-      </div>
+    <div id="galleryGrid" class="grid grid-cols-2 gap-3.5"></div>
 
     <div id="emptyState" class="hidden text-center py-16 px-4">
       <p class="text-4xl mb-3">🎨</p>
@@ -213,7 +211,10 @@
         <textarea id="inputMemo" maxlength="140" rows="3" placeholder="こどもの一言や、がんばっていたエピソードなど" class="w-full bg-cardBg border border-kraft rounded-xl p-3 text-sm text-ink focus:outline-none focus:border-sage placeholder-muted/50 resize-none"></textarea>
       </div>
 
-      <button type="submit" id="workSubmitBtn" class="w-full btn-bounce bg-coral text-white rounded-xl py-3 font-bold text-sm shadow-md mt-2">保存する</button>
+      <button type="submit" id="workSubmitBtn" class="w-full btn-bounce bg-coral text-white rounded-xl py-3 font-bold text-sm shadow-md mt-2 flex items-center justify-center gap-2">
+        <span id="submitBtnSpinner" class="hidden loading-spinner !w-4 !h-4 !border-white/30 !border-t-white"></span>
+        <span id="submitBtnText">保存する</span>
+      </button>
     </form>
   </div>
 
@@ -245,8 +246,7 @@
 
     <div>
       <h4 class="text-xs font-bold text-ink mb-2">登録されているこども</h4>
-      <div id="childManagerList" class="space-y-2">
-        </div>
+      <div id="childManagerList" class="space-y-2"></div>
     </div>
   </div>
 
@@ -302,8 +302,7 @@
 
           <div>
             <p class="text-[11px] font-bold text-muted mb-2 uppercase tracking-wider">コメント</p>
-            <div id="commentBoard" class="space-y-2 max-h-40 overflow-y-auto mb-3 pr-1 text-xs">
-              </div>
+            <div id="commentBoard" class="space-y-2 max-h-40 overflow-y-auto mb-3 pr-1 text-xs"></div>
             <div class="flex gap-2">
               <input type="text" id="commentInput" placeholder="すごいね！などメッセージを入力..." class="flex-1 bg-white border border-kraft/60 rounded-xl px-3 py-2 text-xs text-ink focus:outline-none focus:border-sage shadow-sm" />
               <button onclick="submitComment()" class="btn-bounce bg-sage text-white font-bold rounded-xl px-3 text-xs shadow-sm whitespace-nowrap">送信</button>
@@ -315,7 +314,6 @@
   </div>
 
   <div id="toast" class="toast fixed bottom-24 left-1/2 bg-ink/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-xl z-50 whitespace-nowrap pointer-events-none">通知</div>
-
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -338,8 +336,13 @@
       arrayUnion,
       increment
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import {
+      getStorage,
+      ref,
+      uploadString,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    // ユーザー様からいただいた大切な本物のFirebase Configオブジェクト
     const firebaseConfig = {
       apiKey: "AIzaSyDW3BubqXf460RF6NxVr2rsFurcI75VHCg",
       authDomain: "kodomonote-9a8e1.firebaseapp.com",
@@ -349,13 +352,12 @@
       appId: "1:486206364077:web:49dddbd7342973cc90a924"
     };
 
-    // Firebase初期化
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
-    // アプリケーションの状態管理オブジェクト
     let currentUser = null;
     let unsubscribeWorks = null;
     let unsubscribeChildren = null;
@@ -367,24 +369,21 @@
 
     let currentChildFilter = 'all';
     let currentCategoryFilter = 'all';
-    let currentSortOrder = 'new'; // 'new' or 'old'
+    let currentSortOrder = 'new';
 
     let selectedMediaBase64 = "";
     let selectedMediaType = "";
     let activeDetailId = null;
 
-    // 初回起動時のデータ保存（デモ用）
     if (!localStorage.getItem('kodomonote_children')) {
       localStorage.setItem('kodomonote_children', JSON.stringify(localChildren));
     }
 
-    // ─── Firebase認証関連処理 ────────────────────────────────────
+    // Auth Event
     document.getElementById('authBtn').addEventListener('click', async () => {
       if (currentUser) {
         if (confirm("ログアウトしますか？（未ログイン状態のデータに戻ります）")) {
-          signOut(auth).then(() => {
-            showToast("ログアウトしました");
-          }).catch(err => console.error(err));
+          signOut(auth).then(() => { showToast("ログアウトしました"); }).catch(err => console.error(err));
         }
       } else {
         showToast("Googleでログイン中...");
@@ -403,59 +402,40 @@
         document.getElementById('authBtnText').textContent = "ログアウト";
         document.getElementById('authStatusText').textContent = `家族共有モード (クラウド同期中)`;
         document.getElementById('authStatusText').className = "text-[10px] text-sage font-bold mt-0.5";
-        
-        // LocalStorageの監視を止め、Firestoreのリアルタイム監視に切り替え
         setupFirestoreSync(user.uid);
       } else {
         currentUser = null;
         document.getElementById('authBtnText').textContent = "ログイン";
         document.getElementById('authStatusText').textContent = "デモモード (保存先: ブラウザ)";
         document.getElementById('authStatusText').className = "text-[10px] text-muted font-medium mt-0.5";
-        
         if (unsubscribeWorks) unsubscribeWorks();
         if (unsubscribeChildren) unsubscribeChildren();
-        
         localWorks = JSON.parse(localStorage.getItem('kodomonote_works')) || [];
-        localChildren = JSON.parse(localStorage.getItem('kodomonote_children')) || [
-          { id: 'child-1', name: 'たろう', birthday: '2020-04-01' }
-        ];
+        localChildren = JSON.parse(localStorage.getItem('kodomonote_children')) || [{ id: 'child-1', name: 'たろう', birthday: '2020-04-01' }];
         refreshAppView();
       }
     });
 
-    // Firestoreリアルタイム同期セットアップ
     function setupFirestoreSync(uid) {
-      const familyId = uid; // 認証されたユーザーのUIDをベースにした家族ルーム
-      
-      // 子供達データの監視
+      const familyId = uid;
       const childRef = collection(db, "families", familyId, "children");
       unsubscribeChildren = onSnapshot(childRef, (snapshot) => {
         const loadedChildren = [];
-        snapshot.forEach(doc => {
-          loadedChildren.push({ id: doc.id, ...doc.data() });
-        });
-        
-        // 紐付けデータがない場合は初期値をクラウドに作成
+        snapshot.forEach(doc => { loadedChildren.push({ id: doc.id, ...doc.data() }); });
         if (loadedChildren.length === 0) {
-          const defaultChild = { name: 'たろう', birthday: '2020-04-01' };
-          addDoc(childRef, defaultChild);
+          addDoc(childRef, { name: 'たろう', birthday: '2020-04-01' });
         } else {
           localChildren = loadedChildren;
           refreshChildControls();
         }
       }, err => console.error(err));
 
-      // 作品データの監視
       const worksRef = collection(db, "families", familyId, "artworks");
       unsubscribeWorks = onSnapshot(worksRef, (snapshot) => {
         const loadedWorks = [];
-        snapshot.forEach(doc => {
-          loadedWorks.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach(doc => { loadedWorks.push({ id: doc.id, ...doc.data() }); });
         localWorks = loadedWorks;
         renderCards();
-        
-        // 詳細画面が開いている場合は中身をリアルタイムアップデート
         if (activeDetailId) {
           const updatedWork = localWorks.find(w => w.id === activeDetailId);
           if (updatedWork) updateDetailModalContent(updatedWork);
@@ -473,23 +453,18 @@
       renderCards();
     }
 
-    // ─── 画像処理・自動スキャンロジック (OpenCV.js) ──────────────────────
+    // OpenCV Scan
     window.handleFileSelect = function(e) {
       const file = e.target.files[0];
       if (!file) return;
-
       selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
-      
       const reader = new FileReader();
       reader.onload = function(evt) {
-        const dataUrl = evt.target.result;
-        
         if (selectedMediaType === 'video') {
-          selectedMediaBase64 = dataUrl;
-          showMediaPreview(dataUrl, 'video');
+          selectedMediaBase64 = evt.target.result;
+          showMediaPreview(selectedMediaBase64, 'video');
         } else {
-          // 画像処理（自動スキャン）の実行
-          processImageScan(dataUrl);
+          processImageScan(evt.target.result);
         }
       };
       reader.readAsDataURL(file);
@@ -502,30 +477,23 @@
       
       const img = new Image();
       img.onload = function() {
-        // 画像のリサイズ圧縮（Max 800px）
         const maxDim = 800;
-        let w = img.width;
-        let h = img.height;
+        let w = img.width, h = img.height;
         if (w > maxDim || h > maxDim) {
           if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
           else { w = Math.round((w * maxDim) / h); h = maxDim; }
         }
         const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
-        // OpenCV.js が起動していない場合はスキャンをスキップして圧縮版を採用
         if (!window.cvReady || !window.cv || !cv.Mat) {
-          console.log("OpenCV not ready. Skipping adaptive scan edge crop.");
           selectedMediaBase64 = canvas.toDataURL('image/jpeg', 0.85);
           showMediaPreview(selectedMediaBase64, 'image');
           document.getElementById('scanOverlay').classList.add('hidden');
           return;
         }
 
-        // OpenCVを用いたエッジ輪郭検出・射影歪み自動補正
         setTimeout(() => {
           try {
             let src = cv.imread(canvas);
@@ -534,19 +502,17 @@
             cv.GaussianBlur(dst, dst, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
             cv.Canny(dst, dst, 75, 200, 3, false);
 
-            let contours = new cv. someContourList || new cv.MatVector();
+            let contours = new cv.MatVector();
             let hierarchy = new cv.Mat();
             cv.findContours(dst, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-            let maxArea = 0;
-            let maxContourIndex = -1;
+            let maxArea = 0, maxContourIndex = -1;
             for (let i = 0; i < contours.size(); ++i) {
               let area = cv.contourArea(contours.get(i));
               if (area > maxArea) { maxArea = area; maxContourIndex = i; }
             }
 
             let scannedDataUrl = null;
-            // 一定以上の大きさの四角い輪郭が見つかった場合のみ補正
             if (maxContourIndex !== -1 && maxArea > (canvas.width * canvas.height * 0.15)) {
               let contour = contours.get(maxContourIndex);
               let approx = new cv.Mat();
@@ -554,23 +520,17 @@
               cv.approxPolyDP(contour, approx, 0.02 * peri, true);
 
               if (approx.rows === 4) {
-                // 4つの角を整列させて射影変換を実行
                 let pts = [];
-                for (let i = 0; i < 4; i++) {
-                  pts.push({ x: approx.data32S[i * 2], y: approx.data32S[i * 2 + 1] });
-                }
-                
+                for (let i = 0; i < 4; i++) { pts.push({ x: approx.data32S[i * 2], y: approx.data32S[i * 2 + 1] }); }
                 pts.sort((a, b) => a.x - b.x);
-                let leftToRight = pts;
-                let topLeft = leftToRight[0].y < leftToRight[1].y ? leftToRight[0] : leftToRight[1];
-                let bottomLeft = leftToRight[0].y > leftToRight[1].y ? leftToRight[0] : leftToRight[1];
-                let topRight = leftToRight[2].y < leftToRight[3].y ? leftToRight[2] : leftToRight[3];
-                let bottomRight = leftToRight[2].y > leftToRight[3].y ? leftToRight[2] : leftToRight[3];
+                let topLeft = pts[0].y < pts[1].y ? pts[0] : pts[1];
+                let bottomLeft = pts[0].y > pts[1].y ? pts[0] : pts[1];
+                let topRight = pts[2].y < pts[3].y ? pts[2] : pts[3];
+                let bottomRight = pts[2].y > pts[3].y ? pts[2] : pts[3];
 
                 let wA = Math.sqrt(Math.pow(bottomRight.x - bottomLeft.x, 2) + Math.pow(bottomRight.y - bottomLeft.y, 2));
                 let wB = Math.sqrt(Math.pow(topRight.x - topLeft.x, 2) + Math.pow(topRight.y - topLeft.y, 2));
                 let maxWidth = Math.max(wA, wB);
-
                 let hA = Math.sqrt(Math.pow(topRight.x - bottomRight.x, 2) + Math.pow(topRight.y - bottomRight.y, 2));
                 let hB = Math.sqrt(Math.pow(topLeft.x - bottomLeft.x, 2) + Math.pow(topLeft.y - bottomLeft.y, 2));
                 let maxHeight = Math.max(hA, hB);
@@ -578,10 +538,8 @@
                 let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [topLeft.x, topLeft.y, topRight.x, topRight.y, bottomRight.x, bottomRight.y, bottomLeft.x, bottomLeft.y]);
                 let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, maxWidth, 0, maxWidth, maxHeight, 0, maxHeight]);
                 let M = cv.getPerspectiveTransform(srcTri, dstTri);
-                
                 let transformed = new cv.Mat();
-                let dsize = new cv.Size(maxWidth, maxHeight);
-                cv.warpPerspective(src, transformed, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+                cv.warpPerspective(src, transformed, M, new cv.Size(maxWidth, maxHeight), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
 
                 let resultCanvas = document.createElement('canvas');
                 cv.imshow(resultCanvas, transformed);
@@ -590,16 +548,12 @@
                 srcTri.delete(); dstTri.delete(); M.delete(); transformed.delete(); approx.delete();
               } else { approx.delete(); }
             }
-
-            // メモリ解放
             src.delete(); dst.delete(); contours.delete(); hierarchy.delete();
-
             selectedMediaBase64 = scannedDataUrl ? scannedDataUrl : canvas.toDataURL('image/jpeg', 0.85);
             showMediaPreview(selectedMediaBase64, 'image');
             if(scannedDataUrl) showToast("書類を自動スキャン補正しました✨");
-
           } catch (err) {
-            console.error("OpenCV processing issue:", err);
+            console.error("OpenCV process error:", err);
             selectedMediaBase64 = canvas.toDataURL('image/jpeg', 0.85);
             showMediaPreview(selectedMediaBase64, 'image');
           } finally {
@@ -611,37 +565,25 @@
     }
 
     function showMediaPreview(url, type) {
-      document.getElementById('mediaPlaceholder').add || document.getElementById('mediaPlaceholder').classList.add('hidden');
+      document.getElementById('mediaPlaceholder').classList.add('hidden');
       document.getElementById('mediaResultContainer').classList.remove('hidden');
-      
       const imgEl = document.getElementById('mediaPreview');
       const vidEl = document.getElementById('videoPreview');
-
-      if (type === 'video') {
-        imgEl.classList.add('hidden');
-        vidEl.classList.remove('hidden');
-        vidEl.src = url;
-      } else {
-        vidEl.classList.add('hidden');
-        imgEl.classList.remove('hidden');
-        imgEl.src = url;
-      }
+      if (type === 'video') { imgEl.classList.add('hidden'); vidEl.classList.remove('hidden'); vidEl.src = url; }
+      else { vidEl.classList.add('hidden'); imgEl.classList.remove('hidden'); imgEl.src = url; }
     }
 
     window.clearMediaSelection = function() {
-      selectedMediaBase64 = "";
-      selectedMediaType = "";
+      selectedMediaBase64 = ""; selectedMediaType = "";
       document.getElementById('fileInput').value = "";
-      document.getElementById('mediaPreview').src = "";
-      document.getElementById('videoPreview').src = "";
+      document.getElementById('mediaPreview').src = ""; document.getElementById('videoPreview').src = "";
       document.getElementById('mediaResultContainer').classList.add('hidden');
       document.getElementById('mediaPlaceholder').classList.remove('hidden');
     };
 
-    // ─── 作品（きろく）のデータ操作 ─────────────────────────────────
+    // Submit Work
     window.handleWorkSubmit = async function(e) {
       e.preventDefault();
-      
       const editingId = document.getElementById('editingWorkId').value;
       const title = document.getElementById('inputTitle').value.trim();
       const childId = document.getElementById('inputWorkChild').value;
@@ -650,25 +592,44 @@
       const category = document.querySelector('input[name="inputCategory"]:checked').value;
       const memo = document.getElementById('inputMemo').value.trim();
 
-      if (!selectedMediaBase64 && !editingId) {
-        alert("写真または動画を選択してください");
-        return;
-      }
+      if (!selectedMediaBase64 && !editingId) { alert("写真または動画を選択してください"); return; }
+
+      // ローディング開始
+      document.getElementById('submitBtnSpinner').classList.remove('hidden');
+      document.getElementById('submitBtnText').textContent = "送信中...";
+      document.getElementById('workSubmitBtn').disabled = true;
 
       const childObj = localChildren.find(c => c.id === childId);
       const childName = childObj ? childObj.name : '不明';
 
       if (currentUser) {
-        // クラウド保存 (Firestore)
         const familyId = currentUser.uid;
-        const worksRef = collection(db, "families", familyId, "artworks");
+        let finalMediaUrl = selectedMediaBase64;
+
+        // 新しい写真が選ばれている場合は、Firebase Storageに保存してURLに変換する
+        if (selectedMediaBase64 && selectedMediaBase64.startsWith('data:')) {
+          try {
+            const fileExt = selectedMediaType === 'video' ? 'mp4' : 'jpg';
+            const storagePath = `families/${familyId}/artworks/${Date.now()}.${fileExt}`;
+            const storageRef = ref(storageStorage || storage, storagePath);
+            
+            // Base64文字列をアップロード
+            await uploadString(storageRef, selectedMediaBase64, 'data_url');
+            finalMediaUrl = await getDownloadURL(storageRef);
+          } catch (stErr) {
+            console.error("Storage upload failed:", stErr);
+            showToast("写真のアップロードに失敗しました");
+            resetSubmitButton();
+            return;
+          }
+        }
 
         const dataPayload = {
           title, childId, childName, date, grade, category, memo,
           updatedAt: Date.now()
         };
         if (selectedMediaBase64) {
-          dataPayload.media = selectedMediaBase64;
+          dataPayload.media = finalMediaUrl;
           dataPayload.mediaType = selectedMediaType;
         }
 
@@ -680,54 +641,52 @@
             dataPayload.createdAt = Date.now();
             dataPayload.likes = { heart: 0, clap: 0, star: 0 };
             dataPayload.comments = [];
-            await addDoc(worksRef, dataPayload);
+            await addDoc(collection(db, "families", familyId, "artworks"), dataPayload);
             showToast("おもいでをクラウドにきろくしました！✨");
           }
         } catch(err) {
-          console.error(err);
-          showToast("保存に失敗しました");
+          console.error("Firestore save error:", err);
+          showToast("作品の保存に失敗しました");
         }
       } else {
-        // ローカル保存 (LocalStorage)
+        // LocalStorage Mode
         if (editingId) {
           localWorks = localWorks.map(w => {
             if (w.id === editingId) {
               const updated = { ...w, title, childId, childName, date, grade, category, memo };
-              if (selectedMediaBase64) {
-                updated.media = selectedMediaBase64;
-                updated.mediaType = selectedMediaType;
-              }
+              if (selectedMediaBase64) { updated.media = selectedMediaBase64; updated.mediaType = selectedMediaType; }
               return updated;
             }
             return w;
           });
           showToast("おもいでを更新しました(ローカル)");
         } else {
-          const newWork = {
-            id: 'work-' + Date.now(),
-            title, childId, childName, date, grade, category, memo,
-            media: selectedMediaBase64,
-            mediaType: selectedMediaType,
-            createdAt: Date.now(),
-            likes: { heart: 0, clap: 0, star: 0 },
-            comments: []
-          };
-          localWorks.push(newWork);
+          localWorks.push({
+            id: 'work-' + Date.now(), title, childId, childName, date, grade, category, memo,
+            media: selectedMediaBase64, mediaType: selectedMediaType, createdAt: Date.now(),
+            likes: { heart: 0, clap: 0, star: 0 }, comments: []
+          });
           showToast("おもいでをブラウザに保存しました！");
         }
         localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
         renderCards();
       }
 
+      resetSubmitButton();
       closeDrawer('work');
-      // 更新後の同期モーダル反映
       if (editingId && activeDetailId === editingId) {
         const up = localWorks.find(w => w.id === editingId);
         if(up) updateDetailModalContent(up);
       }
     };
 
-    // ─── こどものプロフィール登録・修正 ─────────────────────────────
+    function resetSubmitButton() {
+      document.getElementById('submitBtnSpinner').classList.add('hidden');
+      document.getElementById('submitBtnText').textContent = "保存する";
+      document.getElementById('workSubmitBtn').disabled = false;
+    }
+
+    // Submit Child
     window.handleChildSubmit = async function(e) {
       e.preventDefault();
       const editingId = document.getElementById('editingChildId').value;
@@ -781,40 +740,26 @@
     };
 
     window.deleteChildProfile = async function(id) {
-      if(localChildren.length <= 1) {
-        alert("最低1人のこどもの登録が必要です");
-        return;
-      }
+      if(localChildren.length <= 1) { alert("最低1人のこどもの登録が必要です"); return; }
       if(!confirm("このこどものプロフィールを削除しますか？(作品データは削除されません)")) return;
-
-      if (currentUser) {
-        await deleteDoc(doc(db, "families", currentUser.uid, "children", id));
-        showToast("削除しました");
-      } else {
+      if (currentUser) { await deleteDoc(doc(db, "families", currentUser.uid, "children", id)); showToast("削除しました"); }
+      else {
         localChildren = localChildren.filter(c => c.id !== id);
         localStorage.setItem('kodomonote_children', JSON.stringify(localChildren));
-        refreshChildControls();
-        renderCards();
-        showToast("削除しました");
+        refreshChildControls(); renderCards(); showToast("削除しました");
       }
       cancelChildEdit();
     };
 
-    // ─── コミュニケーション（スタンプ・コメント） ─────────────────────
+    // Communication
     window.handleStampClick = async function(type) {
       if(!activeDetailId) return;
-      
       if (currentUser) {
-        const itemRef = doc(db, "families", currentUser.uid, "artworks", activeDetailId);
-        const updateField = {};
-        updateField[`likes.${type}`] = increment(1);
-        await updateDoc(itemRef, updateField);
+        await updateDoc(doc(db, "families", currentUser.uid, "artworks", activeDetailId), { [`likes.${type}`]: increment(1) });
       } else {
         localWorks = localWorks.map(w => {
           if (w.id === activeDetailId) {
-            const likes = w.likes || { heart:0, clap:0, star:0 };
-            likes[type] = (likes[type] || 0) + 1;
-            return { ...w, likes };
+            const likes = w.likes || { heart:0, clap:0, star:0 }; likes[type] = (likes[type] || 0) + 1; return { ...w, likes };
           }
           return w;
         });
@@ -829,38 +774,25 @@
     window.submitComment = async function() {
       const txt = document.getElementById('commentInput').value.trim();
       if(!txt || !activeDetailId) return;
-
       const userName = currentUser ? (currentUser.displayName || "家族") : "パパ・ママ";
-      const newComment = {
-        author: userName,
-        text: txt,
-        createdAt: Date.now()
-      };
+      const newComment = { author: userName, text: txt, createdAt: Date.now() };
 
       if (currentUser) {
-        const itemRef = doc(db, "families", currentUser.uid, "artworks", activeDetailId);
-        await updateDoc(itemRef, {
-          comments: arrayUnion(newComment)
-        });
+        await updateDoc(doc(db, "families", currentUser.uid, "artworks", activeDetailId), { comments: arrayUnion(newComment) });
       } else {
         localWorks = localWorks.map(w => {
-          if (w.id === activeDetailId) {
-            const comments = w.comments || [];
-            comments.push(newComment);
-            return { ...w, comments };
-          }
+          if (w.id === activeDetailId) { const comments = w.comments || []; comments.push(newComment); return { ...w, comments }; }
           return w;
         });
         localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
         const matched = localWorks.find(w => w.id === activeDetailId);
         if(matched) updateDetailModalContent(matched);
       }
-
       document.getElementById('commentInput').value = "";
       showToast("コメントを投稿しました💬");
     };
 
-    // ─── ギャラリーレンダリング＆フィルタ ───────────────────────────
+    // Filter & Render
     window.setChildFilter = function(id) {
       currentChildFilter = id;
       document.querySelectorAll('.child-tab').forEach(t => t.classList.remove('active'));
@@ -872,12 +804,10 @@
     window.setCategoryFilter = function(cat) {
       currentCategoryFilter = cat;
       document.querySelectorAll('.cat-chip').forEach(c => {
-        c.classList.remove('bg-ink', 'text-white', 'active');
-        c.classList.add('bg-white', 'text-ink', 'border-kraft');
+        c.classList.remove('bg-ink', 'text-white', 'active'); c.classList.add('bg-white', 'text-ink', 'border-kraft');
       });
       const target = document.getElementById(`cat-${cat}`);
-      target.classList.remove('bg-white', 'text-ink', 'border-kraft');
-      target.classList.add('bg-ink', 'text-white', 'active');
+      target.classList.remove('bg-white', 'text-ink', 'border-kraft'); target.classList.add('bg-ink', 'text-white', 'active');
       renderCards();
     };
 
@@ -887,19 +817,15 @@
       renderCards();
     };
 
-    window.triggerFilter = function() {
-      renderCards();
-    };
+    window.triggerFilter = function() { renderCards(); };
 
     function renderCards() {
       const grid = document.getElementById('galleryGrid');
       const empty = document.getElementById('emptyState');
       grid.innerHTML = "";
-
       const query = document.getElementById('searchBar').value.toLowerCase().trim();
       const gradeSel = document.getElementById('gradeFilter').value;
 
-      // フィルタリング処理
       let filtered = localWorks.filter(w => {
         if (currentChildFilter !== 'all' && w.childId !== currentChildFilter) return false;
         if (currentCategoryFilter !== 'all' && w.category !== currentCategoryFilter) return false;
@@ -912,28 +838,20 @@
         return true;
       });
 
-      // 並び替え処理
       filtered.sort((a, b) => {
         const dateA = new Date(a.date || 0).getTime();
         const dateB = new Date(b.date || 0).getTime();
         return currentSortOrder === 'new' ? dateB - dateA : dateA - dateB;
       });
 
-      if (filtered.length === 0) {
-        grid.classList.add('hidden');
-        empty.classList.remove('hidden');
-        return;
-      }
-
-      grid.classList.remove('hidden');
-      empty.classList.add('hidden');
+      if (filtered.length === 0) { grid.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+      grid.classList.remove('hidden'); empty.classList.add('hidden');
 
       filtered.forEach(item => {
         const card = document.createElement('div');
         card.className = "btn-bounce bg-cardBg border border-kraft/70 rounded-2xl overflow-hidden shadow-sm flex flex-col cursor-pointer";
         card.onclick = () => openDetailModal(item.id);
 
-        const badgeText = { art: '絵・工作', study: 'テスト・プリント', other: 'その他' }[item.category] || '📂';
         const mediaHtml = item.mediaType === 'video' 
           ? `<div class="w-full aspect-square bg-ink/5 flex items-center justify-center relative"><video src="${item.media}" class="w-full h-full object-cover"></video><span class="absolute bottom-2 right-2 bg-ink/60 text-white text-[10px] px-1.5 py-0.5 rounded">▶ 動画</span></div>`
           : `<img src="${item.media}" class="w-full aspect-square object-cover" alt="Thumb" />`;
@@ -964,23 +882,16 @@
     function renderChildTabs() {
       const container = document.getElementById('childTabsContainer');
       container.innerHTML = "";
-
-      // 「全員」の共通タブ
       const allTab = document.createElement('button');
-      allTab.id = "tab-all";
-      allTab.onclick = () => setChildFilter('all');
+      allTab.id = "tab-all"; allTab.onclick = () => setChildFilter('all');
       allTab.className = `child-tab btn-bounce bg-white border border-kraft text-ink rounded-xl px-4 py-1.5 text-xs font-bold shadow-sm whitespace-nowrap ${currentChildFilter === 'all' ? 'active' : ''}`;
-      allTab.textContent = "👦👧 全員";
-      container.appendChild(allTab);
+      allTab.textContent = "👦👧 全員"; container.appendChild(allTab);
 
-      // 子供別の切り替えタブ
       localChildren.forEach(child => {
         const tab = document.createElement('button');
-        tab.id = `tab-${child.id}`;
-        tab.onclick = () => setChildFilter(child.id);
+        tab.id = `tab-${child.id}`; tab.onclick = () => setChildFilter(child.id);
         tab.className = `child-tab btn-bounce bg-white border border-kraft text-ink rounded-xl px-4 py-1.5 text-xs font-bold shadow-sm whitespace-nowrap ${currentChildFilter === child.id ? 'active' : ''}`;
-        tab.textContent = child.name;
-        container.appendChild(tab);
+        tab.textContent = child.name; container.appendChild(tab);
       });
     }
 
@@ -988,13 +899,9 @@
       const select = document.getElementById('inputWorkChild');
       select.innerHTML = "";
       localChildren.forEach(child => {
-        const opt = document.createElement('option');
-        opt.value = child.id;
-        opt.textContent = child.name;
-        select.appendChild(opt);
+        const opt = document.createElement('option'); opt.value = child.id; opt.textContent = child.name; select.appendChild(opt);
       });
 
-      // 設定内の管理一覧リストもついでにレンダリング
       const managerList = document.getElementById('childManagerList');
       managerList.innerHTML = "";
       localChildren.forEach(child => {
@@ -1015,14 +922,12 @@
       });
     }
 
-    // ─── モーダル・ディテール画面制御 ──────────────────────────────
+    // Modal Control
     window.openDetailModal = function(id) {
       activeDetailId = id;
       const target = localWorks.find(w => w.id === id);
       if(!target) return;
-
       updateDetailModalContent(target);
-
       document.getElementById('modalBackdrop').classList.add('open');
       document.getElementById('detailModal').classList.add('open');
       document.body.style.overflow = 'hidden';
@@ -1031,7 +936,6 @@
     function updateDetailModalContent(work) {
       const catName = { art: '絵・工作', study: 'テスト・プリント', other: 'その他' }[work.category] || '📂';
       const catIcon = { art: '🎨', study: '📝', other: '🌟' }[work.category] || '📂';
-      
       document.getElementById('detailBadgeIcon').textContent = catIcon;
       document.getElementById('detailBadgeText').textContent = catName;
       document.getElementById('detailChildTag').textContent = work.childName;
@@ -1039,33 +943,18 @@
       document.getElementById('detailDate').textContent = formatDate(work.date);
       document.getElementById('detailGrade').textContent = formatGrade(work.grade);
       
-      // メモ表示
-      if(work.memo) {
-        document.getElementById('detailMemoContainer').classList.remove('hidden');
-        document.getElementById('detailMemo').textContent = work.memo;
-      } else {
-        document.getElementById('detailMemoContainer').classList.add('hidden');
-      }
+      if(work.memo) { document.getElementById('detailMemoContainer').classList.remove('hidden'); document.getElementById('detailMemo').textContent = work.memo; }
+      else { document.getElementById('detailMemoContainer').classList.add('hidden'); }
 
-      // メディア表示
       const imgEl = document.getElementById('detailImage');
       const vidEl = document.getElementById('detailVideo');
-      if (work.mediaType === 'video') {
-        imgEl.classList.add('hidden');
-        vidEl.classList.remove('hidden');
-        vidEl.src = work.media;
-      } else {
-        vidEl.classList.add('hidden');
-        imgEl.classList.remove('hidden');
-        imgEl.src = work.media;
-      }
+      if (work.mediaType === 'video') { imgEl.classList.add('hidden'); vidEl.classList.remove('hidden'); vidEl.src = work.media; }
+      else { vidEl.classList.add('hidden'); imgEl.classList.remove('hidden'); imgEl.src = work.media; }
 
-      // スタンプ反映
       document.getElementById('stamp-heart-count').textContent = work.likes?.heart || 0;
       document.getElementById('stamp-clap-count').textContent = work.likes?.clap || 0;
       document.getElementById('stamp-star-count').textContent = work.likes?.star || 0;
 
-      // コメント反映
       const board = document.getElementById('commentBoard');
       board.innerHTML = "";
       const comms = work.comments || [];
@@ -1103,7 +992,6 @@
       setTimeout(() => {
         const target = localWorks.find(w => w.id === id);
         if(!target) return;
-
         openDrawer('work');
         document.getElementById('workDrawerTitle').textContent = "✏️ おもいでを修正";
         document.getElementById('editingWorkId').value = target.id;
@@ -1113,44 +1001,35 @@
         document.getElementById('inputGrade').value = target.grade;
         document.getElementById('inputMemo').value = target.memo || "";
         document.getElementById('workSubmitBtn').textContent = "変更を保存する";
-        
-        // 既存メディアのプレビュー表示
         selectedMediaBase64 = target.media;
         selectedMediaType = target.mediaType || 'image';
         showMediaPreview(target.media, selectedMediaType);
         document.getElementById('memoCount').textContent = `${target.memo?.length || 0} / 140`;
-
-        const radios = document.querySelectorAll('input[name="inputCategory"]');
-        radios.forEach(r => { if(r.value === target.category) r.checked = true; });
+        document.querySelectorAll('input[name="inputCategory"]').forEach(r => { if(r.value === target.category) r.checked = true; });
       }, 350);
     };
 
     window.triggerDeleteFromDetail = async function() {
       if(!activeDetailId) return;
       if(!confirm("このおもいでデータを完全に削除しますか？")) return;
-
       const id = activeDetailId;
       closeDetailModal();
-
       if (currentUser) {
         await deleteDoc(doc(db, "families", currentUser.uid, "artworks", id));
         showToast("おもいでを削除しました");
       } else {
         localWorks = localWorks.filter(w => w.id !== id);
         localStorage.setItem('kodomonote_works', JSON.stringify(localWorks));
-        renderCards();
-        showToast("おもいでを削除しました(ローカル)");
+        renderCards(); showToast("おもいでを削除しました(ローカル)");
       }
     };
 
-    // ─── ドロワー表示制御 ──────────────────────────────────────────
+    // Drawer Control
     window.openDrawer = function(type) {
       document.getElementById('modalBackdrop').classList.add('open');
       document.body.style.overflow = 'hidden';
-      
       if(type === 'work') {
         document.getElementById('workDrawer').classList.add('open');
-        // 新規登録モードとしてリセット
         if(!document.getElementById('editingWorkId').value) {
           document.getElementById('workForm').reset();
           document.getElementById('workDrawerTitle').textContent = "🎨 おもいでをきろく";
@@ -1158,86 +1037,33 @@
           document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
           clearMediaSelection();
         }
-      } else {
-        document.getElementById('childDrawer').classList.add('open');
-        cancelChildEdit();
-      }
+      } else { document.getElementById('childDrawer').classList.add('open'); cancelChildEdit(); }
     };
 
     window.closeDrawer = function(type) {
-      if(type === 'work') {
-        document.getElementById('workDrawer').classList.remove('open');
-        setTimeout(() => { document.getElementById('editingWorkId').value = ""; }, 400);
-      } else {
-        document.getElementById('childDrawer').classList.remove('open');
-      }
-      
-      if(!document.getElementById('detailModal').classList.contains('open')) {
-        document.getElementById('modalBackdrop').classList.remove('open');
-        document.body.style.overflow = '';
-      }
+      if(type === 'work') { document.getElementById('workDrawer').classList.remove('open'); setTimeout(() => { document.getElementById('editingWorkId').value = ""; }, 400); }
+      else { document.getElementById('childDrawer').classList.remove('open'); }
+      if(!document.getElementById('detailModal').classList.contains('open')) { document.getElementById('modalBackdrop').classList.remove('open'); document.body.style.overflow = ''; }
     };
 
-    window.closeAllPanels = function() {
-      closeDrawer('work');
-      closeDrawer('child');
-      closeDetailModal();
-    };
+    window.closeAllPanels = function() { closeDrawer('work'); closeDrawer('child'); closeDetailModal(); };
 
-    // ─── 汎用共通ユーティリティ関数 ───────────────────────────────────
-    function escHtml(str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function formatDate(str) {
-      if (!str) return '';
-      const parts = str.split('-');
-      if (parts.length < 3) return str;
-      return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
-    }
-
-    function formatDateSimple(str) {
-      if (!str) return '';
-      const parts = str.split('-');
-      if (parts.length < 3) return str;
-      return `${parseInt(parts[1])}/${parseInt(parts[2])}`;
-    }
-
-    function formatGrade(code) {
-      return { preschool: '小学校前', g1: '小学1年生', g2: '小学2年生', g3: '小学3年生', g4: '小学4年生', g5: '小学5年生', g6: '小学6年生' }[code] || code;
-    }
-
-    function formatDateTime(ts) {
-      if (!ts) return '';
-      const d = new Date(ts);
-      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    }
-
-    function calculateAgeStr(bdStr) {
-      if(!bdStr) return '';
-      const bd = new Date(bdStr);
-      const today = new Date();
-      let age = today.getFullYear() - bd.getFullYear();
-      let m = today.getMonth() - bd.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) { age--; m = 12 + m; }
-      if(age < 0) return '0さい';
-      return age > 0 ? `${age}さい` : `${m}ヶ月`;
-    }
+    // Utils
+    function escHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function formatDate(str) { if (!str) return ''; const parts = str.split('-'); if (parts.length < 3) return str; return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`; }
+    function formatDateSimple(str) { if (!str) return ''; const parts = str.split('-'); if (parts.length < 3) return str; return `${parseInt(parts[1])}/${parseInt(parts[2])}`; }
+    function formatGrade(code) { return { preschool: '小学校前', g1: '小学1年生', g2: '小学2年生', g3: '小学3年生', g4: '小学4年生', g5: '小学5年生', g6: '小学6年生' }[code] || code; }
+    function formatDateTime(ts) { if (!ts) return ''; const d = new Date(ts); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+    function calculateAgeStr(bdStr) { if(!bdStr) return ''; const bd = new Date(bdStr); const today = new Date(); let age = today.getFullYear() - bd.getFullYear(); let m = today.getMonth() - bd.getMonth(); if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) { age--; m = 12 + m; } if(age < 0) return '0さい'; return age > 0 ? `${age}さい` : `${m}ヶ月`; }
 
     let toastTimer = null;
     function showToast(msg) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+      const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
     }
 
-    document.getElementById('inputMemo').addEventListener('input', function() {
-      document.getElementById('memoCount').textContent = `${this.value.length} / 140`;
-    });
+    document.getElementById('inputMemo').addEventListener('input', function() { document.getElementById('memoCount').textContent = `${this.value.length} / 140`; });
 
-    // 初回アプリ画面初期化
     refreshAppView();
   </script>
 </body>
