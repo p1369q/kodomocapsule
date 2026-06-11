@@ -39,9 +39,18 @@
     * { -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans JP', 'Nunito', sans-serif; }
     body { background-color: #FDFAF5; color: #3D3530; overflow-x: hidden; }
     .notebook-line { background-image: linear-gradient(#E8D9C0 1px, transparent 1px); background-size: 100% 2rem; }
+    
+    /* レスポンシブ対応のDrawerアニメーション調整 */
     .drawer, .modal-backdrop { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; pointer-events: none; }
     .drawer { transform: translateY(100%); }
+    @media (min-width: 768px) {
+      .drawer { transform: scale(0.9) translateY(30px); }
+    }
     .drawer.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    @media (min-width: 768px) {
+      .drawer.open { transform: scale(1) translateY(0); }
+    }
+    
     .modal-backdrop.open { opacity: 1; pointer-events: auto; }
     .detail-modal { transition: all 0.3s ease; transform: scale(0.9) translateY(20px); opacity: 0; pointer-events: none; }
     .detail-modal.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
@@ -52,12 +61,14 @@
     .btn-bounce:active { transform: scale(0.96); }
     .loading-spinner { border: 3px solid rgba(124,158,135,0.2); border-top: 3px solid #7C9E87; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col pb-24">
+<body class="min-h-screen flex flex-col pb-28 md:pb-8">
 
-  <header class="sticky top-0 z-30 bg-ivory/90 backdrop-blur-md border-b border-kraft/40 px-4 pt-3 pb-3">
-    <div class="max-w-md mx-auto flex items-center justify-between">
+  <header class="sticky top-0 z-30 bg-ivory/90 backdrop-blur-md border-b border-kraft/40 px-4 pt-3 pb-3 w-full">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-display font-800 tracking-tight text-ink flex items-center gap-1.5">
           <span>📖</span>コドモノート
@@ -76,13 +87,14 @@
     </div>
   </header>
 
-  <main class="flex-1 w-full max-w-md mx-auto px-4 mt-4">
-    <section class="bg-cardBg border border-kraft/60 rounded-2xl p-4 shadow-sm mb-5">
-      <div class="relative mb-3">
+  <main class="flex-1 w-full max-w-6xl mx-auto px-4 mt-6">
+    
+    <section class="bg-cardBg border border-kraft/60 rounded-2xl p-4 shadow-sm mb-5 flex flex-col md:flex-row md:items-center gap-3">
+      <div class="relative flex-1">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-muted">🔍</span>
         <input type="text" id="searchBar" oninput="triggerFilter()" placeholder="タイトルやメモでさがす..." class="w-full bg-ivory border border-kraft/40 rounded-xl pl-9 pr-4 py-2 text-sm text-ink focus:outline-none focus:border-sage placeholder-muted/60" />
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 md:w-80">
         <select id="gradeFilter" onchange="triggerFilter()" class="flex-1 bg-ivory border border-kraft/40 rounded-xl px-3 py-2 text-xs text-ink focus:outline-none focus:border-sage font-medium">
           <option value="all">すべての時期</option>
           <option value="preschool">小学校前</option>
@@ -101,24 +113,24 @@
 
     <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-2 no-scrollbar" id="childTabsContainer"></div>
 
-    <div class="flex items-center gap-2 mb-4">
-      <button onclick="setCategoryFilter('all')" id="cat-all" class="cat-chip btn-bounce active bg-ink text-white rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm">すべて</button>
-      <button onclick="setCategoryFilter('art')" id="cat-art" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm">🎨 絵・工作</button>
-      <button onclick="setCategoryFilter('study')" id="cat-study" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm">📝 テスト・プリント</button>
-      <button onclick="setCategoryFilter('other')" id="cat-other" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm">🌟 その他</button>
+    <div class="flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar pb-1">
+      <button onclick="setCategoryFilter('all')" id="cat-all" class="cat-chip btn-bounce active bg-ink text-white rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm whitespace-nowrap">すべて</button>
+      <button onclick="setCategoryFilter('art')" id="cat-art" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm whitespace-nowrap">🎨 絵・工作</button>
+      <button onclick="setCategoryFilter('study')" id="cat-study" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm whitespace-nowrap">📝 テスト・プリント</button>
+      <button onclick="setCategoryFilter('other')" id="cat-other" class="cat-chip btn-bounce bg-white border border-kraft text-ink rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm whitespace-nowrap">🌟 その他</button>
     </div>
 
-    <div id="galleryGrid" class="grid grid-cols-2 gap-3.5"></div>
+    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
 
-    <div id="emptyState" class="hidden text-center py-16 px-4">
-      <p class="text-4xl mb-3">🎨</p>
-      <p class="text-ink font-bold text-base">おもいでを記録しよう</p>
-      <p class="text-muted text-xs mt-1">下の「＋」ボタンから、こどもの作品やテストを登録できます。</p>
+    <div id="emptyState" class="hidden text-center py-24 px-4">
+      <p class="text-5xl mb-4">🎨</p>
+      <p class="text-ink font-bold text-lg">おもいでを記録しよう</p>
+      <p class="text-muted text-sm mt-1">下の「きろくする」ボタンから、こどもの作品やテストを登録できます。</p>
     </div>
   </main>
 
-  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-md px-4 flex justify-center">
-    <button onclick="openDrawer('work')" class="btn-bounce bg-coral text-white rounded-full px-7 py-3.5 font-display font-800 text-base shadow-lg flex items-center gap-2 tracking-wide border-2 border-white/20">
+  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-40 w-auto px-4">
+    <button onclick="openDrawer('work')" class="btn-bounce bg-coral text-white rounded-full px-8 py-4 font-display font-800 text-base shadow-lg flex items-center gap-2 tracking-wide border-2 border-white/20">
       <svg class="w-5 h-5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
       <span>きろくする</span>
     </button>
@@ -126,8 +138,8 @@
 
   <div id="modalBackdrop" onclick="closeAllPanels()" class="modal-backdrop fixed inset-0 bg-ink/50 backdrop-blur-sm z-40"></div>
 
-  <div id="workDrawer" class="drawer fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-ivory rounded-t-[2.5rem] shadow-2xl z-50 px-5 pt-4 pb-8 border-t border-kraft/40 max-h-[92vh] overflow-y-auto">
-    <div class="w-12 h-1.5 bg-kraft/60 rounded-full mx-auto mb-5"></div>
+  <div id="workDrawer" class="drawer fixed bottom-0 left-0 right-0 md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-md mx-auto bg-ivory rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl z-50 px-5 pt-4 pb-8 border border-kraft/40 max-h-[90vh] overflow-y-auto">
+    <div class="w-12 h-1.5 bg-kraft/60 rounded-full mx-auto mb-5 md:hidden"></div>
     <div class="flex items-center justify-between mb-4">
       <h2 id="workDrawerTitle" class="text-lg font-bold text-ink">🎨 おもいでをきろく</h2>
       <button onclick="closeDrawer('work')" class="text-muted p-1 text-sm font-semibold">とじる</button>
@@ -194,7 +206,7 @@
           </label>
           <label class="border border-kraft rounded-xl p-2.5 flex flex-col items-center gap-1 bg-white cursor-pointer [&:has(input:checked)]:border-sage [&:has(input:checked)]:bg-sage/5">
             <input type="radio" name="inputCategory" value="study" class="accent-sage hidden" />
-            <span class="text-xl">📝</span><span class="text-[11px] font-bold text-ink">テスト・プリント</span>
+            <span class="text-xl">📝</span><span class="text-[11px] font-bold text-ink">プリント</span>
           </label>
           <label class="border border-kraft rounded-xl p-2.5 flex flex-col items-center gap-1 bg-white cursor-pointer [&:has(input:checked)]:border-sage [&:has(input:checked)]:bg-sage/5">
             <input type="radio" name="inputCategory" value="other" class="accent-sage hidden" />
@@ -218,8 +230,8 @@
     </form>
   </div>
 
-  <div id="childDrawer" class="drawer fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-ivory rounded-t-[2.5rem] shadow-2xl z-50 px-5 pt-4 pb-8 border-t border-kraft/40 max-h-[85vh] overflow-y-auto">
-    <div class="w-12 h-1.5 bg-kraft/60 rounded-full mx-auto mb-5"></div>
+  <div id="childDrawer" class="drawer fixed bottom-0 left-0 right-0 md:top-1/2 md:bottom-auto md:-translate-y-1/2 max-w-md mx-auto bg-ivory rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl z-50 px-5 pt-4 pb-8 border border-kraft/40 max-h-[85vh] overflow-y-auto">
+    <div class="w-12 h-1.5 bg-kraft/60 rounded-full mx-auto mb-5 md:hidden"></div>
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-bold text-ink">👦 こどもの設定・管理</h2>
       <button onclick="closeDrawer('child')" class="text-muted p-1 text-sm font-semibold">とじる</button>
@@ -250,7 +262,7 @@
     </div>
   </div>
 
-  <div id="detailModal" class="detail-modal fixed inset-x-4 top-[8vh] max-w-md mx-auto bg-ivory border border-kraft/50 rounded-[2.5rem] shadow-2xl z-50 overflow-hidden flex flex-col max-h-[82vh]">
+  <div id="detailModal" class="detail-modal fixed inset-x-4 top-[8vh] md:top-1/2 md:-translate-y-1/2 max-w-lg mx-auto bg-ivory border border-kraft/50 rounded-[2.5rem] shadow-2xl z-50 overflow-hidden flex flex-col max-h-[82vh]">
     <div class="p-4 border-b border-kraft/30 flex items-center justify-between bg-cardBg">
       <div class="flex items-center gap-1.5">
         <span id="detailBadgeIcon" class="text-lg">🎨</span>
@@ -264,9 +276,9 @@
     </div>
 
     <div class="flex-1 overflow-y-auto">
-      <div class="bg-ink/5 w-full flex items-center justify-between border-b border-kraft/30 overflow-hidden min-h-[220px] max-h-[340px] relative">
-        <img id="detailImage" class="w-full object-contain max-h-[340px]" src="" alt="Detail" />
-        <video id="detailVideo" class="hidden w-full max-h-[340px]" controls></video>
+      <div class="bg-ink/5 w-full flex items-center justify-between border-b border-kraft/30 overflow-hidden min-h-[220px] max-h-[380px] relative">
+        <img id="detailImage" class="w-full object-contain max-h-[380px]" src="" alt="Detail" />
+        <video id="detailVideo" class="hidden w-full max-h-[380px]" controls></video>
       </div>
 
       <div class="p-5 space-y-4">
@@ -581,7 +593,21 @@
       document.getElementById('mediaPlaceholder').classList.remove('hidden');
     };
 
-    // 🌟 【修正済】作品の保存・編集処理
+    // 保存ボタンの状態を安全に切り替える関数（バグ修正箇所）
+    function setSubmitButtonLoading(isLoading) {
+      const submitBtn = document.getElementById('workSubmitBtn');
+      const submitText = document.getElementById('submitBtnText');
+      const submitSpinner = document.getElementById('submitBtnSpinner');
+      
+      if (submitBtn) submitBtn.disabled = isLoading;
+      if (submitText) submitText.textContent = isLoading ? "送信中..." : "保存する";
+      if (submitSpinner) {
+        if (isLoading) submitSpinner.classList.remove('hidden');
+        else submitSpinner.classList.add('hidden');
+      }
+    }
+
+    // 作品の保存・編集処理
     window.handleWorkSubmit = async function(e) {
       e.preventDefault();
       const editingId = document.getElementById('editingWorkId').value;
@@ -592,18 +618,13 @@
       const category = document.querySelector('input[name="inputCategory"]:checked').value;
       const memo = document.getElementById('inputMemo').value.trim();
 
-      const submitBtn = document.getElementById('workSubmitBtn');
-      const submitText = document.getElementById('submitBtnText');
-      const submitSpinner = document.getElementById('submitBtnSpinner');
-      
-      if (submitBtn) submitBtn.disabled = true;
-      if (submitText) submitText.textContent = "送信中...";
-      if (submitSpinner) submitSpinner.classList.remove('hidden');
+      // ローディング開始
+      setSubmitButtonLoading(true);
 
       try {
         let mediaUrl = "";
         
-        // 1. 新規登録時の画像・動画アップロード
+        // 1. 新規登録時の画像・動画アップロード (storageStorageを「storage」に修正)
         if (selectedMediaBase64 && !editingId) {
           const fileExt = selectedMediaType === 'video' ? 'mp4' : 'jpg';
           const storagePath = `families/${currentUser ? currentUser.uid : 'demo'}/artworks/${Date.now()}.${fileExt}`;
@@ -656,13 +677,12 @@
         console.error("保存失敗:", error);
         alert("エラーが発生しました: " + error.message);
       } finally {
-        if (submitBtn) submitBtn.disabled = false;
-        if (submitText) submitText.textContent = "保存する";
-        if (submitSpinner) submitSpinner.classList.add('hidden');
+        // ローディング解除
+        setSubmitButtonLoading(false);
       }
     };
 
-    // 👦 こどもの追加・管理
+    // こどもの追加・管理
     window.handleChildSubmit = async function(e) {
       e.preventDefault();
       const editingId = document.getElementById('editingChildId').value;
@@ -729,9 +749,10 @@
       showToast("こどもを削除しました");
     };
 
-    // 🎨 ギャラリー描画・フィルター処理
+    // ギャラリー描画・フィルター処理
     window.renderChildTabs = function() {
       const container = document.getElementById('childTabsContainer');
+      if (!container) return;
       let html = `<button onclick="setChildFilter('all')" class="child-tab btn-bounce px-4 py-1.5 rounded-full text-xs font-bold shadow-sm whitespace-nowrap ${currentChildFilter === 'all' ? 'active' : 'bg-white border border-kraft text-ink'}">全員</button>`;
       
       localChildren.forEach(child => {
@@ -743,6 +764,7 @@
 
     window.populateChildSelectOptions = function() {
       const select = document.getElementById('inputWorkChild');
+      if (!select) return;
       let html = "";
       localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
       select.innerHTML = html;
@@ -756,8 +778,10 @@
         btn.classList.add('bg-white', 'border', 'border-kraft', 'text-ink');
       });
       const targetBtn = document.getElementById(`cat-${cat}`);
-      targetBtn.classList.remove('bg-white', 'border', 'text-ink');
-      targetBtn.classList.add('active', 'bg-ink', 'text-white');
+      if (targetBtn) {
+        targetBtn.classList.remove('bg-white', 'border', 'text-ink');
+        targetBtn.classList.add('active', 'bg-ink', 'text-white');
+      }
       renderCards();
     };
 
@@ -769,11 +793,13 @@
     };
 
     const gradeMap = { preschool: "小学校前", g1: "小学1年生", g2: "小学2年生", g3: "小学3年生", g4: "小学4年生", g5: "小学5年生", g6: "小学6年生" };
-    const catBadgeMap = { art: { text: "絵・工作", icon: "🎨" }, study: { text: "テスト・プリント", icon: "📝" }, other: { text: "その他", icon: "🌟" } };
+    const catBadgeMap = { art: { text: "絵・工作", icon: "🎨" }, study: { text: "プリント", icon: "📝" }, other: { text: "その他", icon: "🌟" } };
 
     window.renderCards = function() {
       const grid = document.getElementById('galleryGrid');
       const emptyState = document.getElementById('emptyState');
+      if (!grid || !emptyState) return;
+
       const searchWord = document.getElementById('searchBar').value.toLowerCase().trim();
       const gradeSel = document.getElementById('gradeFilter').value;
 
@@ -806,12 +832,12 @@
         const childName = childObj ? childObj.name : "だれか";
         const catObj = catBadgeMap[w.category] || { text: "その他", icon: "🌟" };
         
-        let mediaHtml = `<div class="w-full h-32 bg-kraft/20 flex items-center justify-center text-2xl">🎨</div>`;
+        let mediaHtml = `<div class="w-full h-40 bg-kraft/20 flex items-center justify-center text-3xl">🎨</div>`;
         if (w.mediaUrl) {
           if (w.mediaType === 'video') {
-            mediaHtml = `<div class="w-full h-32 bg-black relative flex items-center justify-center"><video src="${w.mediaUrl}" class="w-full h-full object-cover"></video><span class="absolute bottom-2 right-2 bg-ink/70 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold flex items-center gap-0.5">▶ 🎬</span></div>`;
+            mediaHtml = `<div class="w-full h-40 bg-black relative flex items-center justify-center"><video src="${w.mediaUrl}" class="w-full h-full object-cover"></video><span class="absolute bottom-2 right-2 bg-ink/70 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold flex items-center gap-0.5">▶ 🎬</span></div>`;
           } else {
-            mediaHtml = `<img src="${w.mediaUrl}" class="w-full h-32 object-cover" alt="" loading="lazy" />`;
+            mediaHtml = `<img src="${w.mediaUrl}" class="w-full h-40 object-cover" alt="" loading="lazy" />`;
           }
         }
 
@@ -821,17 +847,17 @@
           <div onclick="openDetailModal('${w.id}')" class="bg-cardBg border border-kraft/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition active:scale-[0.99] cursor-pointer flex flex-col justify-between">
             <div>
               ${mediaHtml}
-              <div class="p-2.5">
+              <div class="p-3">
                 <div class="flex items-center gap-1 flex-wrap">
                   <span class="text-[9px] font-bold text-white bg-sage px-1.5 py-0.5 rounded-md">${childName}</span>
                   <span class="text-[9px] font-medium text-muted bg-kraft/30 px-1.5 py-0.5 rounded-md">${catObj.icon} ${catObj.text}</span>
                 </div>
-                <h3 class="font-bold text-ink text-xs mt-1.5 line-clamp-1">${w.title || '無題'}</h3>
+                <h3 class="font-bold text-ink text-sm mt-2 line-clamp-1">${w.title || '無題'}</h3>
                 <p class="text-[10px] text-muted font-medium mt-0.5">${w.date ? w.date.replace(/-/g, '/') : ''}</p>
               </div>
             </div>
             ${totalStamps > 0 || (w.comments && w.comments.length > 0) ? `
-              <div class="px-2.5 pb-2.5 pt-0 flex items-center gap-2 text-[10px] font-bold text-muted border-t border-kraft/10 mt-1">
+              <div class="px-3 pb-3 pt-0 flex items-center gap-2 text-[10px] font-bold text-muted border-t border-kraft/10 mt-1">
                 ${totalStamps > 0 ? `<span>❤️ ${totalStamps}</span>` : ''}
                 ${w.comments && w.comments.length > 0 ? `<span>💬 ${w.comments.length}</span>` : ''}
               </div>
@@ -842,7 +868,7 @@
       grid.innerHTML = html;
     };
 
-    // 🔍 詳細モーダル・インタラクション
+    // 詳細モーダル制御
     window.openDetailModal = function(id) {
       const work = localWorks.find(w => w.id === id);
       if (!work) return;
@@ -925,6 +951,7 @@
 
     window.submitComment = async function() {
       const input = document.getElementById('commentInput');
+      if (!input) return;
       const text = input.value.trim();
       if (!text || !activeDetailId) return;
 
@@ -969,7 +996,8 @@
       }
 
       document.getElementById('workDrawerTitle').textContent = "✏️ おもいでを編集";
-      document.getElementById('workSubmitBtn').querySelector('#submitBtnText').textContent = "更新する";
+      const submitTextText = document.getElementById('submitBtnText');
+      if(submitTextText) submitTextText.textContent = "更新する";
       openDrawer('work');
     };
 
@@ -989,7 +1017,7 @@
       }
     };
 
-    // 📐 UI Drawer・パネル制御
+    // UI Drawer・パネル制御
     window.openDrawer = function(type) {
       document.getElementById('modalBackdrop').classList.add('open');
       if (type === 'work') {
@@ -1006,7 +1034,8 @@
         document.getElementById('workForm').reset();
         document.getElementById('editingWorkId').value = "";
         document.getElementById('workDrawerTitle').textContent = "🎨 おもいでをきろく";
-        document.getElementById('workSubmitBtn').querySelector('#submitBtnText').textContent = "保存する";
+        const submitTextText = document.getElementById('submitBtnText');
+        if(submitTextText) submitTextText.textContent = "保存する";
         clearMediaSelection();
       } else if (type === 'child') {
         document.getElementById('childDrawer').classList.remove('open');
@@ -1023,6 +1052,7 @@
 
     function renderChildManagerList() {
       const listContainer = document.getElementById('childManagerList');
+      if (!listContainer) return;
       let html = "";
       localChildren.forEach(c => {
         html += `
@@ -1045,12 +1075,14 @@
     const memoArea = document.getElementById('inputMemo');
     if(memoArea) {
       memoArea.addEventListener('input', (e) => {
-        document.getElementById('memoCount').textContent = `${e.target.value.length} / 140`;
+        const countEl = document.getElementById('memoCount');
+        if (countEl) countEl.textContent = `${e.target.value.length} / 140`;
       });
     }
 
     window.showToast = function(msg) {
       const el = document.getElementById('toast');
+      if (!el) return;
       el.textContent = msg; el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), 2500);
     };
