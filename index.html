@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v7-FileValidation-Fix]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-indigo-100 text-indigo-800">Production [v9-GalleryFilter-Enhanced]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -44,7 +44,24 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <main class="max-w-7xl mx-auto px-4 pb-32">
   <section id="galleryPage" class="page active">
-    <div class="pt-6 pb-4"><h2 class="text-3xl font-bold">Gallery</h2></div>
+    <div class="pt-6 pb-4 flex justify-between items-center flex-wrap gap-3">
+      <h2 class="text-3xl font-bold">Gallery</h2>
+      <div class="flex gap-2 flex-1 justify-end max-w-md w-full">
+        <div class="w-1/2">
+          <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="all">すべての子ども</option>
+          </select>
+        </div>
+        <div class="w-1/2">
+          <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="createdDesc">登録が新しい順</option>
+            <option value="createdAsc">登録が古い順</option>
+            <option value="dateDesc">作品の日付が新しい順</option>
+            <option value="dateAsc">作品の日付が古い順</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
   </section>
   <section id="recordsPage" class="page">
@@ -154,8 +171,12 @@ async function syncData() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); renderGallery(); renderTimeline();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); renderGallery(); renderTimeline();
 }
+
+// 💡 変更イベントリスナーをコントロール群にセット
+document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
+document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
 
 window.saveChild = async function(){
   if(!currentSession) return;
@@ -204,16 +225,14 @@ window.deleteChild = async function(id, name) {
   }
 };
 
-// 🖼️ 画像選択（🛡️ 堅牢なファイルバリデーションへアップデート）
 document.getElementById("fileInput").addEventListener("change", async function(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   
-  // 💡 画像(image/)以外のファイル形式が1つでも含まれていたらブロックするロジックに変更
   const hasInvalidFile = files.some(file => !file.type.startsWith('image/'));
   if (hasInvalidFile) {
     alert("📷 登録できるのは画像（写真）ファイルのみです。\n他のファイル形式や動画の登録機能は、今後のアップデートに向けて現在準備中です。");
-    e.target.value = ""; // 選択内容を安全にリセット
+    e.target.value = ""; 
     return;
   }
 
@@ -375,9 +394,55 @@ function populateChildSelect(){
   document.getElementById("inputWorkChild").innerHTML = html;
 }
 
+// 💡 ギャラリー上部の子どもフィルター選択肢を動的に生成する関数
+function populateGalleryChildFilter(){
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  const currentSelectedValue = filterSelect.value; // 現在の選択状態を記憶
+  
+  let html = `<option value="all">すべての子ども</option>`;
+  localChildren.forEach(c => {
+    html += `<option value="${c.id}">${c.name}</option>`;
+  });
+  filterSelect.innerHTML = html;
+  
+  // 記憶していた選択状態を戻す（同期時にリセットされないように）
+  if([...filterSelect.options].some(o => o.value === currentSelectedValue)) {
+    filterSelect.value = currentSelectedValue;
+  }
+}
+
 function renderGallery(){
   let html = "";
-  [...localWorks].sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
+  const sortValue = document.getElementById("gallerySortSelect").value;
+  const filterChildId = document.getElementById("galleryChildFilterSelect").value;
+  
+  // コピーを作成
+  let displayWorks = [...localWorks];
+  
+  // 💡 1. 子どもでの絞り込み（フィルター）ロジックを適用
+  if (filterChildId !== "all") {
+    displayWorks = displayWorks.filter(w => w.childId === filterChildId);
+  }
+  
+  // 2. ソートロジックを適用
+  displayWorks.sort((a, b) => {
+    if (sortValue === "createdDesc") {
+      return b.createdAt - a.createdAt;
+    } else if (sortValue === "createdAsc") {
+      return a.createdAt - b.createdAt;
+    } else if (sortValue === "dateDesc") {
+      const dateA = a.date || "0000-00-00";
+      const dateB = b.date || "0000-00-00";
+      return dateB.localeCompare(dateA);
+    } else if (sortValue === "dateAsc") {
+      const dateA = a.date || "9999-12-31";
+      const dateB = b.date || "9999-12-31";
+      return dateA.localeCompare(dateB);
+    }
+    return 0;
+  });
+
+  displayWorks.forEach(w => {
     let childTag = "";
     if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`; }
     
@@ -398,7 +463,7 @@ function renderGallery(){
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>＋ボタンから最初の作品を登録しましょう！</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する作品が見つかりませんでした</div>";
 }
 
 function renderTimeline(){
