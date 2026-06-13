@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700">Production [v6-PhotoOnly]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-teal-100 text-teal-800">Production [v6-VideoPrep-Fix]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -157,7 +157,6 @@ function renderAll(){
   renderChildList(); populateChildSelect(); renderGallery(); renderTimeline();
 }
 
-// 子ども設定
 window.saveChild = async function(){
   if(!currentSession) return;
   const name = document.getElementById("childName").value.trim();
@@ -205,16 +204,15 @@ window.deleteChild = async function(id, name) {
   }
 };
 
-// 🖼️ 画像選択（💡 動画ブロック機能を追加）
 document.getElementById("fileInput").addEventListener("change", async function(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   
-  // 🛡️ 防衛策：選択されたファイルの中に1つでも動画があれば即ブロック
+  // 💡 動画検出時のメッセージを、開発予定だが現在は準備中という表現へ変更
   const hasVideo = files.some(file => file.type.startsWith('video/'));
   if (hasVideo) {
-    alert("⚠️ 動画は有料プラン限定機能です。\n今回は画像（写真）のみを選択してください。");
-    e.target.value = ""; // 選択をリセット
+    alert("🎥 動画の登録機能は、今後のアップデートに向けて現在準備中です。\n現時点では、画像（写真）ファイルのみを選択してください。");
+    e.target.value = ""; 
     return;
   }
 
@@ -252,7 +250,6 @@ document.getElementById("fileInput").addEventListener("change", async function(e
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
 });
 
-// 作品保存
 document.getElementById("workForm").addEventListener("submit", async function(e){
   e.preventDefault();
   if(!currentSession) return;
@@ -439,7 +436,7 @@ window.openDrawer = function(t){
   }
   document.getElementById(t+"Drawer").classList.add("open"); 
 };
-window.closeDrawer = function(t){ document.getElementById(t+"Drawer").classList.remove("remove"); document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); };
+window.closeDrawer = function(t){ document.getElementById(t+"Drawer").classList.remove("open"); };
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
