@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-slate-100 text-slate-600">環境判定中...</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700">Production [Fixed]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -92,37 +92,28 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </div>
 
 <script type="module">
-// 🛑 最優先エラー監視
 window.onerror = function(msg, url, line) {
-  alert("🚨 致命的エラー検知:\n" + msg + "\n行: " + line);
+  alert("🚨 システムエラー:\n" + msg + "\n行: " + line);
   return false;
 };
 window.addEventListener('unhandledrejection', function(e) {
-  alert("🔥 通信エラー等:\n" + e.reason);
+  alert("🔥 通信・認証エラー:\n" + e.reason);
 });
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfigs = {
-  dev: { apiKey: "AIzaSyDYm32a1LsUdEL5lENwhr5x6lxP9LMsBBw", authDomain: "kodomonote-dev.firebaseapp.com", projectId: "kodomonote-dev", storageBucket: "kodomonote-dev.firebasestorage.app" },
-  prod: { apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk", authDomain: "kodomonote-prod.firebaseapp.com", projectId: "kodomonote-prod", storageBucket: "kodomonote-prod.firebasestorage.app" }
+// 🔒 常に本番環境（kodomonote-prod）に固定
+const prodConfig = {
+  apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
+  authDomain: "kodomonote-prod.firebaseapp.com",
+  projectId: "kodomonote-prod",
+  storageBucket: "kodomonote-prod.firebasestorage.app"
 };
 
-function getFirebaseConfig(){
-  const host = window.location.hostname;
-  const badge = document.getElementById("environmentBadge");
-  if(host === "localhost" || host === "127.0.0.1"){
-    if(badge) { badge.innerText = "Local Dev [v2]"; badge.className = "text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-700"; }
-    return firebaseConfigs.dev;
-  }
-  if(badge) { badge.innerText = "Production [v2]"; badge.className = "text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700"; }
-  return firebaseConfigs.prod;
-}
-
-const app = initializeApp(getFirebaseConfig());
+const app = initializeApp(prodConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
@@ -133,7 +124,6 @@ let localChildren = [];
 let localWorks = [];
 let base64Image = null;
 
-// 🔒 認証ロジック
 window.toggleAuth = async function() {
   if (auth.currentUser) {
     await signOut(auth);
@@ -142,7 +132,7 @@ window.toggleAuth = async function() {
     try {
       await signInWithPopup(auth, provider);
     } catch (err) {
-      alert("ログインに失敗: " + err.message);
+      alert("🛑 ログインに失敗しました！\n理由: " + err.message);
     }
   }
 };
@@ -153,6 +143,7 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     btnText.innerText = "ログアウト";
     currentSession = { familyId: `family_of_${user.uid}`, userId: user.uid };
+    alert("🔑 ログインに完全成功しました！データを同期します。");
     await loadChildren();
     await loadArtworks();
   } else {
@@ -163,9 +154,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// 👶 子ども登録
 window.addChild = async function(){
-  if(!currentSession) { alert("ログインしてください"); return; }
+  if(!currentSession) { alert("🔒 ログインが完了していません。"); return; }
   const name = document.getElementById("childName").value.trim();
   const birthday = document.getElementById("childBirthday").value;
   if(!name){ alert("名前を入力してください"); return; }
@@ -178,29 +168,26 @@ window.addChild = async function(){
     populateChildSelect();
     document.getElementById("childName").value = "";
     document.getElementById("childBirthday").value = "";
-    alert("🎉 子どもを新しく追加しました！");
+    alert("🎉 子どもを追加しました！");
   } catch(e) {
-    alert("❌ 子どもの追加に失敗: " + e.message);
+    alert("❌ 保存失敗: " + e.message);
   }
 };
 
-// 🖼️ 写真選択
 document.getElementById("fileInput").addEventListener("change", function(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = function(evt){
     base64Image = evt.target.result;
-    const container = document.getElementById("mediaResultContainer");
-    container.innerHTML = `<img src="${base64Image}" class="w-full rounded-xl border mb-2"/>`;
+    document.getElementById("mediaResultContainer").innerHTML = `<img src="${base64Image}" class="w-full rounded-xl border mb-2"/>`;
   };
   reader.readAsDataURL(file);
 });
 
-// 💾 作品保存
 document.getElementById("workForm").addEventListener("submit", async function(e){
   e.preventDefault();
-  if(!currentSession) { alert("ログインしてください"); return; }
+  if(!currentSession) { alert("🔒 ログインが完了していません。"); return; }
   const title = document.getElementById("inputTitle").value.trim();
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
@@ -227,13 +214,13 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
     renderGallery();
     renderTimeline();
     closeDrawer("work");
-    alert("✅ 作品の保存がすべて成功しました！");
+    alert("✅ 作品の保存に成功しました！");
 
     document.getElementById("workForm").reset();
     base64Image = null;
     document.getElementById("mediaResultContainer").innerHTML = "";
   } catch(err) {
-    alert("🛑 保存エラー:\n" + err.message);
+    alert("🛑 保存失敗:\n" + err.message);
   }
 });
 
