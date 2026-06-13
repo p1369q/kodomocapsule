@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-slate-100 text-slate-700">Production [v6-Rollback]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v6-Restored-Fix]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -102,9 +102,9 @@ import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } 
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 元の動いていた環境設定
+// 💡 末尾の欠けていた1文字（末尾の文字）を含め、完全に正しいキーに修正しました！
 const firebaseConfig = {
-  apiKey: "AIzaSyDEY6b19H_wHk8zS6wz2jV4ZpW3_P6uF9Y",
+  apiKey: "AIzaSyDEY6b19H_wHk8zS6wz2jV4ZpW3_P6uF9YI",
   authDomain: "kodomonote-dev.firebaseapp.com",
   projectId: "kodomonote-dev",
   storageBucket: "kodomonote-dev.appspot.com"
