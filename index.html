@@ -400,15 +400,23 @@ textarea:focus{
 </div>
 
 <script type="module">
+/* ==========================================================================
+   🚨 スマホデバッグ用：エラー強制アラート監視システム
+   ========================================================================== */
+window.onerror = function(message, source, lineno, colno, error) {
+  alert("🚨 JavaScriptエラー検知:\n" + message + "\n\n場所: " + source + "\n行: " + lineno + "列: " + colno);
+  return false;
+};
+window.addEventListener('unhandledrejection', function(event) {
+  alert("🔥 Firebase/非同期エラー検知:\n" + event.reason);
+});
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
   collection,
   addDoc,
   getDocs,
-  doc,
-  deleteDoc,
-  updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -417,6 +425,13 @@ import {
   uploadString,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { 
+  getAuth, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ==========================================================================
    Firebase 環境自動分離設定（dev / stg / prod）
@@ -461,6 +476,7 @@ function getFirebaseConfig(){
     if(badge) { badge.innerText = "Staging"; badge.className = "text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-amber-100 text-amber-700"; }
     return firebaseConfigs.stg;
   }
+  // GitHub Pages (p1369q.github.io) を含むその他すべてをProduction(本番)とする
   if(badge) { badge.innerText = "Production"; badge.className = "text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700"; }
   return firebaseConfigs.prod;
 }
@@ -468,40 +484,13 @@ function getFirebaseConfig(){
 const app = initializeApp(getFirebaseConfig());
 const db = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
 /* ==========================================================================
-   Production Architecture: 家族プラットフォーム・シミュレーター ＆ DBレイヤー
+   State & Session レイター
    ========================================================================== */
-const currentSession = {
-  familyId: "dummy_family_premium_001",
-  userId: "dummy_user_owner_001",
-  role: "owner"
-};
-
-const DB = {
-  async getChildren() {
-    const snap = await getDocs(collection(db, "families", currentSession.familyId, "children"));
-    const list = [];
-    snap.forEach(d => list.push(d.data()));
-    return list;
-  },
-  async saveChild(childData) {
-    await addDoc(collection(db, "families", currentSession.familyId, "children"), childData);
-  },
-  async getArtworks() {
-    const snap = await getDocs(collection(db, "families", currentSession.familyId, "artworks"));
-    const list = [];
-    snap.forEach(d => list.push(d.data()));
-    return list;
-  },
-  async saveArtwork(artworkData) {
-    await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artworkData);
-  }
-};
-
-/* =========================
-   State
-========================= */
+let currentSession = null;
 let localChildren = [];
 let localWorks = [];
 let selectedMediaFiles = [];
@@ -511,11 +500,80 @@ let currentPage = "gallery";
 let activeCarouselIndex = 0;
 let activeDetailId = null;
 
+const DB = {
+  async getChildren() {
+    if (!currentSession) return [];
+    const snap = await getDocs(collection(db, "families", currentSession.familyId, "children"));
+    const list = [];
+    snap.forEach(d => list.push(d.data()));
+    return list;
+  },
+  async saveChild(childData) {
+    if (!currentSession) throw new Error("ログインしていないため、子供データを保存できません。");
+    await addDoc(collection(db, "families", currentSession.familyId, "children"), childData);
+  },
+  async getArtworks() {
+    if (!currentSession) return [];
+    const snap = await getDocs(collection(db, "families", currentSession.familyId, "artworks"));
+    const list = [];
+    snap.forEach(d => list.push(d.data()));
+    return list;
+  },
+  async saveArtwork(artworkData) {
+    if (!currentSession) throw new Error("ログインしていないため、作品を保存できません。右上のログインボタンからログインしてください。");
+    await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artworkData);
+  }
+};
+
+/* ==========================================================================
+   Authentication Logic
+   ========================================================================== */
+window.toggleAuth = async function() {
+  if (auth.currentUser) {
+    await signOut(auth);
+    showToast("ログアウトしました");
+  } else {
+    try {
+      await signInWithPopup(auth, provider);
+      showToast("Googleログイン成功！");
+    } catch (error) {
+      alert("🛑 ログインポップアップエラー:\n" + error.message);
+    }
+  }
+};
+
+document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
+
+onAuthStateChanged(auth, async (user) => {
+  const btnText = document.getElementById("authBtnText");
+  if (user) {
+    btnText.innerText = "ログアウト";
+    currentSession = {
+      familyId: `family_of_${user.uid}`,
+      userId: user.uid,
+      role: "owner"
+    };
+    showToast("データを読み込み中...");
+    await loadChildren();
+    await loadArtworks();
+  } else {
+    btnText.innerText = "ログイン";
+    currentSession = null;
+    localChildren = [];
+    localWorks = [];
+    renderChildList();
+    populateChildSelect();
+    renderGallery();
+    renderTimeline();
+  }
+});
+
 /* =========================
    Utility
 ========================= */
 function showToast(message){
   const toast = document.getElementById("toast");
+  if(!toast) return;
   toast.innerText = message;
   toast.classList.add("show");
   setTimeout(() => { toast.classList.remove("show"); }, 2200);
@@ -533,7 +591,7 @@ function calculateAgeAtDate(birthday, targetDate){
 }
 
 /* =========================
-   Drawer
+   Drawer Controls
 ========================= */
 window.openDrawer = function(type){ document.getElementById(type+"Drawer").classList.add("open"); };
 window.closeDrawer = function(type){ document.getElementById(type+"Drawer").classList.remove("open"); };
@@ -612,18 +670,20 @@ window.addChild = async function(){
     name,
     birthday,
     createdAt: Date.now(),
-    createdBy: currentSession.userId
+    createdBy: currentSession?.userId || "unknown"
   };
 
-  localChildren.push(child);
-  await DB.saveChild(child);
-
-  renderChildList();
-  populateChildSelect();
-
-  document.getElementById("childName").value = "";
-  document.getElementById("childBirthday").value = "";
-  showToast("子どもを追加しました");
+  try {
+    await DB.saveChild(child);
+    localChildren.push(child);
+    renderChildList();
+    populateChildSelect();
+    document.getElementById("childName").value = "";
+    document.getElementById("childBirthday").value = "";
+    showToast("子どもを追加しました");
+  } catch(e) {
+    alert("保存失敗: " + e.message);
+  }
 };
 
 function renderChildList(){
@@ -708,6 +768,12 @@ document.getElementById("workForm").addEventListener("submit", saveArtwork);
 
 async function saveArtwork(e){
   e.preventDefault();
+  
+  if (!currentSession) {
+    alert("🔒 ログインしていません。\n右上のログインボタンからGoogleログインを行ってから保存してください。");
+    return;
+  }
+
   const title = document.getElementById("inputTitle").value.trim();
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
@@ -715,53 +781,58 @@ async function saveArtwork(e){
 
   if(!title){ showToast("タイトルを入力してください"); return; }
 
+  showToast("作品をアップロード中...");
   let mediaUrls = [];
   const artworkId = crypto.randomUUID();
 
-  if(selectedMediaFiles.length){
-    let fileIndex = 1;
-    for(const media of selectedMediaFiles){
-      const fileExt = media.type === "video" ? "mp4" : "jpg";
-      const path = `families/${currentSession.familyId}/artworks/${artworkId}/${fileIndex}.${fileExt}`;
-      const storageRef = ref(storage, path);
+  try {
+    if(selectedMediaFiles.length){
+      let fileIndex = 1;
+      for(const media of selectedMediaFiles){
+        const fileExt = media.type === "video" ? "mp4" : "jpg";
+        const path = `families/${currentSession.familyId}/artworks/${artworkId}/${fileIndex}.${fileExt}`;
+        const storageRef = ref(storage, path);
 
-      await uploadString(storageRef, media.base64, "data_url");
-      const url = await getDownloadURL(storageRef);
+        await uploadString(storageRef, media.base64, "data_url");
+        const url = await getDownloadURL(storageRef);
 
-      mediaUrls.push({ type: media.type, url });
-      fileIndex++;
+        mediaUrls.push({ type: media.type, url });
+        fileIndex++;
+      }
     }
+
+    const child = localChildren.find(c => c.id === childId);
+    const ageAtCreated = child ? calculateAgeAtDate(child.birthday, date) : selectedAge;
+
+    const artwork = {
+      id: artworkId,
+      title,
+      childId,
+      date,
+      memo,
+      ageAtCreated,
+      mediaUrls,
+      createdAt: Date.now(),
+      createdBy: currentSession.userId,
+      favorite: false,
+      deleted: false
+    };
+
+    await DB.saveArtwork({ ...artwork, createdAt: serverTimestamp() });
+    localWorks.push(artwork);
+
+    renderGallery();
+    renderTimeline();
+    closeDrawer("work");
+    showToast("作品を安全に保存しました");
+
+    document.getElementById("workForm").reset();
+    selectedMediaFiles = [];
+    selectedMediaPreview = [];
+    document.getElementById("mediaResultContainer").innerHTML = "";
+  } catch (err) {
+    alert("🛑 保存エラーが発生しました:\n" + err.message);
   }
-
-  const child = localChildren.find(c => c.id === childId);
-  const ageAtCreated = child ? calculateAgeAtDate(child.birthday, date) : selectedAge;
-
-  const artwork = {
-    id: artworkId,
-    title,
-    childId,
-    date,
-    memo,
-    ageAtCreated,
-    mediaUrls,
-    createdAt: Date.now(),
-    createdBy: currentSession.userId,
-    favorite: false,
-    deleted: false
-  };
-
-  localWorks.push(artwork);
-  await DB.saveArtwork({ ...artwork, createdAt: serverTimestamp() });
-
-  renderGallery();
-  renderTimeline();
-  closeDrawer("work");
-  showToast("作品を安全に保存しました");
-
-  document.getElementById("workForm").reset();
-  selectedMediaFiles = [];
-  selectedMediaPreview = [];
-  document.getElementById("mediaResultContainer").innerHTML = "";
 }
 
 /* =========================
@@ -784,7 +855,7 @@ function renderGallery(){
         ? `<video src="${first.url}" class="w-full h-52 object-cover"></video>`
         : `<img src="${first.url}" class="w-full h-52 object-cover"/>`;
     } else {
-      thumbnail = `<div class="w-full h-52 bg-slate-100"></div>`;
+      thumbnail = `<div class="w-full h-52 bg-slate-100 flex items-center justify-center text-xs text-slate-400">No Image</div>`;
     }
 
     html += `
@@ -858,7 +929,7 @@ function renderDetailCarousel(work){
   const media = work.mediaUrls || [];
 
   if(!media.length){
-    container.innerHTML = `<div class="w-full h-full bg-slate-100"></div>`;
+    container.innerHTML = `<div class="w-full h-full bg-slate-200"></div>`;
     dots.innerHTML = "";
     return;
   }
@@ -879,9 +950,6 @@ function renderDetailCarousel(work){
   dots.innerHTML = dotHtml;
 }
 
-/* =========================
-   Carousel Controls
-========================= */
 window.prevMedia = function(){
   const work = localWorks.find(w => w.id === activeDetailId);
   if(!work?.mediaUrls?.length) return;
@@ -906,47 +974,34 @@ window.jumpMedia = function(index){
 };
 
 /* =========================
-   Migration
-========================= */
-function migrateArtwork(work){
-  if(work.mediaUrls) return work;
-  work.mediaUrls = work.mediaUrl ? [{ type: work.mediaType || "image", url: work.mediaUrl }] : [];
-  return work;
-}
-
-/* =========================
    Firestore Load
 ========================= */
 async function loadChildren(){
-  localChildren = await DB.getChildren();
-  renderChildList();
-  populateChildSelect();
+  try {
+    localChildren = await DB.getChildren();
+    renderChildList();
+    populateChildSelect();
+  } catch(e) {
+    console.error("子供データのロードに失敗:", e);
+  }
 }
 
 async function loadArtworks(){
-  const fetchedWorks = await DB.getArtworks();
-  localWorks = [];
-  fetchedWorks.forEach(data => { localWorks.push(migrateArtwork(data)); });
-  renderGallery();
-  renderTimeline();
-}
-
-/* =========================
-   Touch Swipe Support
-========================= */
-let touchStartX = 0;
-let touchEndX = 0;
-const detailCarousel = document.getElementById("detailCarousel");
-
-if(detailCarousel){
-  detailCarousel.addEventListener("touchstart", e => { touchStartX = e.changedTouches[0].screenX; });
-  detailCarousel.addEventListener("touchend", e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); });
-}
-
-function handleSwipe(){
-  const delta = touchEndX - touchStartX;
-  if(Math.abs(delta) < 40) return;
-  if(delta > 0){ prevMedia(); } else { nextMedia(); }
+  try {
+    const fetchedWorks = await DB.getArtworks();
+    localWorks = [];
+    fetchedWorks.forEach(data => { 
+      // 互換性マイグレーション
+      if(!data.mediaUrls) {
+        data.mediaUrls = data.mediaUrl ? [{ type: data.mediaType || "image", url: data.mediaUrl }] : [];
+      }
+      localWorks.push(data); 
+    });
+    renderGallery();
+    renderTimeline();
+  } catch(e) {
+    console.error("作品データのロードに失敗:", e);
+  }
 }
 
 /* =========================
@@ -956,14 +1011,9 @@ async function init(){
   try{
     renderAgeWheel();
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
-
-    await loadChildren();
-    await loadArtworks();
-
     showToast("Kodomonote Premium 起動完了");
   } catch(err) {
-    console.error(err);
-    showToast("初期化に失敗しました。ルールを確認してください。");
+    alert("初期化失敗: " + err.message);
   }
 }
 
