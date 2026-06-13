@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-teal-100 text-teal-800">Production [v6-VideoPrep-Fix]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v7-FileValidation-Fix]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -204,15 +204,16 @@ window.deleteChild = async function(id, name) {
   }
 };
 
+// 🖼️ 画像選択（🛡️ 堅牢なファイルバリデーションへアップデート）
 document.getElementById("fileInput").addEventListener("change", async function(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   
-  // 💡 動画検出時のメッセージを、開発予定だが現在は準備中という表現へ変更
-  const hasVideo = files.some(file => file.type.startsWith('video/'));
-  if (hasVideo) {
-    alert("🎥 動画の登録機能は、今後のアップデートに向けて現在準備中です。\n現時点では、画像（写真）ファイルのみを選択してください。");
-    e.target.value = ""; 
+  // 💡 画像(image/)以外のファイル形式が1つでも含まれていたらブロックするロジックに変更
+  const hasInvalidFile = files.some(file => !file.type.startsWith('image/'));
+  if (hasInvalidFile) {
+    alert("📷 登録できるのは画像（写真）ファイルのみです。\n他のファイル形式や動画の登録機能は、今後のアップデートに向けて現在準備中です。");
+    e.target.value = ""; // 選択内容を安全にリセット
     return;
   }
 
