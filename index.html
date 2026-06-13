@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-indigo-100 text-indigo-800">Production [v10-CategorySupport-Enhanced]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700">Production [v11-Birthday-Selectbox-Fixed]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -44,24 +44,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <main class="max-w-7xl mx-auto px-4 pb-32">
   <section id="galleryPage" class="page active">
-    <div class="pt-6 pb-4 flex justify-between items-center flex-wrap gap-3">
-      <h2 class="text-3xl font-bold">Gallery</h2>
-      <div class="flex gap-2 flex-1 justify-end max-w-md w-full">
-        <div class="w-1/2">
-          <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-            <option value="all">すべての子ども</option>
-          </select>
-        </div>
-        <div class="w-1/2">
-          <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-            <option value="createdDesc">登録が新しい順</option>
-            <option value="createdAsc">登録が古い順</option>
-            <option value="dateDesc">作品の日付が新しい順</option>
-            <option value="dateAsc">作品の日付が古い順</option>
-          </select>
-        </div>
-      </div>
-    </div>
+    <div class="pt-6 pb-4"><h2 class="text-3xl font-bold">Gallery</h2></div>
     <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
   </section>
   <section id="recordsPage" class="page">
@@ -80,20 +63,10 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">登録</h3><button onclick="closeDrawer('work')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">作品登録</h3><button onclick="closeDrawer('work')">✕</button></div>
     <form id="workForm" class="space-y-5">
       <input type="hidden" id="editingWorkId" value="" />
       <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
-      
-      <div>
-        <label class="block text-sm font-semibold mb-2">カテゴリ</label>
-        <select id="inputCategory" required>
-          <option value="artwork" selected>作品</option>
-          <option value="print">プリント</option>
-          <option value="test">テスト</option>
-        </select>
-      </div>
-
       <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
       <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
       <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
@@ -112,9 +85,31 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">子ども設定</h3><button onclick="closeDrawer('child')">✕</button></div>
     <div class="space-y-4 mb-6">
       <input id="editingChildId" type="hidden" value="" />
-      <input id="childName" placeholder="名前"/>
-      <input id="childBirthday" type="date"/>
-      <div class="flex gap-2">
+      
+      <div>
+        <label class="block text-sm font-semibold text-slate-600 mb-1.5">お名前</label>
+        <input id="childName" placeholder="例：ひなた"/>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-slate-600 mb-1.5">生年月日（誕生日）</label>
+        <div class="flex gap-2">
+          <div class="flex-1 flex items-center gap-1">
+            <select id="childBirthYear" class="py-3 px-2 text-sm"></select>
+            <span class="text-xs text-slate-500 shrink-0">年</span>
+          </div>
+          <div class="w-24 flex items-center gap-1">
+            <select id="childBirthMonth" class="py-3 px-2 text-sm"></select>
+            <span class="text-xs text-slate-500 shrink-0">月</span>
+          </div>
+          <div class="w-24 flex items-center gap-1">
+            <select id="childBirthDay" class="py-3 px-2 text-sm"></select>
+            <span class="text-xs text-slate-500 shrink-0">日</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
         <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加する</button>
         <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-300 bg-slate-100 text-sm">取消</button>
       </div>
@@ -146,6 +141,39 @@ let currentSession = null;
 let localChildren = [];
 let localWorks = [];
 let base64ImagesArray = [];
+
+// 💡 生年月日セレクトボックスの選択肢を初期生成
+function initBirthdaySelectboxes() {
+  const yearSelect = document.getElementById("childBirthYear");
+  const monthSelect = document.getElementById("childBirthMonth");
+  const daySelect = document.getElementById("childBirthDay");
+  
+  const currentYear = new Date().getFullYear();
+  
+  // 年: 今年から20年前まで
+  let yearHtml = "";
+  for (let y = currentYear; y >= currentYear - 20; y--) {
+    yearHtml += `<option value="${y}">${y}</option>`;
+  }
+  yearSelect.innerHTML = yearHtml;
+  
+  // 月: 1〜12 (ループしない)
+  let monthHtml = "";
+  for (let m = 1; m <= 12; m++) {
+    const mStr = String(m).padStart(2, '0');
+    monthHtml += `<option value="${mStr}">${m}</option>`;
+  }
+  monthSelect.innerHTML = monthHtml;
+  
+  // 日: 1〜31
+  let dayHtml = "";
+  for (let d = 1; d <= 31; d++) {
+    const dStr = String(d).padStart(2, '0');
+    dayHtml += `<option value="${dStr}">${d}</option>`;
+  }
+  daySelect.innerHTML = dayHtml;
+}
+initBirthdaySelectboxes();
 
 window.toggleAuth = async function() {
   if (auth.currentUser) { if(confirm("ログアウトしますか？")) await signOut(auth); } 
@@ -181,18 +209,21 @@ async function syncData() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); renderGallery(); renderTimeline();
+  renderChildList(); populateChildSelect(); renderGallery(); renderTimeline();
 }
 
-document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
-document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
-
+// 子ども設定
 window.saveChild = async function(){
   if(!currentSession) return;
   const name = document.getElementById("childName").value.trim();
-  const birthday = document.getElementById("childBirthday").value;
   const editingId = document.getElementById("editingChildId").value;
   if(!name){ alert("名前を入力してください"); return; }
+
+  // 💡 分割されたセレクトボックスから YYYY-MM-DD 文字列を作成
+  const year = document.getElementById("childBirthYear").value;
+  const month = document.getElementById("childBirthMonth").value;
+  const day = document.getElementById("childBirthDay").value;
+  const birthday = `${year}-${month}-${day}`;
 
   if(editingId) {
     const target = localChildren.find(c => c.id === editingId);
@@ -212,7 +243,17 @@ window.editChild = function(id) {
   if(!c) return;
   document.getElementById("editingChildId").value = c.id;
   document.getElementById("childName").value = c.name;
-  document.getElementById("childBirthday").value = c.birthday || "";
+  
+  // 💡 既存の YYYY-MM-DD から各セレクトボックスに値を復元
+  if (c.birthday && c.birthday.includes("-")) {
+    const parts = c.birthday.split("-");
+    if (parts.length === 3) {
+      document.getElementById("childBirthYear").value = parts[0];
+      document.getElementById("childBirthMonth").value = parts[1];
+      document.getElementById("childBirthDay").value = parts[2];
+    }
+  }
+  
   document.getElementById("childSubmitBtn").innerText = "更新する";
   document.getElementById("childCancelBtn").classList.remove("hidden");
 };
@@ -220,7 +261,12 @@ window.editChild = function(id) {
 window.cancelChildEdit = function() {
   document.getElementById("editingChildId").value = "";
   document.getElementById("childName").value = "";
-  document.getElementById("childBirthday").value = "";
+  
+  // 初期状態の年にリセット
+  document.getElementById("childBirthYear").value = new Date().getFullYear();
+  document.getElementById("childBirthMonth").value = "01";
+  document.getElementById("childBirthDay").value = "01";
+  
   document.getElementById("childSubmitBtn").innerText = "追加する";
   document.getElementById("childCancelBtn").classList.add("hidden");
 };
@@ -234,13 +280,14 @@ window.deleteChild = async function(id, name) {
   }
 };
 
+// 画像選択
 document.getElementById("fileInput").addEventListener("change", async function(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   
-  const hasInvalidFile = files.some(file => !file.type.startsWith('image/'));
-  if (hasInvalidFile) {
-    alert("📷 登録できるのは画像（写真）ファイルのみです。\n他のファイル形式や動画の登録機能は、今後のアップデートに向けて現在準備中です。");
+  const hasVideo = files.some(file => file.type.startsWith('video/'));
+  if (hasVideo) {
+    alert("⚠️ 動画は有料プラン限定機能です。\n今回は画像（写真）のみを選択してください。");
     e.target.value = ""; 
     return;
   }
@@ -279,13 +326,13 @@ document.getElementById("fileInput").addEventListener("change", async function(e
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
 });
 
+// 作品保存
 document.getElementById("workForm").addEventListener("submit", async function(e){
   e.preventDefault();
   if(!currentSession) return;
   
   const editingId = document.getElementById("editingWorkId").value;
   const title = document.getElementById("inputTitle").value.trim();
-  const category = document.getElementById("inputCategory").value; // 💡 カテゴリ取得
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
   const memo = document.getElementById("inputMemo").value.trim();
@@ -314,9 +361,8 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         }
       }
       
-      // 💡 categoryを更新オブジェクトに追加
-      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls });
-      alert("データを更新しました！");
+      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, childId, date, memo, mediaUrls });
+      alert("作品を更新しました！");
     } else {
       const artworkId = crypto.randomUUID();
       let mediaUrls = [];
@@ -329,10 +375,9 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         mediaUrls.push({ type: "image", url });
       }
       
-      // 💡 categoryを新規データオブジェクトに追加
-      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now() };
+      const artwork = { id: artworkId, title, childId, date, memo, mediaUrls, createdAt: Date.now() };
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
-      alert("✅ データを保存しました！");
+      alert("✅ 作品を保存しました！");
     }
     
     closeDrawer("work");
@@ -350,9 +395,8 @@ window.openEditWork = function(id) {
   if(!w) return;
   
   document.getElementById("editingWorkId").value = w.id;
-  document.getElementById("workFormTitle").innerText = "編集";
+  document.getElementById("workFormTitle").innerText = "作品の編集";
   document.getElementById("inputTitle").value = w.title;
-  document.getElementById("inputCategory").value = w.category || "artwork"; // 💡 カテゴリを復元（過去データはartwork扱い）
   document.getElementById("inputWorkChild").value = w.childId || "";
   document.getElementById("inputDate").value = w.date || "";
   document.getElementById("inputMemo").value = w.memo || "";
@@ -369,7 +413,7 @@ window.openEditWork = function(id) {
 };
 
 window.deleteWork = async function(id, title) {
-  if(!confirm(`「${title}」のデータを削除してもよろしいですか？\n（※すべての写真データも完全に消去されます）`)) return;
+  if(!confirm(`「${title}」の作品を削除してもよろしいですか？\n（※すべての写真データも完全に消去されます）`)) return;
   const target = localWorks.find(w => w.id === id);
   if(!target) return;
 
@@ -380,7 +424,7 @@ window.deleteWork = async function(id, title) {
       }
     }
     await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
-    alert("データを削除しました。");
+    alert("作品を削除しました。");
     await syncData();
   } catch(err) {
     alert("削除失敗: " + err.message);
@@ -407,62 +451,11 @@ function populateChildSelect(){
   document.getElementById("inputWorkChild").innerHTML = html;
 }
 
-function populateGalleryChildFilter(){
-  const filterSelect = document.getElementById("galleryChildFilterSelect");
-  const currentSelectedValue = filterSelect.value;
-  
-  let html = `<option value="all">すべての子ども</option>`;
-  localChildren.forEach(c => {
-    html += `<option value="${c.id}">${c.name}</option>`;
-  });
-  filterSelect.innerHTML = html;
-  
-  if([...filterSelect.options].some(o => o.value === currentSelectedValue)) {
-    filterSelect.value = currentSelectedValue;
-  }
-}
-
-// 💡 カテゴリ毎のラベルと背景色をマッピングするヘルパー
-function getCategoryBadgeHtml(cat) {
-  if (cat === "print") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">プリント</span>`;
-  if (cat === "test") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">テスト</span>`;
-  return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">作品</span>`;
-}
-
 function renderGallery(){
   let html = "";
-  const sortValue = document.getElementById("gallerySortSelect").value;
-  const filterChildId = document.getElementById("galleryChildFilterSelect").value;
-  
-  let displayWorks = [...localWorks];
-  
-  if (filterChildId !== "all") {
-    displayWorks = displayWorks.filter(w => w.childId === filterChildId);
-  }
-  
-  displayWorks.sort((a, b) => {
-    if (sortValue === "createdDesc") {
-      return b.createdAt - a.createdAt;
-    } else if (sortValue === "createdAsc") {
-      return a.createdAt - b.createdAt;
-    } else if (sortValue === "dateDesc") {
-      const dateA = a.date || "0000-00-00";
-      const dateB = b.date || "0000-00-00";
-      return dateB.localeCompare(dateA);
-    } else if (sortValue === "dateAsc") {
-      const dateA = a.date || "9999-12-31";
-      const dateB = b.date || "9999-12-31";
-      return dateA.localeCompare(dateB);
-    }
-    return 0;
-  });
-
-  displayWorks.forEach(w => {
+  [...localWorks].sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
     let childTag = "";
     if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`; }
-    
-    // 💡 カテゴリバッジを取得
-    let categoryTag = getCategoryBadgeHtml(w.category);
     
     let img = w.mediaUrls?.length ? `<img src="${w.mediaUrls[0].url}" class="w-full h-44 object-cover cursor-pointer" onclick="openEditWork('${w.id}')"/>` : '';
     let countBadge = w.mediaUrls?.length > 1 ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">📂 ${w.mediaUrls.length}枚</div>` : '';
@@ -474,17 +467,14 @@ function renderGallery(){
           <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
           <button onclick="deleteWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
         </div>
-        <div class="flex flex-wrap gap-1 items-center mt-2">
+        <div class="flex items-center justify-between mt-2">
           ${childTag}
-          ${categoryTag}
-        </div>
-        <div class="flex justify-end mt-2">
           <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
         </div>
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>＋ボタンから最初の作品を登録しましょう！</div>";
 }
 
 function renderTimeline(){
@@ -493,11 +483,6 @@ function renderTimeline(){
     let childName = "共通";
     if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childName = c.name; }
     
-    // 💡 タイムライン用カテゴリ名変換
-    let catLabel = "作品";
-    if(w.category === "print") catLabel = "プリント";
-    if(w.category === "test") catLabel = "テスト";
-
     let thumbs = "";
     if(w.mediaUrls?.length) {
       w.mediaUrls.forEach(m => { thumbs += `<img src="${m.url}" class="w-10 h-10 object-cover rounded-md border"/>`; });
@@ -507,7 +492,7 @@ function renderTimeline(){
       <div class="flex justify-between items-start">
         <div>
           <div class="font-bold text-slate-800">${w.title}</div>
-          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName} ・ ${catLabel}</div>
+          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}</div>
         </div>
         <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
       </div>
@@ -520,16 +505,18 @@ function renderTimeline(){
 
 window.openDrawer = function(t){ 
   if(t === 'work' && !document.getElementById("editingWorkId").value) {
-    document.getElementById("workFormTitle").innerText = "データ登録";
+    document.getElementById("workFormTitle").innerText = "作品登録";
     document.getElementById("workForm").reset();
-    document.getElementById("inputCategory").value = "artwork"; // 💡 新規登録時はデフォルト「作品」
     document.getElementById("mediaResultContainer").innerHTML = "";
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
     base64ImagesArray = [];
   }
+  if(t === 'child') {
+    cancelChildEdit();
+  }
   document.getElementById(t+"Drawer").classList.add("open"); 
 };
-window.closeDrawer = function(t){ document.getElementById(t+"Drawer").classList.remove("open"); };
+window.closeDrawer = function(t){ document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); };
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
