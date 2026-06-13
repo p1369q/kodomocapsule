@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-indigo-100 text-indigo-800">Production [v9-GalleryFilter-Enhanced]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-indigo-100 text-indigo-800">Production [v10-CategorySupport-Enhanced]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -80,10 +80,20 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">作品登録</h3><button onclick="closeDrawer('work')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">登録</h3><button onclick="closeDrawer('work')">✕</button></div>
     <form id="workForm" class="space-y-5">
       <input type="hidden" id="editingWorkId" value="" />
       <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
+      
+      <div>
+        <label class="block text-sm font-semibold mb-2">カテゴリ</label>
+        <select id="inputCategory" required>
+          <option value="artwork" selected>作品</option>
+          <option value="print">プリント</option>
+          <option value="test">テスト</option>
+        </select>
+      </div>
+
       <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
       <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
       <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
@@ -174,7 +184,6 @@ function renderAll(){
   renderChildList(); populateChildSelect(); populateGalleryChildFilter(); renderGallery(); renderTimeline();
 }
 
-// 💡 変更イベントリスナーをコントロール群にセット
 document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
 document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
 
@@ -276,6 +285,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
   
   const editingId = document.getElementById("editingWorkId").value;
   const title = document.getElementById("inputTitle").value.trim();
+  const category = document.getElementById("inputCategory").value; // 💡 カテゴリ取得
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
   const memo = document.getElementById("inputMemo").value.trim();
@@ -304,8 +314,9 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         }
       }
       
-      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, childId, date, memo, mediaUrls });
-      alert("作品を更新しました！");
+      // 💡 categoryを更新オブジェクトに追加
+      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls });
+      alert("データを更新しました！");
     } else {
       const artworkId = crypto.randomUUID();
       let mediaUrls = [];
@@ -318,9 +329,10 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         mediaUrls.push({ type: "image", url });
       }
       
-      const artwork = { id: artworkId, title, childId, date, memo, mediaUrls, createdAt: Date.now() };
+      // 💡 categoryを新規データオブジェクトに追加
+      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now() };
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
-      alert("✅ 作品を保存しました！");
+      alert("✅ データを保存しました！");
     }
     
     closeDrawer("work");
@@ -338,8 +350,9 @@ window.openEditWork = function(id) {
   if(!w) return;
   
   document.getElementById("editingWorkId").value = w.id;
-  document.getElementById("workFormTitle").innerText = "作品の編集";
+  document.getElementById("workFormTitle").innerText = "編集";
   document.getElementById("inputTitle").value = w.title;
+  document.getElementById("inputCategory").value = w.category || "artwork"; // 💡 カテゴリを復元（過去データはartwork扱い）
   document.getElementById("inputWorkChild").value = w.childId || "";
   document.getElementById("inputDate").value = w.date || "";
   document.getElementById("inputMemo").value = w.memo || "";
@@ -356,7 +369,7 @@ window.openEditWork = function(id) {
 };
 
 window.deleteWork = async function(id, title) {
-  if(!confirm(`「${title}」の作品を削除してもよろしいですか？\n（※すべての写真データも完全に消去されます）`)) return;
+  if(!confirm(`「${title}」のデータを削除してもよろしいですか？\n（※すべての写真データも完全に消去されます）`)) return;
   const target = localWorks.find(w => w.id === id);
   if(!target) return;
 
@@ -367,7 +380,7 @@ window.deleteWork = async function(id, title) {
       }
     }
     await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
-    alert("作品を削除しました。");
+    alert("データを削除しました。");
     await syncData();
   } catch(err) {
     alert("削除失敗: " + err.message);
@@ -394,10 +407,9 @@ function populateChildSelect(){
   document.getElementById("inputWorkChild").innerHTML = html;
 }
 
-// 💡 ギャラリー上部の子どもフィルター選択肢を動的に生成する関数
 function populateGalleryChildFilter(){
   const filterSelect = document.getElementById("galleryChildFilterSelect");
-  const currentSelectedValue = filterSelect.value; // 現在の選択状態を記憶
+  const currentSelectedValue = filterSelect.value;
   
   let html = `<option value="all">すべての子ども</option>`;
   localChildren.forEach(c => {
@@ -405,10 +417,16 @@ function populateGalleryChildFilter(){
   });
   filterSelect.innerHTML = html;
   
-  // 記憶していた選択状態を戻す（同期時にリセットされないように）
   if([...filterSelect.options].some(o => o.value === currentSelectedValue)) {
     filterSelect.value = currentSelectedValue;
   }
+}
+
+// 💡 カテゴリ毎のラベルと背景色をマッピングするヘルパー
+function getCategoryBadgeHtml(cat) {
+  if (cat === "print") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">プリント</span>`;
+  if (cat === "test") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">テスト</span>`;
+  return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">作品</span>`;
 }
 
 function renderGallery(){
@@ -416,15 +434,12 @@ function renderGallery(){
   const sortValue = document.getElementById("gallerySortSelect").value;
   const filterChildId = document.getElementById("galleryChildFilterSelect").value;
   
-  // コピーを作成
   let displayWorks = [...localWorks];
   
-  // 💡 1. 子どもでの絞り込み（フィルター）ロジックを適用
   if (filterChildId !== "all") {
     displayWorks = displayWorks.filter(w => w.childId === filterChildId);
   }
   
-  // 2. ソートロジックを適用
   displayWorks.sort((a, b) => {
     if (sortValue === "createdDesc") {
       return b.createdAt - a.createdAt;
@@ -446,6 +461,9 @@ function renderGallery(){
     let childTag = "";
     if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`; }
     
+    // 💡 カテゴリバッジを取得
+    let categoryTag = getCategoryBadgeHtml(w.category);
+    
     let img = w.mediaUrls?.length ? `<img src="${w.mediaUrls[0].url}" class="w-full h-44 object-cover cursor-pointer" onclick="openEditWork('${w.id}')"/>` : '';
     let countBadge = w.mediaUrls?.length > 1 ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">📂 ${w.mediaUrls.length}枚</div>` : '';
     
@@ -456,14 +474,17 @@ function renderGallery(){
           <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
           <button onclick="deleteWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
         </div>
-        <div class="flex items-center justify-between mt-2">
+        <div class="flex flex-wrap gap-1 items-center mt-2">
           ${childTag}
+          ${categoryTag}
+        </div>
+        <div class="flex justify-end mt-2">
           <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
         </div>
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する作品が見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
 }
 
 function renderTimeline(){
@@ -472,6 +493,11 @@ function renderTimeline(){
     let childName = "共通";
     if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childName = c.name; }
     
+    // 💡 タイムライン用カテゴリ名変換
+    let catLabel = "作品";
+    if(w.category === "print") catLabel = "プリント";
+    if(w.category === "test") catLabel = "テスト";
+
     let thumbs = "";
     if(w.mediaUrls?.length) {
       w.mediaUrls.forEach(m => { thumbs += `<img src="${m.url}" class="w-10 h-10 object-cover rounded-md border"/>`; });
@@ -481,7 +507,7 @@ function renderTimeline(){
       <div class="flex justify-between items-start">
         <div>
           <div class="font-bold text-slate-800">${w.title}</div>
-          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}</div>
+          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName} ・ ${catLabel}</div>
         </div>
         <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
       </div>
@@ -494,8 +520,9 @@ function renderTimeline(){
 
 window.openDrawer = function(t){ 
   if(t === 'work' && !document.getElementById("editingWorkId").value) {
-    document.getElementById("workFormTitle").innerText = "作品登録";
+    document.getElementById("workFormTitle").innerText = "データ登録";
     document.getElementById("workForm").reset();
+    document.getElementById("inputCategory").value = "artwork"; // 💡 新規登録時はデフォルト「作品」
     document.getElementById("mediaResultContainer").innerHTML = "";
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
     base64ImagesArray = [];
