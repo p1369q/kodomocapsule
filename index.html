@@ -18,7 +18,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .page{display:none;}
 .page.active{display:block;}
 .glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.78);}
-.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);}
+.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;}
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
 .nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
 .fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(86,115,108,.28);}
@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700">Production [Fixed]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-rose-100 text-rose-700">Production [v4-Full]</div>
     </div>
     <div class="flex gap-3 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -63,18 +63,19 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">作品登録</h3><button onclick="closeDrawer('work')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">作品登録</h3><button onclick="closeDrawer('work')">✕</button></div>
     <form id="workForm" class="space-y-5">
-      <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle"/></div>
+      <input type="hidden" id="editingWorkId" value="" />
+      <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
       <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
       <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
       <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
-      <div>
+      <div id="fileInputContainer">
         <input id="fileInput" type="file" accept="image/*" class="hidden"/>
-        <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-4 rounded-2xl border border-dashed border-[#CBD5E1] bg-slate-50">写真を1枚追加</button>
+        <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-4 rounded-2xl border border-dashed border-[#CBD5E1] bg-slate-50 text-sm">写真を変更または追加</button>
         <div id="mediaResultContainer" class="mt-4"></div>
       </div>
-      <button type="submit" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
+      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
     </form>
   </div>
 </div>
@@ -82,30 +83,25 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">子ども設定</h3><button onclick="closeDrawer('child')">✕</button></div>
-    <div class="space-y-4">
+    <div class="space-y-4 mb-6">
+      <input id="editingChildId" type="hidden" value="" />
       <input id="childName" placeholder="名前"/>
       <input id="childBirthday" type="date"/>
-      <button onclick="addChild()" class="w-full py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加</button>
+      <div class="flex gap-2">
+        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加する</button>
+        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-300 bg-slate-100 text-sm">取消</button>
+      </div>
     </div>
-    <div id="childList" class="mt-6"></div>
+    <div id="childList" class="mt-6 space-y-2"></div>
   </div>
 </div>
 
 <script type="module">
-window.onerror = function(msg, url, line) {
-  alert("🚨 システムエラー:\n" + msg + "\n行: " + line);
-  return false;
-};
-window.addEventListener('unhandledrejection', function(e) {
-  alert("🔥 通信・認証エラー:\n" + e.reason);
-});
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 🔒 常に本番環境（kodomonote-prod）に固定
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
   authDomain: "kodomonote-prod.firebaseapp.com",
@@ -124,17 +120,10 @@ let localChildren = [];
 let localWorks = [];
 let base64Image = null;
 
+// 🔑 認証
 window.toggleAuth = async function() {
-  if (auth.currentUser) {
-    await signOut(auth);
-    alert("ログアウトしました");
-  } else {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      alert("🛑 ログインに失敗しました！\n理由: " + err.message);
-    }
-  }
+  if (auth.currentUser) { if(confirm("ログアウトしますか？")) await signOut(auth); } 
+  else { try { await signInWithPopup(auth, provider); } catch (err) { alert("ログイン失敗: " + err.message); } }
 };
 document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
 
@@ -143,120 +132,291 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     btnText.innerText = "ログアウト";
     currentSession = { familyId: `family_of_${user.uid}`, userId: user.uid };
-    alert("🔑 ログインに完全成功しました！データを同期します。");
-    await loadChildren();
-    await loadArtworks();
+    await syncData();
   } else {
     btnText.innerText = "ログイン";
     currentSession = null;
     localChildren = []; localWorks = [];
-    renderChildList(); populateChildSelect(); renderGallery(); renderTimeline();
+    renderAll();
   }
 });
 
-window.addChild = async function(){
-  if(!currentSession) { alert("🔒 ログインが完了していません。"); return; }
+async function syncData() {
+  if(!currentSession) return;
+  // 子ども取得
+  localChildren = [];
+  const cSnap = await getDocs(collection(db, "families", currentSession.familyId, "children"));
+  cSnap.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
+  
+  // 作品取得
+  localWorks = [];
+  const wSnap = await getDocs(collection(db, "families", currentSession.familyId, "artworks"));
+  wSnap.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
+
+  renderAll();
+}
+
+function renderAll(){
+  renderChildList(); populateChildSelect(); renderGallery(); renderTimeline();
+}
+
+// 👶 子ども処理（追加・編集・削除）
+window.saveChild = async function(){
+  if(!currentSession) return;
   const name = document.getElementById("childName").value.trim();
   const birthday = document.getElementById("childBirthday").value;
+  const editingId = document.getElementById("editingChildId").value;
   if(!name){ alert("名前を入力してください"); return; }
 
-  const child = { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() };
-  try {
+  if(editingId) {
+    // 編集モード
+    const target = localChildren.find(c => c.id === editingId);
+    if(target) {
+      const docRef = doc(db, "families", currentSession.familyId, "children", target.docId);
+      await updateDoc(docRef, { name, birthday });
+    }
+    alert("子どもの情報を更新しました！");
+  } else {
+    // 新規追加
+    const child = { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() };
     await addDoc(collection(db, "families", currentSession.familyId, "children"), child);
-    localChildren.push(child);
-    renderChildList();
-    populateChildSelect();
-    document.getElementById("childName").value = "";
-    document.getElementById("childBirthday").value = "";
     alert("🎉 子どもを追加しました！");
-  } catch(e) {
-    alert("❌ 保存失敗: " + e.message);
+  }
+  cancelChildEdit();
+  await syncData();
+};
+
+window.editChild = function(id) {
+  const c = localChildren.find(item => item.id === id);
+  if(!c) return;
+  document.getElementById("editingChildId").value = c.id;
+  document.getElementById("childName").value = c.name;
+  document.getElementById("childBirthday").value = c.birthday || "";
+  document.getElementById("childSubmitBtn").innerText = "更新する";
+  document.getElementById("childCancelBtn").classList.remove("hidden");
+};
+
+window.cancelChildEdit = function() {
+  document.getElementById("editingChildId").value = "";
+  document.getElementById("childName").value = "";
+  document.getElementById("childBirthday").value = "";
+  document.getElementById("childSubmitBtn").innerText = "追加する";
+  document.getElementById("childCancelBtn").classList.add("hidden");
+};
+
+window.deleteChild = async function(id, name) {
+  if(!confirm(`「${name}」ちゃんの設定を削除しますか？\n（※登録済みの作品は削除されません）`)) return;
+  const target = localChildren.find(c => c.id === id);
+  if(target) {
+    await deleteDoc(doc(db, "families", currentSession.familyId, "children", target.docId));
+    alert("削除しました。");
+    await syncData();
   }
 };
 
+// 🖼️ 画像の超高速化圧縮（レスポンス改善）
 document.getElementById("fileInput").addEventListener("change", function(e){
   const file = e.target.files[0];
   if(!file) return;
+  
   const reader = new FileReader();
   reader.onload = function(evt){
-    base64Image = evt.target.result;
-    document.getElementById("mediaResultContainer").innerHTML = `<img src="${base64Image}" class="w-full rounded-xl border mb-2"/>`;
+    const img = new Image();
+    img.onload = function() {
+      // 縦横最大1000pxに収まるよう自動縮小して爆速化
+      const maxWithHeight = 1000;
+      let width = img.width;
+      let height = img.height;
+      if (width > height && width > maxWithHeight) { height *= maxWithHeight / width; width = maxWithHeight; } 
+      else if (height > maxWithHeight) { width *= maxWithHeight / height; height = maxWithHeight; }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      base64Image = canvas.toDataURL('image/jpeg', 0.75); // 画質を維持しつつ容量を10分の一に
+      document.getElementById("mediaResultContainer").innerHTML = `<img src="${base64Image}" class="w-full rounded-xl border mb-2"/>`;
+    };
+    img.src = evt.target.result;
   };
   reader.readAsDataURL(file);
 });
 
+// 💾 作品の処理（保存・編集・削除）
 document.getElementById("workForm").addEventListener("submit", async function(e){
   e.preventDefault();
-  if(!currentSession) { alert("🔒 ログインが完了していません。"); return; }
+  if(!currentSession) return;
+  
+  const editingId = document.getElementById("editingWorkId").value;
   const title = document.getElementById("inputTitle").value.trim();
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
   const memo = document.getElementById("inputMemo").value.trim();
-
-  if(!title){ alert("タイトルを入力してください"); return; }
-
-  let mediaUrls = [];
-  const artworkId = crypto.randomUUID();
+  
+  document.getElementById("workSubmitBtn").innerText = "通信中...";
+  document.getElementById("workSubmitBtn").disabled = true;
 
   try {
-    if(base64Image){
-      const path = `families/${currentSession.familyId}/artworks/${artworkId}/1.jpg`;
-      const storageRef = ref(storage, path);
-      await uploadString(storageRef, base64Image, "data_url");
-      const url = await getDownloadURL(storageRef);
-      mediaUrls.push({ type: "image", url });
+    if(editingId) {
+      // ⭐️ 作品の編集
+      const target = localWorks.find(w => w.id === editingId);
+      let mediaUrls = target.mediaUrls || [];
+      
+      if(base64Image) {
+        const path = `families/${currentSession.familyId}/artworks/${target.id}/1.jpg`;
+        const storageRef = ref(storage, path);
+        await uploadString(storageRef, base64Image, "data_url");
+        const url = await getDownloadURL(storageRef);
+        mediaUrls = [{ type: "image", url }];
+      }
+      
+      const docRef = doc(db, "families", currentSession.familyId, "artworks", target.docId);
+      await updateDoc(docRef, { title, childId, date, memo, mediaUrls });
+      alert("作品を修正しました！");
+    } else {
+      // ⭐️ 新規追加
+      const artworkId = crypto.randomUUID();
+      let mediaUrls = [];
+      
+      if(base64Image){
+        const path = `families/${currentSession.familyId}/artworks/${artworkId}/1.jpg`;
+        const storageRef = ref(storage, path);
+        await uploadString(storageRef, base64Image, "data_url");
+        const url = await getDownloadURL(storageRef);
+        mediaUrls.push({ type: "image", url });
+      }
+      
+      const artwork = { id: artworkId, title, childId, date, memo, mediaUrls, createdAt: Date.now() };
+      await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
+      alert("✅ 作品を保存しました！");
     }
-
-    const artwork = { id: artworkId, title, childId, date, memo, mediaUrls, createdAt: Date.now() };
-    await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
     
-    localWorks.push(artwork);
-    renderGallery();
-    renderTimeline();
     closeDrawer("work");
-    alert("✅ 作品の保存に成功しました！");
-
-    document.getElementById("workForm").reset();
-    base64Image = null;
-    document.getElementById("mediaResultContainer").innerHTML = "";
+    await syncData();
   } catch(err) {
-    alert("🛑 保存失敗:\n" + err.message);
+    alert("エラーが発生しました:\n" + err.message);
+  } finally {
+    document.getElementById("workSubmitBtn").innerText = "保存する";
+    document.getElementById("workSubmitBtn").disabled = false;
   }
 });
 
+window.openEditWork = function(id) {
+  const w = localWorks.find(item => item.id === id);
+  if(!w) return;
+  
+  document.getElementById("editingWorkId").value = w.id;
+  document.getElementById("workFormTitle").innerText = "作品の編集";
+  document.getElementById("inputTitle").value = w.title;
+  document.getElementById("inputWorkChild").value = w.childId || "";
+  document.getElementById("inputDate").value = w.date || "";
+  document.getElementById("inputMemo").value = w.memo || "";
+  base64Image = null;
+  
+  let imgHtml = w.mediaUrls?.length ? `<img src="${w.mediaUrls[0].url}" class="w-full rounded-xl border mb-2"/>` : '';
+  document.getElementById("mediaResultContainer").innerHTML = imgHtml;
+  
+  openDrawer("work");
+};
+
+window.deleteWork = async function(id, title) {
+  if(!confirm(`「${title}」の作品を削除してもよろしいですか？\n（※写真データも完全に消去されます）`)) return;
+  const target = localWorks.find(w => w.id === id);
+  if(!target) return;
+
+  try {
+    // 写真金庫から削除
+    if(target.mediaUrls?.length) {
+      const path = `families/${currentSession.familyId}/artworks/${target.id}/1.jpg`;
+      try { await deleteObject(ref(storage, path)); } catch(e){ console.log("Storageすでになし", e); }
+    }
+    // データベースから削除
+    await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
+    alert("作品を削除しました。");
+    await syncData();
+  } catch(err) {
+    alert("削除失敗: " + err.message);
+  }
+};
+
+// 🎨 画面描画ロジック
 function renderChildList(){
   let html = "";
-  localChildren.forEach(c => { html += `<div class="premium-card p-4 mb-2"><div class="font-semibold">${c.name}</div></div>`; });
-  document.getElementById("childList").innerHTML = html;
+  localChildren.forEach(c => { 
+    html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50">
+      <div class="font-semibold text-slate-700">${c.name}</div>
+      <div class="flex gap-3 text-xs">
+        <button onclick="editChild('${c.id}')" class="text-emerald-600 font-medium">✏️ 編集</button>
+        <button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button>
+      </div>
+    </div>`; 
+  });
+  document.getElementById("childList").innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
 }
+
 function populateChildSelect(){
-  let html = `<option value="">選択してください</option>`;
+  let html = `<option value="">子どもを選択してください</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
   document.getElementById("inputWorkChild").innerHTML = html;
 }
+
 function renderGallery(){
   let html = "";
   [...localWorks].sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
-    let img = w.mediaUrls?.length ? `<img src="${w.mediaUrls[0].url}" class="w-full h-44 object-cover"/>` : '';
-    html += `<div class="premium-card overflow-hidden">${img}<div class="p-3"><div class="font-bold">${w.title}</div></div></div>`;
+    let childTag = "";
+    if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`; }
+    let img = w.mediaUrls?.length ? `<img src="${w.mediaUrls[0].url}" class="w-full h-44 object-cover cursor-pointer" onclick="openEditWork('${w.id}')"/>` : '';
+    
+    html += `<div class="premium-card overflow-hidden">
+      ${img}
+      <div class="p-3">
+        <div class="flex justify-between items-start gap-1 mb-1">
+          <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
+          <button onclick="deleteWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          ${childTag}
+          <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
+        </div>
+      </div>
+    </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html;
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>＋ボタンから最初の作品を登録しましょう！</div>";
 }
+
 function renderTimeline(){
   let html = "";
   [...localWorks].sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
-    html += `<div class="premium-card p-4"><div class="font-bold">${w.title}</div><div class="text-xs text-slate-400">${w.date}</div></div>`;
+    let childName = "共通";
+    if(w.childId) { const c = localChildren.find(item => item.id === w.childId); if(c) childName = c.name; }
+    html += `<div class="premium-card p-4 flex justify-between items-center">
+      <div>
+        <div class="font-bold text-slate-800">${w.title}</div>
+        <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}</div>
+        ${w.memo ? `<div class="text-xs text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg">${w.memo}</div>` : ''}
+      </div>
+      <button onclick="openEditWork('${w.id}')" class="text-sm px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
+    </div>`;
   });
-  document.getElementById("recordsTimeline").innerHTML = html;
+  document.getElementById("recordsTimeline").innerHTML = html || "<p class='text-center py-8 text-slate-400 text-sm'>タイムラインのデータがありません</p>";
 }
-async function loadChildren(){ localChildren = []; const snap = await getDocs(collection(db, "families", currentSession.familyId, "children")); snap.forEach(d => localChildren.push(d.data())); renderChildList(); populateChildSelect(); }
-async function loadArtworks(){ localWorks = []; const snap = await getDocs(collection(db, "families", currentSession.familyId, "artworks")); snap.forEach(d => localWorks.push(d.data())); renderGallery(); renderTimeline(); }
-window.openDrawer = function(t){ document.getElementById(t+"Drawer").classList.add("open"); };
-window.closeDrawer = function(t){ document.getElementById(t+"Drawer").classList.remove("open"); };
+
+// 共通パーツ表示管理
+window.openDrawer = function(t){ 
+  if(t === 'work' && !document.getElementById("editingWorkId").value) {
+    document.getElementById("workFormTitle").innerText = "作品登録";
+    document.getElementById("workForm").reset();
+    document.getElementById("mediaResultContainer").innerHTML = "";
+    document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+    base64Image = null;
+  }
+  document.getElementById(t+"Drawer").classList.add("open"); 
+};
+window.closeDrawer = function(t){ document.getElementById(t+"Drawer").classList.remove("remove"); document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); };
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  if(p === "gallery"){ document.getElementById("galleryPage").classList.add("active"); } 
-  else { document.getElementById("recordsPage").classList.add("active"); }
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  if(p === "gallery"){ document.getElementById("galleryPage").classList.add("active"); document.getElementById("nav-gallery").classList.add("active"); } 
+  else { document.getElementById("recordsPage").classList.add("active"); document.getElementById("nav-records").classList.add("active"); }
 };
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
 </script>
