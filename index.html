@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium</title>
+<title>コドomonote Premium [v22]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,32 +29,28 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </head>
 <body>
 
-<header class="sticky top-0 z-50 px-4 py-4 glass border-b border-[#E7E1D7]">
-  <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <div>
-      <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v19-Realtime-Sync]</div>
+<div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
+  <div class="max-w-7xl mx-auto flex flex-col gap-2">
+    
+    <div class="flex gap-2 items-center w-full">
+      <div class="flex-1">
+        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+      </div>
+      <button id="authBtn" class="px-3 py-2 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium shrink-0"><span id="authBtnText">ログイン</span></button>
+      <button onclick="switchPage('trash')" class="w-9 h-9 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-sm shrink-0" title="ゴミ箱">🗑️</button>
+      <button onclick="openDrawer('child')" class="w-9 h-9 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-sm shrink-0" title="子ども設定">⚙</button>
     </div>
-    <div class="flex gap-2 items-center">
-      <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
-      <button onclick="switchPage('trash')" class="w-11 h-11 rounded-full bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-lg" title="ゴミ箱">🗑️</button>
-      <button onclick="openDrawer('child')" class="w-11 h-11 rounded-full bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-lg">⚙</button>
-    </div>
-  </div>
-</header>
 
-<main class="max-w-7xl mx-auto px-4 pb-32">
-  <section id="galleryPage" class="page active">
-    <div class="pt-6 pb-4 flex justify-between items-center flex-wrap gap-3">
-      <h2 class="text-3xl font-bold">Gallery</h2>
-      <div class="flex gap-2 flex-1 justify-end max-w-md w-full">
+    <div class="flex gap-2 items-center w-full justify-between">
+      <div class="flex gap-2 flex-1 max-w-md">
         <div class="w-1/2">
-          <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+          <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
             <option value="all">すべての子ども</option>
+            <option value="favorite">⭐ お気に入り</option>
           </select>
         </div>
         <div class="w-1/2">
-          <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+          <select id="gallerySortSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
             <option value="createdDesc">登録が新しい順</option>
             <option value="createdAsc">登録が古い順</option>
             <option value="dateDesc">作品の日付が新しい順</option>
@@ -64,22 +60,29 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </select>
         </div>
       </div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v22-All-Merged</div>
     </div>
-    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
+  <section id="galleryPage" class="page active">
+    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
 
   <section id="recordsPage" class="page">
-    <div class="pt-6 pb-4"><h2 class="text-3xl font-bold">Records</h2></div>
+    <div class="py-2"><h2 class="text-xl font-bold px-1">Records</h2></div>
     <div id="recordsTimeline" class="space-y-4"></div>
   </section>
 
   <section id="trashPage" class="page">
-    <div class="pt-6 pb-4 flex justify-between items-center">
-      <h2 class="text-3xl font-bold text-slate-700 flex items-center gap-2">🗑️ ゴミ箱</h2>
-      <button onclick="switchPage('gallery')" class="text-sm text-[#7C9A92] font-semibold">ギャラリーに戻る</button>
+    <div class="py-2 flex justify-between items-center px-1">
+      <h2 class="text-xl font-bold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
+      <button onclick="switchPage('gallery')" class="text-xs text-[#7C9A92] font-semibold">戻る</button>
     </div>
-    <p class="text-xs text-slate-400 mb-6">ゴミ箱に入れたデータはここから復元するか、完全に消去することができます。</p>
-    <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+    <p class="text-[11px] text-slate-400 mb-4 px-1">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。</p>
+    <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
 </main>
 
@@ -160,7 +163,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-// 💡 Firestoreのインポートに onSnapshot を追加
+// 💡 リアルタイムリスナーのために onSnapshot をしっかりインポート
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -183,7 +186,7 @@ let localChildren = [];
 let localWorks = [];
 let base64MediaArray = [];
 
-// 💡 リアルタイムリスナーの解除関数を保持する変数
+// 💡 リアルタイムリスナーの解除用関数を管理
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
 
@@ -248,21 +251,19 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     btnText.innerText = "ログイン";
     currentSession = null;
-    // 💡 ログアウト時にリスナーを解除してデータをクリア
+    // 💡 ログアウト時に監視停止とローカル初期化
     stopRealtimeSync();
     localChildren = []; localWorks = [];
     renderAll();
   }
 });
 
-// 💡 リアルタイム同期をスタートする関数（新設）
+// 💡 リアルタイム同期開始（手動の再読込 syncData が不要に）
 function startRealtimeSync() {
   if(!currentSession) return;
-  
-  // 既存のリスナーがあれば念のため解除
   stopRealtimeSync();
 
-  // 子どもデータの監視
+  // 子どもデータのリアルタイム監視
   unsubscribeChildren = onSnapshot(
     collection(db, "families", currentSession.familyId, "children"),
     (snapshot) => {
@@ -270,43 +271,36 @@ function startRealtimeSync() {
       snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
       renderAll();
     },
-    (error) => {
-      console.error("子どもデータのリアルタイム同期エラー:", error);
-    }
+    (err) => console.error("Children sync error:", err)
   );
 
-  // 作品データの監視
+  // 作品データのリアルタイム監視
   unsubscribeWorks = onSnapshot(
     collection(db, "families", currentSession.familyId, "artworks"),
     (snapshot) => {
       localWorks = [];
       snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
+      // 💡 [v18] データ更新タイミングで自動ゴミ箱クリーンアップを実行
+      cleanupOldTrash();
       renderAll();
     },
-    (error) => {
-      console.error("作品データのリアルタイム同期エラー:", error);
-    }
+    (err) => console.error("Artworks sync error:", err)
   );
 }
 
-// 💡 リアルタイム同期をストップする関数（新設）
 function stopRealtimeSync() {
-  if (unsubscribeChildren) {
-    unsubscribeChildren();
-    unsubscribeChildren = null;
-  }
-  if (unsubscribeWorks) {
-    unsubscribeWorks();
-    unsubscribeWorks = null;
-  }
+  if (unsubscribeChildren) { unsubscribeChildren(); unsubscribeChildren = null; }
+  if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
 }
 
 function renderAll(){
   renderChildList(); populateChildSelect(); populateGalleryChildFilter(); renderGallery(); renderTimeline(); renderTrash();
 }
 
+// 💡 各種フィルター・検索入力時の即時イベント連動
 document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
 document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
+document.getElementById("gallerySearchInput").addEventListener("input", function() { renderGallery(); });
 
 window.saveChild = async function(){
   if(!currentSession) return;
@@ -329,7 +323,6 @@ window.saveChild = async function(){
     await addDoc(collection(db, "families", currentSession.familyId, "children"), child);
   }
   cancelChildEdit();
-  // 💡 await syncData() の手動呼び出しをすべて削除（onSnapshotが自動検知するため）
 };
 
 window.editChild = function(id) {
@@ -479,7 +472,8 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         mediaUrls.push({ type: isPdf ? "pdf" : "image", url });
       }
       
-      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false };
+      // 💡 [v21] 新規作成時はデフォルトでお気に入り(isFavorite)をfalseにして作成
+      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false };
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
       alert("✅ データを保存しました！");
     }
@@ -493,9 +487,27 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
   }
 });
 
+// 💡 [v21] お気に入り（★）の状態を反転・リアルタイム更新する関数
+window.toggleFavorite = async function(id, event) {
+  if (event) event.stopPropagation(); // 編集モーダルが開くのを防ぐ
+  if(!currentSession) return;
+  const target = localWorks.find(w => w.id === id);
+  if(!target) return;
+
+  const newFavoriteStatus = !target.isFavorite;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), {
+      isFavorite: newFavoriteStatus
+    });
+    // onSnapshotが更新を自動検知して再描画するため、ここでの手動renderは不要です
+  } catch(err) {
+    console.error("お気に入り更新エラー:", err);
+  }
+};
+
 window.openEditWork = function(id) {
   const w = localWorks.find(item => item.id === id);
-  if(!w || w.isDeleted) return; 
+  if(!w || w.isDeleted) return;
   
   document.getElementById("editingWorkId").value = w.id;
   document.getElementById("workFormTitle").innerText = "データの編集";
@@ -550,8 +562,8 @@ window.restoreWork = async function(id) {
   }
 };
 
-window.deleteWorkPermanently = async function(id, title) {
-  if(!confirm(`「${title}」をゴミ箱から完全に削除しますか？\nこの操作は取り消せません。写真やPDFも消失します。`)) return;
+window.deleteWorkPermanently = async function(id, title, silent = false) {
+  if(!silent && !confirm(`「${title}」をゴミ箱から完全に削除しますか？\nこの操作は取り消せません。写真やPDFも消失します。`)) return;
   const target = localWorks.find(w => w.id === id);
   if(!target) return;
 
@@ -563,11 +575,26 @@ window.deleteWorkPermanently = async function(id, title) {
       }
     }
     await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
-    alert("データを完全に削除しました。");
+    if(!silent) alert("データを完全に削除しました。");
   } catch(err) {
-    alert("完全削除失敗: " + err.message);
+    if(!silent) alert("完全削除失敗: " + err.message);
   }
 };
+
+// 💡 [v18] 30日経過したゴミ箱アイテムの自動完全消去ロジック
+async function cleanupOldTrash() {
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const trashItems = localWorks.filter(w => w.isDeleted);
+  
+  for (const item of trashItems) {
+    const deleteTime = item.deletedAt || now;
+    if (now - deleteTime > THIRTY_DAYS_MS) {
+      console.log(`期限切れクリーンアップ: ${item.title}`);
+      await deleteWorkPermanently(item.id, item.title, true);
+    }
+  }
+}
 
 function renderChildList(){
   let html = "";
@@ -593,7 +620,10 @@ function populateGalleryChildFilter(){
   const filterSelect = document.getElementById("galleryChildFilterSelect");
   if(!filterSelect) return;
   const currentSelectedValue = filterSelect.value;
-  let html = `<option value="all">すべての子ども</option>`;
+  
+  // 💡 [v21] ⭐お気に入りの固定枠オプションを維持
+  let html = `<option value="all">すべての子ども</option>
+              <option value="favorite">⭐ お気に入り</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
   filterSelect.innerHTML = html;
   if([...filterSelect.options].some(o => o.value === currentSelectedValue)) {
@@ -611,15 +641,29 @@ function renderGallery(){
   let html = "";
   const sortSelect = document.getElementById("gallerySortSelect");
   const filterSelect = document.getElementById("galleryChildFilterSelect");
-  if(!sortSelect || !filterSelect) return;
+  const searchInput = document.getElementById("gallerySearchInput");
+  if(!sortSelect || !filterSelect || !searchInput) return;
 
   const sortValue = sortSelect.value;
-  const filterChildId = filterSelect.value;
+  const filterValue = filterSelect.value;
+  const searchQuery = searchInput.value.toLowerCase().trim();
   
   let displayWorks = localWorks.filter(w => !w.isDeleted);
   
-  if (filterChildId !== "all") {
-    displayWorks = displayWorks.filter(w => w.childId === filterChildId);
+  // 💡 [v21] フィルター条件分け（お気に入り vs 特定の子ども）
+  if (filterValue === "favorite") {
+    displayWorks = displayWorks.filter(w => w.isFavorite === true);
+  } else if (filterValue !== "all") {
+    displayWorks = displayWorks.filter(w => w.childId === filterValue);
+  }
+
+  // 💡 [v20] リアルタイム検索絞り込み
+  if (searchQuery !== "") {
+    displayWorks = displayWorks.filter(w => {
+      const matchTitle = w.title && w.title.toLowerCase().includes(searchQuery);
+      const matchMemo = w.memo && w.memo.toLowerCase().includes(searchQuery);
+      return matchTitle || matchMemo;
+    });
   }
   
   displayWorks.sort((a, b) => {
@@ -665,12 +709,18 @@ function renderGallery(){
     }
     let countBadge = w.mediaUrls?.length > 1 ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">📂 ${w.mediaUrls.length}枚</div>` : '';
     
+    // 💡 [v21] ⭐お気に入り星印のカラースイッチ状態
+    const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
+    
     html += `<div class="premium-card overflow-hidden">
       <div class="relative">${mediaPreview}${countBadge}</div>
       <div class="p-3">
         <div class="flex justify-between items-start gap-1 mb-1">
           <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
-          <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+          <div class="flex gap-2 shrink-0 items-center">
+            <button onclick="toggleFavorite('${w.id}', event)" class="text-base transition ${favBtnColor}" title="お気に入り">★</button>
+            <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+          </div>
         </div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
         <div class="flex justify-end mt-2">
@@ -704,10 +754,13 @@ function renderTimeline(){
       });
     }
 
+    // 💡 [v21] タイムライン上でもお気に入りなら星を表示
+    const favIndicator = w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : '';
+
     html += `<div class="premium-card p-4">
       <div class="flex justify-between items-start">
         <div>
-          <div class="font-bold text-slate-800">${w.title}</div>
+          <div class="font-bold text-slate-800 flex items-center gap-1">${w.title}${favIndicator}</div>
           <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo} ・ ${catLabel}</div>
         </div>
         <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
@@ -734,14 +787,19 @@ function renderTrash(){
         mediaPreview = `<img src="${w.mediaUrls[0].url}" class="w-full h-32 object-cover"/>`;
       }
     }
+
+    // 💡 [v18] あと何日で自動削除されるかの日数計算
+    const daysPassed = Math.floor((Date.now() - (w.deletedAt || Date.now())) / (24 * 60 * 60 * 1000));
+    const daysLeft = Math.max(0, 30 - daysPassed);
     
     html += `<div class="premium-card overflow-hidden bg-slate-50 border-dashed">
       <div class="relative opacity-60">${mediaPreview}</div>
       <div class="p-3">
-        <div class="font-bold text-xs text-slate-700 line-clamp-1 mb-2">${w.title}</div>
+        <div class="font-bold text-xs text-slate-700 line-clamp-1 mb-1">${w.title}</div>
+        <div class="text-[10px] text-rose-500 mb-2 font-medium">あと ${daysLeft} 日で自動消去</div>
         <div class="flex gap-2 justify-between">
           <button onclick="restoreWork('${w.id}')" class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-medium flex-1">戻す</button>
-          <button onclick="deleteWorkPermanently('${w.id}', '${w.title}')" class="text-[10px] bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded-md font-medium flex-1">完全に消去</button>
+          <button onclick="deleteWorkPermanently('${w.id}', '${w.title}', false)" class="text-[10px] bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded-md font-medium flex-1">完全に消去</button>
         </div>
       </div>
     </div>`;
@@ -771,11 +829,14 @@ window.switchPage = function(p){
   if(p === "gallery"){ 
     document.getElementById("galleryPage").classList.add("active"); 
     document.getElementById("nav-gallery").classList.add("active"); 
+    renderGallery();
   } else if (p === "records") { 
     document.getElementById("recordsPage").classList.add("active"); 
     document.getElementById("nav-records").classList.add("active"); 
+    renderTimeline();
   } else if (p === "trash") {
     document.getElementById("trashPage").classList.add("active");
+    renderTrash();
   }
 };
 
