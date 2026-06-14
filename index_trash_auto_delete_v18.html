@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>コドomonote Premium</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#7C9A92;--accent-dark:#56736C;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',sans-serif;}
+button{cursor:pointer;}
+input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:white;outline:none;}
+.hidden{display:none !important;}
+.page{display:none;}
+.page.active{display:block;}
+.glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.78);}
+.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
+.nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
+.fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(86,115,108,.28);}
+.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;}
+.drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:92vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
+.drawer.open .drawer-panel{transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<header class="sticky top-0 z-50 px-4 py-4 glass border-b border-[#E7E1D7]">
+  <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <div>
+      <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v17-Trash-Can-Feature]</div>
+    </div>
+    <div class="flex gap-2 items-center">
+      <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
+      <button onclick="switchPage('trash')" class="w-11 h-11 rounded-full bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-lg" title="ゴミ箱">🗑️</button>
+      <button onclick="openDrawer('child')" class="w-11 h-11 rounded-full bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-lg">⚙</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 pb-32">
+  <section id="galleryPage" class="page active">
+    <div class="pt-6 pb-4 flex justify-between items-center flex-wrap gap-3">
+      <h2 class="text-3xl font-bold">Gallery</h2>
+      <div class="flex gap-2 flex-1 justify-end max-w-md w-full">
+        <div class="w-1/2">
+          <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="all">すべての子ども</option>
+          </select>
+        </div>
+        <div class="w-1/2">
+          <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="createdDesc">登録が新しい順</option>
+            <option value="createdAsc">登録が古い順</option>
+            <option value="dateDesc">作品の日付が新しい順</option>
+            <option value="dateAsc">作品の日付が古い順</option>
+            <option value="ageAsc">子どもの年齢が若い順</option>
+            <option value="ageDesc">子どもの年齢が高い順</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+  </section>
+
+  <section id="recordsPage" class="page">
+    <div class="pt-6 pb-4"><h2 class="text-3xl font-bold">Records</h2></div>
+    <div id="recordsTimeline" class="space-y-4"></div>
+  </section>
+
+  <section id="trashPage" class="page">
+    <div class="pt-6 pb-4 flex justify-between items-center">
+      <h2 class="text-3xl font-bold text-slate-700 flex items-center gap-2">🗑️ ゴミ箱</h2>
+      <button onclick="switchPage('gallery')" class="text-sm text-[#7C9A92] font-semibold">ギャラリーに戻る</button>
+    </div>
+    <p class="text-xs text-slate-400 mb-6">ゴミ箱に入れたデータはここから復元するか、完全に消去することができます。</p>
+    <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+  </section>
+</main>
+
+<div class="bottom-nav flex justify-center items-center">
+  <div class="w-full max-w-lg px-8 flex items-center justify-between">
+    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">Gallery</span></button>
+    <button onclick="openDrawer('work')" class="fab">+</button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">Records</span></button>
+  </div>
+</div>
+
+<div id="workDrawer" class="drawer">
+  <div class="drawer-panel">
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')">✕</button></div>
+    <form id="workForm" class="space-y-5">
+      <input type="hidden" id="editingWorkId" value="" />
+      <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
+      
+      <div>
+        <label class="block text-sm font-semibold mb-2">カテゴリ</label>
+        <select id="inputCategory" required>
+          <option value="artwork" selected>作品</option>
+          <option value="print">プリント</option>
+          <option value="test">テスト</option>
+        </select>
+      </div>
+
+      <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
+      <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
+      <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
+      <div id="fileInputContainer">
+        <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
+        <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-4 rounded-2xl border border-dashed border-[#CBD5E1] bg-slate-50 text-sm font-medium">写真またはPDFを選択して追加</button>
+        <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
+      </div>
+      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
+    </form>
+  </div>
+</div>
+
+<div id="childDrawer" class="drawer">
+  <div class="drawer-panel">
+    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">子ども設定</h3><button onclick="closeDrawer('child')">✕</button></div>
+    <div class="space-y-4 mb-6">
+      <input id="editingChildId" type="hidden" value="" />
+      
+      <div>
+        <label class="block text-sm font-semibold text-slate-600 mb-1.5">お名前</label>
+        <input id="childName" placeholder="例：ひなた"/>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-slate-600 mb-1.5">生年月日（誕生日）</label>
+        <div class="flex gap-2">
+          <div class="flex-1 flex items-center gap-1">
+            <select id="childBirthYear" class="py-3 px-2 text-sm"></select>
+            <span class="text-xs text-slate-500 shrink-0">年</span>
+          </div>
+          <div class="w-24 flex items-center gap-1">
+            <select id="childBirthMonth" class="py-3 px-2 text-sm"></select>
+            <span class="text-xs text-slate-500 shrink-0">月</span>
+          </div>
+          <div class="w-24 flex items-center gap-1">
+            <select id="childBirthDay" class="py-3 px-2 text-sm"></select>
+            <span class="text-xs text-slate-500 shrink-0">日</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加する</button>
+        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-300 bg-slate-100 text-sm">取消</button>
+      </div>
+    </div>
+    <div id="childList" class="mt-6 space-y-2"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const prodConfig = {
+  apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
+  authDomain: "kodomonote-prod.firebaseapp.com",
+  projectId: "kodomonote-prod",
+  storageBucket: "kodomonote-prod.firebasestorage.app"
+};
+
+const app = initializeApp(prodConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let currentSession = null;
+let localChildren = [];
+let localWorks = [];
+let base64MediaArray = [];
+
+function initBirthdaySelectboxes() {
+  const yearSelect = document.getElementById("childBirthYear");
+  const monthSelect = document.getElementById("childBirthMonth");
+  const daySelect = document.getElementById("childBirthDay");
+  if(!yearSelect || !monthSelect || !daySelect) return;
+  
+  const currentYear = new Date().getFullYear();
+  let yearHtml = "";
+  for (let y = currentYear; y >= currentYear - 20; y--) { yearHtml += `<option value="${y}">${y}</option>`; }
+  yearSelect.innerHTML = yearHtml;
+  
+  let monthHtml = "";
+  for (let m = 1; m <= 12; m++) {
+    const mStr = String(m).padStart(2, '0');
+    monthHtml += `<option value="${mStr}">${m}</option>`;
+  }
+  monthSelect.innerHTML = monthHtml;
+  
+  let dayHtml = "";
+  for (let d = 1; d <= 31; d++) {
+    const dStr = String(d).padStart(2, '0');
+    dayHtml += `<option value="${dStr}">${d}</option>`;
+  }
+  daySelect.innerHTML = dayHtml;
+}
+initBirthdaySelectboxes();
+
+function calculateAgeInMonths(birthDateStr, workDateStr) {
+  if (!birthDateStr || !workDateStr) return null;
+  const birth = new Date(birthDateStr);
+  const work = new Date(workDateStr);
+  if (isNaN(birth.getTime()) || isNaN(work.getTime())) return null;
+  
+  let months = (work.getFullYear() - birth.getFullYear()) * 12 + (work.getMonth() - birth.getMonth());
+  if (work.getDate() < birth.getDate()) { months--; }
+  return months;
+}
+
+function formatAgeString(totalMonths) {
+  if (totalMonths === null || totalMonths < 0) return "";
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  return `${years}歳${months}ヶ月`;
+}
+
+window.toggleAuth = async function() {
+  if (auth.currentUser) { if(confirm("ログアウトしますか？")) await signOut(auth); } 
+  else { try { await signInWithPopup(auth, provider); } catch (err) { alert("ログイン失敗: " + err.message); } }
+};
+document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
+
+onAuthStateChanged(auth, async (user) => {
+  const btnText = document.getElementById("authBtnText");
+  if (user) {
+    btnText.innerText = "ログアウト";
+    currentSession = { familyId: `family_of_${user.uid}`, userId: user.uid };
+    await syncData();
+    await cleanupExpiredTrash();
+    await syncData();
+  } else {
+    btnText.innerText = "ログイン";
+    currentSession = null;
+    localChildren = []; localWorks = [];
+    renderAll();
+  }
+});
+
+
+async function cleanupExpiredTrash() {
+  if (!currentSession) return;
+
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  try {
+    const expiredWorks = localWorks.filter(work =>
+      work.isDeleted === true &&
+      work.deletedAt &&
+      (now - work.deletedAt) > THIRTY_DAYS
+    );
+
+    for (const work of expiredWorks) {
+      if (work.mediaUrls?.length) {
+        for (let i = 0; i < work.mediaUrls.length; i++) {
+          const ext = work.mediaUrls[i].type === "pdf" ? "pdf" : "jpg";
+
+          try {
+            await deleteObject(
+              ref(
+                storage,
+                `families/${currentSession.familyId}/artworks/${work.id}/${i}.${ext}`
+              )
+            );
+          } catch (e) {
+            console.warn("Storage削除失敗", e);
+          }
+        }
+      }
+
+      await deleteDoc(
+        doc(
+          db,
+          "families",
+          currentSession.familyId,
+          "artworks",
+          work.docId
+        )
+      );
+    }
+
+    if (expiredWorks.length > 0) {
+      console.log(`期限切れゴミ箱データを ${expiredWorks.length} 件削除しました`);
+    }
+  } catch (err) {
+    console.error("ゴミ箱自動削除エラー", err);
+  }
+}
+
+async function syncData() {
+  if(!currentSession) return;
+  try {
+    localChildren = [];
+    const cSnap = await getDocs(collection(db, "families", currentSession.familyId, "children"));
+    cSnap.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
+    
+    localWorks = [];
+    const wSnap = await getDocs(collection(db, "families", currentSession.familyId, "artworks"));
+    wSnap.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
+
+    renderAll();
+  } catch(e) {
+    console.error("データ同期エラー:", e);
+  }
+}
+
+function renderAll(){
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); renderGallery(); renderTimeline(); renderTrash();
+}
+
+document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
+document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
+
+window.saveChild = async function(){
+  if(!currentSession) return;
+  const name = document.getElementById("childName").value.trim();
+  const editingId = document.getElementById("editingChildId").value;
+  if(!name){ alert("名前を入力してください"); return; }
+
+  const year = document.getElementById("childBirthYear").value;
+  const month = document.getElementById("childBirthMonth").value;
+  const day = document.getElementById("childBirthDay").value;
+  const birthday = `${year}-${month}-${day}`;
+
+  if(editingId) {
+    const target = localChildren.find(c => c.id === editingId);
+    if(target) {
+      await updateDoc(doc(db, "families", currentSession.familyId, "children", target.docId), { name, birthday });
+    }
+  } else {
+    const child = { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() };
+    await addDoc(collection(db, "families", currentSession.familyId, "children"), child);
+  }
+  cancelChildEdit();
+  await syncData();
+};
+
+window.editChild = function(id) {
+  const c = localChildren.find(item => item.id === id);
+  if(!c) return;
+  document.getElementById("editingChildId").value = c.id;
+  document.getElementById("childName").value = c.name;
+  
+  if (c.birthday && c.birthday.includes("-")) {
+    const parts = c.birthday.split("-");
+    if (parts.length === 3) {
+      document.getElementById("childBirthYear").value = parts[0];
+      document.getElementById("childBirthMonth").value = parts[1];
+      document.getElementById("childBirthDay").value = parts[2];
+    }
+  }
+  document.getElementById("childSubmitBtn").innerText = "更新する";
+  document.getElementById("childCancelBtn").classList.remove("hidden");
+};
+
+window.cancelChildEdit = function() {
+  document.getElementById("editingChildId").value = "";
+  document.getElementById("childName").value = "";
+  document.getElementById("childBirthYear").value = new Date().getFullYear();
+  document.getElementById("childBirthMonth").value = "01";
+  document.getElementById("childBirthDay").value = "01";
+  document.getElementById("childSubmitBtn").innerText = "追加する";
+  document.getElementById("childCancelBtn").classList.add("hidden");
+};
+
+window.deleteChild = async function(id, name) {
+  if(!confirm(`「${name}」ちゃんの設定を削除しますか？`)) return;
+  const target = localChildren.find(c => c.id === id);
+  if(target) {
+    await deleteDoc(doc(db, "families", currentSession.familyId, "children", target.docId));
+    await syncData();
+  }
+};
+
+document.getElementById("fileInput").addEventListener("change", async function(e){
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  
+  const hasVideoOrAudio = files.some(file => file.type.startsWith('video/') || file.type.startsWith('audio/'));
+  const hasInvalidFile = files.some(file => !file.type.startsWith('image/') && file.type !== 'application/pdf');
+  
+  if (hasVideoOrAudio || hasInvalidFile) {
+    alert("⚠️ 動画・音声は有料プラン限定機能です。\n「写真（画像）」または「PDFファイル」を選択してください。");
+    e.target.value = ""; 
+    return;
+  }
+
+  base64MediaArray = [];
+  document.getElementById("mediaResultContainer").innerHTML = `<p class="col-span-3 text-xs text-slate-400">ファイルを処理中...</p>`;
+
+  const processPromises = files.map(file => {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        if (file.type === 'application/pdf') {
+          resolve({ type: "pdf", dataUrl: evt.target.result });
+        } else {
+          const img = new Image();
+          img.onload = function() {
+            const maxWithHeight = 900;
+            let width = img.width; let height = img.height;
+            if (width > height && width > maxWithHeight) { height *= maxWithHeight / width; width = maxWithHeight; } 
+            else if (height > maxWithHeight) { width *= maxWithHeight / height; height = maxWithHeight; }
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            resolve({ type: "image", dataUrl: canvas.toDataURL('image/jpeg', 0.7) });
+          };
+          img.src = evt.target.result;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  base64MediaArray = await Promise.all(processPromises);
+  
+  let previewHtml = "";
+  base64MediaArray.forEach(item => {
+    if (item.type === "pdf") {
+      previewHtml += `<div class="aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">
+        <span class="text-2xl mb-1">📄</span>
+        <span class="text-[10px] text-slate-600 font-bold tracking-tight line-clamp-1">PDFファイル</span>
+      </div>`;
+    } else {
+      previewHtml += `<div class="aspect-square rounded-xl overflow-hidden border"><img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+    }
+  });
+  document.getElementById("mediaResultContainer").innerHTML = previewHtml;
+});
+
+document.getElementById("workForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  if(!currentSession) return;
+  
+  const editingId = document.getElementById("editingWorkId").value;
+  const title = document.getElementById("inputTitle").value.trim();
+  const category = document.getElementById("inputCategory").value; 
+  const childId = document.getElementById("inputWorkChild").value;
+  const date = document.getElementById("inputDate").value;
+  const memo = document.getElementById("inputMemo").value.trim();
+  
+  document.getElementById("workSubmitBtn").innerText = "送信中...";
+  document.getElementById("workSubmitBtn").disabled = true;
+
+  try {
+    if(editingId) {
+      const target = localWorks.find(w => w.id === editingId);
+      let mediaUrls = target.mediaUrls || [];
+      
+      if(base64MediaArray.length) {
+        if(target.mediaUrls?.length) {
+          for(let i=0; i<target.mediaUrls.length; i++) {
+            const ext = target.mediaUrls[i].type === "pdf" ? "pdf" : "jpg";
+            try { await deleteObject(ref(storage, `families/${currentSession.familyId}/artworks/${target.id}/${i}.${ext}`)); } catch(e){}
+          }
+        }
+        mediaUrls = [];
+        for(let i=0; i<base64MediaArray.length; i++) {
+          const isPdf = base64MediaArray[i].type === "pdf";
+          const ext = isPdf ? "pdf" : "jpg";
+          const path = `families/${currentSession.familyId}/artworks/${target.id}/${i}.${ext}`;
+          const storageRef = ref(storage, path);
+          await uploadString(storageRef, base64MediaArray[i].dataUrl, "data_url");
+          const url = await getDownloadURL(storageRef);
+          mediaUrls.push({ type: isPdf ? "pdf" : "image", url });
+        }
+      }
+      
+      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls });
+      alert("データを更新しました！");
+    } else {
+      const artworkId = crypto.randomUUID();
+      let mediaUrls = [];
+      
+      for(let i=0; i<base64MediaArray.length; i++) {
+        const isPdf = base64MediaArray[i].type === "pdf";
+        const ext = isPdf ? "pdf" : "jpg";
+        const path = `families/${currentSession.familyId}/artworks/${artworkId}/${i}.${ext}`;
+        const storageRef = ref(storage, path);
+        await uploadString(storageRef, base64MediaArray[i].dataUrl, "data_url");
+        const url = await getDownloadURL(storageRef);
+        mediaUrls.push({ type: isPdf ? "pdf" : "image", url });
+      }
+      
+      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false };
+      await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
+      alert("✅ データを保存しました！");
+    }
+    
+    closeDrawer("work");
+    await syncData();
+  } catch(err) {
+    alert("エラーが発生しました:\n" + err.message);
+  } finally {
+    document.getElementById("workSubmitBtn").innerText = "保存する";
+    document.getElementById("workSubmitBtn").disabled = false;
+  }
+});
+
+window.openEditWork = function(id) {
+  const w = localWorks.find(item => item.id === id);
+  if(!w || w.isDeleted) return; // ゴミ箱内データは編集不可
+  
+  document.getElementById("editingWorkId").value = w.id;
+  document.getElementById("workFormTitle").innerText = "データの編集";
+  document.getElementById("inputTitle").value = w.title;
+  document.getElementById("inputCategory").value = w.category || "artwork"; 
+  document.getElementById("inputWorkChild").value = w.childId || "";
+  document.getElementById("inputDate").value = w.date || "";
+  document.getElementById("inputMemo").value = w.memo || "";
+  base64MediaArray = [];
+  
+  let mediaHtml = "";
+  if(w.mediaUrls?.length) {
+    w.mediaUrls.forEach(m => {
+      if (m.type === "pdf") {
+        mediaHtml += `<div class="aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center cursor-pointer" onclick="window.open('${m.url}', '_blank')">
+          <span class="text-2xl mb-1">📄</span>
+          <span class="text-[10px] text-blue-600 font-semibold underline line-clamp-1">PDFを開く</span>
+        </div>`;
+      } else {
+        mediaHtml += `<div class="aspect-square rounded-xl overflow-hidden border"><img src="${m.url}" class="w-full h-full object-cover"/></div>`;
+      }
+    });
+  }
+  document.getElementById("mediaResultContainer").innerHTML = mediaHtml;
+  openDrawer("work");
+};
+
+// 💡 ゴミ箱へ移動（論理削除）
+window.trashWork = async function(id, title) {
+  if(!confirm(`「${title}」のデータをゴミ箱に移動しますか？`)) return;
+  const target = localWorks.find(w => w.id === id);
+  if(!target) return;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { 
+      isDeleted: true, 
+      deletedAt: Date.now() 
+    });
+    await syncData();
+  } catch(err) {
+    alert("ゴミ箱への移動に失敗しました: " + err.message);
+  }
+};
+
+// 💡 ゴミ箱から戻す（復元）
+window.restoreWork = async function(id) {
+  const target = localWorks.find(w => w.id === id);
+  if(!target) return;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { 
+      isDeleted: false,
+      deletedAt: null
+    });
+    alert("データを復元しました！");
+    await syncData();
+  } catch(err) {
+    alert("復元失敗: " + err.message);
+  }
+};
+
+// 💡 完全にデータを削除（物理削除）
+window.deleteWorkPermanently = async function(id, title) {
+  if(!confirm(`「${title}」をゴミ箱から完全に削除しますか？\nこの操作は取り消せません。写真やPDFも消失します。`)) return;
+  const target = localWorks.find(w => w.id === id);
+  if(!target) return;
+
+  try {
+    if(target.mediaUrls?.length) {
+      for(let i=0; i<target.mediaUrls.length; i++) {
+        const ext = target.mediaUrls[i].type === "pdf" ? "pdf" : "jpg";
+        try { await deleteObject(ref(storage, `families/${currentSession.familyId}/artworks/${target.id}/${i}.${ext}`)); } catch(e){}
+      }
+    }
+    await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
+    alert("データを完全に削除しました。");
+    await syncData();
+  } catch(err) {
+    alert("完全削除失敗: " + err.message);
+  }
+};
+
+function renderChildList(){
+  let html = "";
+  localChildren.forEach(c => { 
+    html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50">
+      <div class="font-semibold text-slate-700">${c.name}</div>
+      <div class="flex gap-3 text-xs">
+        <button onclick="editChild('${c.id}')" class="text-emerald-600 font-medium">✏️ 編集</button>
+        <button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button>
+      </div>
+    </div>`; 
+  });
+  document.getElementById("childList").innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
+}
+
+function populateChildSelect(){
+  let html = `<option value="">子どもを選択してください</option>`;
+  localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
+  document.getElementById("inputWorkChild").innerHTML = html;
+}
+
+function populateGalleryChildFilter(){
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  if(!filterSelect) return;
+  const currentSelectedValue = filterSelect.value;
+  let html = `<option value="all">すべての子ども</option>`;
+  localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
+  filterSelect.innerHTML = html;
+  if([...filterSelect.options].some(o => o.value === currentSelectedValue)) {
+    filterSelect.value = currentSelectedValue;
+  }
+}
+
+function getCategoryBadgeHtml(cat) {
+  if (cat === "print") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">プリント</span>`;
+  if (cat === "test") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">テスト</span>`;
+  return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">作品</span>`;
+}
+
+function renderGallery(){
+  let html = "";
+  const sortSelect = document.getElementById("gallerySortSelect");
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  if(!sortSelect || !filterSelect) return;
+
+  const sortValue = sortSelect.value;
+  const filterChildId = filterSelect.value;
+  
+  // 💡 ゴミ箱入り（isDeleted: true）を除外
+  let displayWorks = localWorks.filter(w => !w.isDeleted);
+  
+  if (filterChildId !== "all") {
+    displayWorks = displayWorks.filter(w => w.childId === filterChildId);
+  }
+  
+  displayWorks.sort((a, b) => {
+    if (sortValue === "createdDesc") { return b.createdAt - a.createdAt; } 
+    else if (sortValue === "createdAsc") { return a.createdAt - b.createdAt; } 
+    else if (sortValue === "dateDesc") { return (b.date || "0000-00-00").localeCompare(a.date || "0000-00-00"); } 
+    else if (sortValue === "dateAsc") { return (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31"); } 
+    else if (sortValue === "ageAsc" || sortValue === "ageDesc") {
+      const childA = a.childId ? localChildren.find(c => c.id === a.childId) : null;
+      const childB = b.childId ? localChildren.find(c => c.id === b.childId) : null;
+      const monthsA = childA ? calculateAgeInMonths(childA.birthday, a.date) : null;
+      const monthsB = childB ? calculateAgeInMonths(childB.birthday, b.date) : null;
+      if (monthsA === null) return 1;
+      if (monthsB === null) return -1;
+      return sortValue === "ageAsc" ? monthsA - monthsB : monthsB - monthsA;
+    }
+    return 0;
+  });
+
+  displayWorks.forEach(w => {
+    let childTag = ""; let ageTag = "";
+    if(w.childId) { 
+      const c = localChildren.find(item => item.id === w.childId); 
+      if(c) {
+        childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`;
+        const totalMonths = calculateAgeInMonths(c.birthday, w.date);
+        const ageStr = formatAgeString(totalMonths);
+        if(ageStr) { ageTag = `<span class="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-medium">🎂 ${ageStr}</span>`; }
+      } 
+    }
+    
+    let categoryTag = getCategoryBadgeHtml(w.category);
+    let mediaPreview = '';
+    if (w.mediaUrls?.length) {
+      if (w.mediaUrls[0].type === "pdf") {
+        mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')">
+          <span class="text-4xl mb-1">📄</span>
+          <span class="text-xs text-slate-500 font-semibold">PDFドキュメント</span>
+        </div>`;
+      } else {
+        mediaPreview = `<img src="${w.mediaUrls[0].url}" class="w-full h-44 object-cover cursor-pointer" onclick="openEditWork('${w.id}')"/>`;
+      }
+    }
+    let countBadge = w.mediaUrls?.length > 1 ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">📂 ${w.mediaUrls.length}枚</div>` : '';
+    
+    html += `<div class="premium-card overflow-hidden">
+      <div class="relative">${mediaPreview}${countBadge}</div>
+      <div class="p-3">
+        <div class="flex justify-between items-start gap-1 mb-1">
+          <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
+          <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+        </div>
+        <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
+        <div class="flex justify-end mt-2">
+          <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
+}
+
+function renderTimeline(){
+  let html = "";
+  // 💡 ゴミ箱入りを除外
+  let activeWorks = localWorks.filter(w => !w.isDeleted);
+  
+  activeWorks.sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
+    let childName = "共通"; let ageInfo = "";
+    if(w.childId) { 
+      const c = localChildren.find(item => item.id === w.childId); 
+      if(c) { childName = c.name; const totalMonths = calculateAgeInMonths(c.birthday, w.date); const ageStr = formatAgeString(totalMonths); if(ageStr) ageInfo = ` (${ageStr})`; } 
+    }
+    let catLabel = "作品";
+    if(w.category === "print") catLabel = "プリント";
+    if(w.category === "test") catLabel = "テスト";
+
+    let thumbs = "";
+    if(w.mediaUrls?.length) {
+      w.mediaUrls.forEach(m => { 
+        if (m.type === "pdf") { thumbs += `<div class="w-10 h-10 bg-slate-200 border rounded-md flex items-center justify-center text-sm" title="PDF">📄</div>`; } 
+        else { thumbs += `<img src="${m.url}" class="w-10 h-10 object-cover rounded-md border"/>`; }
+      });
+    }
+
+    html += `<div class="premium-card p-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-bold text-slate-800">${w.title}</div>
+          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo} ・ ${catLabel}</div>
+        </div>
+        <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
+      </div>
+      <div class="flex gap-1.5 mt-3 overflow-x-auto py-1">${thumbs}</div>
+      ${w.memo ? `<div class="text-xs text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg">${w.memo}</div>` : ''}
+    </div>`;
+  });
+  document.getElementById("recordsTimeline").innerHTML = html || "<p class='text-center py-8 text-slate-400 text-sm'>タイムラインのデータがありません</p>";
+}
+
+// 💡 ゴミ箱ビューのレンダリング（新設）
+function renderTrash(){
+  let html = "";
+  let trashedWorks = localWorks.filter(w => w.isDeleted);
+  
+  // 削除されたのが新しい順
+  trashedWorks.sort((a,b) => (b.deletedAt || 0) - (a.deletedAt || 0));
+
+  trashedWorks.forEach(w => {
+    let mediaPreview = '';
+    if (w.mediaUrls?.length) {
+      if (w.mediaUrls[0].type === "pdf") {
+        mediaPreview = `<div class="w-full h-32 bg-slate-100 flex items-center justify-center border-b font-bold text-2xl">📄</div>`;
+      } else {
+        mediaPreview = `<img src="${w.mediaUrls[0].url}" class="w-full h-32 object-cover"/>`;
+      }
+    }
+    
+    html += `<div class="premium-card overflow-hidden bg-slate-50 border-dashed">
+      <div class="relative opacity-60">${mediaPreview}</div>
+      <div class="p-3">
+        <div class="font-bold text-xs text-slate-700 line-clamp-1 mb-2">${w.title}</div>
+        <div class="flex gap-2 justify-between">
+          <button onclick="restoreWork('${w.id}')" class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-medium flex-1">戻す</button>
+          <button onclick="deleteWorkPermanently('${w.id}', '${w.title}')" class="text-[10px] bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded-md font-medium flex-1">完全に消去</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("trashGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-xs'>ゴミ箱は空っぽです</div>";
+}
+
+window.openDrawer = function(t){ 
+  if(t === 'work' && !document.getElementById("editingWorkId").value) {
+    document.getElementById("workFormTitle").innerText = "データ登録";
+    document.getElementById("workForm").reset();
+    document.getElementById("inputCategory").value = "artwork";
+    document.getElementById("mediaResultContainer").innerHTML = "";
+    document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+    base64MediaArray = [];
+  }
+  if(t === 'child') { cancelChildEdit(); }
+  document.getElementById(t+"Drawer").classList.add("open"); 
+};
+
+window.closeDrawer = function(t){ document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); };
+
+window.switchPage = function(p){
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  
+  if(p === "gallery"){ 
+    document.getElementById("galleryPage").classList.add("active"); 
+    document.getElementById("nav-gallery").classList.add("active"); 
+  } else if (p === "records") { 
+    document.getElementById("recordsPage").classList.add("active"); 
+    document.getElementById("nav-records").classList.add("active"); 
+  } else if (p === "trash") {
+    // ゴミ箱ページ
+    document.getElementById("trashPage").classList.add("active");
+  }
+};
+
+document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+</script>
+</body>
+</html>
