@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium [v20]</title>
+<title>コドomonote Premium [v21]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,6 +46,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <div class="w-1/2">
           <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
             <option value="all">すべての子ども</option>
+            <option value="favorite">⭐ お気に入り</option>
           </select>
         </div>
         <div class="w-1/2">
@@ -59,7 +60,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </select>
         </div>
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v20-MaxUI</div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v21-Favorite</div>
     </div>
 
   </div>
@@ -446,7 +447,8 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         mediaUrls.push({ type: isPdf ? "pdf" : "image", url });
       }
       
-      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false };
+      // 💡 新規登録時はisFavoriteをデフォルトfalseで登録
+      const artwork = { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false };
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), artwork);
       alert("✅ データを保存しました！");
     }
@@ -460,6 +462,27 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
     document.getElementById("workSubmitBtn").disabled = false;
   }
 });
+
+// 💡 お気に入り状態を反転させてFirebaseを更新する関数
+window.toggleFavorite = async function(id, event) {
+  if (event) event.stopPropagation(); // 編集モーダルが開くのを防ぐ
+  if(!currentSession) return;
+  const target = localWorks.find(w => w.id === id);
+  if(!target) return;
+
+  const newFavoriteStatus = !target.isFavorite;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), {
+      isFavorite: newFavoriteStatus
+    });
+    // ローカルデータを即時更新して再レンダリング
+    target.isFavorite = newFavoriteStatus;
+    renderGallery();
+    renderTimeline();
+  } catch(err) {
+    console.error("お気に入り更新エラー:", err);
+  }
+};
 
 window.openEditWork = function(id) {
   const w = localWorks.find(item => item.id === id);
@@ -578,7 +601,10 @@ function populateGalleryChildFilter(){
   const filterSelect = document.getElementById("galleryChildFilterSelect");
   if(!filterSelect) return;
   const currentSelectedValue = filterSelect.value;
-  let html = `<option value="all">すべての子ども</option>`;
+  
+  // 💡 お気に入り固定枠を残しつつ子供一覧を生成
+  let html = `<option value="all">すべての子ども</option>
+              <option value="favorite">⭐ お気に入り</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
   filterSelect.innerHTML = html;
   if([...filterSelect.options].some(o => o.value === currentSelectedValue)) {
@@ -600,13 +626,16 @@ function renderGallery(){
   if(!sortSelect || !filterSelect || !searchInput) return;
 
   const sortValue = sortSelect.value;
-  const filterChildId = filterSelect.value;
+  const filterValue = filterSelect.value;
   const searchQuery = searchInput.value.toLowerCase().trim();
   
   let displayWorks = localWorks.filter(w => !w.isDeleted);
   
-  if (filterChildId !== "all") {
-    displayWorks = displayWorks.filter(w => w.childId === filterChildId);
+  // 💡 フィルター条件分岐：お気に入りと子ども別
+  if (filterValue === "favorite") {
+    displayWorks = displayWorks.filter(w => w.isFavorite === true);
+  } else if (filterValue !== "all") {
+    displayWorks = displayWorks.filter(w => w.childId === filterValue);
   }
 
   if (searchQuery !== "") {
@@ -660,12 +689,18 @@ function renderGallery(){
     }
     let countBadge = w.mediaUrls?.length > 1 ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-bold">📂 ${w.mediaUrls.length}枚</div>` : '';
     
+    // 💡 ⭐ボタンの色切り替え
+    const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
+    
     html += `<div class="premium-card overflow-hidden">
       <div class="relative">${mediaPreview}${countBadge}</div>
       <div class="p-3">
         <div class="flex justify-between items-start gap-1 mb-1">
           <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
-          <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+          <div class="flex gap-2 shrink-0 items-center">
+            <button onclick="toggleFavorite('${w.id}', event)" class="text-base transition ${favBtnColor}" title="お気に入り">★</button>
+            <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+          </div>
         </div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
         <div class="flex justify-end mt-2">
@@ -699,10 +734,12 @@ function renderTimeline(){
       });
     }
 
+    const favIndicator = w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : '';
+
     html += `<div class="premium-card p-4">
       <div class="flex justify-between items-start">
         <div>
-          <div class="font-bold text-slate-800">${w.title}</div>
+          <div class="font-bold text-slate-800 flex items-center gap-1">${w.title}${favIndicator}</div>
           <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo} ・ ${catLabel}</div>
         </div>
         <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
