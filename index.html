@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium</title>
+<title>コドomonote Premium [v19]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +33,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <div>
       <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v18-Trash-Auto-Cleanup-Login]</div>
+      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v19-Trash-Auto-Cleanup-Search]</div>
     </div>
     <div class="flex gap-2 items-center">
       <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
@@ -47,21 +47,26 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <section id="galleryPage" class="page active">
     <div class="pt-6 pb-4 flex justify-between items-center flex-wrap gap-3">
       <h2 class="text-3xl font-bold">Gallery</h2>
-      <div class="flex gap-2 flex-1 justify-end max-w-md w-full">
-        <div class="w-1/2">
-          <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-            <option value="all">すべての子ども</option>
-          </select>
+      <div class="flex flex-col gap-2 flex-1 max-w-md w-full">
+        <div class="w-full">
+          <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
         </div>
-        <div class="w-1/2">
-          <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-            <option value="createdDesc">登録が新しい順</option>
-            <option value="createdAsc">登録が古い順</option>
-            <option value="dateDesc">作品の日付が新しい順</option>
-            <option value="dateAsc">作品の日付が古い順</option>
-            <option value="ageAsc">子どもの年齢が若い順</option>
-            <option value="ageDesc">子どもの年齢が高い順</option>
-          </select>
+        <div class="flex gap-2 w-full">
+          <div class="w-1/2">
+            <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="all">すべての子ども</option>
+            </select>
+          </div>
+          <div class="w-1/2">
+            <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="createdDesc">登録が新しい順</option>
+              <option value="createdAsc">登録が古い順</option>
+              <option value="dateDesc">作品の日付が新しい順</option>
+              <option value="dateAsc">作品の日付が古い順</option>
+              <option value="ageAsc">子どもの年齢が若い順</option>
+              <option value="ageDesc">子どもの年齢が高い順</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -78,7 +83,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <h2 class="text-3xl font-bold text-slate-700 flex items-center gap-2">🗑️ ゴミ箱</h2>
       <button onclick="switchPage('gallery')" class="text-sm text-[#7C9A92] font-semibold">ギャラリーに戻る</button>
     </div>
-    <p class="text-xs text-slate-400 mb-6">ゴミ箱に入れたデータはここから復元するか、完全に消去することができます。</p>
+    <p class="text-xs text-slate-400 mb-6">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。ここから復元することも可能です。</p>
     <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
   </section>
 </main>
@@ -270,6 +275,7 @@ function renderAll(){
 
 document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
 document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
+document.getElementById("gallerySearchInput").addEventListener("input", function() { renderGallery(); });
 
 window.saveChild = async function(){
   if(!currentSession) return;
@@ -460,7 +466,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
 
 window.openEditWork = function(id) {
   const w = localWorks.find(item => item.id === id);
-  if(!w || w.isDeleted) return; // ゴミ箱内データは編集不可
+  if(!w || w.isDeleted) return;
   
   document.getElementById("editingWorkId").value = w.id;
   document.getElementById("workFormTitle").innerText = "データの編集";
@@ -488,7 +494,6 @@ window.openEditWork = function(id) {
   openDrawer("work");
 };
 
-// 💡 ゴミ箱へ移動（論理削除）
 window.trashWork = async function(id, title) {
   if(!confirm(`「${title}」のデータをゴミ箱に移動しますか？`)) return;
   const target = localWorks.find(w => w.id === id);
@@ -504,7 +509,6 @@ window.trashWork = async function(id, title) {
   }
 };
 
-// 💡 ゴミ箱から戻す（復元）
 window.restoreWork = async function(id) {
   const target = localWorks.find(w => w.id === id);
   if(!target) return;
@@ -519,9 +523,8 @@ window.restoreWork = async function(id) {
   }
 };
 
-// 💡 完全にデータを削除（物理削除）
-window.deleteWorkPermanently = async function(id, title) {
-  if(!confirm(`「${title}」をゴミ箱から完全に削除しますか？\nこの操作は取り消せません。写真やPDFも消失します。`)) return;
+window.deleteWorkPermanently = async function(id, title, silent = false) {
+  if(!silent && !confirm(`「${title}」をゴミ箱から完全に削除しますか？\nこの操作は取り消せません。写真やPDFも消失します。`)) return;
   const target = localWorks.find(w => w.id === id);
   if(!target) return;
 
@@ -533,12 +536,26 @@ window.deleteWorkPermanently = async function(id, title) {
       }
     }
     await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
-    alert("データを完全に削除しました。");
+    if(!silent) alert("データを完全に削除しました。");
     await syncData();
   } catch(err) {
-    alert("完全削除失敗: " + err.message);
+    if(!silent) alert("完全削除失敗: " + err.message);
   }
 };
+
+async function cleanupOldTrash() {
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const trashItems = localWorks.filter(w => w.isDeleted);
+  
+  for (const item of trashItems) {
+    const deleteTime = item.deletedAt || now;
+    if (now - deleteTime > THIRTY_DAYS_MS) {
+      console.log(`期限切れのため自動クリーンアップを実行しました: ${item.title}`);
+      await deleteWorkPermanently(item.id, item.title, true);
+    }
+  }
+}
 
 function renderChildList(){
   let html = "";
@@ -582,16 +599,25 @@ function renderGallery(){
   let html = "";
   const sortSelect = document.getElementById("gallerySortSelect");
   const filterSelect = document.getElementById("galleryChildFilterSelect");
-  if(!sortSelect || !filterSelect) return;
+  const searchInput = document.getElementById("gallerySearchInput");
+  if(!sortSelect || !filterSelect || !searchInput) return;
 
   const sortValue = sortSelect.value;
   const filterChildId = filterSelect.value;
+  const searchQuery = searchInput.value.toLowerCase().trim();
   
-  // 💡 ゴミ箱入り（isDeleted: true）を除外
   let displayWorks = localWorks.filter(w => !w.isDeleted);
   
   if (filterChildId !== "all") {
     displayWorks = displayWorks.filter(w => w.childId === filterChildId);
+  }
+
+  if (searchQuery !== "") {
+    displayWorks = displayWorks.filter(w => {
+      const matchTitle = w.title && w.title.toLowerCase().includes(searchQuery);
+      const matchMemo = w.memo && w.memo.toLowerCase().includes(searchQuery);
+      return matchTitle || matchMemo;
+    });
   }
   
   displayWorks.sort((a, b) => {
@@ -656,7 +682,6 @@ function renderGallery(){
 
 function renderTimeline(){
   let html = "";
-  // 💡 ゴミ箱入りを除外
   let activeWorks = localWorks.filter(w => !w.isDeleted);
   
   activeWorks.sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
@@ -692,12 +717,12 @@ function renderTimeline(){
   document.getElementById("recordsTimeline").innerHTML = html || "<p class='text-center py-8 text-slate-400 text-sm'>タイムラインのデータがありません</p>";
 }
 
-// 💡 ゴミ箱ビューのレンダリング（新設）
-function renderTrash(){
+async function renderTrash(){
+  await cleanupOldTrash();
+
   let html = "";
   let trashedWorks = localWorks.filter(w => w.isDeleted);
   
-  // 削除されたのが新しい順
   trashedWorks.sort((a,b) => (b.deletedAt || 0) - (a.deletedAt || 0));
 
   trashedWorks.forEach(w => {
@@ -709,14 +734,18 @@ function renderTrash(){
         mediaPreview = `<img src="${w.mediaUrls[0].url}" class="w-full h-32 object-cover"/>`;
       }
     }
+
+    const daysPassed = Math.floor((Date.now() - (w.deletedAt || Date.now())) / (24 * 60 * 60 * 1000));
+    const daysLeft = Math.max(0, 30 - daysPassed);
     
     html += `<div class="premium-card overflow-hidden bg-slate-50 border-dashed">
       <div class="relative opacity-60">${mediaPreview}</div>
       <div class="p-3">
-        <div class="font-bold text-xs text-slate-700 line-clamp-1 mb-2">${w.title}</div>
+        <div class="font-bold text-xs text-slate-700 line-clamp-1 mb-1">${w.title}</div>
+        <div class="text-[10px] text-rose-500 mb-2 font-medium">あと ${daysLeft} 日で自動消去</div>
         <div class="flex gap-2 justify-between">
           <button onclick="restoreWork('${w.id}')" class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-medium flex-1">戻す</button>
-          <button onclick="deleteWorkPermanently('${w.id}', '${w.title}')" class="text-[10px] bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded-md font-medium flex-1">完全に消去</button>
+          <button onclick="deleteWorkPermanently('${w.id}', '${w.title}', false)" class="text-[10px] bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded-md font-medium flex-1">完全に消去</button>
         </div>
       </div>
     </div>`;
@@ -746,12 +775,14 @@ window.switchPage = function(p){
   if(p === "gallery"){ 
     document.getElementById("galleryPage").classList.add("active"); 
     document.getElementById("nav-gallery").classList.add("active"); 
+    renderGallery();
   } else if (p === "records") { 
     document.getElementById("recordsPage").classList.add("active"); 
     document.getElementById("nav-records").classList.add("active"); 
+    renderTimeline();
   } else if (p === "trash") {
-    // ゴミ箱ページ
     document.getElementById("trashPage").classList.add("active");
+    renderTrash();
   }
 };
 
