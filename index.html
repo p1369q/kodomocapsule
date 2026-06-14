@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium [v23]</title>
+<title>コドomonote Premium [v24]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +25,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;}
 .drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:92vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
-
-/* 💡 年齢タブ用カスタムインジケータースタイル */
 .age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
 </style>
 </head>
@@ -63,7 +61,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </select>
         </div>
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v23-Carousel-AgeTabs</div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v24-Multi-Camera-Save</div>
     </div>
 
     <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -122,11 +120,25 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
       <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
       <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
-      <div id="fileInputContainer">
+      
+      <div id="fileInputContainer" class="space-y-2">
+        <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応）</label>
+        
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
-        <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-4 rounded-2xl border border-dashed border-[#CBD5E1] bg-slate-50 text-sm font-medium">写真またはPDFを選択して追加</button>
+        <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
+        
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-emerald-50 text-[#56736C] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">
+            📸 写真を撮る (保存連動)
+          </button>
+          <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">
+            🖼️ ライブラリから選ぶ
+          </button>
+        </div>
+        
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
+      
       <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
     </form>
   </div>
@@ -181,11 +193,7 @@ let base64MediaArray = [];
 
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
-
-// 💡 年齢クイックフィルタの状態管理変数
 let currentAgeStageFilter = "all";
-
-// 💡 カルーセル（複数画像）の現在インデックスを保持するオブジェクト群 { [workId]: index }
 let carouselIndices = {};
 
 function initBirthdaySelectboxes() {
@@ -193,16 +201,13 @@ function initBirthdaySelectboxes() {
   const monthSelect = document.getElementById("childBirthMonth");
   const daySelect = document.getElementById("childBirthDay");
   if(!yearSelect || !monthSelect || !daySelect) return;
-  
   const currentYear = new Date().getFullYear();
   let yearHtml = "";
   for (let y = currentYear; y >= currentYear - 20; y--) { yearHtml += `<option value="${y}">${y}</option>`; }
   yearSelect.innerHTML = yearHtml;
-  
   let monthHtml = "";
   for (let m = 1; m <= 12; m++) { monthHtml += `<option value="${String(m).padStart(2, '0')}">${m}</option>`; }
   monthSelect.innerHTML = monthHtml;
-  
   let dayHtml = "";
   for (let d = 1; d <= 31; d++) { dayHtml += `<option value="${String(d).padStart(2, '0')}">${d}</option>`; }
   daySelect.innerHTML = dayHtml;
@@ -214,7 +219,6 @@ function calculateAgeInMonths(birthDateStr, workDateStr) {
   const birth = new Date(birthDateStr);
   const work = new Date(workDateStr);
   if (isNaN(birth.getTime()) || isNaN(work.getTime())) return null;
-  
   let months = (work.getFullYear() - birth.getFullYear()) * 12 + (work.getMonth() - birth.getMonth());
   if (work.getDate() < birth.getDate()) { months--; }
   return months;
@@ -251,13 +255,11 @@ onAuthStateChanged(auth, async (user) => {
 function startRealtimeSync() {
   if(!currentSession) return;
   stopRealtimeSync();
-
   unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
     localChildren = [];
     snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
     renderAll();
   }, (err) => console.error(err));
-
   unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
     localWorks = [];
     snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
@@ -279,7 +281,6 @@ document.getElementById("gallerySortSelect").addEventListener("change", function
 document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
 document.getElementById("gallerySearchInput").addEventListener("input", function() { renderGallery(); });
 
-// 💡 年齢ステージ切り替え用関数 [新機能]
 window.setAgeStageFilter = function(stage) {
   currentAgeStageFilter = stage;
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
@@ -287,61 +288,13 @@ window.setAgeStageFilter = function(stage) {
   renderGallery();
 };
 
-window.saveChild = async function(){
-  if(!currentSession) return;
-  const name = document.getElementById("childName").value.trim();
-  const editingId = document.getElementById("editingChildId").value;
-  if(!name){ alert("名前を入力してください"); return; }
-  const birthday = `${document.getElementById("childBirthYear").value}-${document.getElementById("childBirthMonth").value}-${document.getElementById("childBirthDay").value}`;
-
-  if(editingId) {
-    const target = localChildren.find(c => c.id === editingId);
-    if(target) await updateDoc(doc(db, "families", currentSession.familyId, "children", target.docId), { name, birthday });
-  } else {
-    await addDoc(collection(db, "families", currentSession.familyId, "children"), { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() });
-  }
-  cancelChildEdit();
-};
-
-window.editChild = function(id) {
-  const c = localChildren.find(item => item.id === id);
-  if(!c) return;
-  document.getElementById("editingChildId").value = c.id;
-  document.getElementById("childName").value = c.name;
-  if (c.birthday && c.birthday.includes("-")) {
-    const parts = c.birthday.split("-");
-    if (parts.length === 3) {
-      document.getElementById("childBirthYear").value = parts[0];
-      document.getElementById("childBirthMonth").value = parts[1];
-      document.getElementById("childBirthDay").value = parts[2];
-    }
-  }
-  document.getElementById("childSubmitBtn").innerText = "更新する";
-  document.getElementById("childCancelBtn").classList.remove("hidden");
-};
-
-window.cancelChildEdit = function() {
-  document.getElementById("editingChildId").value = "";
-  document.getElementById("childName").value = "";
-  document.getElementById("childSubmitBtn").innerText = "追加する";
-  document.getElementById("childCancelBtn").classList.add("hidden");
-};
-
-window.deleteChild = async function(id, name) {
-  if(!confirm(`「${name}」ちゃんの設定を削除しますか？`)) return;
-  const target = localChildren.find(c => c.id === id);
-  if(target) await deleteDoc(doc(db, "families", currentSession.familyId, "children", target.docId));
-};
-
-document.getElementById("fileInput").addEventListener("change", async function(e){
-  const files = Array.from(e.target.files);
+// 💡 複数枚画像・PDFの共通処理ロジック（追加されていく配列にマージする形式に最適化）
+async function processSelectedFiles(files) {
   if(!files.length) return;
   if (files.some(file => file.type.startsWith('video/') || file.type.startsWith('audio/') || (!file.type.startsWith('image/') && file.type !== 'application/pdf'))) {
     alert("⚠️ 動画・音声は有料プラン限定機能です。\n「写真（画像）」または「PDFファイル」を選択してください。");
-    e.target.value = ""; return;
+    return;
   }
-  base64MediaArray = [];
-  document.getElementById("mediaResultContainer").innerHTML = `<p class="col-span-3 text-xs text-slate-400">ファイルを処理中...</p>`;
 
   const processPromises = files.map(file => {
     return new Promise(resolve => {
@@ -351,11 +304,11 @@ document.getElementById("fileInput").addEventListener("change", async function(e
         else {
           const img = new Image();
           img.onload = function() {
-            const max = 900; let w = img.width, h = img.height;
+            const max = 1000; let w = img.width, h = img.height;
             if (w > h && w > max) { h *= max / w; w = max; } else if (h > max) { w *= max / h; h = max; }
             const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve({ type: "image", dataUrl: canvas.toDataURL('image/jpeg', 0.7) });
+            resolve({ type: "image", dataUrl: canvas.toDataURL('image/jpeg', 0.75) });
           };
           img.src = evt.target.result;
         }
@@ -363,12 +316,46 @@ document.getElementById("fileInput").addEventListener("change", async function(e
       reader.readAsDataURL(file);
     });
   });
-  base64MediaArray = await Promise.all(processPromises);
+
+  const newResults = await Promise.all(processPromises);
+  // 💡 既存の選択リストに、新規撮影・追加分を結合（複数枚の連続撮影・選択に対応）
+  base64MediaArray = base64MediaArray.concat(newResults);
+  
+  renderMediaPreviews();
+}
+
+// 💡 選択中メディアのプレビュー表示と、個別削除ボタンの設置
+function renderMediaPreviews() {
   let previewHtml = "";
-  base64MediaArray.forEach(item => {
-    previewHtml += item.type === "pdf" ? `<div class="aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner"><span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFファイル</span></div>` : `<div class="aspect-square rounded-xl overflow-hidden border"><img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+  base64MediaArray.forEach((item, index) => {
+    const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>`;
+    
+    if(item.type === "pdf") {
+      previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFファイル</span></div>`;
+    } else {
+      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+    }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
+}
+
+// 💡 登録前に間違えて選んだ画像をプレビューから外す関数
+window.removeSelectedMedia = function(index, event) {
+  if(event) event.stopPropagation();
+  base64MediaArray.splice(index, 1);
+  renderMediaPreviews();
+};
+
+// 通常ライブラリ・ファイル選択イベント
+document.getElementById("fileInput").addEventListener("change", function(e){
+  processSelectedFiles(Array.from(e.target.files));
+  e.target.value = ""; // 連続選択を可能にするためリセット
+});
+
+// カメラ撮影イベント（写真アプリ側への保存を連動）
+document.getElementById("cameraInput").addEventListener("change", function(e){
+  processSelectedFiles(Array.from(e.target.files));
+  e.target.value = ""; // 連続撮影を可能にするためリセット
 });
 
 document.getElementById("workForm").addEventListener("submit", async function(e){
@@ -423,13 +410,11 @@ window.toggleFavorite = async function(id, event) {
   await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isFavorite: !target.isFavorite });
 };
 
-// 💡 カルーセルのインデックスを変更する関数 [新機能]
 window.changeCarouselIndex = function(id, direction, event, maxCount) {
-  if (event) event.stopPropagation(); // 編集へ遷移するのをガード
+  if (event) event.stopPropagation();
   if (!carouselIndices[id]) carouselIndices[id] = 0;
-  
   carouselIndices[id] = (carouselIndices[id] + direction + maxCount) % maxCount;
-  renderGallery(); // 再描画してインデックスの画像を切り替え
+  renderGallery();
 };
 
 window.openEditWork = function(id) {
@@ -441,14 +426,15 @@ window.openEditWork = function(id) {
   document.getElementById("inputWorkChild").value = w.childId || "";
   document.getElementById("inputDate").value = w.date || "";
   document.getElementById("inputMemo").value = w.memo || "";
+  
+  // 💡 既存のURLをbase64MediaArrayへマッピングして再編集可能にする
   base64MediaArray = [];
-  let mediaHtml = "";
   if(w.mediaUrls?.length) {
     w.mediaUrls.forEach(m => {
-      mediaHtml += m.type === "pdf" ? `<div class="aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center cursor-pointer" onclick="window.open('${m.url}', '_blank')"><span class="text-2xl mb-1">📄</span><span class="text-[10px] text-blue-600 font-semibold underline line-clamp-1">PDFを開く</span></div>` : `<div class="aspect-square rounded-xl overflow-hidden border"><img src="${m.url}" class="w-full h-full object-cover"/></div>`;
+      base64MediaArray.push({ type: m.type, dataUrl: m.url });
     });
   }
-  document.getElementById("mediaResultContainer").innerHTML = mediaHtml;
+  renderMediaPreviews();
   openDrawer("work");
 };
 
@@ -517,27 +503,16 @@ function renderGallery(){
   const filterSelect = document.getElementById("galleryChildFilterSelect");
   const searchInput = document.getElementById("gallerySearchInput");
   if(!sortSelect || !filterSelect || !searchInput) return;
-
-  const sortValue = sortSelect.value;
-  const filterValue = filterSelect.value;
-  const searchQuery = searchInput.value.toLowerCase().trim();
-  
+  const sortValue = sortSelect.value; const filterValue = filterSelect.value; const searchQuery = searchInput.value.toLowerCase().trim();
   let displayWorks = localWorks.filter(w => !w.isDeleted);
-  
-  // 子ども・お気に入りフィルター
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
   else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
 
-  // 💡 年齢ステージ別クイックフィルター処理 [新機能]
   if (currentAgeStageFilter !== "all") {
     displayWorks = displayWorks.filter(w => {
       if (!w.childId) return currentAgeStageFilter === "unknown";
-      const child = localChildren.find(c => c.id === w.childId);
-      if (!child) return currentAgeStageFilter === "unknown";
-      
-      const totalMonths = calculateAgeInMonths(child.birthday, w.date);
-      if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
-      
+      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
+      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
       const ageYears = Math.floor(totalMonths / 12);
       if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
       if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
@@ -546,7 +521,6 @@ function renderGallery(){
     });
   }
 
-  // 検索クエリ
   if (searchQuery !== "") {
     displayWorks = displayWorks.filter(w => (w.title && w.title.toLowerCase().includes(searchQuery)) || (w.memo && w.memo.toLowerCase().includes(searchQuery)));
   }
@@ -573,32 +547,29 @@ function renderGallery(){
       const c = localChildren.find(item => item.id === w.childId); 
       if(c) {
         childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`;
-        const totalMonths = calculateAgeInMonths(c.birthday, w.date);
-        const ageStr = formatAgeString(totalMonths);
+        const totalMonths = calculateAgeInMonths(c.birthday, w.date); const ageStr = formatAgeString(totalMonths);
         if(ageStr) ageTag = `<span class="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-medium">🎂 ${ageStr}</span>`;
       } 
     }
-    
     let categoryTag = getCategoryBadgeHtml(w.category);
-    
-    // 💡 [新機能] カルーセルプレビューロジックの実装
-    let mediaPreview = '';
-    const mediaCount = w.mediaUrls?.length || 0;
+    let mediaPreview = ''; const mediaCount = w.mediaUrls?.length || 0;
     if (mediaCount > 0) {
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
       const currentIndex = carouselIndices[w.id] >= mediaCount ? 0 : carouselIndices[w.id];
       const activeMedia = w.mediaUrls[currentIndex];
+      // 💡 万が一FirestoreのURLがそのまま入っている場合と、データ移行期用のフォールバック
+      const sourceUrl = activeMedia.url || activeMedia.dataUrl || activeMedia;
+      const isPdf = activeMedia.type === "pdf" || (typeof sourceUrl === 'string' && sourceUrl.includes('pdf'));
 
-      if (activeMedia.type === "pdf") {
+      if (isPdf) {
         mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
       } else {
-        mediaPreview = `<img src="${activeMedia.url}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openEditWork('${w.id}')"/>`;
+        mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openEditWork('${w.id}')"/>`;
       }
     } else {
       mediaPreview = `<div class="w-full h-44 bg-slate-100 flex items-center justify-center text-xs text-slate-400 border-b">画像なし</div>`;
     }
 
-    // カルーセルのインジケーター（左右移動ボタン ＆ ドット）
     let carouselController = '';
     if (mediaCount > 1) {
       const idx = carouselIndices[w.id] || 0;
@@ -610,9 +581,7 @@ function renderGallery(){
         <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold select-none">${idx + 1} / ${mediaCount}</div>
       `;
     }
-    
     const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
-    
     html += `<div class="premium-card overflow-hidden">
       <div class="relative">${mediaPreview}${carouselController}</div>
       <div class="p-3">
@@ -643,7 +612,11 @@ function renderTimeline(){
     }
     let thumbs = "";
     if(w.mediaUrls?.length) {
-      w.mediaUrls.forEach(m => { thumbs += m.type === "pdf" ? `<div class="w-10 h-10 bg-slate-200 border rounded-md flex items-center justify-center text-sm">📄</div>` : `<img src="${m.url}" class="w-10 h-10 object-cover rounded-md border"/>`; });
+      w.mediaUrls.forEach(m => {
+        const src = m.url || m.dataUrl || m;
+        const isPdf = m.type === "pdf" || (typeof src === 'string' && src.includes('pdf'));
+        thumbs += isPdf ? `<div class="w-10 h-10 bg-slate-200 border rounded-md flex items-center justify-center text-sm">📄</div>` : `<img src="${src}" class="w-10 h-10 object-cover rounded-md border"/>`; 
+      });
     }
     html += `<div class="premium-card p-4">
       <div class="flex justify-between items-start">
@@ -664,8 +637,10 @@ function renderTrash(){
   let html = "";
   localWorks.filter(w => w.isDeleted).sort((a,b) => (b.deletedAt || 0) - (a.deletedAt || 0)).forEach(w => {
     const dLeft = Math.max(0, 30 - Math.floor((Date.now() - (w.deletedAt || Date.now())) / (24 * 60 * 60 * 1000)));
+    const src = w.mediaUrls?.length ? (w.mediaUrls[0].url || w.mediaUrls[0].dataUrl || w.mediaUrls[0]) : '';
+    const isPdf = w.mediaUrls?.length && (w.mediaUrls[0].type === "pdf" || (typeof src === 'string' && src.includes('pdf')));
     html += `<div class="premium-card overflow-hidden bg-slate-50 border-dashed">
-      <div class="relative opacity-60">${w.mediaUrls?.length && w.mediaUrls[0].type==="image" ? `<img src="${w.mediaUrls[0].url}" class="w-full h-32 object-cover"/>` : `<div class="w-full h-32 bg-slate-100 flex items-center justify-center text-2xl">📄</div>`}</div>
+      <div class="relative opacity-60">${w.mediaUrls?.length && !isPdf ? `<img src="${src}" class="w-full h-32 object-cover"/>` : `<div class="w-full h-32 bg-slate-100 flex items-center justify-center text-2xl">📄</div>`}</div>
       <div class="p-3">
         <div class="font-bold text-xs text-slate-700 line-clamp-1 mb-1">${w.title}</div>
         <div class="text-[10px] text-rose-500 mb-2 font-medium">あと ${dLeft} 日で自動消去</div>
