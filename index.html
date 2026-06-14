@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium [v19]</title>
+<title>コドomonote Premium [v20]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,62 +29,59 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </head>
 <body>
 
-<header class="sticky top-0 z-50 px-4 py-4 glass border-b border-[#E7E1D7]">
-  <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <div>
-      <div class="text-2xl font-bold tracking-tight">Kodomonote</div>
-      <div id="environmentBadge" class="text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-block bg-emerald-100 text-emerald-800">Production [v19-Trash-Auto-Cleanup-Search]</div>
+<div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
+  <div class="max-w-7xl mx-auto flex flex-col gap-2">
+    
+    <div class="flex gap-2 items-center w-full">
+      <div class="flex-1">
+        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+      </div>
+      <button id="authBtn" class="px-3 py-2 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium shrink-0"><span id="authBtnText">ログイン</span></button>
+      <button onclick="switchPage('trash')" class="w-9 h-9 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-sm shrink-0" title="ゴミ箱">🗑️</button>
+      <button onclick="openDrawer('child')" class="w-9 h-9 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-sm shrink-0" title="子ども設定">⚙</button>
     </div>
-    <div class="flex gap-2 items-center">
-      <button id="authBtn" class="px-4 py-2 rounded-full bg-white border border-[#E7E1D7] text-sm shadow-sm"><span id="authBtnText">ログイン</span></button>
-      <button onclick="switchPage('trash')" class="w-11 h-11 rounded-full bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-lg" title="ゴミ箱">🗑️</button>
-      <button onclick="openDrawer('child')" class="w-11 h-11 rounded-full bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-lg">⚙</button>
-    </div>
-  </div>
-</header>
 
-<main class="max-w-7xl mx-auto px-4 pb-32">
-  <section id="galleryPage" class="page active">
-    <div class="pt-6 pb-4 flex justify-between items-center flex-wrap gap-3">
-      <h2 class="text-3xl font-bold">Gallery</h2>
-      <div class="flex flex-col gap-2 flex-1 max-w-md w-full">
-        <div class="w-full">
-          <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+    <div class="flex gap-2 items-center w-full justify-between">
+      <div class="flex gap-2 flex-1 max-w-md">
+        <div class="w-1/2">
+          <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="all">すべての子ども</option>
+          </select>
         </div>
-        <div class="flex gap-2 w-full">
-          <div class="w-1/2">
-            <select id="galleryChildFilterSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-              <option value="all">すべての子ども</option>
-            </select>
-          </div>
-          <div class="w-1/2">
-            <select id="gallerySortSelect" class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-              <option value="createdDesc">登録が新しい順</option>
-              <option value="createdAsc">登録が古い順</option>
-              <option value="dateDesc">作品の日付が新しい順</option>
-              <option value="dateAsc">作品の日付が古い順</option>
-              <option value="ageAsc">子どもの年齢が若い順</option>
-              <option value="ageDesc">子どもの年齢が高い順</option>
-            </select>
-          </div>
+        <div class="w-1/2">
+          <select id="gallerySortSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="createdDesc">登録が新しい順</option>
+            <option value="createdAsc">登録が古い順</option>
+            <option value="dateDesc">作品の日付が新しい順</option>
+            <option value="dateAsc">作品の日付が古い順</option>
+            <option value="ageAsc">子どもの年齢が若い順</option>
+            <option value="ageDesc">子どもの年齢が高い順</option>
+          </select>
         </div>
       </div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v20-MaxUI</div>
     </div>
-    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
+  <section id="galleryPage" class="page active">
+    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
 
   <section id="recordsPage" class="page">
-    <div class="pt-6 pb-4"><h2 class="text-3xl font-bold">Records</h2></div>
+    <div class="py-2"><h2 class="text-xl font-bold px-1">Records</h2></div>
     <div id="recordsTimeline" class="space-y-4"></div>
   </section>
 
   <section id="trashPage" class="page">
-    <div class="pt-6 pb-4 flex justify-between items-center">
-      <h2 class="text-3xl font-bold text-slate-700 flex items-center gap-2">🗑️ ゴミ箱</h2>
-      <button onclick="switchPage('gallery')" class="text-sm text-[#7C9A92] font-semibold">ギャラリーに戻る</button>
+    <div class="py-2 flex justify-between items-center px-1">
+      <h2 class="text-xl font-bold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
+      <button onclick="switchPage('gallery')" class="text-xs text-[#7C9A92] font-semibold">戻る</button>
     </div>
-    <p class="text-xs text-slate-400 mb-6">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。ここから復元することも可能です。</p>
-    <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+    <p class="text-[11px] text-slate-400 mb-4 px-1">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。</p>
+    <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
 </main>
 
