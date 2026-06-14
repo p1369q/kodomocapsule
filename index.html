@@ -239,6 +239,8 @@ onAuthStateChanged(auth, async (user) => {
     btnText.innerText = "ログアウト";
     currentSession = { familyId: `family_of_${user.uid}`, userId: user.uid };
     await syncData();
+    await cleanupExpiredTrash();
+    await syncData();
   } else {
     btnText.innerText = "ログイン";
     currentSession = null;
@@ -246,6 +248,57 @@ onAuthStateChanged(auth, async (user) => {
     renderAll();
   }
 });
+
+
+async function cleanupExpiredTrash() {
+  if (!currentSession) return;
+
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  try {
+    const expiredWorks = localWorks.filter(work =>
+      work.isDeleted === true &&
+      work.deletedAt &&
+      (now - work.deletedAt) > THIRTY_DAYS
+    );
+
+    for (const work of expiredWorks) {
+      if (work.mediaUrls?.length) {
+        for (let i = 0; i < work.mediaUrls.length; i++) {
+          const ext = work.mediaUrls[i].type === "pdf" ? "pdf" : "jpg";
+
+          try {
+            await deleteObject(
+              ref(
+                storage,
+                `families/${currentSession.familyId}/artworks/${work.id}/${i}.${ext}`
+              )
+            );
+          } catch (e) {
+            console.warn("Storage削除失敗", e);
+          }
+        }
+      }
+
+      await deleteDoc(
+        doc(
+          db,
+          "families",
+          currentSession.familyId,
+          "artworks",
+          work.docId
+        )
+      );
+    }
+
+    if (expiredWorks.length > 0) {
+      console.log(`期限切れゴミ箱データを ${expiredWorks.length} 件削除しました`);
+    }
+  } catch (err) {
+    console.error("ゴミ箱自動削除エラー", err);
+  }
+}
 
 async function syncData() {
   if(!currentSession) return;
@@ -510,7 +563,8 @@ window.restoreWork = async function(id) {
   if(!target) return;
   try {
     await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { 
-      isDeleted: false 
+      isDeleted: false,
+      deletedAt: null
     });
     alert("データを復元しました！");
     await syncData();
