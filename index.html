@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v31]</title>
+<title>コドモノート [v32]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .drawer.open .drawer-panel{transform:translateY(0);}
 .age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
 
-/* メニューの開閉スムーズアニメーション用 */
 #searchMenuArea {
   transition: max-height 0.3s ease-out, opacity 0.2s ease-out, margin-top 0.3s ease-out;
   max-height: 500px;
@@ -45,7 +44,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </head>
 <body>
 
-<!-- ログイン前、および家族グループ未設定時の案内用オーバーレイ画面 -->
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
   <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm">
     <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
@@ -53,13 +51,11 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     
     <div id="gateLoading" class="text-sm text-slate-400 py-4">読み込み中...</div>
     
-    <!-- ステージ1: ログインを促すエリア -->
     <div id="gateLoginArea" class="hidden space-y-4">
       <p class="text-sm font-medium text-slate-700">利用を開始するにはGoogleアカウントでログインしてください</p>
       <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#56736C] text-white font-bold text-sm shadow shadow-emerald-900/10 hover:bg-[#465e58] transition">Googleアカウントでサインイン</button>
     </div>
 
-    <!-- ステージ2: 家族共有の設定（新規作成 or 招待コード合流） -->
     <div id="gateSetupArea" class="hidden space-y-6">
       <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
         👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
@@ -94,11 +90,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
-<!-- スマホ最適化型レスポンシブヘッダー -->
 <div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
   <div class="max-w-7xl mx-auto flex flex-col">
     
-    <!-- 1段目：ロゴ ＋ 右側ボタン群 -->
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
@@ -106,11 +100,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </button>
       </div>
       
-      <!-- ボタン群エリア：位置の入れ替えと見切れ防止調整 -->
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
         
-        <!-- 🔍 絞り込みトグルボタン（文字を消してアイコンのみにし、ログインの右側へ移動） -->
         <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none" id="menuToggleBtn" title="条件で絞り込み">
           <span>🔍</span>
         </button>
@@ -120,14 +112,11 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </div>
 
-    <!-- 表示・非表示の対象エリア（検索バー・フィルター・年齢タブ） -->
     <div id="searchMenuArea" class="flex flex-col gap-2.5 mt-2.5">
-      <!-- 2段目：検索バー -->
       <div class="w-full">
         <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
 
-      <!-- 3段目：フィルター・ソート -->
       <div class="flex gap-2 items-center w-full justify-between">
         <div class="flex gap-2 flex-1">
           <div class="w-1/2">
@@ -147,10 +136,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v31</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v32</div>
       </div>
 
-      <!-- 4段目：年齢・成長ステージ別のクイック横スクロールタブ -->
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
         <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
         <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
@@ -191,7 +179,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
-<!-- 各種モールドロワー類 -->
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')">✕</button></div>
@@ -229,7 +216,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">アカウント・設定</h3><button onclick="closeDrawer('child')">✕</button></div>
     
-    <!-- 現在の家族招待コード表示欄 -->
     <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
       <label class="block text-xs font-bold text-slate-500 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
@@ -262,7 +248,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -289,7 +275,6 @@ let unsubscribeWorks = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// メニューの表示・非表示を切り替えるJS関数
 window.toggleSearchMenu = function() {
   const menuArea = document.getElementById("searchMenuArea");
   const toggleBtn = document.getElementById("menuToggleBtn");
@@ -368,7 +353,14 @@ onAuthStateChanged(auth, async (user) => {
       if (userDocSnap.exists() && userDocSnap.data().familyId) {
         const fId = userDocSnap.data().familyId;
         currentSession = { familyId: fId, userId: user.uid };
-        document.getElementById("displayFamilyIdCode").value = fId;
+        
+        // 画面に表示する共有コードはフィールド内の inviteCode を見せたいので親ドキュメントを取得
+        const famSnap = await getDoc(doc(db, "families", fId));
+        if(famSnap.exists() && famSnap.data().inviteCode) {
+          document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
+        } else {
+          document.getElementById("displayFamilyIdCode").value = fId;
+        }
         
         gateScreen.classList.add("hidden");
         startRealtimeSync();
@@ -403,16 +395,18 @@ window.createNewFamilyGroup = async function() {
   btn.innerText = "作成中...";
   btn.disabled = true;
 
-  const generatedFamilyId = crypto.randomUUID();
+  const docFamilyId = crypto.randomUUID(); 
+  const inviteCodeUuid = crypto.randomUUID(); 
   
   try {
     await setDoc(doc(db, "users", user.uid), {
-      familyId: generatedFamilyId,
+      familyId: docFamilyId,
       email: user.email || "",
       updatedAt: Date.now()
     });
 
-    await setDoc(doc(db, "families", generatedFamilyId), {
+    await setDoc(doc(db, "families", docFamilyId), {
+      inviteCode: inviteCodeUuid,
       createdAt: Date.now(),
       createdBy: user.uid,
       members: { [user.uid]: true }
@@ -427,6 +421,7 @@ window.createNewFamilyGroup = async function() {
   }
 };
 
+// 【重要修正】inviteCode フィールドを正しくクエリ検索するように修正
 window.joinFamilyGroup = async function() {
   const user = auth.currentUser;
   const inviteCode = document.getElementById("joinInviteCodeInput").value.trim();
@@ -438,25 +433,29 @@ window.joinFamilyGroup = async function() {
   btn.disabled = true;
 
   try {
-    const familyRef = doc(db, "families", inviteCode);
-    const familySnap = await getDoc(familyRef);
+    const q = query(collection(db, "families"), where("inviteCode", "==", inviteCode));
+    const querySnapshot = await getDocs(q);
 
-    if (!familySnap.exists()) {
+    if (querySnapshot.empty) {
       alert("⚠️ 入力された家族招待コードが見つかりません。コードが正しいかご確認ください。");
       btn.innerText = "合流する";
       btn.disabled = false;
       return;
     }
 
-    const updatedMembers = { ...familySnap.data().members, [user.uid]: true };
+    const familyDoc = querySnapshot.docs[0];
+    const targetDocId = familyDoc.id; 
+    const familyData = familyDoc.data();
+
+    const updatedMembers = { ...familyData.members, [user.uid]: true };
     
     await setDoc(doc(db, "users", user.uid), {
-      familyId: inviteCode,
+      familyId: targetDocId,
       email: user.email || "",
       updatedAt: Date.now()
     });
 
-    await updateDoc(familyRef, { members: updatedMembers });
+    await updateDoc(doc(db, "families", targetDocId), { members: updatedMembers });
 
     alert("🎉 パートナーの家族ノートへの合流に成功しました！");
     location.reload();
