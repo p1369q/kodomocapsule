@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v27]</title>
+<title>コドモノート [v28]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,7 +80,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex flex-col gap-2">
     
     <div class="flex gap-2 items-center w-full">
-      <div class="text-2xl font-extrabold text-[#56736C] mr-2 select-none tracking-tight">コドモノート</div>
+      <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] mr-2 select-none tracking-tight active:scale-95 transition-transform text-left" title="トップ画面に戻る">
+        コドモノート
+      </button>
       <div class="flex-1">
         <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
@@ -108,7 +110,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </select>
         </div>
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v27</div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v28</div>
     </div>
 
     <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -453,6 +455,26 @@ window.setAgeStageFilter = function(stage) {
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
   document.getElementById(`ageTab-${stage}`).classList.add("active");
   renderGallery();
+};
+
+// 💡 ロゴクリック時に検索条件をクリアしてトップ画面（ギャラリー）を表示する関数
+window.goToTopPage = function() {
+  // 1. 各種入力やセレクトボックス、フィルターを初期状態にリセット
+  document.getElementById("gallerySearchInput").value = "";
+  document.getElementById("galleryChildFilterSelect").value = "all";
+  document.getElementById("gallerySortSelect").value = "createdDesc";
+  
+  // 2. 年齢ステージタブを「すべて」にリセット
+  currentAgeStageFilter = "all";
+  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
+  const allTab = document.getElementById("ageTab-all");
+  if(allTab) allTab.classList.add("active");
+
+  // 3. ドロワーが開いていたらすべて閉じる
+  closeDrawer();
+
+  // 4. ギャラリーページに切り替えて再描画
+  switchPage('gallery');
 };
 
 window.saveChild = async function(){
@@ -852,7 +874,14 @@ window.openDrawer = function(t){
   document.getElementById(t+"Drawer").classList.add("open"); 
 };
 
-window.closeDrawer = function(t){ document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); };
+window.closeDrawer = function(t){ 
+  if(t) {
+    const el = document.getElementById(t+"Drawer");
+    if(el) el.classList.remove('open');
+  } else {
+    document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); 
+  }
+};
 
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
