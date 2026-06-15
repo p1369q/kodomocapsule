@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v40]</title>
+<title>コドモノート [v41]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,7 +136,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v40</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v41</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -296,10 +296,11 @@ let isPremiumUser = false;
 
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
+let unsubscribeUserPlan = null; // v41: プラン状態の自動同期用
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 🛠️ Stripe決済リダイレクト関数（v40 通信処理最適化）
+// 🛠️ Stripe決済リダイレクト関数
 window.redirectToStripeCheckout = async function() {
   if (!auth.currentUser) {
     alert("ログイン状態が確認できません。アプリに再ログインしてください。");
@@ -313,7 +314,6 @@ window.redirectToStripeCheckout = async function() {
     const successUrl = window.location.href; 
     const cancelUrl = window.location.href;
 
-    // 🚀 Cloud Functions呼び出し (Headersとmodeをより標準的な形に再構成)
     const response = await fetch("https://us-central1-kodomonote-prod.cloudfunctions.net/createCheckoutSession", {
       method: "POST",
       mode: "cors",
@@ -328,7 +328,7 @@ window.redirectToStripeCheckout = async function() {
         cancelUrl: cancelUrl
       })
     }).catch(fetchErr => {
-      throw new Error(`Failed to fetch\nバックエンドサーバーへ物理的に到達できませんでした。\n\n【原因の可能性】\n1. Functionsがデプロイされていない\n2. URL(リージョン等)が異なる\n3. Cloud Functionsの公開権限(allUsersへのInvoker付与)が不足している\n\n詳細: ${fetchErr.message}`);
+      throw new Error(`Failed to fetch\nバックエンドサーバーへ物理的に到達できませんでした。\n\n【次の対応が必要です】\nFirebaseコンソール右上かGoogle Cloudコンソールから、このFunctions(createCheckoutSession)の権限設定を開き、\n「allUsers」に対して「Cloud Functions 起動元」のロールを追加してください（一般公開設定）。\n\n詳細: ${fetchErr.message}`);
     });
 
     if (!response.ok) {
@@ -452,33 +452,34 @@ onAuthStateChanged(auth, async (user) => {
     gateLoading.classList.remove("hidden");
 
     try {
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      // v41: ドキュメントの変更（プラン決済完了など）をリアルタイム監視する形に変更
+      unsubscribeUserPlan = onSnapshot(doc(db, "users", user.uid), async (userSnap) => {
+        if (userSnap.exists() && userSnap.data().familyId) {
+          const fId = userSnap.data().familyId;
+          currentSession = { familyId: fId, userId: user.uid };
+          
+          isPremiumUser = userSnap.data().plan === "premium";
+          updatePlanUI();
 
-      if (userDocSnap.exists() && userDocSnap.data().familyId) {
-        const fId = userDocSnap.data().familyId;
-        currentSession = { familyId: fId, userId: user.uid };
-        
-        if (userDocSnap.data().plan === "premium") {
-          isPremiumUser = true;
+          const famSnap = await getDoc(doc(db, "families", fId));
+          if(famSnap.exists() && famSnap.data().inviteCode) {
+            document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
+          } else {
+            document.getElementById("displayFamilyIdCode").value = fId;
+          }
+          
+          gateScreen.classList.add("hidden");
+          startRealtimeSync();
         } else {
-          isPremiumUser = false;
+          gateLoading.classList.add("hidden");
+          gateSetupArea.classList.remove("hidden");
         }
-        updatePlanUI();
-
-        const famSnap = await getDoc(doc(db, "families", fId));
-        if(famSnap.exists() && famSnap.data().inviteCode) {
-          document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
-        } else {
-          document.getElementById("displayFamilyIdCode").value = fId;
-        }
-        
-        gateScreen.classList.add("hidden");
-        startRealtimeSync();
-      } else {
+      }, (err) => {
+        console.error("Plan sync error:", err);
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
-      }
+      });
+
     } catch(err) {
       console.error("Auth mapping error:", err);
       gateLoading.classList.add("hidden");
@@ -488,6 +489,7 @@ onAuthStateChanged(auth, async (user) => {
     btnText.innerText = "ログイン";
     currentSession = null;
     stopRealtimeSync();
+    if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
     localChildren = []; localWorks = [];
     gateLoading.classList.add("hidden");
     gateSetupArea.classList.add("hidden");
@@ -588,20 +590,23 @@ window.copyFamilyCode = function() {
 
 function startRealtimeSync() {
   if(!currentSession) return;
-  stopRealtimeSync();
+  
+  if (!unsubscribeChildren) {
+    unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
+      localChildren = [];
+      snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
+      renderAll();
+    }, (err) => console.error("Sync Children Error:", err));
+  }
 
-  unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
-    localChildren = [];
-    snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
-    renderAll();
-  }, (err) => console.error("Sync Children Error:", err));
-
-  unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
-    localWorks = [];
-    snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
-    cleanupOldTrash();
-    renderAll();
-  }, (err) => console.error("Sync Works Error:", err));
+  if (!unsubscribeWorks) {
+    unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
+      localWorks = [];
+      snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
+      cleanupOldTrash();
+      renderAll();
+    }, (err) => console.error("Sync Works Error:", err));
+  }
 }
 
 function stopRealtimeSync() {
