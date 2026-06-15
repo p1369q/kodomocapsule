@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v39]</title>
+<title>コドモノート [v40]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,7 +136,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v39</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v40</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -299,10 +299,10 @@ let unsubscribeWorks = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 🛠️ Stripe決済リダイレクト関数（エラー可視化&強化版）
+// 🛠️ Stripe決済リダイレクト関数（v40 通信処理最適化）
 window.redirectToStripeCheckout = async function() {
   if (!auth.currentUser) {
-    alert("ログイン状態が確認できません。一度アプリに再ログインしてください。");
+    alert("ログイン状態が確認できません。アプリに再ログインしてください。");
     return;
   }
   const btn = document.getElementById("stripePaymentBtn");
@@ -310,13 +310,17 @@ window.redirectToStripeCheckout = async function() {
   btn.innerText = "決済画面へ移行中...";
 
   try {
-    const successUrl = "https://www.google.com";
-    const cancelUrl = "https://www.google.com";
+    const successUrl = window.location.href; 
+    const cancelUrl = window.location.href;
 
-    // 1. サーバーへリクエストを送信
+    // 🚀 Cloud Functions呼び出し (Headersとmodeをより標準的な形に再構成)
     const response = await fetch("https://us-central1-kodomonote-prod.cloudfunctions.net/createCheckoutSession", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      mode: "cors",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       body: JSON.stringify({
         uid: auth.currentUser.uid,
         email: auth.currentUser.email || "",
@@ -324,31 +328,27 @@ window.redirectToStripeCheckout = async function() {
         cancelUrl: cancelUrl
       })
     }).catch(fetchErr => {
-      throw new Error("ネットワークに接続できないか、サーバーへのアクセスが遮断されました。\n詳細: " + fetchErr.message);
+      throw new Error(`Failed to fetch\nバックエンドサーバーへ物理的に到達できませんでした。\n\n【原因の可能性】\n1. Functionsがデプロイされていない\n2. URL(リージョン等)が異なる\n3. Cloud Functionsの公開権限(allUsersへのInvoker付与)が不足している\n\n詳細: ${fetchErr.message}`);
     });
 
-    // 2. HTTPステータスコードのチェック
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`サーバーエラーが発生しました (ステータスコード: ${response.status})\n内容: ${errText || "なし"}`);
+      throw new Error(`サーバーエラー (HTTP ${response.status}):\n${errText || "応答なし"}`);
     }
 
-    // 3. レスポンスのJSONパース
     const session = await response.json().catch(() => {
-      throw new Error("サーバーから返ってきたデータが正しいJSON形式ではありません。");
+      throw new Error("サーバーからの応答をJSONオブジェクトに変換できませんでした。");
     });
 
-    // 4. URLが存在すれば遷移、無ければエラーを投げる
     if (session && session.url) {
-      console.log("Stripe Checkout URL found:", session.url);
-      window.location.replace(session.url);
+      console.log("Redirecting to Stripe:", session.url);
+      window.location.href = session.url; 
     } else {
-      throw new Error(session.error || "決済用URLデータが空、または不完全です。");
+      throw new Error(session.error || "戻り値に決済ページURL(url)が含まれていません。");
     }
 
   } catch (e) {
-    // どんな細かなエラーもすべてポップアップに引きずり出します
-    alert("【Stripe接続エラー】\n" + e.message + "\n\nお手数ですが、このメッセージを開発元にお知らせください。");
+    alert("【Stripe接続エラー】\n" + e.message);
     btn.disabled = false;
     btn.innerText = "プレミアムにする";
   }
@@ -875,7 +875,7 @@ function populateChildSelect(){
   document.getElementById("inputWorkChild").innerHTML = html;
 }
 
-function populateGalleryChildFilter(){
+ function populateGalleryChildFilter(){
   const filterSelect = document.getElementById("galleryChildFilterSelect"); if(!filterSelect) return;
   const val = filterSelect.value;
   let html = `<option value="all">すべての子ども</option><option value="favorite">⭐ お気に入り</option>`;
