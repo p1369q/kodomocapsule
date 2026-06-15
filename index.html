@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v30]</title>
+<title>コドモノート [v31]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,26 +98,29 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 <div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
   <div class="max-w-7xl mx-auto flex flex-col">
     
-    <!-- 1段目：ロゴ ＋ メニュー表示トグル ＋ 各種操作ボタン -->
+    <!-- 1段目：ロゴ ＋ 右側ボタン群 -->
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
           コドモノート
         </button>
-        <!-- 💡 表示・非表示を切り替えるトグルボタンを追加 -->
-        <button onclick="toggleSearchMenu()" class="px-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95 select-none" id="menuToggleBtn">
-          <span>🔍</span><span>絞り込み</span>
-        </button>
       </div>
       
+      <!-- ボタン群エリア：位置の入れ替えと見切れ防止調整 -->
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
+        
+        <!-- 🔍 絞り込みトグルボタン（文字を消してアイコンのみにし、ログインの右側へ移動） -->
+        <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none" id="menuToggleBtn" title="条件で絞り込み">
+          <span>🔍</span>
+        </button>
+
         <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="ゴミ箱">🗑️</button>
         <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="設定">⚙</button>
       </div>
     </div>
 
-    <!-- 💡 表示・非表示の対象エリア（検索バー・フィルター・年齢タブをパッケージ化） -->
+    <!-- 表示・非表示の対象エリア（検索バー・フィルター・年齢タブ） -->
     <div id="searchMenuArea" class="flex flex-col gap-2.5 mt-2.5">
       <!-- 2段目：検索バー -->
       <div class="w-full">
@@ -144,7 +147,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v30</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v31</div>
       </div>
 
       <!-- 4段目：年齢・成長ステージ別のクイック横スクロールタブ -->
@@ -286,7 +289,7 @@ let unsubscribeWorks = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 💡 メニューの表示・非表示を切り替えるJS関数
+// メニューの表示・非表示を切り替えるJS関数
 window.toggleSearchMenu = function() {
   const menuArea = document.getElementById("searchMenuArea");
   const toggleBtn = document.getElementById("menuToggleBtn");
@@ -856,7 +859,7 @@ function renderGallery(){
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する data が見つかりませんでした</div>";
 }
 
 function renderTimeline(){
