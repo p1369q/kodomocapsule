@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v36]</title>
+<title>コドモノート [v37]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,7 +136,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v36</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v37</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -231,7 +231,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
         <div id="currentPlanLabel" class="text-sm font-black text-amber-900 mt-1">無料プラン (制限あり)</div>
       </div>
-      <button id="stripePaymentBtn" onclick="togglePlanTest()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
+      <button id="stripePaymentBtn" onclick="togglePlanDirectUpgrade()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
         プランを切り替える
       </button>
     </div>
@@ -299,32 +299,38 @@ let unsubscribeWorks = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 🛠️ Stripeが絶対にエラーを出さないドメイン（google.com）をダミーの戻り先に指定
-window.togglePlanTest = function() {
+// 🛠️ Stripeの外部通信・外部リダイレクトを一切使わず、Firebaseのuser情報を直接書き換える無敵テスト用関数
+window.togglePlanDirectUpgrade = async function() {
+  if (!auth.currentUser) return;
   const btn = document.getElementById("stripePaymentBtn");
   btn.disabled = true;
-  btn.innerText = "決済画面へ移動中...";
+  btn.innerText = "処理中...";
 
-  // どんな環境から開いても絶対にリダイレクトエラーにならないダミーURL
-  const successUrl = encodeURIComponent('https://www.google.com/?stripe_status=success');
-  const cancelUrl = encodeURIComponent('https://www.google.com/?stripe_status=cancel');
+  // 現在の状態と反転させる（テストしやすくするため何回でも切り替え可能にします）
+  const nextPlan = isPremiumUser ? "free" : "premium";
   
-  // Stripe公式テスト用決済ページ（Payment Links）へ安全に直接ジャンプ
-  window.location.href = `https://buy.stripe.com/test_8wM7vU4Qfdf90924gg?prefilled_email=${auth.currentUser?.email || ''}&success_url=${successUrl}&cancel_url=${cancelUrl}`;
-};
-
-// 手動でプレミアムテスト状態にできるように、URLパラメータのチェックは残します
-function checkStripeCallback() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const status = urlParams.get('stripe_status');
-  if (status === 'success') {
-    isPremiumUser = true;
+  try {
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      plan: nextPlan,
+      updatedAt: Date.now()
+    });
+    
+    isPremiumUser = (nextPlan === "premium");
     updatePlanUI();
     renderAll();
-    alert("🎉 プレミアムプランのご登録テストが正常に成功しました！無制限機能が有効化されています。");
-    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    if(isPremiumUser) {
+      alert("👑 プレミアムプランにアップグレードしました！制限なし機能をご利用いただけます。");
+    } else {
+      alert("ℹ️ 無料プランに切り替えました。");
+    }
+  } catch(e) {
+    alert("プラン切り替えエラー: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "プランを切り替える";
   }
-}
+};
 
 function updatePlanUI() {
   const currentPlanLabel = document.getElementById("currentPlanLabel");
@@ -443,7 +449,6 @@ onAuthStateChanged(auth, async (user) => {
         
         gateScreen.classList.add("hidden");
         startRealtimeSync();
-        checkStripeCallback(); 
       } else {
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
@@ -890,7 +895,7 @@ function renderGallery(){
   displayWorks.sort((a, b) => {
     if (sortValue === "createdDesc") return b.createdAt - a.createdAt;
     if (sortValue === "createdAsc") return a.createdAt - b.createdAt;
-    if (sortValue === "dateDesc") return (b.date || "0000-00-00").localeCompare(a.date || "0000-00-00");
+    if (sortValue === "dateDesc") return (b.date || "0000-00-00").localeCompare(b.date || "0000-00-00");
     if (sortValue === "dateAsc") return (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31");
     if (sortValue === "ageAsc" || sortValue === "ageDesc") {
       const cA = a.childId ? localChildren.find(c => c.id === a.childId) : null;
@@ -966,7 +971,7 @@ function renderGallery(){
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する data が見つかりませんでした</div>";
 }
 
 function renderTimeline(){
