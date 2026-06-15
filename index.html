@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium [v25]</title>
+<title>コドomonote Premium [v26]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,7 +49,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       
       <div class="space-y-3">
         <h3 class="text-sm font-bold text-slate-800 text-left">✨ 新しく利用をスタートする場合</h3>
-        <button onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
+        <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
           🚀 新しい家族グループを作成する
         </button>
       </div>
@@ -65,7 +65,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <p class="text-[11px] text-slate-400">共有された家族招待コード（UUID形式）を入力してください。</p>
         <div class="flex gap-2">
           <input type="text" id="joinInviteCodeInput" placeholder="例：xxxxxxxx-xxxx-..." class="flex-1 py-2.5 px-3 text-xs rounded-xl bg-slate-50 border border-slate-200">
-          <button onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#7C9A92] text-white text-xs font-bold shrink-0 shadow-sm">合流する</button>
+          <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#7C9A92] text-white text-xs font-bold shrink-0 shadow-sm">合流する</button>
         </div>
       </div>
       
@@ -107,7 +107,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </select>
         </div>
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v25-FamilyShare-Ready</div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">Production [v26]</div>
     </div>
 
     <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -235,8 +235,7 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// セッション管理用の構造を本番向けに変更
-let currentSession = null; // { familyId, userId }
+let currentSession = null; 
 let localChildren = [];
 let localWorks = [];
 let base64MediaArray = [];
@@ -291,7 +290,6 @@ window.toggleAuth = async function() {
 };
 document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
 
-// 💡 ユーザー認証後の、所属家族グループマッピング処理
 onAuthStateChanged(auth, async (user) => {
   const btnText = document.getElementById("authBtnText");
   const gateScreen = document.getElementById("authGatescreen");
@@ -304,20 +302,24 @@ onAuthStateChanged(auth, async (user) => {
     gateLoginArea.classList.add("hidden");
     gateLoading.classList.remove("hidden");
 
-    // usersコレクションからユーザー個人の属するfamilyIdを取得
-    const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-    if (userDocSnap.exists() && userDocSnap.data().familyId) {
-      const fId = userDocSnap.data().familyId;
-      currentSession = { familyId: fId, userId: user.uid };
-      document.getElementById("displayFamilyIdCode").value = fId;
-      
-      // ゲート画面を外し、リアルタイム同期開始
-      gateScreen.classList.add("hidden");
-      startRealtimeSync();
-    } else {
-      // 認証は終わったが家族グループがない状態 -> セットアップUIを表示
+      if (userDocSnap.exists() && userDocSnap.data().familyId) {
+        const fId = userDocSnap.data().familyId;
+        currentSession = { familyId: fId, userId: user.uid };
+        document.getElementById("displayFamilyIdCode").value = fId;
+        
+        gateScreen.classList.add("hidden");
+        startRealtimeSync();
+      } else {
+        gateLoading.classList.add("hidden");
+        gateSetupArea.classList.remove("hidden");
+      }
+    } catch(err) {
+      console.error("Auth mapping error:", err);
+      // 万が一セキュリティルールで拒否されても、先に進めるようにセットアップ画面を出す
       gateLoading.classList.add("hidden");
       gateSetupArea.classList.remove("hidden");
     }
@@ -334,68 +336,83 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// 💡 新規に家族グループを発行する関数
+// 💡 修正点：セキュリティルールの順序バグを回避して安全に初期グループを作る
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
   if (!user) return;
   if (!confirm("新しい家族の記録ノートスペースを生成しますか？")) return;
 
+  const btn = document.getElementById("btnCreateFamily");
+  btn.innerText = "作成中...";
+  btn.disabled = true;
+
   const generatedFamilyId = crypto.randomUUID();
   
-  // 1. 家族メタデータ（セキュリティルールでmembers管理用）を作成
-  await setDoc(doc(db, "families", generatedFamilyId), {
-    createdAt: Date.now(),
-    createdBy: user.uid,
-    members: { [user.uid]: true }
-  });
+  try {
+    // 1. 最初に「users」側に、これから作成するfamilyIdを書き込む（自分を主権者として宣言）
+    await setDoc(doc(db, "users", user.uid), {
+      familyId: generatedFamilyId,
+      email: user.email || "",
+      updatedAt: Date.now()
+    });
 
-  // 2. ユーザープロフィールに所属家族IDを書き込み
-  await setDoc(doc(db, "users", user.uid), {
-    familyId: generatedFamilyId,
-    email: user.email,
-    updatedAt: Date.now()
-  });
+    // 2. その直後に「families」ドキュメントを作成（セキュリティルールがusersのデータを参照して許可する）
+    await setDoc(doc(db, "families", generatedFamilyId), {
+      createdAt: Date.now(),
+      createdBy: user.uid,
+      members: { [user.uid]: true }
+    });
 
-  alert("家族グループを新規に作成しました！");
-  location.reload();
+    alert("🎉 家族グループを新規に作成しました！");
+    location.reload();
+  } catch (e) {
+    btn.innerText = "🚀 新しい家族グループを作成する";
+    btn.disabled = false;
+    alert("🚨 Firebaseエラーが発生しました。\nFirestoreのルール設定と干渉している可能性があります:\n\n" + e.message);
+  }
 };
 
-// 💡 パートナーの招待コードを入力して合流する関数
 window.joinFamilyGroup = async function() {
   const user = auth.currentUser;
   const inviteCode = document.getElementById("joinInviteCodeInput").value.trim();
   if(!user) return;
   if(!inviteCode) { alert("招待コードを入力してください"); return; }
 
+  const btn = document.getElementById("btnJoinFamily");
+  btn.innerText = "合流中...";
+  btn.disabled = true;
+
   try {
-    // 指定された家族グループが存在するか確認
     const familyRef = doc(db, "families", inviteCode);
     const familySnap = await getDoc(familyRef);
 
     if (!familySnap.exists()) {
       alert("⚠️ 入力された家族招待コードが見つかりません。コードが正しいかご確認ください。");
+      btn.innerText = "合流する";
+      btn.disabled = false;
       return;
     }
 
-    // 1. 家族グループのメンバーリストに自分を追加
     const updatedMembers = { ...familySnap.data().members, [user.uid]: true };
-    await updateDoc(familyRef, { members: updatedMembers });
-
-    // 2. 自分のユーザー情報にfamilyIdを書き込み
+    
+    // 合流時もセキュリティルールに則り、usersへの登録を先に行う
     await setDoc(doc(db, "users", user.uid), {
       familyId: inviteCode,
-      email: user.email,
+      email: user.email || "",
       updatedAt: Date.now()
     });
+
+    await updateDoc(familyRef, { members: updatedMembers });
 
     alert("🎉 パートナーの家族ノートへの合流に成功しました！");
     location.reload();
   } catch(e) {
-    alert("エラーが発生しました: " + e.message);
+    btn.innerText = "合流する";
+    btn.disabled = false;
+    alert("🚨 合流エラーが発生しました:\n" + e.message);
   }
 };
 
-// 家族コードコピー補助
 window.copyFamilyCode = function() {
   const codeInput = document.getElementById("displayFamilyIdCode");
   codeInput.select();
@@ -449,13 +466,17 @@ window.saveChild = async function(){
   if(!name){ alert("名前を入力してください"); return; }
   const birthday = `${document.getElementById("childBirthYear").value}-${document.getElementById("childBirthMonth").value}-${document.getElementById("childBirthDay").value}`;
 
-  if(editingId) {
-    const target = localChildren.find(c => c.id === editingId);
-    if(target) await updateDoc(doc(db, "families", currentSession.familyId, "children", target.docId), { name, birthday });
-  } else {
-    await addDoc(collection(db, "families", currentSession.familyId, "children"), { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() });
+  try {
+    if(editingId) {
+      const target = localChildren.find(c => c.id === editingId);
+      if(target) await updateDoc(doc(db, "families", currentSession.familyId, "children", target.docId), { name, birthday });
+    } else {
+      await addDoc(collection(db, "families", currentSession.familyId, "children"), { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() });
+    }
+    cancelChildEdit();
+  } catch(e) {
+    alert("子ども情報の保存に失敗しました: " + e.message);
   }
-  cancelChildEdit();
 };
 
 window.editChild = function(id) {
@@ -555,14 +576,11 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
       const target = localWorks.find(w => w.id === editingId);
       let mediaUrls = [];
       
-      // 既存データ（すでにFirebaseストレージにあるURL）と、新しく追加されたBase64ファイルを仕分けして保存
       for(let i=0; i<base64MediaArray.length; i++) {
         const currentItem = base64MediaArray[i];
         if (currentItem.dataUrl.startsWith('http')) {
-          // すでにアップロード済みのURLならそのまま維持
           mediaUrls.push({ type: currentItem.type, url: currentItem.dataUrl });
         } else {
-          // 新規追加されたBase64ファイルの場合はアップロード実行
           const isPdf = currentItem.type === "pdf";
           const path = `families/${currentSession.familyId}/artworks/${target.id}/${Date.now()}_${i}.${isPdf?"pdf":"jpg"}`;
           const r = ref(storage, path); await uploadString(r, currentItem.dataUrl, "data_url");
@@ -581,7 +599,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false });
     }
     closeDrawer("work");
-  } catch(err) { alert(err.message); } finally { document.getElementById("workSubmitBtn").innerText = "保存する"; document.getElementById("workSubmitBtn").disabled = false; }
+  } catch(err) { alert("保存エラー: " + err.message); } finally { document.getElementById("workSubmitBtn").innerText = "保存する"; document.getElementById("workSubmitBtn").disabled = false; }
 });
 
 window.toggleFavorite = async function(id, event) {
@@ -773,7 +791,7 @@ function renderGallery(){
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する data が見つかりませんでした</div>";
 }
 
 function renderTimeline(){
