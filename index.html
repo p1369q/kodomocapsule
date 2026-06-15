@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドomonote Premium [v26]</title>
+<title>コドモノート [v27]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,8 +32,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
   <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm">
-    <h1 class="text-3xl font-extrabold text-[#56736C]">コドomonote</h1>
-    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するプレミアムノートアプリ</p>
+    <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
+    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するノートアプリ</p>
     
     <div id="gateLoading" class="text-sm text-slate-400 py-4">読み込み中...</div>
     
@@ -80,6 +80,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex flex-col gap-2">
     
     <div class="flex gap-2 items-center w-full">
+      <div class="text-2xl font-extrabold text-[#56736C] mr-2 select-none tracking-tight">コドモノート</div>
       <div class="flex-1">
         <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
@@ -107,7 +108,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </select>
         </div>
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">Production [v26]</div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v27</div>
     </div>
 
     <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -127,7 +128,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </section>
 
   <section id="recordsPage" class="page">
-    <div class="py-2"><h2 class="text-xl font-bold px-1">Records</h2></div>
+    <div class="py-2"><h2 class="text-xl font-bold px-1">タイムライン</h2></div>
     <div id="recordsTimeline" class="space-y-4"></div>
   </section>
 
@@ -143,9 +144,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div class="bottom-nav flex justify-center items-center">
   <div class="w-full max-w-lg px-8 flex items-center justify-between">
-    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">Gallery</span></button>
+    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">ギャラリー</span></button>
     <button onclick="openDrawer('work')" class="fab">+</button>
-    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">Records</span></button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">タイムライン</span></button>
   </div>
 </div>
 
@@ -319,7 +320,6 @@ onAuthStateChanged(auth, async (user) => {
       }
     } catch(err) {
       console.error("Auth mapping error:", err);
-      // 万が一セキュリティルールで拒否されても、先に進めるようにセットアップ画面を出す
       gateLoading.classList.add("hidden");
       gateSetupArea.classList.remove("hidden");
     }
@@ -336,7 +336,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// 💡 修正点：セキュリティルールの順序バグを回避して安全に初期グループを作る
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
   if (!user) return;
@@ -349,14 +348,12 @@ window.createNewFamilyGroup = async function() {
   const generatedFamilyId = crypto.randomUUID();
   
   try {
-    // 1. 最初に「users」側に、これから作成するfamilyIdを書き込む（自分を主権者として宣言）
     await setDoc(doc(db, "users", user.uid), {
       familyId: generatedFamilyId,
       email: user.email || "",
       updatedAt: Date.now()
     });
 
-    // 2. その直後に「families」ドキュメントを作成（セキュリティルールがusersのデータを参照して許可する）
     await setDoc(doc(db, "families", generatedFamilyId), {
       createdAt: Date.now(),
       createdBy: user.uid,
@@ -395,7 +392,6 @@ window.joinFamilyGroup = async function() {
 
     const updatedMembers = { ...familySnap.data().members, [user.uid]: true };
     
-    // 合流時もセキュリティルールに則り、usersへの登録を先に行う
     await setDoc(doc(db, "users", user.uid), {
       familyId: inviteCode,
       email: user.email || "",
@@ -791,7 +787,7 @@ function renderGallery(){
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する data が見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
 }
 
 function renderTimeline(){
