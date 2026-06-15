@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v29]</title>
+<title>コドモノート [v30]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +26,21 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:92vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
 .age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
+
+/* メニューの開閉スムーズアニメーション用 */
+#searchMenuArea {
+  transition: max-height 0.3s ease-out, opacity 0.2s ease-out, margin-top 0.3s ease-out;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+}
+#searchMenuArea.collapsed {
+  max-height: 0px !important;
+  opacity: 0 !important;
+  margin-top: 0px !important;
+  padding-bottom: 0px !important;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -81,14 +96,19 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <!-- スマホ最適化型レスポンシブヘッダー -->
 <div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
-  <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
+  <div class="max-w-7xl mx-auto flex flex-col">
     
-    <!-- 1段目：ロゴ ＋ 各種操作ボタン（横並びで絶対に崩れないように整理） -->
+    <!-- 1段目：ロゴ ＋ メニュー表示トグル ＋ 各種操作ボタン -->
     <div class="flex items-center justify-between w-full gap-2">
-      <!-- 💡 ロゴが絶対に改行されないよう whitespace-nowrap を追加 -->
-      <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap shrink-0" title="トップ画面に戻る">
-        コドモノート
-      </button>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
+          コドモノート
+        </button>
+        <!-- 💡 表示・非表示を切り替えるトグルボタンを追加 -->
+        <button onclick="toggleSearchMenu()" class="px-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95 select-none" id="menuToggleBtn">
+          <span>🔍</span><span>絞り込み</span>
+        </button>
+      </div>
       
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
@@ -97,41 +117,44 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </div>
 
-    <!-- 2段目：検索バー（スマホでも潰れないよう独立させて幅100%を確保） -->
-    <div class="w-full">
-      <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
-    </div>
-
-    <!-- 3段目：フィルター・ソート -->
-    <div class="flex gap-2 items-center w-full justify-between">
-      <div class="flex gap-2 flex-1">
-        <div class="w-1/2">
-          <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-            <option value="all">すべての子ども</option>
-            <option value="favorite">⭐ お気に入り</option>
-          </select>
-        </div>
-        <div class="w-1/2">
-          <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-            <option value="createdDesc">登録が新しい順</option>
-            <option value="createdAsc">登録が古い順</option>
-            <option value="dateDesc">作品の日付が新しい順</option>
-            <option value="dateAsc">作品の日付が古い順</option>
-            <option value="ageAsc">年齢が若い順</option>
-            <option value="ageDesc">年齢が高い順</option>
-          </select>
-        </div>
+    <!-- 💡 表示・非表示の対象エリア（検索バー・フィルター・年齢タブをパッケージ化） -->
+    <div id="searchMenuArea" class="flex flex-col gap-2.5 mt-2.5">
+      <!-- 2段目：検索バー -->
+      <div class="w-full">
+        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v29</div>
-    </div>
 
-    <!-- 4段目：年齢・成長ステージ別のクイック横スクロールタブ -->
-    <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
-      <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
-      <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
-      <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
-      <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
-      <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+      <!-- 3段目：フィルター・ソート -->
+      <div class="flex gap-2 items-center w-full justify-between">
+        <div class="flex gap-2 flex-1">
+          <div class="w-1/2">
+            <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="all">すべての子ども</option>
+              <option value="favorite">⭐ お気に入り</option>
+            </select>
+          </div>
+          <div class="w-1/2">
+            <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="createdDesc">登録が新しい順</option>
+              <option value="createdAsc">登録が古い順</option>
+              <option value="dateDesc">作品の日付が新しい順</option>
+              <option value="dateAsc">作品の日付が古い順</option>
+              <option value="ageAsc">年齢が若い順</option>
+              <option value="ageDesc">年齢が高い順</option>
+            </select>
+          </div>
+        </div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v30</div>
+      </div>
+
+      <!-- 4段目：年齢・成長ステージ別のクイック横スクロールタブ -->
+      <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
+        <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+        <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
+        <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
+        <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
+        <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+      </div>
     </div>
 
   </div>
@@ -262,6 +285,21 @@ let unsubscribeChildren = null;
 let unsubscribeWorks = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
+
+// 💡 メニューの表示・非表示を切り替えるJS関数
+window.toggleSearchMenu = function() {
+  const menuArea = document.getElementById("searchMenuArea");
+  const toggleBtn = document.getElementById("menuToggleBtn");
+  if(menuArea.classList.contains("collapsed")) {
+    menuArea.classList.remove("collapsed");
+    toggleBtn.classList.add("bg-[#56736C]", "text-white");
+    toggleBtn.classList.remove("bg-slate-100", "text-slate-600");
+  } else {
+    menuArea.classList.add("collapsed");
+    toggleBtn.classList.remove("bg-[#56736C]", "text-white");
+    toggleBtn.classList.add("bg-slate-100", "text-slate-600");
+  }
+};
 
 function initBirthdaySelectboxes() {
   const yearSelect = document.getElementById("childBirthYear");
