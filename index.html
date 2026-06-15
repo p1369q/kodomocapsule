@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v28]</title>
+<title>コドモノート [v29]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +30,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </head>
 <body>
 
+<!-- ログイン前、および家族グループ未設定時の案内用オーバーレイ画面 -->
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
   <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm">
     <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
@@ -37,11 +38,13 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     
     <div id="gateLoading" class="text-sm text-slate-400 py-4">読み込み中...</div>
     
+    <!-- ステージ1: ログインを促すエリア -->
     <div id="gateLoginArea" class="hidden space-y-4">
       <p class="text-sm font-medium text-slate-700">利用を開始するにはGoogleアカウントでログインしてください</p>
       <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#56736C] text-white font-bold text-sm shadow shadow-emerald-900/10 hover:bg-[#465e58] transition">Googleアカウントでサインイン</button>
     </div>
 
+    <!-- ステージ2: 家族共有の設定（新規作成 or 招待コード合流） -->
     <div id="gateSetupArea" class="hidden space-y-6">
       <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
         👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
@@ -76,43 +79,53 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+<!-- スマホ最適化型レスポンシブヘッダー -->
 <div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
-  <div class="max-w-7xl mx-auto flex flex-col gap-2">
+  <div class="max-w-7xl mx-auto flex flex-col gap-2.5">
     
-    <div class="flex gap-2 items-center w-full">
-      <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] mr-2 select-none tracking-tight active:scale-95 transition-transform text-left" title="トップ画面に戻る">
+    <!-- 1段目：ロゴ ＋ 各種操作ボタン（横並びで絶対に崩れないように整理） -->
+    <div class="flex items-center justify-between w-full gap-2">
+      <!-- 💡 ロゴが絶対に改行されないよう whitespace-nowrap を追加 -->
+      <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap shrink-0" title="トップ画面に戻る">
         コドモノート
       </button>
-      <div class="flex-1">
-        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+      
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
+        <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="ゴミ箱">🗑️</button>
+        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="設定">⚙</button>
       </div>
-      <button id="authBtn" class="px-3 py-2 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium shrink-0"><span id="authBtnText">ログイン</span></button>
-      <button onclick="switchPage('trash')" class="w-9 h-9 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-sm shrink-0" title="ゴミ箱">🗑️</button>
-      <button onclick="openDrawer('child')" class="w-9 h-9 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-sm shrink-0" title="設定">⚙</button>
     </div>
 
+    <!-- 2段目：検索バー（スマホでも潰れないよう独立させて幅100%を確保） -->
+    <div class="w-full">
+      <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+    </div>
+
+    <!-- 3段目：フィルター・ソート -->
     <div class="flex gap-2 items-center w-full justify-between">
-      <div class="flex gap-2 flex-1 max-w-md">
+      <div class="flex gap-2 flex-1">
         <div class="w-1/2">
-          <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+          <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
             <option value="all">すべての子ども</option>
             <option value="favorite">⭐ お気に入り</option>
           </select>
         </div>
         <div class="w-1/2">
-          <select id="gallerySortSelect" class="w-full py-1.5 px-2.5 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+          <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
             <option value="createdDesc">登録が新しい順</option>
             <option value="createdAsc">登録が古い順</option>
             <option value="dateDesc">作品の日付が新しい順</option>
             <option value="dateAsc">作品の日付が古い順</option>
-            <option value="ageAsc">子どもの年齢が若い順</option>
-            <option value="ageDesc">子どもの年齢が高い順</option>
+            <option value="ageAsc">年齢が若い順</option>
+            <option value="ageDesc">年齢が高い順</option>
           </select>
         </div>
       </div>
-      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">v28</div>
+      <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v29</div>
     </div>
 
+    <!-- 4段目：年齢・成長ステージ別のクイック横スクロールタブ -->
     <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
       <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
       <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
@@ -152,6 +165,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+<!-- 各種モールドロワー類 -->
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')">✕</button></div>
@@ -189,6 +203,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">アカウント・設定</h3><button onclick="closeDrawer('child')">✕</button></div>
     
+    <!-- 現在の家族招待コード表示欄 -->
     <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
       <label class="block text-xs font-bold text-slate-500 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
@@ -367,7 +382,7 @@ window.createNewFamilyGroup = async function() {
   } catch (e) {
     btn.innerText = "🚀 新しい家族グループを作成する";
     btn.disabled = false;
-    alert("🚨 Firebaseエラーが発生しました。\nFirestoreのルール設定と干渉している可能性があります:\n\n" + e.message);
+    alert("🚨 Firebaseエラーが発生しました:\n" + e.message);
   }
 };
 
@@ -457,23 +472,17 @@ window.setAgeStageFilter = function(stage) {
   renderGallery();
 };
 
-// 💡 ロゴクリック時に検索条件をクリアしてトップ画面（ギャラリー）を表示する関数
 window.goToTopPage = function() {
-  // 1. 各種入力やセレクトボックス、フィルターを初期状態にリセット
   document.getElementById("gallerySearchInput").value = "";
   document.getElementById("galleryChildFilterSelect").value = "all";
   document.getElementById("gallerySortSelect").value = "createdDesc";
   
-  // 2. 年齢ステージタブを「すべて」にリセット
   currentAgeStageFilter = "all";
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
   const allTab = document.getElementById("ageTab-all");
   if(allTab) allTab.classList.add("active");
 
-  // 3. ドロワーが開いていたらすべて閉じる
   closeDrawer();
-
-  // 4. ギャラリーページに切り替えて再描画
   switchPage('gallery');
 };
 
@@ -529,7 +538,7 @@ window.deleteChild = async function(id, name) {
 async function processSelectedFiles(files) {
   if(!files.length) return;
   if (files.some(file => file.type.startsWith('video/') || file.type.startsWith('audio/') || (!file.type.startsWith('image/') && file.type !== 'application/pdf'))) {
-    alert("⚠️ 動画・音声は有料プラン限定機能です。\n「写真（画像）」または「PDFファイル」を選択してください。"); return;
+    alert("⚠️ 「写真（画像）」または「PDFファイル」を選択してください。"); return;
   }
   const processPromises = files.map(file => {
     return new Promise(resolve => {
@@ -563,7 +572,7 @@ function renderMediaPreviews() {
     if(item.type === "pdf") {
       previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFファイル</span></div>`;
     } else {
-      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl.startsWith('http') ? item.dataUrl : item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
     }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
