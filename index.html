@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>コドモノート [v34]</title>
+    <title>コドモノート [v37]</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,24 +33,18 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">🎨</span>
             <h1 class="text-xl font-bold tracking-tight text-slate-900">コドモノート</h1>
-            <span class="text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">v34</span>
+            <span class="text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">v37</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button id="search-toggle-btn" class="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100 transition">
-                🔍
-            </button>
-            <button id="settings-btn" class="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100 transition">
-                ⚙️
-            </button>
-            <button id="logout-btn" class="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition">
-                ログアウト
-            </button>
+            <button id="search-toggle-btn" class="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100 transition">🔍</button>
+            <button id="settings-btn" class="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100 transition">⚙️</button>
+            <button id="logout-btn" class="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition">ログアウト</button>
         </div>
     </header>
 
     <div id="search-bar-container" class="bg-white border-b border-slate-200 px-4 py-3 hidden">
         <div class="max-w-xl mx-auto flex gap-2">
-            <input type="text" id="search-input" placeholder="タイトルやメモで検索..." class="flex-1 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+            <input type="text" id="search-input" placeholder="タイトルやメモで検索..." class="flex-1 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             <select id="child-filter" class="border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <option value="all">すべてのユーザー</option>
             </select>
@@ -88,9 +82,7 @@
                     <h3 class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-3">📩 パートナーから招待されている場合</h3>
                     <div class="space-y-2">
                         <input type="text" id="join-family-code" placeholder="共有された家族招待コードを入力" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                        <button id="join-family-btn" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-xl hover:bg-slate-900 transition shadow-sm">
-                            合流する
-                        </button>
+                        <button id="join-family-btn" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-xl hover:bg-slate-900 transition shadow-sm">合流する</button>
                     </div>
                 </div>
             </div>
@@ -100,15 +92,11 @@
             <div class="flex items-center space-x-2 overflow-x-auto pb-4 mb-4 scrollbar-none" id="tag-shortcut-container">
                 <button class="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shrink-0">すべて</button>
             </div>
-
-            <div id="artworks-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                </div>
+            <div id="artworks-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
         </div>
     </main>
 
-    <button id="fab-btn" class="fixed bottom-6 right-6 w-14 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 flex items-center justify-center text-2xl transition-transform hover:scale-105 active:scale-95 z-30 hidden" style="height: 3.5rem;">
-        ＋
-    </button>
+    <button id="fab-btn" class="fixed bottom-6 right-6 w-14 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 flex items-center justify-center text-2xl transition-transform hover:scale-105 active:scale-95 z-30 hidden" style="height: 3.5rem;">＋</button>
 
     <div id="settings-modal" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl border border-slate-200">
@@ -123,17 +111,12 @@
                     </label>
                     <div class="flex gap-2 mt-1">
                         <input type="text" id="family-code-display" readonly class="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-600 font-mono focus:outline-none" />
-                        <button id="copy-code-btn" class="bg-white border border-slate-300 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-slate-50 transition active:bg-slate-100">
-                            コピー
-                        </button>
+                        <button id="copy-code-btn" class="bg-white border border-slate-300 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-slate-50 transition">コピー</button>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力するとデータを完全共有できます。</p>
                 </div>
 
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1 mb-3">
-                        <span>👶</span> <span>子ども情報の管理</span>
-                    </h3>
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1 mb-3"><span>👶</span> <span>子ども情報の管理</span></h3>
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-500 mb-1">お名前</label>
@@ -147,25 +130,19 @@
                                 <select id="child-birth-day" class="w-20 border border-slate-300 rounded-xl px-2 py-2 text-sm bg-white"></select>
                             </div>
                         </div>
-                        <button id="add-child-btn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-4 rounded-xl text-sm transition">
-                            子どもを追加する
-                        </button>
+                        <button id="add-child-btn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-4 rounded-xl text-sm transition">子どもを追加する</button>
                     </div>
                     <div id="children-list" class="mt-4 space-y-2"></div>
                 </div>
 
                 <div class="border-t border-slate-200 pt-6">
-                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1 mb-3">
-                        <span>👑</span> <span>プレミアムプラン（サブスクリプション）</span>
-                    </h3>
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1 mb-3"><span>👑</span> <span>プレミアムプラン</span></h3>
                     <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4 shadow-sm">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">機能無制限</span>
                             <span class="text-lg font-bold text-slate-900">¥300 <span class="text-xs font-normal text-slate-500">/ 月</span></span>
                         </div>
-                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">
-                            プレミアムプランに登録すると、作品やプリントの保存件数が無制限になり、高画質な画像保存、家族間での快適な高速共有が有効になります。
-                        </p>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed">作品の保存件数が無制限になり、高画質な画像保存、家族間での高速共有が有効になります。</p>
                         <button id="stripe-checkout-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center space-x-2 shadow-sm">
                             <span>💳</span> <span>プレミアムプランに登録する</span>
                         </button>
@@ -181,7 +158,6 @@
                 <h2 class="text-lg font-bold text-slate-900">作品を追加する</h2>
                 <button id="close-upload-btn" class="text-slate-400 hover:text-slate-600 text-2xl font-semibold">&times;</button>
             </div>
-            
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1">対象の子ども</label>
@@ -189,26 +165,24 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1">タイトル</label>
-                    <input type="text" id="upload-title-input" placeholder="例：おはなばたけ、たのしいえんそく" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    <input type="text" id="upload-title-input" placeholder="例：おはなばたけ" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1">写真・画像を選択</label>
-                    <input type="file" id="upload-file-input" accept="image/*" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer" />
+                    <input type="file" id="upload-file-input" accept="image/*" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm cursor-pointer" />
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-500 mb-1">メモ・思い出（任意）</label>
-                    <textarea id="upload-memo-input" rows="2" placeholder="例：幼稚園の粘土細工で作ったそうです。上手にできたね！" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                    <textarea id="upload-memo-input" rows="2" placeholder="メモを残せます" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                 </div>
-                <button id="submit-upload-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition shadow-sm">
-                    アップロードして保存する
-                </button>
+                <button id="submit-upload-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition shadow-sm">アップロードして保存する</button>
             </div>
         </div>
     </div>
 
     <script>
         // -------------------------------------------------------------------------
-        // 🔑 CONFIGURATION (環境に合わせてご自身の認証情報を指定してください)
+        // 🔑 CONFIGURATION (ご自身のFirebaseのキーを設定してください)
         // -------------------------------------------------------------------------
         const firebaseConfig = {
             apiKey: "AIzaSyA...",
@@ -227,40 +201,32 @@
         // -------------------------------------------------------------------------
         // 💳 STRIPE INTEGRATION SETUP
         // -------------------------------------------------------------------------
-        // 🌟 共有していただいたテスト用キーを自動設定済みです
         const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TiW2M2XPPikXao88nEDITwowuJMEXNqor6tPljD1DbatiND10xKtExoBIaVw3QLbU7itLrpxwEbYHoYkny05FRo00SPnzYHNf'; 
         
-        // 🔴 修正箇所: 作成した商品の「価格ID（price_...）」をここに貼り付けてください
-        const STRIPE_PRICE_ID = '🔴ここに価格IDを入力'; 
+        // 🌟 コピーしていただいた本物の価格IDをここに反映させました！
+        const STRIPE_PRICE_ID = 'price_1TiWZq2XPPikXao8uSHGWojN'; 
 
         const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
-        // アプリケーション共通ステート保持用
         let currentUser = null;
         let currentFamilyId = null;
         let childrenMap = {};
 
-        // ドキュメント初期読み込み時のイベントハンドリング
         document.addEventListener('DOMContentLoaded', () => {
             initDateDropdowns();
             setupEventListeners();
-            checkPaymentStatus(); // 決済リダイレクトから戻ってきたかの簡易検知
+            checkPaymentStatus();
             
-            // ログイン状態変更の監視
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUser = user;
-                    console.log("Logged in user:", user.uid);
                     await checkUserFamilyGroup();
                 } else {
-                    console.log("User not logged in.");
-                    // ダミーの自動匿名ログイン
                     auth.signInAnonymously().catch(err => console.error("Anonymous signin failed:", err));
                 }
             });
         });
 
-        // 📅 生年月日ドロップダウンの初期化
         function initDateDropdowns() {
             const yearSelect = document.getElementById('child-birth-year');
             const monthSelect = document.getElementById('child-birth-month');
@@ -281,7 +247,6 @@
             }
         }
 
-        // ⚙️ ユーザーの所属家族グループの存在確認
         async function checkUserFamilyGroup() {
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -305,14 +270,10 @@
             }
         }
 
-        // 💳 Stripe決済画面（Checkout）へのリダイレクト処理
+        // 💳 Stripe決済処理
         document.getElementById('stripe-checkout-btn').addEventListener('click', async () => {
             if (!currentUser) {
                 alert('決済を開始するにはログインが必要です。');
-                return;
-            }
-            if (STRIPE_PRICE_ID.includes('ここに価格IDを入力')) {
-                alert('ソースコード内の STRIPE_PRICE_ID に、Stripe管理画面で発行した価格ID（price_...）を設定してください。');
                 return;
             }
 
@@ -321,23 +282,14 @@
             btn.innerHTML = '🔄 決済画面へ移動中...';
 
             try {
-                // セッションを発行してStripe安全決済画面へジャンプ
                 const { error } = await stripe.redirectToCheckout({
-                    lineItems: [{
-                        price: STRIPE_PRICE_ID,
-                        quantity: 1,
-                    }],
+                    lineItems: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
                     mode: 'subscription',
-                    // 成功時とキャンセル時の戻り先URL（パラメータ付き）
                     successUrl: window.location.origin + window.location.pathname + '?stripe_status=success&session_id={CHECKOUT_SESSION_ID}',
                     cancelUrl: window.location.origin + window.location.pathname + '?stripe_status=cancel',
-                    // バックエンドやWebhookで突合させるためにFirebaseのUIDを連携
                     clientReferenceId: currentUser.uid
                 });
-
-                if (error) {
-                    throw error;
-                }
+                if (error) throw error;
             } catch (err) {
                 console.error("Stripe Checkout Error:", err);
                 alert("Stripe決済の起動に失敗しました: " + err.message);
@@ -346,13 +298,11 @@
             }
         });
 
-        // 🔍 パラメーターから決済結果を簡易チェック
         function checkPaymentStatus() {
             const urlParams = new URLSearchParams(window.location.search);
             const stripeStatus = urlParams.get('stripe_status');
-            
             if (stripeStatus === 'success') {
-                alert('🎉 プレミアムプランの登録手続きが正常に開始されました！決済完了の反映までしばらくお待ちください。');
+                alert('🎉 プレミアムプランの登録手続きが開始されました！');
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (stripeStatus === 'cancel') {
                 alert('決済手続きがキャンセルされました。');
@@ -360,59 +310,46 @@
             }
         }
 
-        // 🚀 新規家族グループの作成手続き
         document.getElementById('create-family-btn').addEventListener('click', async () => {
             try {
                 const newFamilyRef = db.collection('families').doc();
                 const familyId = newFamilyRef.id;
-                
                 await newFamilyRef.set({
                     familyId: familyId,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     members: [currentUser.uid]
                 });
-                
                 await db.collection('users').doc(currentUser.uid).set({
                     uid: currentUser.uid,
                     familyId: familyId,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-                
                 await checkUserFamilyGroup();
             } catch (err) {
-                alert("家族グループの作成に失敗しました: " + err.message);
+                alert("グループ作成失敗: " + err.message);
             }
         });
 
-        // 📩 既存の家族グループへの合流
         document.getElementById('join-family-btn').addEventListener('click', async () => {
             const code = document.getElementById('join-family-code').value.trim();
             if (!code) return alert("招待コードを入力してください。");
-            
             try {
                 const familyDoc = await db.collection('families').doc(code).get();
-                if (!familyDoc.exists) {
-                    alert("入力された家族招待コードが見つかりません。");
-                    return;
-                }
-                
+                if (!familyDoc.exists) return alert("コードが見つかりません。");
                 await db.collection('families').doc(code).update({
                     members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                 });
-                
                 await db.collection('users').doc(currentUser.uid).set({
                     uid: currentUser.uid,
                     familyId: code,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-                
                 await checkUserFamilyGroup();
             } catch (err) {
-                alert("家族グループへの合流に失敗しました: " + err.message);
+                alert("合流失敗: " + err.message);
             }
         });
 
-        // 👶 子どもデータのリアルタイム購読
         function subscribeChildren() {
             db.collection('families').doc(currentFamilyId).collection('children')
               .onSnapshot((snapshot) => {
@@ -437,21 +374,18 @@
                       
                       const row = document.createElement('div');
                       row.className = "flex items-center justify-between bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-sm";
-                      row.innerHTML = `<span class="font-medium">${child.name} (${child.birthYear}/${child.birthMonth}/${child.birthDay}生まれ)</span>`;
+                      row.innerHTML = `<span class="font-medium">${child.name}</span>`;
                       listContainer.appendChild(row);
                   });
-              }, err => console.error("Children snapshot error:", err));
+              });
         }
 
-        // 👶 新しい子ども情報の保存
         document.getElementById('add-child-btn').addEventListener('click', async () => {
             const name = document.getElementById('child-name-input').value.trim();
             const year = document.getElementById('child-birth-year').value;
             const month = document.getElementById('child-birth-month').value;
             const day = document.getElementById('child-birth-day').value;
-            
-            if (!name) return alert("お名前を入力してください。");
-            
+            if (!name) return alert("名前を入力してください。");
             try {
                 await db.collection('families').doc(currentFamilyId).collection('children').add({
                     name: name,
@@ -460,58 +394,48 @@
                     birthDay: parseInt(day),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
                 document.getElementById('child-name-input').value = '';
-                alert("子ども情報を登録しました！");
             } catch (err) {
-                alert("子ども情報の保存に失敗しました: " + err.message);
+                alert("保存失敗: " + err.message);
             }
         });
 
-        // 🎨 作品データのリアルタイム購読
         function subscribeArtworks() {
             db.collection('families').doc(currentFamilyId).collection('artworks')
               .orderBy('createdAt', 'desc')
               .onSnapshot((snapshot) => {
                   const grid = document.getElementById('artworks-grid');
                   grid.innerHTML = '';
-                  
                   if (snapshot.empty) {
-                      grid.innerHTML = `<p class="col-span-full text-center text-slate-400 py-12 text-sm">登録されている作品がまだありません。<br>右下の「＋」ボタンから追加してみましょう！</p>`;
+                      grid.innerHTML = `<p class="col-span-full text-center text-slate-400 py-12 text-sm">作品がありません。</p>';
                       return;
                   }
-                  
                   snapshot.forEach((doc) => {
                       const artwork = doc.data();
                       const childName = childrenMap[artwork.childId]?.name || "不詳";
-                      
                       const card = document.createElement('div');
-                      card.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col group hover:shadow-md transition";
+                      card.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col";
                       card.innerHTML = `
-                          <div class="aspect-square w-full bg-slate-100 relative overflow-hidden">
-                              <img src="${artwork.imageUrl || 'https://via.placeholder.com/300'}" alt="${artwork.title}" class="w-full h-full object-cover transition-transform group-hover:scale-102" loading="lazy" />
-                              <span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">${childName}</span>
+                          <div class="aspect-square w-full bg-slate-100 relative">
+                              <img src="${artwork.imageUrl || ''}" class="w-full h-full object-cover" />
+                              <span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">${childName}</span>
                           </div>
-                          <div class="p-3 flex-1 flex flex-col justify-between">
-                              <h4 class="font-bold text-slate-900 text-sm truncate">${artwork.title || '無題'}</h4>
-                              <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${artwork.memo || ''}</p>
+                          <div class="p-3">
+                              <h4 class="font-bold text-sm truncate">${artwork.title || '無題'}</h4>
                           </div>
                       `;
                       grid.appendChild(card);
                   });
-              }, err => console.error("Artworks snapshot error:", err));
+              });
         }
 
-        // 🎨 新しい作品（画像）のアップロード保存
         document.getElementById('submit-upload-btn').addEventListener('click', async () => {
             const childId = document.getElementById('upload-child-select').value;
             const title = document.getElementById('upload-title-input').value.trim();
             const file = document.getElementById('upload-file-input').files[0];
             const memo = document.getElementById('upload-memo-input').value.trim();
             
-            if (!childId) return alert("対象となる子どもを選択してください。");
-            if (!file) return alert("アップロードする画像ファイルを選択してください。");
-            
+            if (!childId || !file) return alert("必須項目を入力してください。");
             const btn = document.getElementById('submit-upload-btn');
             btn.disabled = true;
             btn.textContent = "アップロード中...";
@@ -519,76 +443,32 @@
             try {
                 const storagePath = `families/${currentFamilyId}/artworks/${Date.now()}_${file.name}`;
                 const storageRef = storage.ref().child(storagePath);
-                
                 const uploadTask = await storageRef.put(file);
                 const imageUrl = await uploadTask.ref.getDownloadURL();
                 
                 await db.collection('families').doc(currentFamilyId).collection('artworks').add({
-                    childId: childId,
-                    title: title || "無題の作品",
-                    imageUrl: imageUrl,
-                    storagePath: storagePath,
-                    memo: memo,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    childId: childId, title: title || "無題の作品", imageUrl: imageUrl, storagePath: storagePath, memo: memo, createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
-                document.getElementById('upload-title-input').value = '';
-                document.getElementById('upload-file-input').value = '';
-                document.getElementById('upload-memo-input').value = '';
                 document.getElementById('upload-modal').classList.add('hidden');
-                
-                alert("作品を保存しました！");
             } catch (err) {
-                alert("作品の保存に失敗しました: " + err.message);
-            } finaly {
+                alert("保存失敗: " + err.message);
+            } finally {
                 btn.disabled = false;
                 btn.textContent = "アップロードして保存する";
             }
         });
 
-        // ↕️ UI制御イベントの一括設定
         function setupEventListeners() {
-            // 設定画面
-            document.getElementById('settings-btn').addEventListener('click', () => {
-                document.getElementById('settings-modal').classList.remove('hidden');
-            });
-            document.getElementById('close-settings-btn').addEventListener('click', () => {
-                document.getElementById('settings-modal').classList.add('hidden');
-            });
-            
-            // アップロード画面
-            document.getElementById('fab-btn').addEventListener('click', () => {
-                if (Object.keys(childrenMap).length === 0) {
-                    alert("作品を登録する前に、まず「⚙️ アカウント・設定」から子ども情報を登録してください。");
-                    document.getElementById('settings-modal').classList.remove('hidden');
-                    return;
-                }
-                document.getElementById('upload-modal').classList.remove('hidden');
-            });
-            document.getElementById('close-upload-btn').addEventListener('click', () => {
-                document.getElementById('upload-modal').classList.add('hidden');
-            });
-            
-            // 検索バー
-            document.getElementById('search-toggle-btn').addEventListener('click', () => {
-                const bar = document.getElementById('search-bar-container');
-                bar.classList.toggle('hidden');
-            });
-            
-            // 招待コードコピー
+            document.getElementById('settings-btn').addEventListener('click', () => document.getElementById('settings-modal').classList.remove('hidden'));
+            document.getElementById('close-settings-btn').addEventListener('click', () => document.getElementById('settings-modal').classList.add('hidden'));
+            document.getElementById('fab-btn').addEventListener('click', () => document.getElementById('upload-modal').classList.remove('hidden'));
+            document.getElementById('close-upload-btn').addEventListener('click', () => document.getElementById('upload-modal').classList.add('hidden'));
+            document.getElementById('search-toggle-btn').addEventListener('click', () => document.getElementById('search-bar-container').classList.toggle('hidden'));
             document.getElementById('copy-code-btn').addEventListener('click', () => {
-                const codeInput = document.getElementById('family-code-display');
-                if(!codeInput.value) return;
-                navigator.clipboard.writeText(codeInput.value);
-                alert("家族コードをコピーしました！パートナーに共有してください。");
+                navigator.clipboard.writeText(document.getElementById('family-code-display').value);
+                alert("コピーしました！");
             });
-            
-            // ログアウト
-            document.getElementById('logout-btn').addEventListener('click', () => {
-                if(confirm("ログアウトしますか？")) {
-                    auth.signOut().then(() => window.location.reload());
-                }
-            });
+            document.getElementById('logout-btn').addEventListener('click', () => { if(confirm("ログアウトしますか？")) auth.signOut().then(() => window.location.reload()); });
         }
     </script>
 </body>
