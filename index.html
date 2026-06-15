@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v32]</title>
+<title>コドモノート [v33]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,7 +136,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v32</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v33</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -152,6 +152,16 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </div>
 
 <main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
+  <div id="premiumBannerArea" class="hidden mb-4 p-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <span class="text-lg">👑</span>
+      <div class="text-left">
+        <div class="text-xs font-bold">プレミアムプラン利用中</div>
+        <div class="text-[10px] opacity-90">子ども登録・作品保存数がすべて無制限です</div>
+      </div>
+    </div>
+  </div>
+
   <section id="galleryPage" class="page active">
     <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
@@ -174,7 +184,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 <div class="bottom-nav flex justify-center items-center">
   <div class="w-full max-w-lg px-8 flex items-center justify-between">
     <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">ギャラリー</span></button>
-    <button onclick="openDrawer('work')" class="fab">+</button>
+    <button onclick="handleFabClick()" class="fab">+</button>
     <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">タイムライン</span></button>
   </div>
 </div>
@@ -202,7 +212,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-emerald-50 text-[#56736C] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る (保存連動)</button>
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-emerald-50 text-[#56736C] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る (保存連峰)</button>
           <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
         </div>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
@@ -216,6 +226,16 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">アカウント・設定</h3><button onclick="closeDrawer('child')">✕</button></div>
     
+    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
+      <div>
+        <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
+        <div id="currentPlanLabel" class="text-sm font-black text-amber-900 mt-1">無料プラン (制限あり)</div>
+      </div>
+      <button onclick="togglePlanTest()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
+        プランを切り替える
+      </button>
+    </div>
+
     <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
       <label class="block text-xs font-bold text-slate-500 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
@@ -226,7 +246,10 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     </div>
 
     <div class="space-y-4 mb-6 pt-2 border-t">
-      <h4 class="text-sm font-bold text-slate-800">👶 子どもの追加・編集</h4>
+      <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
+        <span>👶 子どもの追加・編集</span>
+        <span id="childLimitCountLabel" class="text-xs font-medium text-slate-500">(0 / 1人)</span>
+      </h4>
       <input id="editingChildId" type="hidden" value="" />
       <div><label class="block text-sm font-semibold text-slate-600 mb-1.5">お名前</label><input id="childName" placeholder="例：ひなた"/></div>
       <div>
@@ -269,11 +292,44 @@ let currentSession = null;
 let localChildren = [];
 let localWorks = [];
 let base64MediaArray = [];
+let isPremiumUser = false; // 有料プラン判定用フラグ
 
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
+
+// テスト用にプランをトグル切り替えする関数
+window.togglePlanTest = function() {
+  isPremiumUser = !isPremiumUser;
+  updatePlanUI();
+  renderAll();
+};
+
+function updatePlanUI() {
+  const currentPlanLabel = document.getElementById("currentPlanLabel");
+  const premiumBannerArea = document.getElementById("premiumBannerArea");
+  
+  if (isPremiumUser) {
+    currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
+    currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
+    premiumBannerArea.classList.remove("hidden");
+  } else {
+    currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
+    currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
+    premiumBannerArea.classList.add("hidden");
+  }
+}
+
+window.handleFabClick = function() {
+  // 無料プランかつアクティブな作品数が10件以上の場合はブロック
+  const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
+  if (!isPremiumUser && activeWorksCount >= 10) {
+    alert("⚠️ 無料プランの作品登録上限（10件）に達しています。\nこれ以上登録するにはプレミアムプランへの切り替えが必要です。");
+    return;
+  }
+  openDrawer('work');
+};
 
 window.toggleSearchMenu = function() {
   const menuArea = document.getElementById("searchMenuArea");
@@ -354,7 +410,12 @@ onAuthStateChanged(auth, async (user) => {
         const fId = userDocSnap.data().familyId;
         currentSession = { familyId: fId, userId: user.uid };
         
-        // 画面に表示する共有コードはフィールド内の inviteCode を見せたいので親ドキュメントを取得
+        // プレミアムプラン状態の自動復元（もしDB側に持たせる拡張を行う場合）
+        if (userDocSnap.data().plan === "premium") {
+          isPremiumUser = true;
+        }
+        updatePlanUI();
+
         const famSnap = await getDoc(doc(db, "families", fId));
         if(famSnap.exists() && famSnap.data().inviteCode) {
           document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
@@ -402,6 +463,7 @@ window.createNewFamilyGroup = async function() {
     await setDoc(doc(db, "users", user.uid), {
       familyId: docFamilyId,
       email: user.email || "",
+      plan: "free", // 初回は一律フリープラン
       updatedAt: Date.now()
     });
 
@@ -421,7 +483,6 @@ window.createNewFamilyGroup = async function() {
   }
 };
 
-// 【重要修正】inviteCode フィールドを正しくクエリ検索するように修正
 window.joinFamilyGroup = async function() {
   const user = auth.currentUser;
   const inviteCode = document.getElementById("joinInviteCodeInput").value.trim();
@@ -452,6 +513,7 @@ window.joinFamilyGroup = async function() {
     await setDoc(doc(db, "users", user.uid), {
       familyId: targetDocId,
       email: user.email || "",
+      plan: "free",
       updatedAt: Date.now()
     });
 
@@ -531,6 +593,13 @@ window.saveChild = async function(){
   const name = document.getElementById("childName").value.trim();
   const editingId = document.getElementById("editingChildId").value;
   if(!name){ alert("名前を入力してください"); return; }
+  
+  // 【重要：プラン制限】無料プランで新規追加（編集以外）のとき、すでに1人以上いたらブロック
+  if (!isPremiumUser && !editingId && localChildren.length >= 1) {
+    alert("⚠️ 無料プランでは登録できるお子様は1名様までとなります。\n2名以上登録する場合はプレミアムプランへの切り替えが必要です。");
+    return;
+  }
+
   const birthday = `${document.getElementById("childBirthYear").value}-${document.getElementById("childBirthMonth").value}-${document.getElementById("childBirthDay").value}`;
 
   try {
@@ -630,6 +699,14 @@ document.getElementById("cameraInput").addEventListener("change", function(e){ p
 document.getElementById("workForm").addEventListener("submit", async function(e){
   e.preventDefault(); if(!currentSession) return;
   const editingId = document.getElementById("editingWorkId").value;
+  
+  // 【重要：プラン制限】新規登録時、無料プランで10件以上ならブロック
+  const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
+  if (!isPremiumUser && !editingId && activeWorksCount >= 10) {
+    alert("⚠️ 無料プランの作品登録上限（10件）に達しています。\nこれ以上登録するにはプレミアムプランへの切り替えが必要です。");
+    return;
+  }
+
   const title = document.getElementById("inputTitle").value.trim();
   const category = document.getElementById("inputCategory").value; 
   const childId = document.getElementById("inputWorkChild").value;
@@ -737,6 +814,12 @@ function renderChildList(){
     html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50"><div class="font-semibold text-slate-700">${c.name}</div><div class="flex gap-3 text-xs"><button onclick="editChild('${c.id}')" class="text-emerald-600 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`; 
   });
   document.getElementById("childList").innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
+  
+  // 上限数のラベル更新
+  const limitLabel = document.getElementById("childLimitCountLabel");
+  if(limitLabel) {
+    limitLabel.innerText = isPremiumUser ? `(${localChildren.length}人登録中)` : `(${localChildren.length} / 1人)`;
+  }
 }
 
 function populateChildSelect(){
@@ -765,6 +848,10 @@ function renderGallery(){
   if(!sortSelect || !filterSelect || !searchInput) return;
   const sortValue = sortSelect.value; const filterValue = filterSelect.value; const searchQuery = searchInput.value.toLowerCase().trim();
   let displayWorks = localWorks.filter(w => !w.isDeleted);
+  
+  // 無料プランの場合の件数表示補助
+  const totalActiveCount = displayWorks.length;
+
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
   else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
 
@@ -800,6 +887,13 @@ function renderGallery(){
     }
     return 0;
   });
+
+  // 無料プラン時、今どれくらい使っているかのカウンターバッジを上部に追加
+  if(!isPremiumUser) {
+    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">
+      📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span> (無料プラン上限)
+    </div>`;
+  }
 
   displayWorks.forEach(w => {
     let childTag = ""; let ageTag = "";
@@ -858,7 +952,7 @@ function renderGallery(){
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する data が見つかりませんでした</div>";
+  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当するデータが見つかりませんでした</div>";
 }
 
 function renderTimeline(){
