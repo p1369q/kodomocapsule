@@ -3,43 +3,32 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v42-restored]</title>
+<title>コドモノート [v41]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* 以前のクラシックなカラーパレットと角丸（12px〜16px基準）に戻す調整 */
-:root{
-  --bg:#F4F4F5; /* 少し落ち着いたグレー背景 */
-  --card:#FFFFFF;
-  --ink:#1E293B;
-  --muted:#64748B;
-  --accent:#56736C; /* 以前のメインカラー */
-  --accent-dark:#3D524E;
-  --gold:#D6B25E;
-  --border:#D1D5DB; /* 境界線を少しハッキリさせる */
-  --danger:#D66A5E;
-}
+:root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#7C9A92;--accent-dark:#56736C;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',sans-serif;}
 button{cursor:pointer;}
-input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:white;outline:none;}
+input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:white;outline:none;}
 .hidden{display:none !important;}
 .page{display:none;}
 .page.active{display:block;}
-.glass{background:rgba(255,255,255,.95); border-bottom: 2px solid var(--border);}
-.premium-card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:70px;z-index:200;background:#FFFFFF;border-top:2px solid var(--border);}
-.nav-tab{color:#64748B;transition:.2s; font-size: 14px; font-weight: 500;}.nav-tab.active{color:var(--accent);font-weight:700;}
-.fab{width:56px;height:56px;border:none;border-radius:50%;color:white;font-size:28px;background:var(--accent);box-shadow:0 4px 12px rgba(86,115,108,.3); font-weight: bold;}
-.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5);z-index:500;opacity:0;pointer-events:none;transition:.25s;}
-.drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:85vh;overflow:auto;background:white;border-radius:16px 16px 0 0;padding:24px;transform:translateY(40px);transition:.25s;}
+.glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.78);}
+.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
+.nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
+.fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(86,115,108,.28);}
+.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;}
+.drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:92vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
-.age-tab.active { background-color: var(--accent); color: white; font-weight: 600; }
+.age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
 
 #searchMenuArea {
-  transition: max-height 0.2s ease-out, opacity 0.1s ease-out;
+  transition: max-height 0.3s ease-out, opacity 0.2s ease-out, margin-top 0.3s ease-out;
   max-height: 500px;
   opacity: 1;
   overflow: hidden;
@@ -55,42 +44,42 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
 </head>
 <body>
 
-<div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F4F4F5] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
-  <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-xl border border-gray-300 shadow-md">
-    <h1 class="text-3xl font-black text-[#56736C]">コドモノート</h1>
+<div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
+  <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm">
+    <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
     <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するノートアプリ</p>
     
     <div id="gateLoading" class="text-sm text-slate-400 py-4">読み込み中...</div>
     
     <div id="gateLoginArea" class="hidden space-y-4">
       <p class="text-sm font-medium text-slate-700">利用を開始するにはGoogleアカウントでログインしてください</p>
-      <button onclick="toggleAuth()" class="w-full py-3.5 rounded-lg bg-[#56736C] text-white font-bold text-sm hover:bg-[#465e58] transition">Googleアカウントでサインイン</button>
+      <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#56736C] text-white font-bold text-sm shadow shadow-emerald-900/10 hover:bg-[#465e58] transition">Googleアカウントでサインイン</button>
     </div>
 
     <div id="gateSetupArea" class="hidden space-y-6">
-      <div class="p-3 bg-emerald-50 rounded-lg text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
+      <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
         👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
       </div>
       
       <div class="space-y-3">
         <h3 class="text-sm font-bold text-slate-800 text-left">✨ 新しく利用をスタートする場合</h3>
-        <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3 rounded-lg border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
+        <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
           🚀 新しい家族グループを作成する
         </button>
       </div>
 
       <div class="relative flex py-2 items-center text-slate-300">
-        <div class="flex-grow border-t border-gray-200"></div>
+        <div class="flex-grow border-t border-slate-200"></div>
         <span class="flex-shrink mx-3 text-xs text-slate-400 font-medium">または</span>
-        <div class="flex-grow border-t border-gray-200"></div>
+        <div class="flex-grow border-t border-slate-200"></div>
       </div>
 
       <div class="space-y-3 text-left">
         <h3 class="text-sm font-bold text-slate-800">✉️ パートナーから招待されている場合</h3>
         <p class="text-[11px] text-slate-400">共有された家族招待コード（UUID形式）を入力してください。</p>
         <div class="flex gap-2">
-          <input type="text" id="joinInviteCodeInput" placeholder="例：xxxxxxxx-xxxx-..." class="flex-1 py-2 px-3 text-xs rounded-lg bg-slate-50 border border-gray-300">
-          <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-lg bg-[#7C9A92] text-white text-xs font-bold shrink-0">合流する</button>
+          <input type="text" id="joinInviteCodeInput" placeholder="例：xxxxxxxx-xxxx-..." class="flex-1 py-2.5 px-3 text-xs rounded-xl bg-slate-50 border border-slate-200">
+          <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#7C9A92] text-white text-xs font-bold shrink-0 shadow-sm">合流する</button>
         </div>
       </div>
       
@@ -101,43 +90,43 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
   </div>
 </div>
 
-<div class="sticky top-0 z-50 p-3 glass">
+<div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
   <div class="max-w-7xl mx-auto flex flex-col">
     
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="goToTopPage()" class="text-2xl font-black text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
+        <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
           コドモノート
         </button>
       </div>
       
-      <div class="flex items-center gap-2 shrink-0">
-        <button id="authBtn" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-xs font-medium"><span id="authBtnText">ログイン</span></button>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
         
-        <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center border border-gray-300 active:scale-95 select-none" id="menuToggleBtn" title="条件で絞り込み">
+        <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none" id="menuToggleBtn" title="条件で絞り込み">
           <span>🔍</span>
         </button>
 
-        <button onclick="switchPage('trash')" class="w-8 h-8 rounded-lg bg-white border border-gray-300 flex items-center justify-center text-xs" title="ゴミ箱">🗑️</button>
-        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-lg bg-white border border-gray-300 flex items-center justify-center text-xs" title="設定">⚙</button>
+        <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="ゴミ箱">🗑️</button>
+        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="設定">⚙</button>
       </div>
     </div>
 
     <div id="searchMenuArea" class="flex flex-col gap-2.5 mt-2.5">
       <div class="w-full">
-        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-lg bg-white border border-gray-300">
+        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
 
       <div class="flex gap-2 items-center w-full justify-between">
         <div class="flex gap-2 flex-1">
           <div class="w-1/2">
-            <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-lg bg-white border border-gray-300 cursor-pointer">
+            <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="all">すべての子ども</option>
               <option value="favorite">⭐ お気に入り</option>
             </select>
           </div>
           <div class="w-1/2">
-            <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-lg bg-white border border-gray-300 cursor-pointer">
+            <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="createdDesc">登録が新しい順</option>
               <option value="createdAsc">登録が古い順</option>
               <option value="dateDesc">作品の日付が新しい順</option>
@@ -147,15 +136,15 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v42</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v41</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
-        <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-gray-300 whitespace-nowrap transition">すべて</button>
-        <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-gray-300 whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
-        <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-gray-300 whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
-        <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-gray-300 whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
-        <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-gray-300 whitespace-nowrap transition">❓ 未分類</button>
+        <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+        <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
+        <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
+        <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
+        <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
       </div>
     </div>
 
@@ -163,7 +152,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
 </div>
 
 <main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
-  <div id="premiumBannerArea" class="hidden mb-4 p-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
+  <div id="premiumBannerArea" class="hidden mb-4 p-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
     <div class="flex items-center gap-2">
       <span class="text-lg">👑</span>
       <div class="text-left">
@@ -193,10 +182,10 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
 </main>
 
 <div class="bottom-nav flex justify-center items-center">
-  <div class="w-full max-w-lg px-12 flex items-center justify-between">
-    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span>ギャラリー</span></button>
-    <button onclick="handleFabClick()" class="fab shadow-md">+</button>
-    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span>タイムライン</span></button>
+  <div class="w-full max-w-lg px-8 flex items-center justify-between">
+    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">ギャラリー</span></button>
+    <button onclick="handleFabClick()" class="fab">+</button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">タイムライン</span></button>
   </div>
 </div>
 
@@ -223,12 +212,12 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-lg border border-gray-300 bg-emerald-50 text-[#56736C] text-xs font-bold flex items-center justify-center gap-1.5">📸 写真を撮る</button>
-          <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-lg border border-gray-300 bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5">🖼️ ライブラリから選ぶ</button>
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-emerald-50 text-[#56736C] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
+          <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
         </div>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
-      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-lg text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
+      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
     </form>
   </div>
 </div>
@@ -237,21 +226,21 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">アカウント・設定</h3><button onclick="closeDrawer('child')">✕</button></div>
     
-    <div class="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200 flex justify-between items-center">
+    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
       <div>
         <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
         <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
       </div>
-      <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-sm transition">
+      <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
         プレミアムにする
       </button>
     </div>
 
-    <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-gray-200">
+    <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
       <label class="block text-xs font-bold text-slate-500 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
-        <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-lg border flex-1" value="取得中...">
-        <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold shrink-0">コピー</button>
+        <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
+        <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
       </div>
       <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力するとデータを完全共有できます。</p>
     </div>
@@ -272,8 +261,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8p
         </div>
       </div>
       <div class="flex gap-2 pt-2">
-        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-lg text-white font-semibold bg-[#7C9A92]">追加する</button>
-        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-lg border border-gray-300 bg-slate-100 text-sm">取消</button>
+        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加する</button>
+        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-300 bg-slate-100 text-sm">取消</button>
       </div>
     </div>
     <div id="childList" class="mt-6 space-y-2"></div>
@@ -307,10 +296,11 @@ let isPremiumUser = false;
 
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
-let unsubscribeUserPlan = null;
+let unsubscribeUserPlan = null; // v41: プラン状態の自動同期用
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
+// 🛠️ Stripe決済リダイレクト関数
 window.redirectToStripeCheckout = async function() {
   if (!auth.currentUser) {
     alert("ログイン状態が確認できません。アプリに再ログインしてください。");
@@ -462,6 +452,7 @@ onAuthStateChanged(auth, async (user) => {
     gateLoading.classList.remove("hidden");
 
     try {
+      // v41: ドキュメントの変更（プラン決済完了など）をリアルタイム監視する形に変更
       unsubscribeUserPlan = onSnapshot(doc(db, "users", user.uid), async (userSnap) => {
         if (userSnap.exists() && userSnap.data().familyId) {
           const fId = userSnap.data().familyId;
@@ -742,9 +733,9 @@ function renderMediaPreviews() {
   base64MediaArray.forEach((item, index) => {
     const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>`;
     if(item.type === "pdf") {
-      previewHtml += `<div class="relative aspect-square rounded-lg border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFファイル</span></div>`;
+      previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFファイル</span></div>`;
     } else {
-      previewHtml += `<div class="relative aspect-square rounded-lg overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
     }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
@@ -898,9 +889,9 @@ function populateChildSelect(){
 }
 
 function getCategoryBadgeHtml(cat) {
-  if (cat === "print") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-md">プリント</span>`;
-  if (cat === "test") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md">テスト</span>`;
-  return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">作品</span>`;
+  if (cat === "print") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">プリント</span>`;
+  if (cat === "test") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">テスト</span>`;
+  return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">作品</span>`;
 }
 
 function renderGallery(){
@@ -949,7 +940,7 @@ function renderGallery(){
   });
 
   if(!isPremiumUser) {
-    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-lg border text-xs text-slate-600 font-medium text-center">
+    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">
       📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span> (無料プラン上限)
     </div>`;
   }
@@ -959,9 +950,9 @@ function renderGallery(){
     if(w.childId) { 
       const c = localChildren.find(item => item.id === w.childId); 
       if(c) {
-        childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${c.name}</span>`;
+        childTag = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${c.name}</span>`;
         const totalMonths = calculateAgeInMonths(c.birthday, w.date); const ageStr = formatAgeString(totalMonths);
-        if(ageStr) ageTag = `<span class="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md font-medium">🎂 ${ageStr}</span>`;
+        if(ageStr) ageTag = `<span class="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-medium">🎂 ${ageStr}</span>`;
       } 
     }
     let categoryTag = getCategoryBadgeHtml(w.category);
