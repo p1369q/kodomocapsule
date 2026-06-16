@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v44]</title>
+<title>コドモノート [v45]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,9 +22,13 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
 .nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
 .fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(86,115,108,.28);}
-.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;}
-.drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:92vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
+
+/* ドロワーが見切れないように上部にセーフティ余白を追加 */
+.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;padding-top: 48px;}
+.drawer.open{opacity:1;pointer-events:auto;}
+.drawer-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
+
 .age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
 
 #searchMenuArea {
@@ -136,7 +140,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v44</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v45</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -191,7 +195,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
     <form id="workForm" class="space-y-5">
       <input type="hidden" id="editingWorkId" value="" />
       <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
@@ -224,7 +228,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">アカウント・設定</h3><button onclick="closeDrawer('child')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定</h3><button onclick="closeDrawer('child')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
     
     <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
       <div>
@@ -935,7 +939,6 @@ function renderGallery(){
     return 0;
   });
 
-  // 👑 プレミアムユーザーの場合は完全に非表示にする修正
   if(!isPremiumUser) {
     html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">
       📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span> (無料プラン上限)
