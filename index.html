@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
@@ -269,11 +269,15 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+<script type="importmap">
+  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" } }
+</script>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
@@ -296,11 +300,11 @@ let isPremiumUser = false;
 
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
-let unsubscribeUserPlan = null; // v41: プラン状態の自動同期用
+let unsubscribeUserPlan = null; 
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 🛠️ Stripe決済リダイレクト関数 (v41ベースに新環境URLを統合・最適化)
+// 🛠️ Stripe決済リダイレクト関数（ペイロード送信を完全に最適化）
 window.redirectToStripeCheckout = async function() {
   if (!auth.currentUser) {
     alert("ログイン状態が確認できません。アプリに再ログインしてください。");
@@ -314,18 +318,17 @@ window.redirectToStripeCheckout = async function() {
     const successUrl = window.location.href; 
     const cancelUrl = window.location.href;
 
+    // Functions側で確実に受け取れるプレーンなオブジェクト構造でリクエスト
     const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
       method: "POST",
-      mode: "cors",
       headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        uid: auth.currentUser.uid,
-        email: auth.currentUser.email || "",
-        successUrl: successUrl,
-        cancelUrl: cancelUrl
+        uid: String(auth.currentUser.uid),
+        email: String(auth.currentUser.email || ""),
+        successUrl: String(successUrl),
+        cancelUrl: String(cancelUrl)
       })
     });
 
@@ -334,15 +337,13 @@ window.redirectToStripeCheckout = async function() {
       throw new Error(`サーバーエラー (HTTP ${response.status}):\n${errText || "応答なし"}`);
     }
 
-    const session = await response.json().catch(() => {
-      throw new Error("サーバーからの応答をJSONオブジェクトに変換できませんでした。");
-    });
+    const session = await response.json();
 
     if (session && session.url) {
       console.log("Redirecting to Stripe:", session.url);
       window.location.href = session.url; 
     } else {
-      throw new Error(session.error || "戻り値に決済ページURL(url)が含まれていません。");
+      throw new Error(session.error || "戻り値に決済ページURLが含まれていません。");
     }
 
   } catch (e) {
