@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v42]</title>
+<title>コドモノート [v43]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,7 +136,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v42</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v43</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -304,7 +304,7 @@ let unsubscribeUserPlan = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 🛠️ Stripe決済リダイレクト関数（ペイロード送信を完全に最適化）
+// 🛠️ Stripe決済リダイレクト関数
 window.redirectToStripeCheckout = async function() {
   if (!auth.currentUser) {
     alert("ログイン状態が確認できません。アプリに再ログインしてください。");
@@ -318,7 +318,6 @@ window.redirectToStripeCheckout = async function() {
     const successUrl = window.location.href; 
     const cancelUrl = window.location.href;
 
-    // Functions側で確実に受け取れるプレーンなオブジェクト構造でリクエスト
     const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
       method: "POST",
       headers: { 
@@ -363,6 +362,7 @@ function updatePlanUI() {
     premiumBannerArea.classList.remove("hidden");
     document.getElementById("stripePaymentBtn").classList.add("hidden");
   } else {
+    // 💡 もし過去データが多くても、現在のプラン名を正しく提示
     currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
     currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     premiumBannerArea.classList.add("hidden");
@@ -371,9 +371,10 @@ function updatePlanUI() {
 }
 
 window.handleFabClick = function() {
+  // 💡 提案1: 無料ダウングレード時に過去データは保持するが、10件以上の状態での「新規登録」のみロックする
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && activeWorksCount >= 10) {
-    alert("⚠️ 無料プランの作品登録上限（10件）に達しています。\nこれ以上登録するにはプレミアムプランへの切り替えが必要です。");
+    alert("⚠️ 無料プランの作品登録上限（10件）に達しているか超えています。\n新しく作品を追加するには、不要な作品を削除するか、プレミアムプランへ再度ご加入ください。\n（※過去に登録した作品はそのまま閲覧・編集が可能です）");
     return;
   }
   openDrawer('work');
@@ -647,8 +648,9 @@ window.saveChild = async function(){
   const editingId = document.getElementById("editingChildId").value;
   if(!name){ alert("名前を入力してください"); return; }
   
+  // 💡 提案1: 無料ダウングレード時に過去の子どもデータは保持・編集可能。ただし「新規追加」のみ1人以上の時にロックする。
   if (!isPremiumUser && !editingId && localChildren.length >= 1) {
-    alert("⚠️ 無料プランでは登録できるお子様は1名様までとなります。\n2名以上登録する場合はプレミアムプランへの切り替えが必要です。");
+    alert("⚠️ 無料プランでは、新しく登録できるお子様は1名様までとなります。\n2名以上新規登録する場合はプレミアムプランへの切り替えが必要です。\n（※すでに登録されているお子様の情報編集・更新はそのまま可能です）");
     return;
   }
 
@@ -752,9 +754,10 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
   e.preventDefault(); if(!currentSession) return;
   const editingId = document.getElementById("editingWorkId").value;
   
+  // 💡 フォーム送信のタイミングでも再チェック（念のための多重ガード）
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && !editingId && activeWorksCount >= 10) {
-    alert("⚠️ 無料プランの作品登録上限（10件）に達しています。\nこれ以上登録するにはプレミアムプランへの切り替えが必要です。");
+    alert("⚠️ 無料プランの作品登録上限（10件）に達しているため、新規登録はできません。");
     return;
   }
 
@@ -937,6 +940,7 @@ function renderGallery(){
     return 0;
   });
 
+  // 💡 ユーザーの安心感向上のため、上限を超えて保存されていても「現在の保存数」として正確にカウントを表示
   if(!isPremiumUser) {
     html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">
       📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span> (無料プラン上限)
