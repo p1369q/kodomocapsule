@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v46]</title>
+<title>コドモノート [v47]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,7 +140,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v46</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v47</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -371,6 +371,11 @@ function updatePlanUI() {
     currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     premiumBannerArea.classList.add("hidden");
     document.getElementById("stripePaymentBtn").classList.remove("hidden");
+  }
+  
+  // ★プランの切り替えをギャラリー表示に即時反映させる命令を追加しました
+  if (typeof renderGallery === "function") {
+    renderGallery();
   }
 }
 
