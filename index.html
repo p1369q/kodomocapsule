@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v57]</title>
+<title>コドモノート [v58]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
 :root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#7C9A92;--accent-dark:#56736C;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -43,6 +45,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   padding-bottom: 0px !important;
   pointer-events: none;
 }
+/* 3D表示のコンテナー */
+#three3dCanvasContainer canvas { border-radius: 20px; width:100% !important; height:100% !important; }
 </style>
 </head>
 <body>
@@ -137,7 +141,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v57</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v58</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -273,6 +277,32 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+<div id="three3dModal" class="fixed inset-0 z-[600] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto flex flex-col p-5 shadow-2xl border border-slate-200">
+    <div class="flex justify-between items-center mb-3">
+      <h3 id="threeModalTitle" class="text-lg font-bold text-slate-800 line-clamp-1">3D形状プレビュー</h3>
+      <button onclick="close3DModal()" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 text-sm font-bold flex items-center justify-center">✕</button>
+    </div>
+    <div class="relative w-full aspect-square bg-slate-900 rounded-2xl shadow-inner overflow-hidden" id="three3dCanvasContainer">
+      <div id="threeLoadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 text-white z-10 hidden">
+        <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-400 mb-2"></div>
+        <div class="text-xs font-semibold text-emerald-400">ポリゴン立体復元中...</div>
+      </div>
+      <div class="absolute bottom-2.5 right-2.5 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded-full pointer-events-none select-none">🔄 スワイプで回転 / ピンチで拡大</div>
+    </div>
+    <div class="mt-4 p-3 bg-slate-50 rounded-xl space-y-3 border text-xs">
+      <div class="flex justify-between items-center">
+        <span class="font-bold text-slate-600">📐 立体感の深さ調整</span>
+        <input type="range" id="threeSliderDepth" min="0.2" max="3.0" step="0.2" value="1.2" class="w-32 accent-[#56736C]">
+      </div>
+      <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
+        <span class="font-bold text-slate-600">網目構造（ワイヤーフレーム）</span>
+        <input type="checkbox" id="threeCheckWireframe" class="w-4 h-4 accent-[#56736C]">
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="importmap">
   { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" } }
 </script>
@@ -307,6 +337,12 @@ let unsubscribeWorks = null;
 let unsubscribeUserPlan = null; 
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
+
+// v58追加: Three.js グローバル管理変数
+let threeScene, threeCamera, threeRenderer, threeControls;
+let threeMesh = null;
+let currentActive3DImageUrl = "";
+const threeTextureLoader = new THREE.TextureLoader();
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -395,7 +431,6 @@ window.forceDowngradeToFree = async function() {
       updatedAt: Date.now()
     });
     alert("プランを「free」に更新しました！");
-    // v57修正: 反映を即時確定させ、UIを確実に再描画する
     isPremiumUser = false;
     updatePlanUI();
   } catch(e) {
@@ -409,7 +444,6 @@ function updatePlanUI() {
   const testPlanToggleArea = document.getElementById("testPlanToggleArea");
   const pBtn = document.getElementById("stripePaymentBtn");
   
-  // v57修正: classListだけでなく、style.displayで確実にボタンエリアの表示・非表示を切り替え
   if (isPremiumUser) {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
     if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
@@ -939,6 +973,8 @@ function renderGallery(){
     }
     let categoryTag = getCategoryBadgeHtml(w.category);
     let mediaPreview = ''; const mediaCount = w.mediaUrls?.length || 0;
+    let firstImgUrl = ""; // v58追加: 3D生成に送る画像用パス
+    
     if (mediaCount > 0) {
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
       const currentIndex = carouselIndices[w.id] >= mediaCount ? 0 : carouselIndices[w.id];
@@ -949,6 +985,7 @@ function renderGallery(){
       if (isPdf) {
         mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
       } else {
+        firstImgUrl = sourceUrl;
         mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openEditWork('${w.id}')"/>`;
       }
     } else {
@@ -966,6 +1003,10 @@ function renderGallery(){
         <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold select-none">${idx + 1} / ${mediaCount}</div>
       `;
     }
+    
+    // v58追加: 画像があるときだけ3Dポリゴン変換ボタンを配置
+    const threeBtnHtml = firstImgUrl ? `<button onclick="open3DPolygonModal('${firstImgUrl}', '${w.title.replace(/'/g, "\\'")}', event)" class="text-[11px] bg-emerald-50 text-[#56736C] border border-emerald-200 px-2 py-0.5 rounded-md font-bold shadow-sm transition active:scale-95">📦 3D表示</button>` : '';
+
     const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
     html += `<div class="premium-card overflow-hidden">
       <div class="relative">${mediaPreview}${carouselController}</div>
@@ -978,7 +1019,10 @@ function renderGallery(){
           </div>
         </div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
-        <div class="flex justify-end mt-2"><button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button></div>
+        <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-100">
+          ${threeBtnHtml}
+          <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
+        </div>
       </div>
     </div>`;
   });
@@ -1060,6 +1104,156 @@ window.switchPage = function(p){
   else if (p === "records") { document.getElementById("recordsPage").classList.add("active"); document.getElementById("nav-records").classList.add("active"); renderTimeline(); } 
   else if (p === "trash") { document.getElementById("trashPage").classList.add("active"); renderTrash(); }
 };
+
+// ==========================================
+// v58追加: 3Dポリゴン解析・表示ロジック（Three.js）
+// ==========================================
+function init3DSpace() {
+  const container = document.getElementById('three3dCanvasContainer');
+  if(!container) return;
+  
+  threeScene = new THREE.Scene();
+  threeScene.background = new THREE.Color(0x0f172a); // Slate 900
+
+  threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  threeCamera.position.set(0, 4, 8);
+
+  threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  threeRenderer.setSize(container.clientWidth, container.clientHeight);
+  threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(threeRenderer.domElement);
+
+  threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
+  threeControls.enableDamping = true;
+  threeControls.dampingFactor = 0.07;
+  threeControls.maxPolarAngle = Math.PI / 2;
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  threeScene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 10, 5);
+  threeScene.add(dirLight);
+
+  function renderLoop() {
+    requestAnimationFrame(renderLoop);
+    if(threeControls) threeControls.update();
+    if(threeRenderer && threeScene && threeCamera) {
+      threeRenderer.render(threeScene, threeCamera);
+    }
+  }
+  renderLoop();
+}
+
+window.open3DPolygonModal = function(imgUrl, title, event) {
+  if (event) event.stopPropagation();
+  currentActive3DImageUrl = imgUrl;
+  
+  const modal = document.getElementById("three3dModal");
+  document.getElementById("threeModalTitle").innerText = `📦 3D化: ${title}`;
+  modal.classList.remove("opacity-0", "pointer-events-none");
+  
+  if(!threeScene) {
+    init3DSpace();
+  }
+  
+  generate3DPolygonMesh();
+};
+
+window.close3DModal = function() {
+  const modal = document.getElementById("three3dModal");
+  modal.classList.add("opacity-0", "pointer-events-none");
+  if (threeMesh) {
+    threeScene.remove(threeMesh);
+    threeMesh.geometry.dispose();
+    threeMesh.material.dispose();
+    threeMesh = null;
+  }
+};
+
+function generate3DPolygonMesh() {
+  if (!currentActive3DImageUrl) return;
+  document.getElementById("threeLoadingIndicator").classList.remove("hidden");
+  
+  if (threeMesh) {
+    threeScene.remove(threeMesh);
+    threeMesh.geometry.dispose();
+    threeMesh.material.dispose();
+    threeMesh = null;
+  }
+
+  const img = new Image();
+  img.crossOrigin = "Anonymous"; // 外部URL（Storage等）からの読み込みを許可
+  img.onload = function() {
+    const analysisCanvas = document.createElement('canvas');
+    const size = 128; // モバイル端末負荷軽減の最適化ピクセルサイズ
+    analysisCanvas.width = size;
+    analysisCanvas.height = size;
+    const ctx = analysisCanvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, size, size);
+    
+    const imgData = ctx.getImageData(0, 0, size, size).data;
+    const geometry = new THREE.PlaneGeometry(4.5, 4.5, size - 1, size - 1);
+    const vertices = geometry.attributes.position.array;
+    
+    const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
+    
+    let vIdx = 0;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3 / 255;
+        // Z軸方向（奥行き・立体感）を画像の輝度に基づいて動的に変形
+        vertices[vIdx * 3 + 2] = brightness * depthScale;
+        vIdx++;
+      }
+    }
+    
+    geometry.computeVertexNormals();
+    
+    threeTextureLoader.load(currentActive3DImageUrl, function(texture) {
+      const isWireframe = document.getElementById("threeCheckWireframe").checked;
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        side: THREE.DoubleSide,
+        wireframe: isWireframe,
+        roughness: 0.45,
+        metalness: 0.05
+      });
+      
+      threeMesh = new THREE.Mesh(geometry, material);
+      threeMesh.rotation.x = -Math.PI / 2.8; // 閲覧しやすい角度に調整
+      threeScene.add(threeMesh);
+      
+      if(threeControls) threeControls.reset();
+      document.getElementById("threeLoadingIndicator").classList.add("hidden");
+    }, null, function(err) {
+      // 万が一テクスチャ読み込みがCORS等で失敗した時のためのカラーフォールバック
+      const material = new THREE.MeshStandardMaterial({ color: 0x7C9A92, wireframe: true });
+      threeMesh = new THREE.Mesh(geometry, material);
+      threeMesh.rotation.x = -Math.PI / 2.8;
+      threeScene.add(threeMesh);
+      document.getElementById("threeLoadingIndicator").classList.add("hidden");
+    });
+  };
+  img.src = currentActive3DImageUrl;
+}
+
+// 3D調整値の変更イベント検知
+document.getElementById("threeSliderDepth").addEventListener("input", generate3DPolygonMesh);
+document.getElementById("threeCheckWireframe").addEventListener("change", function(e) {
+  if(threeMesh && threeMesh.material) {
+    threeMesh.material.wireframe = e.target.checked;
+  }
+});
+
+window.addEventListener('resize', function() {
+  const container = document.getElementById('three3dCanvasContainer');
+  if(!container || !threeCamera || !threeRenderer) return;
+  threeCamera.aspect = container.clientWidth / container.clientHeight;
+  threeCamera.updateProjectionMatrix();
+  threeRenderer.setSize(container.clientWidth, container.clientHeight);
+});
 
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
 </script>
