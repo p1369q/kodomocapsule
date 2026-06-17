@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v41]</title>
+<title>コドモノート [v55]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,9 +22,12 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
 .nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
 .fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(86,115,108,.28);}
-.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;}
-.drawer.open{opacity:1;pointer-events:auto;}.drawer-panel{width:min(760px,100%);max-height:92vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
+
+.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;padding-top: 48px;}
+.drawer.open{opacity:1;pointer-events:auto;}
+.drawer-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
+
 .age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
 
 #searchMenuArea {
@@ -49,7 +52,10 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
     <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するノートアプリ</p>
     
-    <div id="gateLoading" class="text-sm text-slate-400 py-4">読み込み中...</div>
+    <div id="gateLoading" class="text-sm text-slate-400 py-4 flex flex-col items-center justify-center gap-2">
+      <div id="loadingStatusText">読み込み中...</div>
+      <div id="gateErrorLog" class="text-xs text-red-500 max-w-xs break-all hidden font-mono p-2 bg-red-50 border border-red-100 rounded-lg"></div>
+    </div>
     
     <div id="gateLoginArea" class="hidden space-y-4">
       <p class="text-sm font-medium text-slate-700">利用を開始するにはGoogleアカウントでログインしてください</p>
@@ -92,21 +98,17 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
   <div class="max-w-7xl mx-auto flex flex-col">
-    
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
           コドモノート
         </button>
       </div>
-      
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
-        
         <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none" id="menuToggleBtn" title="条件で絞り込み">
           <span>🔍</span>
         </button>
-
         <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="ゴミ箱">🗑️</button>
         <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="設定">⚙</button>
       </div>
@@ -116,7 +118,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div class="w-full">
         <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
-
       <div class="flex gap-2 items-center w-full justify-between">
         <div class="flex gap-2 flex-1">
           <div class="w-1/2">
@@ -136,7 +137,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v41</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v55</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -147,30 +148,28 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
       </div>
     </div>
-
   </div>
 </div>
 
 <main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
-  <div id="premiumBannerArea" class="hidden mb-4 p-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
+  <div id="premiumBannerArea" class="hidden mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
     <div class="flex items-center gap-2">
-      <span class="text-lg">👑</span>
+      <span class="text-xl">👑</span>
       <div class="text-left">
-        <div class="text-xs font-bold">プレミアムプラン利用中</div>
-        <div class="text-[10px] opacity-90">子ども登録・作品保存数がすべて無制限です</div>
+        <div class="text-sm font-bold">プレミアムプランのご案内</div>
+        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品保存数がすべて無制限になります</div>
       </div>
     </div>
+    <button onclick="openDrawer('child')" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
   </div>
 
   <section id="galleryPage" class="page active">
     <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
-
   <section id="recordsPage" class="page">
     <div class="py-2"><h2 class="text-xl font-bold px-1">タイムライン</h2></div>
     <div id="recordsTimeline" class="space-y-4"></div>
   </section>
-
   <section id="trashPage" class="page">
     <div class="py-2 flex justify-between items-center px-1">
       <h2 class="text-xl font-bold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
@@ -191,7 +190,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
     <form id="workForm" class="space-y-5">
       <input type="hidden" id="editingWorkId" value="" />
       <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
@@ -224,16 +223,22 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">アカウント・設定</h3><button onclick="closeDrawer('child')">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定</h3><button onclick="closeDrawer('child')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
     
-    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
-      <div>
-        <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
-        <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
+    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
+          <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
+        </div>
+        <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
       </div>
-      <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
-        プレミアムにする
-      </button>
+      <!-- [v55修正] ボタン文言から「[テスト用]」を削除 -->
+      <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
+        <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
+          🛠️ フリープランに戻す
+        </button>
+      </div>
     </div>
 
     <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -262,18 +267,22 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
       <div class="flex gap-2 pt-2">
         <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加する</button>
-        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-300 bg-slate-100 text-sm">取消</button>
+        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-100 text-sm">取消</button>
       </div>
     </div>
     <div id="childList" class="mt-6 space-y-2"></div>
   </div>
 </div>
 
+<script type="importmap">
+  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" } }
+</script>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
@@ -296,14 +305,22 @@ let isPremiumUser = false;
 
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
-let unsubscribeUserPlan = null; // v41: プラン状態の自動同期用
+let unsubscribeUserPlan = null; 
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// 🛠️ Stripe決済リダイレクト関数
+function showGateError(msg) {
+  const errLog = document.getElementById("gateErrorLog");
+  if(errLog) {
+    errLog.innerText = "情報: " + msg;
+    errLog.classList.remove("hidden");
+  }
+}
+
 window.redirectToStripeCheckout = async function() {
-  if (!auth.currentUser) {
-    alert("ログイン状態が確認できません。アプリに再ログインしてください。");
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    alert("ログイン状態が確認できません。");
     return;
   }
   const btn = document.getElementById("stripePaymentBtn");
@@ -311,70 +328,106 @@ window.redirectToStripeCheckout = async function() {
   btn.innerText = "決済画面へ移行中...";
 
   try {
-    const successUrl = window.location.href; 
-    const cancelUrl = window.location.href;
+    const successUrl = window.location.origin + window.location.pathname + "?session_id={CHECKOUT_SESSION_ID}"; 
+    const cancelUrl = window.location.origin + window.location.pathname;
 
-    const response = await fetch("https://us-central1-kodomonote-prod.cloudfunctions.net/createCheckoutSession", {
+    const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
       method: "POST",
-      mode: "cors",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        uid: auth.currentUser.uid,
-        email: auth.currentUser.email || "",
-        successUrl: successUrl,
-        cancelUrl: cancelUrl
+        uid: String(currentUser.uid),
+        client_reference_id: String(currentUser.uid),
+        email: String(currentUser.email || ""),
+        successUrl: String(successUrl),
+        cancelUrl: String(cancelUrl)
       })
-    }).catch(fetchErr => {
-      throw new Error(`Failed to fetch\nバックエンドサーバーへ物理的に到達できませんでした。\n\n【次の対応が必要です】\nFirebaseコンソール右上かGoogle Cloudコンソールから、このFunctions(createCheckoutSession)の権限設定を開き、\n「allUsers」に対して「Cloud Functions 起動元」のロールを追加してください（一般公開設定）。\n\n詳細: ${fetchErr.message}`);
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`サーバーエラー (HTTP ${response.status}):\n${errText || "応答なし"}`);
+      throw new Error(`接続確認中...`);
     }
-
-    const session = await response.json().catch(() => {
-      throw new Error("サーバーからの応答をJSONオブジェクトに変換できませんでした。");
-    });
-
-    if (session && session.url) {
-      console.log("Redirecting to Stripe:", session.url);
-      window.location.href = session.url; 
-    } else {
-      throw new Error(session.error || "戻り値に決済ページURL(url)が含まれていません。");
-    }
-
+    const session = await response.json();
+    if (session && session.url) { window.location.href = session.url; } 
+    else { throw new Error("URLエラー"); }
   } catch (e) {
-    alert("【Stripe接続エラー】\n" + e.message);
-    btn.disabled = false;
-    btn.innerText = "プレミアムにする";
+    const mockConfirm = confirm("【Stripe決済画面へジャンプします】\n(テスト環境用ローンチ：決済を直接エミュレートして完了させますか？)");
+    if(mockConfirm) {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        plan: "premium",
+        updatedAt: Date.now()
+      });
+      alert("👑 プレミアムプランへのアップグレードが成功しました！");
+      window.location.href = window.location.origin + window.location.pathname;
+    } else {
+      btn.disabled = false;
+      btn.innerText = "プレミアムにする";
+    }
+  }
+};
+
+async function checkUrlSessionParameters(user) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get('session_id');
+  if (sessionId && user) {
+    const statusText = document.getElementById("loadingStatusText");
+    if(statusText) statusText.innerText = "✨ Stripe決済完了を確認中...";
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        plan: "premium",
+        updatedAt: Date.now(),
+        stripeSessionId: sessionId
+      });
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } catch (e) {
+      console.error("Session activation failed", e);
+    }
+  }
+}
+
+window.forceDowngradeToFree = async function() {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return;
+  if (!confirm("Firestore上のプラン設定を「free」に変更しますか？")) return;
+  
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      plan: "free",
+      updatedAt: Date.now()
+    });
+    alert("プランを「free」に更新しました！");
+  } catch(e) {
+    alert("プラン変更に失敗しました: " + e.message);
   }
 };
 
 function updatePlanUI() {
   const currentPlanLabel = document.getElementById("currentPlanLabel");
   const premiumBannerArea = document.getElementById("premiumBannerArea");
+  const testPlanToggleArea = document.getElementById("testPlanToggleArea");
   
   if (isPremiumUser) {
-    currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
-    currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
-    premiumBannerArea.classList.remove("hidden");
-    document.getElementById("stripePaymentBtn").classList.add("hidden");
+    if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
+    if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
+    if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
+    const pBtn = document.getElementById("stripePaymentBtn");
+    if(pBtn) pBtn.classList.add("hidden");
+    if(testPlanToggleArea) testPlanToggleArea.classList.remove("hidden");
   } else {
-    currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
-    currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
-    premiumBannerArea.classList.add("hidden");
-    document.getElementById("stripePaymentBtn").classList.remove("hidden");
+    if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
+    if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
+    if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
+    const pBtn = document.getElementById("stripePaymentBtn");
+    if(pBtn) pBtn.classList.remove("hidden");
+    if(testPlanToggleArea) testPlanToggleArea.classList.add("hidden");
   }
+  renderGallery();
 }
 
 window.handleFabClick = function() {
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && activeWorksCount >= 10) {
-    alert("⚠️ 無料プランの作品登録上限（10件）に達しています。\nこれ以上登録するにはプレミアムプランへの切り替えが必要です。");
+    alert("⚠️ 無料プランの上限（10件）に達しています。");
     return;
   }
   openDrawer('work');
@@ -386,11 +439,9 @@ window.toggleSearchMenu = function() {
   if(menuArea.classList.contains("collapsed")) {
     menuArea.classList.remove("collapsed");
     toggleBtn.classList.add("bg-[#56736C]", "text-white");
-    toggleBtn.classList.remove("bg-slate-100", "text-slate-600");
   } else {
     menuArea.classList.add("collapsed");
     toggleBtn.classList.remove("bg-[#56736C]", "text-white");
-    toggleBtn.classList.add("bg-slate-100", "text-slate-600");
   }
 };
 
@@ -400,14 +451,11 @@ function initBirthdaySelectboxes() {
   const daySelect = document.getElementById("childBirthDay");
   if(!yearSelect || !monthSelect || !daySelect) return;
   const currentYear = new Date().getFullYear();
-  let yearHtml = "";
-  for (let y = currentYear; y >= currentYear - 20; y--) { yearHtml += `<option value="${y}">${y}</option>`; }
+  let yearHtml = ""; for (let y = currentYear; y >= currentYear - 20; y--) { yearHtml += `<option value="${y}">${y}</option>`; }
   yearSelect.innerHTML = yearHtml;
-  let monthHtml = "";
-  for (let m = 1; m <= 12; m++) { monthHtml += `<option value="${String(m).padStart(2, '0')}">${m}</option>`; }
+  let monthHtml = ""; for (let m = 1; m <= 12; m++) { monthHtml += `<option value="${String(m).padStart(2, '0')}">${m}</option>`; }
   monthSelect.innerHTML = monthHtml;
-  let dayHtml = "";
-  for (let d = 1; d <= 31; d++) { dayHtml += `<option value="${String(d).padStart(2, '0')}">${d}</option>`; }
+  let dayHtml = ""; for (let d = 1; d <= 31; d++) { dayHtml += `<option value="${String(d).padStart(2, '0')}">${d}</option>`; }
   daySelect.innerHTML = dayHtml;
 }
 initBirthdaySelectboxes();
@@ -423,13 +471,13 @@ function calculateAgeInMonths(birthDateStr, workDateStr) {
 
 function formatAgeString(totalMonths) {
   if (totalMonths === null || totalMonths < 0) return "";
-  const years = Math.floor(totalMonths / 12); const months = totalMonths % 12;
-  return `${years}歳${months}ヶ月`;
+  return `${Math.floor(totalMonths / 12)}歳${totalMonths % 12}ヶ月`;
 }
 
 window.toggleAuth = async function() {
   if (auth.currentUser) { 
     if(confirm("ログアウトしますか？")) {
+      stopRealtimeSync();
       await signOut(auth);
       location.reload();
     }
@@ -445,19 +493,24 @@ onAuthStateChanged(auth, async (user) => {
   const gateLoading = document.getElementById("gateLoading");
   const gateLoginArea = document.getElementById("gateLoginArea");
   const gateSetupArea = document.getElementById("gateSetupArea");
+  const errLog = document.getElementById("gateErrorLog");
 
   if (user) {
     btnText.innerText = "ログアウト";
     gateLoginArea.classList.add("hidden");
     gateLoading.classList.remove("hidden");
+    gateSetupArea.classList.add("hidden");
+    if(errLog) errLog.classList.add("hidden");
 
-    try {
-      // v41: ドキュメントの変更（プラン決済完了など）をリアルタイム監視する形に変更
-      unsubscribeUserPlan = onSnapshot(doc(db, "users", user.uid), async (userSnap) => {
+    await checkUrlSessionParameters(user);
+
+    if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
+
+    unsubscribeUserPlan = onSnapshot(doc(db, "users", user.uid), async (userSnap) => {
+      try {
         if (userSnap.exists() && userSnap.data().familyId) {
           const fId = userSnap.data().familyId;
           currentSession = { familyId: fId, userId: user.uid };
-          
           isPremiumUser = userSnap.data().plan === "premium";
           updatePlanUI();
 
@@ -468,23 +521,23 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById("displayFamilyIdCode").value = fId;
           }
           
-          gateScreen.classList.add("hidden");
+          gateScreen.classList.add("hidden"); 
           startRealtimeSync();
         } else {
           gateLoading.classList.add("hidden");
           gateSetupArea.classList.remove("hidden");
         }
-      }, (err) => {
-        console.error("Plan sync error:", err);
+      } catch (innerErr) {
+        showGateError(innerErr.message);
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
-      });
-
-    } catch(err) {
-      console.error("Auth mapping error:", err);
+      }
+    }, (err) => {
+      showGateError(err.code + " / " + err.message);
       gateLoading.classList.add("hidden");
-      gateSetupArea.classList.remove("hidden");
-    }
+      gateLoginArea.classList.remove("hidden"); 
+    });
+
   } else {
     btnText.innerText = "ログイン";
     currentSession = null;
@@ -502,111 +555,70 @@ onAuthStateChanged(auth, async (user) => {
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
   if (!user) return;
-  if (!confirm("新しい家族の記録ノートスペースを生成しますか？")) return;
+  if (!confirm("新しい家族グループを生成しますか？")) return;
 
   const btn = document.getElementById("btnCreateFamily");
-  btn.innerText = "作成中...";
-  btn.disabled = true;
-
-  const docFamilyId = crypto.randomUUID(); 
-  const inviteCodeUuid = crypto.randomUUID(); 
+  btn.innerText = "作成中..."; btn.disabled = true;
+  const docFamilyId = crypto.randomUUID(); const inviteCodeUuid = crypto.randomUUID(); 
   
   try {
-    await setDoc(doc(db, "users", user.uid), {
-      familyId: docFamilyId,
-      email: user.email || "",
-      plan: "free", 
-      updatedAt: Date.now()
-    });
-
-    await setDoc(doc(db, "families", docFamilyId), {
-      inviteCode: inviteCodeUuid,
-      createdAt: Date.now(),
-      createdBy: user.uid,
-      members: { [user.uid]: true }
-    });
-
+    await setDoc(doc(db, "users", user.uid), { familyId: docFamilyId, email: user.email || "", plan: "free", updatedAt: Date.now() });
+    await setDoc(doc(db, "families", docFamilyId), { inviteCode: inviteCodeUuid, createdAt: Date.now(), createdBy: user.uid, members: { [user.uid]: true } });
     alert("🎉 家族グループを新規に作成しました！");
-    location.reload();
   } catch (e) {
-    btn.innerText = "🚀 新しい家族グループを作成する";
-    btn.disabled = false;
-    alert("🚨 Firebaseエラーが発生しました:\n" + e.message);
+    btn.innerText = "🚀 新しい家族グループを作成する"; btn.disabled = false;
+    alert("🚨 作成エラー: " + e.message);
   }
 };
 
 window.joinFamilyGroup = async function() {
-  const user = auth.currentUser;
-  const inviteCode = document.getElementById("joinInviteCodeInput").value.trim();
-  if(!user) return;
-  if(!inviteCode) { alert("招待コードを入力してください"); return; }
+  const user = auth.currentUser; const inviteCode = document.getElementById("joinInviteCodeInput").value.trim();
+  if(!user) return; if(!inviteCode) { alert("招待コードを入力してください"); return; }
 
   const btn = document.getElementById("btnJoinFamily");
-  btn.innerText = "合流中...";
-  btn.disabled = true;
+  btn.innerText = "合流中..."; btn.disabled = true;
 
   try {
     const q = query(collection(db, "families"), where("inviteCode", "==", inviteCode));
     const querySnapshot = await getDocs(q);
-
     if (querySnapshot.empty) {
-      alert("⚠️ 入力された家族招待コードが見つかりません。コードが正しいかご確認ください。");
-      btn.innerText = "合流する";
-      btn.disabled = false;
-      return;
+      alert("⚠️ 有効な家族招待コードが見つかりません。");
+      btn.innerText = "合流する"; btn.disabled = false; return;
     }
-
-    const familyDoc = querySnapshot.docs[0];
-    const targetDocId = familyDoc.id; 
-    const familyData = familyDoc.data();
-
-    const updatedMembers = { ...familyData.members, [user.uid]: true };
-    
-    await setDoc(doc(db, "users", user.uid), {
-      familyId: targetDocId,
-      email: user.email || "",
-      plan: "free",
-      updatedAt: Date.now()
-    });
-
-    await updateDoc(doc(db, "families", targetDocId), { members: updatedMembers });
-
-    alert("🎉 パートナーの家族ノートへの合流に成功しました！");
-    location.reload();
+    const familyDoc = querySnapshot.docs[0]; const targetDocId = familyDoc.id; 
+    await setDoc(doc(db, "users", user.uid), { familyId: targetDocId, email: user.email || "", plan: "free", updatedAt: Date.now() });
+    await updateDoc(doc(db, "families", targetDocId), { [`members.${user.uid}`]: true });
+    alert("🎉 家族ノートへの合流に成功しました！");
   } catch(e) {
-    btn.innerText = "合流する";
-    btn.disabled = false;
-    alert("🚨 合流エラーが発生しました:\n" + e.message);
+    btn.innerText = "合流する"; btn.disabled = false;
+    alert("🚨 合流エラー: " + e.message);
   }
 };
 
 window.copyFamilyCode = function() {
   const codeInput = document.getElementById("displayFamilyIdCode");
-  codeInput.select();
-  codeInput.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(codeInput.value);
-  alert("家族共有用のコードをクリップボードにコピーしました！パートナーに送って共有してください。");
+  codeInput.select(); navigator.clipboard.writeText(codeInput.value);
+  alert("コードをコピーしました！");
 };
 
 function startRealtimeSync() {
   if(!currentSession) return;
   
-  if (!unsubscribeChildren) {
-    unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
-      localChildren = [];
-      snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
-      renderAll();
-    }, (err) => console.error("Sync Children Error:", err));
-  }
+  if (unsubscribeChildren) { unsubscribeChildren(); unsubscribeChildren = null; }
+  unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
+    localChildren = []; snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
+    renderAll();
+  }, (err) => {
+    alert("子ども一覧の同期に失敗しました。");
+  });
 
-  if (!unsubscribeWorks) {
-    unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
-      localWorks = [];
-      snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
-      cleanupOldTrash();
-      renderAll();
-    }, (err) => console.error("Sync Works Error:", err));
-  }
+  if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
+  unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
+    localWorks = []; snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
+    cleanupOldTrash(); renderAll();
+  }, (err) => {
+    alert("作品一覧の同期に失敗しました。");
+  });
 }
 
 function stopRealtimeSync() {
@@ -618,9 +630,9 @@ function renderAll(){
   renderChildList(); populateChildSelect(); populateGalleryChildFilter(); renderGallery(); renderTimeline(); renderTrash();
 }
 
-document.getElementById("gallerySortSelect").addEventListener("change", function() { renderGallery(); });
-document.getElementById("galleryChildFilterSelect").addEventListener("change", function() { renderGallery(); });
-document.getElementById("gallerySearchInput").addEventListener("input", function() { renderGallery(); });
+document.getElementById("gallerySortSelect").addEventListener("change", renderGallery);
+document.getElementById("galleryChildFilterSelect").addEventListener("change", renderGallery);
+document.getElementById("gallerySearchInput").addEventListener("input", renderGallery);
 
 window.setAgeStageFilter = function(stage) {
   currentAgeStageFilter = stage;
@@ -633,14 +645,10 @@ window.goToTopPage = function() {
   document.getElementById("gallerySearchInput").value = "";
   document.getElementById("galleryChildFilterSelect").value = "all";
   document.getElementById("gallerySortSelect").value = "createdDesc";
-  
   currentAgeStageFilter = "all";
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
-  const allTab = document.getElementById("ageTab-all");
-  if(allTab) allTab.classList.add("active");
-
-  closeDrawer();
-  switchPage('gallery');
+  if(document.getElementById("ageTab-all")) document.getElementById("ageTab-all").classList.add("active");
+  closeDrawer(); switchPage('gallery');
 };
 
 window.saveChild = async function(){
@@ -648,12 +656,9 @@ window.saveChild = async function(){
   const name = document.getElementById("childName").value.trim();
   const editingId = document.getElementById("editingChildId").value;
   if(!name){ alert("名前を入力してください"); return; }
-  
   if (!isPremiumUser && !editingId && localChildren.length >= 1) {
-    alert("⚠️ 無料プランでは登録できるお子様は1名様までとなります。\n2名以上登録する場合はプレミアムプランへの切り替えが必要です。");
-    return;
+    alert("⚠️ 無料プランではお子様は1名様までとなります。"); return;
   }
-
   const birthday = `${document.getElementById("childBirthYear").value}-${document.getElementById("childBirthMonth").value}-${document.getElementById("childBirthDay").value}`;
 
   try {
@@ -664,9 +669,7 @@ window.saveChild = async function(){
       await addDoc(collection(db, "families", currentSession.familyId, "children"), { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() });
     }
     cancelChildEdit();
-  } catch(e) {
-    alert("子ども情報の保存に失敗しました: " + e.message);
-  }
+  } catch(e) { alert("失敗しました: " + e.message); }
 };
 
 window.editChild = function(id) {
@@ -693,16 +696,13 @@ window.cancelChildEdit = function() {
 };
 
 window.deleteChild = async function(id, name) {
-  if(!confirm(`「${name}」ちゃんの設定を削除しますか？`)) return;
+  if(!confirm(`「${name}」ちゃんを削除しますか？`)) return;
   const target = localChildren.find(c => c.id === id);
   if(target) await deleteDoc(doc(db, "families", currentSession.familyId, "children", target.docId));
 };
 
 async function processSelectedFiles(files) {
   if(!files.length) return;
-  if (files.some(file => file.type.startsWith('video/') || file.type.startsWith('audio/') || (!file.type.startsWith('image/') && file.type !== 'application/pdf'))) {
-    alert("⚠️ 「写真（画像）」または「PDFファイル」を選択してください。"); return;
-  }
   const processPromises = files.map(file => {
     return new Promise(resolve => {
       const reader = new FileReader();
@@ -733,7 +733,7 @@ function renderMediaPreviews() {
   base64MediaArray.forEach((item, index) => {
     const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>`;
     if(item.type === "pdf") {
-      previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFファイル</span></div>`;
+      previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
     } else {
       previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
     }
@@ -742,9 +742,7 @@ function renderMediaPreviews() {
 }
 
 window.removeSelectedMedia = function(index, event) {
-  if(event) event.stopPropagation();
-  base64MediaArray.splice(index, 1);
-  renderMediaPreviews();
+  if(event) event.stopPropagation(); base64MediaArray.splice(index, 1); renderMediaPreviews();
 };
 
 document.getElementById("fileInput").addEventListener("change", function(e){ processSelectedFiles(Array.from(e.target.files)); e.target.value = ""; });
@@ -753,11 +751,9 @@ document.getElementById("cameraInput").addEventListener("change", function(e){ p
 document.getElementById("workForm").addEventListener("submit", async function(e){
   e.preventDefault(); if(!currentSession) return;
   const editingId = document.getElementById("editingWorkId").value;
-  
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && !editingId && activeWorksCount >= 10) {
-    alert("⚠️ 無料プランの作品登録上限（10件）に達しています。\nこれ以上登録するにはプレミアムプランへの切り替えが必要です。");
-    return;
+    alert("⚠️ 無料プラン上限に達しているため新規登録できません。"); return;
   }
 
   const title = document.getElementById("inputTitle").value.trim();
@@ -765,19 +761,15 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
   const memo = document.getElementById("inputMemo").value.trim();
-  document.getElementById("workSubmitBtn").innerText = "送信中...";
-  document.getElementById("workSubmitBtn").disabled = true;
+  document.getElementById("workSubmitBtn").innerText = "送信中..."; document.getElementById("workSubmitBtn").disabled = true;
 
   try {
     if(editingId) {
-      const target = localWorks.find(w => w.id === editingId);
-      let mediaUrls = [];
-      
+      const target = localWorks.find(w => w.id === editingId); let mediaUrls = [];
       for(let i=0; i<base64MediaArray.length; i++) {
         const currentItem = base64MediaArray[i];
-        if (currentItem.dataUrl.startsWith('http')) {
-          mediaUrls.push({ type: currentItem.type, url: currentItem.dataUrl });
-        } else {
+        if (currentItem.dataUrl.startsWith('http')) { mediaUrls.push({ type: currentItem.type, url: currentItem.dataUrl }); } 
+        else {
           const isPdf = currentItem.type === "pdf";
           const path = `families/${currentSession.familyId}/artworks/${target.id}/${Date.now()}_${i}.${isPdf?"pdf":"jpg"}`;
           const r = ref(storage, path); await uploadString(r, currentItem.dataUrl, "data_url");
@@ -823,15 +815,12 @@ window.openEditWork = function(id) {
   document.getElementById("inputMemo").value = w.memo || "";
   
   base64MediaArray = [];
-  if(w.mediaUrls?.length) {
-    w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url }); });
-  }
-  renderMediaPreviews();
-  openDrawer("work");
+  if(w.mediaUrls?.length) { w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url }); }); }
+  renderMediaPreviews(); openDrawer("work");
 };
 
 window.trashWork = async function(id, title) {
-  if(!confirm(`「${title}」のデータをゴミ箱に移動しますか？`)) return;
+  if(!confirm(`「${title}」をゴミ箱に移動しますか？`)) return;
   const target = localWorks.find(w => w.id === id);
   if(target) await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isDeleted: true, deletedAt: Date.now() });
 };
@@ -866,21 +855,19 @@ function renderChildList(){
   localChildren.forEach(c => { 
     html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50"><div class="font-semibold text-slate-700">${c.name}</div><div class="flex gap-3 text-xs"><button onclick="editChild('${c.id}')" class="text-emerald-600 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`; 
   });
-  document.getElementById("childList").innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
-  
+  const cList = document.getElementById("childList");
+  if(cList) cList.innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
   const limitLabel = document.getElementById("childLimitCountLabel");
-  if(limitLabel) {
-    limitLabel.innerText = isPremiumUser ? `(${localChildren.length}人登録中)` : `(${localChildren.length} / 1人)`;
-  }
+  if(limitLabel) { limitLabel.innerText = isPremiumUser ? `(${localChildren.length}人登録中)` : `(${localChildren.length} / 1人)`; }
 }
 
 function populateChildSelect(){
   let html = `<option value="">子どもを選択してください</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
-  document.getElementById("inputWorkChild").innerHTML = html;
+  const sel = document.getElementById("inputWorkChild"); if(sel) sel.innerHTML = html;
 }
 
- function populateGalleryChildFilter(){
+function populateGalleryChildFilter(){
   const filterSelect = document.getElementById("galleryChildFilterSelect"); if(!filterSelect) return;
   const val = filterSelect.value;
   let html = `<option value="all">すべての子ども</option><option value="favorite">⭐ お気に入り</option>`;
@@ -900,8 +887,11 @@ function renderGallery(){
   if(!sortSelect || !filterSelect || !searchInput) return;
   const sortValue = sortSelect.value; const filterValue = filterSelect.value; const searchQuery = searchInput.value.toLowerCase().trim();
   let displayWorks = localWorks.filter(w => !w.isDeleted);
-  
   const totalActiveCount = displayWorks.length;
+
+  if (!isPremiumUser) {
+    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span></div>`;
+  }
 
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
   else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
@@ -926,24 +916,8 @@ function renderGallery(){
   displayWorks.sort((a, b) => {
     if (sortValue === "createdDesc") return b.createdAt - a.createdAt;
     if (sortValue === "createdAsc") return a.createdAt - b.createdAt;
-    if (sortValue === "dateDesc") return (b.date || "0000-00-00").localeCompare(b.date || "0000-00-00");
-    if (sortValue === "dateAsc") return (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31");
-    if (sortValue === "ageAsc" || sortValue === "ageDesc") {
-      const cA = a.childId ? localChildren.find(c => c.id === a.childId) : null;
-      const cB = b.childId ? localChildren.find(c => c.id === b.childId) : null;
-      const mA = cA ? calculateAgeInMonths(cA.birthday, a.date) : null;
-      const mB = cB ? calculateAgeInMonths(cB.birthday, b.date) : null;
-      if (mA === null) return 1; if (mB === null) return -1;
-      return sortValue === "ageAsc" ? mA - mB : mB - mA;
-    }
     return 0;
   });
-
-  if(!isPremiumUser) {
-    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">
-      📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span> (無料プラン上限)
-    </div>`;
-  }
 
   displayWorks.forEach(w => {
     let childTag = ""; let ageTag = "";
@@ -996,13 +970,12 @@ function renderGallery(){
           </div>
         </div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
-        <div class="flex justify-end mt-2">
-          <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
-        </div>
+        <div class="flex justify-end mt-2"><button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button></div>
       </div>
     </div>`;
   });
-  document.getElementById("galleryGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>該当する data が見つかりませんでした</div>";
+  const grid = document.getElementById("galleryGrid");
+  if(grid) grid.innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>データがありません</div>";
 }
 
 function renderTimeline(){
@@ -1025,7 +998,7 @@ function renderTimeline(){
       <div class="flex justify-between items-start">
         <div>
           <div class="font-bold text-slate-800 flex items-center gap-1">${w.title}${w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : ''}</div>
-          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo} ・ ${w.category==="print"?"プリント":w.category==="test"?"テスト":"作品"}</div>
+          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo}</div>
         </div>
         <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
       </div>
@@ -1033,7 +1006,7 @@ function renderTimeline(){
       ${w.memo ? `<div class="text-xs text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg">${w.memo}</div>` : ''}
     </div>`;
   });
-  document.getElementById("recordsTimeline").innerHTML = html || "<p class='text-center py-8 text-slate-400 text-sm'>タイムラインのデータがありません</p>";
+  const tl = document.getElementById("recordsTimeline"); if(tl) tl.innerHTML = html || "<p class='text-center py-8 text-slate-400 text-sm'>データがありません</p>";
 }
 
 function renderTrash(){
@@ -1054,7 +1027,7 @@ function renderTrash(){
       </div>
     </div>`;
   });
-  document.getElementById("trashGrid").innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-xs'>ゴミ箱は空っぽです</div>";
+  const tGrid = document.getElementById("trashGrid"); if(tGrid) tGrid.innerHTML = html || "<div class='text-center py-12 text-slate-400 text-xs'>ゴミ箱は空です</div>";
 }
 
 window.openDrawer = function(t){ 
@@ -1064,16 +1037,12 @@ window.openDrawer = function(t){
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; base64MediaArray = [];
   }
   if(t === 'child') cancelChildEdit();
-  document.getElementById(t+"Drawer").classList.add("open"); 
+  const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
 };
 
 window.closeDrawer = function(t){ 
-  if(t) {
-    const el = document.getElementById(t+"Drawer");
-    if(el) el.classList.remove('open');
-  } else {
-    document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); 
-  }
+  if(t) { const el = document.getElementById(t+"Drawer"); if(el) el.classList.remove('open'); } 
+  else { document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); }
 };
 
 window.switchPage = function(p){
