@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v58]</title>
+<title>コドモノート [v59]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +141,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v58</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v59</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -338,7 +338,7 @@ let unsubscribeUserPlan = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// v58追加: Three.js グローバル管理変数
+// Three.js グローバル管理変数
 let threeScene, threeCamera, threeRenderer, threeControls;
 let threeMesh = null;
 let currentActive3DImageUrl = "";
@@ -973,7 +973,7 @@ function renderGallery(){
     }
     let categoryTag = getCategoryBadgeHtml(w.category);
     let mediaPreview = ''; const mediaCount = w.mediaUrls?.length || 0;
-    let firstImgUrl = ""; // v58追加: 3D生成に送る画像用パス
+    let firstImgUrl = ""; 
     
     if (mediaCount > 0) {
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
@@ -1004,7 +1004,6 @@ function renderGallery(){
       `;
     }
     
-    // v58追加: 画像があるときだけ3Dポリゴン変換ボタンを配置
     const threeBtnHtml = firstImgUrl ? `<button onclick="open3DPolygonModal('${firstImgUrl}', '${w.title.replace(/'/g, "\\'")}', event)" class="text-[11px] bg-emerald-50 text-[#56736C] border border-emerald-200 px-2 py-0.5 rounded-md font-bold shadow-sm transition active:scale-95">📦 3D表示</button>` : '';
 
     const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
@@ -1106,7 +1105,7 @@ window.switchPage = function(p){
 };
 
 // ==========================================
-// v58追加: 3Dポリゴン解析・表示ロジック（Three.js）
+// v59 3Dポリゴン解析・表示ロジック（CORS・無限ロード対策強化）
 // ==========================================
 function init3DSpace() {
   const container = document.getElementById('three3dCanvasContainer');
@@ -1118,7 +1117,7 @@ function init3DSpace() {
   threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
   threeCamera.position.set(0, 4, 8);
 
-  threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
   threeRenderer.setSize(container.clientWidth, container.clientHeight);
   threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(threeRenderer.domElement);
@@ -1128,7 +1127,7 @@ function init3DSpace() {
   threeControls.dampingFactor = 0.07;
   threeControls.maxPolarAngle = Math.PI / 2;
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
   threeScene.add(ambientLight);
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -1147,7 +1146,9 @@ function init3DSpace() {
 
 window.open3DPolygonModal = function(imgUrl, title, event) {
   if (event) event.stopPropagation();
-  currentActive3DImageUrl = imgUrl;
+  
+  // StorageのURLにキャッシュバスター（?t=timestamp）を付与してCORSの厳格なブラウザキャッシュバグを回避
+  currentActive3DImageUrl = imgUrl.includes('?') ? `${imgUrl}&t=${Date.now()}` : `${imgUrl}?t=${Date.now()}`;
   
   const modal = document.getElementById("three3dModal");
   document.getElementById("threeModalTitle").innerText = `📦 3D化: ${title}`;
@@ -1165,8 +1166,8 @@ window.close3DModal = function() {
   modal.classList.add("opacity-0", "pointer-events-none");
   if (threeMesh) {
     threeScene.remove(threeMesh);
-    threeMesh.geometry.dispose();
-    threeMesh.material.dispose();
+    if(threeMesh.geometry) threeMesh.geometry.dispose();
+    if(threeMesh.material) threeMesh.material.dispose();
     threeMesh = null;
   }
 };
@@ -1177,66 +1178,95 @@ function generate3DPolygonMesh() {
   
   if (threeMesh) {
     threeScene.remove(threeMesh);
-    threeMesh.geometry.dispose();
-    threeMesh.material.dispose();
+    if(threeMesh.geometry) threeMesh.geometry.dispose();
+    if(threeMesh.material) threeMesh.material.dispose();
     threeMesh = null;
   }
 
-  const img = new Image();
-  img.crossOrigin = "Anonymous"; // 外部URL（Storage等）からの読み込みを許可
-  img.onload = function() {
-    const analysisCanvas = document.createElement('canvas');
-    const size = 128; // モバイル端末負荷軽減の最適化ピクセルサイズ
-    analysisCanvas.width = size;
-    analysisCanvas.height = size;
-    const ctx = analysisCanvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, size, size);
+  // 先にThree.jsのTextureLoaderでCORS付きで読み込む（スマホブラウザ対策）
+  threeTextureLoader.setCrossOrigin('anonymous');
+  threeTextureLoader.load(currentActive3DImageUrl, function(texture) {
     
-    const imgData = ctx.getImageData(0, 0, size, size).data;
-    const geometry = new THREE.PlaneGeometry(4.5, 4.5, size - 1, size - 1);
-    const vertices = geometry.attributes.position.array;
-    
-    const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
-    
-    let vIdx = 0;
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const i = (y * size + x) * 4;
-        const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3 / 255;
-        // Z軸方向（奥行き・立体感）を画像の輝度に基づいて動的に変形
-        vertices[vIdx * 3 + 2] = brightness * depthScale;
-        vIdx++;
-      }
+    // テクスチャ画像（Imageオブジェクト）からピクセルデータを抽出して高低差を計算
+    const img = texture.image;
+    if(!img) {
+      fallbackMeshGeneration();
+      return;
     }
-    
-    geometry.computeVertexNormals();
-    
-    threeTextureLoader.load(currentActive3DImageUrl, function(texture) {
+
+    try {
+      const analysisCanvas = document.createElement('canvas');
+      const size = 128; // スマホ負荷軽減サイズ
+      analysisCanvas.width = size;
+      analysisCanvas.height = size;
+      const ctx = analysisCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      
+      const imgData = ctx.getImageData(0, 0, size, size).data;
+      const geometry = new THREE.PlaneGeometry(4.5, 4.5, size - 1, size - 1);
+      const vertices = geometry.attributes.position.array;
+      
+      const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
+      
+      let vIdx = 0;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const i = (y * size + x) * 4;
+          // 輝度（明るさ）の算出
+          const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3 / 255;
+          // Z軸を浮き上がらせる
+          vertices[vIdx * 3 + 2] = brightness * depthScale;
+          vIdx++;
+        }
+      }
+      
+      geometry.computeVertexNormals();
+      
       const isWireframe = document.getElementById("threeCheckWireframe").checked;
       const material = new THREE.MeshStandardMaterial({
         map: texture,
         side: THREE.DoubleSide,
         wireframe: isWireframe,
-        roughness: 0.45,
-        metalness: 0.05
+        roughness: 0.5,
+        metalness: 0.1
       });
       
       threeMesh = new THREE.Mesh(geometry, material);
-      threeMesh.rotation.x = -Math.PI / 2.8; // 閲覧しやすい角度に調整
+      threeMesh.rotation.x = -Math.PI / 2.8; 
       threeScene.add(threeMesh);
       
       if(threeControls) threeControls.reset();
       document.getElementById("threeLoadingIndicator").classList.add("hidden");
-    }, null, function(err) {
-      // 万が一テクスチャ読み込みがCORS等で失敗した時のためのカラーフォールバック
-      const material = new THREE.MeshStandardMaterial({ color: 0x7C9A92, wireframe: true });
-      threeMesh = new THREE.Mesh(geometry, material);
-      threeMesh.rotation.x = -Math.PI / 2.8;
-      threeScene.add(threeMesh);
-      document.getElementById("threeLoadingIndicator").classList.add("hidden");
-    });
-  };
-  img.src = currentActive3DImageUrl;
+
+    } catch (canvasError) {
+      console.error("Canvas analysis error (CORS restriction likely):", canvasError);
+      fallbackMeshGeneration(texture);
+    }
+
+  }, null, function(err) {
+    console.error("Texture load error:", err);
+    fallbackMeshGeneration();
+  });
+}
+
+// エラー・CORSブロック発生時のためのセーフティネット表示関数（無限ロード防止）
+function fallbackMeshGeneration(loadedTexture = null) {
+  const geometry = new THREE.PlaneGeometry(4.5, 4.5, 32, 32);
+  const isWireframe = document.getElementById("threeCheckWireframe").checked;
+  
+  const material = new THREE.MeshStandardMaterial({
+    color: loadedTexture ? 0xffffff : 0x7C9A92,
+    map: loadedTexture,
+    side: THREE.DoubleSide,
+    wireframe: loadedTexture ? isWireframe : true
+  });
+  
+  threeMesh = new THREE.Mesh(geometry, material);
+  threeMesh.rotation.x = -Math.PI / 2.8;
+  threeScene.add(threeMesh);
+  
+  if(threeControls) threeControls.reset();
+  document.getElementById("threeLoadingIndicator").classList.add("hidden");
 }
 
 // 3D調整値の変更イベント検知
