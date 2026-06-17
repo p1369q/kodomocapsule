@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v50]</title>
+<title>コドモノート [v51]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +141,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v50</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v51</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -228,12 +228,21 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
     <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定</h3><button onclick="closeDrawer('child')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
-    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
-      <div>
-        <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
-        <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
+    
+    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
+          <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
+        </div>
+        <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
       </div>
-      <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
+      <!-- テスト用のプラン強制ダウングレード切り替えボタン -->
+      <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
+        <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
+          🛠️ [テスト用] フリープランに戻す
+        </button>
+      </div>
     </div>
 
     <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -350,21 +359,46 @@ window.redirectToStripeCheckout = async function() {
   }
 };
 
+// Firestoreのデータを直接フリープラン（"free"）に書き換えるテスト用関数
+window.forceDowngradeToFree = async function() {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return;
+  if (!confirm("テスト機能：Firestore上のプラン設定を「free」に変更しますか？")) return;
+  
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      plan: "free",
+      updatedAt: Date.now()
+    });
+    alert("Firestoreのプランを「free」に更新しました！");
+  } catch(e) {
+    alert("プラン変更に失敗しました: " + e.message);
+  }
+};
+
 function updatePlanUI() {
   const currentPlanLabel = document.getElementById("currentPlanLabel");
   const premiumBannerArea = document.getElementById("premiumBannerArea");
+  const testPlanToggleArea = document.getElementById("testPlanToggleArea");
+  
   if (isPremiumUser) {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
     if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
     const pBtn = document.getElementById("stripePaymentBtn");
     if(pBtn) pBtn.classList.add("hidden");
+    
+    // プレミアムプランの時はダウングレードテストボタンを出せるようにする
+    if(testPlanToggleArea) testPlanToggleArea.classList.remove("hidden");
   } else {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
     if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
     const pBtn = document.getElementById("stripePaymentBtn");
     if(pBtn) pBtn.classList.remove("hidden");
+    
+    // フリープランの時は隠す
+    if(testPlanToggleArea) testPlanToggleArea.classList.add("hidden");
   }
   renderGallery();
 }
@@ -450,7 +484,6 @@ onAuthStateChanged(auth, async (user) => {
 
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
 
-    // 完全なエラーハンドリング付きユーザー監視
     unsubscribeUserPlan = onSnapshot(doc(db, "users", user.uid), async (userSnap) => {
       try {
         if (userSnap.exists() && userSnap.data().familyId) {
@@ -466,10 +499,9 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById("displayFamilyIdCode").value = fId;
           }
           
-          gateScreen.classList.add("hidden"); // 全てのロードが完了してはじめて画面を開放
+          gateScreen.classList.add("hidden"); 
           startRealtimeSync();
         } else {
-          // 家族グループが設定されていない場合
           gateLoading.classList.add("hidden");
           gateSetupArea.classList.remove("hidden");
         }
@@ -480,11 +512,8 @@ onAuthStateChanged(auth, async (user) => {
         gateSetupArea.classList.remove("hidden");
       }
     }, (err) => {
-      // 権限エラー（Permission Denied）などが起きた場合、ここに飛びます
       console.error("Firestore Users Snapshot Error:", err);
       showGateError(err.code + " / " + err.message);
-      
-      // フリーズさせないために読み込み中を外し、ログイン/ログアウト切り替えを露出させる
       gateLoading.classList.add("hidden");
       gateLoginArea.classList.remove("hidden"); 
     });
