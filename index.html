@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v55]</title>
+<title>コドモノート [v56]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,7 +137,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v55</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v56</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -232,12 +232,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
         </div>
         <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
-      </div>
-      <!-- [v55修正] ボタン文言から「[テスト用]」を削除 -->
-      <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
-        <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
-          🛠️ フリープランに戻す
-        </button>
       </div>
     </div>
 
@@ -350,18 +344,10 @@ window.redirectToStripeCheckout = async function() {
     if (session && session.url) { window.location.href = session.url; } 
     else { throw new Error("URLエラー"); }
   } catch (e) {
-    const mockConfirm = confirm("【Stripe決済画面へジャンプします】\n(テスト環境用ローンチ：決済を直接エミュレートして完了させますか？)");
-    if(mockConfirm) {
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        plan: "premium",
-        updatedAt: Date.now()
-      });
-      alert("👑 プレミアムプランへのアップグレードが成功しました！");
-      window.location.href = window.location.origin + window.location.pathname;
-    } else {
-      btn.disabled = false;
-      btn.innerText = "プレミアムにする";
-    }
+    console.error(e);
+    alert("決済画面への移行に失敗しました。少し時間をおいて再度お試しください。");
+    btn.disabled = false;
+    btn.innerText = "プレミアムにする";
   }
 };
 
@@ -385,26 +371,9 @@ async function checkUrlSessionParameters(user) {
   }
 }
 
-window.forceDowngradeToFree = async function() {
-  const currentUser = auth.currentUser;
-  if (!currentUser) return;
-  if (!confirm("Firestore上のプラン設定を「free」に変更しますか？")) return;
-  
-  try {
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      plan: "free",
-      updatedAt: Date.now()
-    });
-    alert("プランを「free」に更新しました！");
-  } catch(e) {
-    alert("プラン変更に失敗しました: " + e.message);
-  }
-};
-
 function updatePlanUI() {
   const currentPlanLabel = document.getElementById("currentPlanLabel");
   const premiumBannerArea = document.getElementById("premiumBannerArea");
-  const testPlanToggleArea = document.getElementById("testPlanToggleArea");
   
   if (isPremiumUser) {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
@@ -412,14 +381,12 @@ function updatePlanUI() {
     if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
     const pBtn = document.getElementById("stripePaymentBtn");
     if(pBtn) pBtn.classList.add("hidden");
-    if(testPlanToggleArea) testPlanToggleArea.classList.remove("hidden");
   } else {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
     if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
     const pBtn = document.getElementById("stripePaymentBtn");
     if(pBtn) pBtn.classList.remove("hidden");
-    if(testPlanToggleArea) testPlanToggleArea.classList.add("hidden");
   }
   renderGallery();
 }
