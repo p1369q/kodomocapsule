@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v69]</title>
+<title>コドモノート [v55]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
 :root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#7C9A92;--accent-dark:#56736C;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -45,7 +43,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   padding-bottom: 0px !important;
   pointer-events: none;
 }
-#three3dCanvasContainer canvas { border-radius: 20px; width:100% !important; height:100% !important; }
 </style>
 </head>
 <body>
@@ -69,17 +66,20 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
         👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
       </div>
+      
       <div class="space-y-3">
         <h3 class="text-sm font-bold text-slate-800 text-left">✨ 新しく利用をスタートする場合</h3>
         <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
           🚀 新しい家族グループを作成する
         </button>
       </div>
+
       <div class="relative flex py-2 items-center text-slate-300">
         <div class="flex-grow border-t border-slate-200"></div>
         <span class="flex-shrink mx-3 text-xs text-slate-400 font-medium">または</span>
         <div class="flex-grow border-t border-slate-200"></div>
       </div>
+
       <div class="space-y-3 text-left">
         <h3 class="text-sm font-bold text-slate-800">✉️ パートナーから招待されている場合</h3>
         <p class="text-[11px] text-slate-400">共有された家族招待コード（UUID形式）を入力してください。</p>
@@ -88,6 +88,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#7C9A92] text-white text-xs font-bold shrink-0 shadow-sm">合流する</button>
         </div>
       </div>
+      
       <div class="pt-4 border-t text-left">
         <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
       </div>
@@ -136,7 +137,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v69</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v55</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -232,7 +233,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </div>
         <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
       </div>
-      <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60" style="display: none;">
+      <!-- [v55修正] ボタン文言から「[テスト用]」を削除 -->
+      <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
         <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
           🛠️ フリープランに戻す
         </button>
@@ -272,32 +274,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
-<div id="three3dModal" class="fixed inset-0 z-[600] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-  <div class="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto flex flex-col p-5 shadow-2xl border border-slate-200">
-    <div class="flex justify-between items-center mb-3">
-      <h3 id="threeModalTitle" class="text-lg font-bold text-slate-800 line-clamp-1">3D形状プレビュー</h3>
-      <button onclick="close3DModal()" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 text-sm font-bold flex items-center justify-center">✕</button>
-    </div>
-    <div class="relative w-full aspect-square bg-slate-900 rounded-2xl shadow-inner overflow-hidden" id="three3dCanvasContainer">
-      <div id="threeLoadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 text-white z-10 hidden">
-        <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-400 mb-2"></div>
-        <div class="text-xs font-semibold text-emerald-400">ポリゴン立体復元中...</div>
-      </div>
-      <div class="absolute bottom-2.5 right-2.5 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded-full pointer-events-none select-none">🔄 スワイプで回転 / ピンチで拡大</div>
-    </div>
-    <div class="mt-4 p-3 bg-slate-50 rounded-xl space-y-3 border text-xs">
-      <div class="flex justify-between items-center">
-        <span class="font-bold text-slate-600">📐 立体感の深さ調整</span>
-        <input type="range" id="threeSliderDepth" min="0.2" max="3.0" step="0.2" value="1.2" class="w-32 accent-[#56736C]">
-      </div>
-      <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
-        <span class="font-bold text-slate-600">網目構造（ワイヤーフレーム）</span>
-        <input type="checkbox" id="threeCheckWireframe" class="w-4 h-4 accent-[#56736C]">
-      </div>
-    </div>
-  </div>
-</div>
-
 <script type="importmap">
   { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" } }
 </script>
@@ -306,7 +282,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
-import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
@@ -320,7 +296,6 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: 'select_account' });
 
 let currentSession = null; 
 let localChildren = [];
@@ -334,10 +309,6 @@ let unsubscribeUserPlan = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-let threeScene, threeCamera, threeRenderer, threeControls;
-let threeMesh = null;
-let currentActive3DImageUrl = "";
-
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
   if(errLog) {
@@ -348,7 +319,10 @@ function showGateError(msg) {
 
 window.redirectToStripeCheckout = async function() {
   const currentUser = auth.currentUser;
-  if (!currentUser) return;
+  if (!currentUser) {
+    alert("ログイン状態が確認できません。");
+    return;
+  }
   const btn = document.getElementById("stripePaymentBtn");
   btn.disabled = true;
   btn.innerText = "決済画面へ移行中...";
@@ -369,7 +343,9 @@ window.redirectToStripeCheckout = async function() {
       })
     });
 
-    if (!response.ok) throw new Error(`接続確認中...`);
+    if (!response.ok) {
+      throw new Error(`接続確認中...`);
+    }
     const session = await response.json();
     if (session && session.url) { window.location.href = session.url; } 
     else { throw new Error("URLエラー"); }
@@ -412,7 +388,7 @@ async function checkUrlSessionParameters(user) {
 window.forceDowngradeToFree = async function() {
   const currentUser = auth.currentUser;
   if (!currentUser) return;
-  if (!confirm("Firestore上のプラン設定を「free」変更しますか？")) return;
+  if (!confirm("Firestore上のプラン設定を「free」に変更しますか？")) return;
   
   try {
     await updateDoc(doc(db, "users", currentUser.uid), {
@@ -420,8 +396,6 @@ window.forceDowngradeToFree = async function() {
       updatedAt: Date.now()
     });
     alert("プランを「free」に更新しました！");
-    isPremiumUser = false;
-    updatePlanUI();
   } catch(e) {
     alert("プラン変更に失敗しました: " + e.message);
   }
@@ -431,24 +405,21 @@ function updatePlanUI() {
   const currentPlanLabel = document.getElementById("currentPlanLabel");
   const premiumBannerArea = document.getElementById("premiumBannerArea");
   const testPlanToggleArea = document.getElementById("testPlanToggleArea");
-  const pBtn = document.getElementById("stripePaymentBtn");
   
   if (isPremiumUser) {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
+    if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
-    if(pBtn) pBtn.style.display = 'none';
-    if(testPlanToggleArea) {
-      testPlanToggleArea.style.display = 'block';
-      testPlanToggleArea.classList.remove("hidden");
-    }
+    const pBtn = document.getElementById("stripePaymentBtn");
+    if(pBtn) pBtn.classList.add("hidden");
+    if(testPlanToggleArea) testPlanToggleArea.classList.remove("hidden");
   } else {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
+    if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
-    if(pBtn) pBtn.style.display = 'block';
-    if(testPlanToggleArea) {
-      testPlanToggleArea.style.display = 'none';
-      testPlanToggleArea.classList.add("hidden");
-    }
+    const pBtn = document.getElementById("stripePaymentBtn");
+    if(pBtn) pBtn.classList.remove("hidden");
+    if(testPlanToggleArea) testPlanToggleArea.classList.add("hidden");
   }
   renderGallery();
 }
@@ -511,27 +482,10 @@ window.toggleAuth = async function() {
       location.reload();
     }
   } else { 
-    try { 
-      await signInWithPopup(auth, provider); 
-    } catch (err) { 
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch(redirectErr) {
-        alert("ログインエラー: " + redirectErr.message); 
-      }
-    } 
+    try { await signInWithPopup(auth, provider); } catch (err) { alert("ログイン失敗: " + err.message); } 
   }
 };
 document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
-
-async function handleRedirectResult() {
-  try {
-    const result = await getRedirectResult(auth);
-  } catch (error) {
-    showGateError("リダイレクト認証失敗: " + error.message);
-  }
-}
-handleRedirectResult();
 
 onAuthStateChanged(auth, async (user) => {
   const btnText = document.getElementById("authBtnText");
@@ -654,12 +608,16 @@ function startRealtimeSync() {
   unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
     localChildren = []; snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
     renderAll();
+  }, (err) => {
+    alert("子ども一覧の同期に失敗しました。");
   });
 
   if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
   unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
     localWorks = []; snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
     cleanupOldTrash(); renderAll();
+  }, (err) => {
+    alert("作品一覧の同期に失敗しました。");
   });
 }
 
@@ -903,7 +861,7 @@ function renderChildList(){
   if(limitLabel) { limitLabel.innerText = isPremiumUser ? `(${localChildren.length}人登録中)` : `(${localChildren.length} / 1人)`; }
 }
 
- function populateChildSelect(){
+function populateChildSelect(){
   let html = `<option value="">子どもを選択してください</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
   const sel = document.getElementById("inputWorkChild"); if(sel) sel.innerHTML = html;
@@ -957,7 +915,7 @@ function renderGallery(){
   
   displayWorks.sort((a, b) => {
     if (sortValue === "createdDesc") return b.createdAt - a.createdAt;
-    if (sortValue === "createdAsc") return a.createdAt - a.createdAt;
+    if (sortValue === "createdAsc") return a.createdAt - b.createdAt;
     return 0;
   });
 
@@ -973,8 +931,6 @@ function renderGallery(){
     }
     let categoryTag = getCategoryBadgeHtml(w.category);
     let mediaPreview = ''; const mediaCount = w.mediaUrls?.length || 0;
-    let firstImgUrl = ""; 
-    
     if (mediaCount > 0) {
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
       const currentIndex = carouselIndices[w.id] >= mediaCount ? 0 : carouselIndices[w.id];
@@ -985,7 +941,6 @@ function renderGallery(){
       if (isPdf) {
         mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
       } else {
-        firstImgUrl = sourceUrl;
         mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openEditWork('${w.id}')"/>`;
       }
     } else {
@@ -1003,9 +958,6 @@ function renderGallery(){
         <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold select-none">${idx + 1} / ${mediaCount}</div>
       `;
     }
-    
-    const threeBtnHtml = firstImgUrl ? `<button onclick="open3DPolygonModal('${firstImgUrl}', '${w.title.replace(/'/g, "\\'")}', event)" class="text-[11px] bg-emerald-50 text-[#56736C] border border-emerald-200 px-2 py-0.5 rounded-md font-bold shadow-sm transition active:scale-95">📦 3D表示</button>` : '';
-
     const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
     html += `<div class="premium-card overflow-hidden">
       <div class="relative">${mediaPreview}${carouselController}</div>
@@ -1018,10 +970,7 @@ function renderGallery(){
           </div>
         </div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
-        <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-100">
-          ${threeBtnHtml}
-          <button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button>
-        </div>
+        <div class="flex justify-end mt-2"><button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button></div>
       </div>
     </div>`;
   });
@@ -1103,190 +1052,6 @@ window.switchPage = function(p){
   else if (p === "records") { document.getElementById("recordsPage").classList.add("active"); document.getElementById("nav-records").classList.add("active"); renderTimeline(); } 
   else if (p === "trash") { document.getElementById("trashPage").classList.add("active"); renderTrash(); }
 };
-
-// ==========================================
-// 3D表示：CORSポリシー設定対応テクスチャローダー
-// ==========================================
-function init3DSpace() {
-  const container = document.getElementById('three3dCanvasContainer');
-  if(!container) return;
-  
-  threeScene = new THREE.Scene();
-  threeScene.background = new THREE.Color(0x0f172a); 
-
-  threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-  threeCamera.position.set(0, 3.5, 7);
-
-  threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-  threeRenderer.setSize(container.clientWidth, container.clientHeight);
-  threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  container.appendChild(threeRenderer.domElement);
-
-  threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
-  threeControls.enableDamping = true;
-  threeControls.dampingFactor = 0.07;
-  threeControls.maxPolarAngle = Math.PI / 2;
-  threeControls.target.set(0, 0, 0);
-
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-  threeScene.add(ambientLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
-  dirLight.position.set(5, 10, 5);
-  threeScene.add(dirLight);
-
-  function renderLoop() {
-    requestAnimationFrame(renderLoop);
-    if(threeControls) threeControls.update();
-    if(threeRenderer && threeScene && threeCamera) {
-      threeRenderer.render(threeScene, threeCamera);
-    }
-  }
-  renderLoop();
-}
-
-window.open3DPolygonModal = function(imgUrl, title, event) {
-  if (event) event.stopPropagation();
-  currentActive3DImageUrl = imgUrl;
-  
-  const modal = document.getElementById("three3dModal");
-  document.getElementById("threeModalTitle").innerText = `📦 3D化: ${title}`;
-  modal.classList.remove("opacity-0", "pointer-events-none");
-  
-  if(!threeScene) { init3DSpace(); }
-  
-  setTimeout(() => {
-    const container = document.getElementById('three3dCanvasContainer');
-    if (container && threeCamera && threeRenderer) {
-      threeCamera.aspect = container.clientWidth / container.clientHeight;
-      threeCamera.updateProjectionMatrix();
-      threeRenderer.setSize(container.clientWidth, container.clientHeight);
-    }
-    generate3DPolygonMesh();
-  }, 60);
-};
-
-window.close3DModal = function() {
-  const modal = document.getElementById("three3dModal");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  if (threeMesh) {
-    threeScene.remove(threeMesh);
-    if(threeMesh.geometry) threeMesh.geometry.dispose();
-    if(threeMesh.material) threeMesh.material.dispose();
-    threeMesh = null;
-  }
-  document.getElementById("threeLoadingIndicator").classList.add("hidden");
-};
-
-async function generate3DPolygonMesh() {
-  if (!currentActive3DImageUrl) return;
-  document.getElementById("threeLoadingIndicator").classList.remove("hidden");
-  
-  if (threeMesh) {
-    threeScene.remove(threeMesh);
-    if(threeMesh.geometry) threeMesh.geometry.dispose();
-    if(threeMesh.material) threeMesh.material.dispose();
-    threeMesh = null;
-  }
-
-  const textureLoader = new THREE.TextureLoader();
-  
-  // 🟢 変更点1: CORS 属性を明示的に指定してブラウザのセキュリティ制限を解除
-  textureLoader.setCrossOrigin('anonymous');
-
-  // 🟢 変更点2: 古いCORSエラーのキャッシュを強制回避するために、URLにキャッシュバスター（?v=69）を付与
-  const cacheBustedUrl = currentActive3DImageUrl.includes('?') 
-    ? `${currentActive3DImageUrl}&v=69` 
-    : `${currentActive3DImageUrl}?v=69`;
-
-  textureLoader.load(
-    cacheBustedUrl,
-    function (texture) {
-      try {
-        const geometry = new THREE.PlaneGeometry(4.5, 4.5, 64, 64);
-        const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
-        const isWireframe = document.getElementById("threeCheckWireframe").checked;
-        
-        const material = new THREE.MeshStandardMaterial({
-          map: texture,
-          displacementMap: texture, 
-          displacementScale: depthScale,
-          side: THREE.DoubleSide,
-          wireframe: isWireframe,
-          roughness: 0.6,
-          metalness: 0.1
-        });
-        
-        threeMesh = new THREE.Mesh(geometry, material);
-        threeMesh.position.set(0, 0, 0);
-        threeMesh.rotation.x = -Math.PI / 2;
-        threeScene.add(threeMesh);
-        
-        if(threeCamera) threeCamera.position.set(0, 3.5, 7);
-        if(threeControls) {
-          threeControls.target.set(0, 0, 0);
-          threeControls.reset();
-        }
-      } catch (ex) {
-        console.error("Mesh calculation exception:", ex);
-        fallbackMeshGeneration();
-      } finally {
-        document.getElementById("threeLoadingIndicator").classList.add("hidden");
-      }
-    },
-    undefined,
-    function (err) {
-      console.warn("Texture load failed due to CORS or network error. Using fallback.", err);
-      fallbackMeshGeneration();
-    }
-  );
-}
-
-function fallbackMeshGeneration() {
-  if (threeMesh) {
-    threeScene.remove(threeMesh);
-    if(threeMesh.geometry) threeMesh.geometry.dispose();
-    if(threeMesh.material) threeMesh.material.dispose();
-    threeMesh = null;
-  }
-
-  const geometry = new THREE.PlaneGeometry(4.5, 4.5, 16, 16);
-  const isWireframe = document.getElementById("threeCheckWireframe").checked;
-  
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x7C9A92,
-    side: THREE.DoubleSide,
-    wireframe: isWireframe,
-    roughness: 0.5
-  });
-  
-  threeMesh = new THREE.Mesh(geometry, material);
-  threeMesh.position.set(0, 0, 0);
-  threeMesh.rotation.x = -Math.PI / 2;
-  threeScene.add(threeMesh);
-  
-  if(threeCamera) threeCamera.position.set(0, 3.5, 7);
-  if(threeControls) {
-    threeControls.target.set(0, 0, 0);
-    threeControls.reset();
-  }
-  document.getElementById("threeLoadingIndicator").classList.add("hidden");
-}
-
-document.getElementById("threeSliderDepth").addEventListener("input", generate3DPolygonMesh);
-document.getElementById("threeCheckWireframe").addEventListener("change", function(e) {
-  if(threeMesh && threeMesh.material) {
-    threeMesh.material.wireframe = e.target.checked;
-  }
-});
-
-window.addEventListener('resize', function() {
-  const container = document.getElementById('three3dCanvasContainer');
-  if(!container || !threeCamera || !threeRenderer) return;
-  threeCamera.aspect = container.clientWidth / container.clientHeight;
-  threeCamera.updateProjectionMatrix();
-  threeRenderer.setSize(container.clientWidth, container.clientHeight);
-});
 
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
 </script>
