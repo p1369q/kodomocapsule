@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v61]</title>
+<title>コドモノート [v62]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Three.js & OrbitControls (3Dポリゴン生成用) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
@@ -141,7 +142,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v61</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v62</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -277,12 +278,14 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+<!-- v62 3Dポリゴン閲覧モーダル用UI -->
 <div id="three3dModal" class="fixed inset-0 z-[600] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
   <div class="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto flex flex-col p-5 shadow-2xl border border-slate-200">
     <div class="flex justify-between items-center mb-3">
       <h3 id="threeModalTitle" class="text-lg font-bold text-slate-800 line-clamp-1">3D形状プレビュー</h3>
       <button onclick="close3DModal()" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 text-sm font-bold flex items-center justify-center">✕</button>
     </div>
+    <!-- 3D表示空間 -->
     <div class="relative w-full aspect-square bg-slate-900 rounded-2xl shadow-inner overflow-hidden" id="three3dCanvasContainer">
       <div id="threeLoadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 text-white z-10 hidden">
         <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-400 mb-2"></div>
@@ -290,6 +293,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
       <div class="absolute bottom-2.5 right-2.5 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded-full pointer-events-none select-none">🔄 スワイプで回転 / ピンチで拡大</div>
     </div>
+    <!-- コントローラー -->
     <div class="mt-4 p-3 bg-slate-50 rounded-xl space-y-3 border text-xs">
       <div class="flex justify-between items-center">
         <span class="font-bold text-slate-600">📐 立体感の深さ調整</span>
@@ -342,7 +346,6 @@ let carouselIndices = {};
 let threeScene, threeCamera, threeRenderer, threeControls;
 let threeMesh = null;
 let currentActive3DImageUrl = "";
-const threeTextureLoader = new THREE.TextureLoader();
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -1105,7 +1108,7 @@ window.switchPage = function(p){
 };
 
 // ==========================================
-// v61 3D表示位置・CORS・画角の完全修正ロジック
+// v62 3D表示：CORS＆ベタ塗りフォールバックの完全突破ロジック
 // ==========================================
 function init3DSpace() {
   const container = document.getElementById('three3dCanvasContainer');
@@ -1114,9 +1117,8 @@ function init3DSpace() {
   threeScene = new THREE.Scene();
   threeScene.background = new THREE.Color(0x0f172a); // Slate 900
 
-  // カメラの初期位置をしっかり固定
   threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-  threeCamera.position.set(0, 3.5, 7); // 少し手前・上から見下ろす位置
+  threeCamera.position.set(0, 3.5, 7);
 
   threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
   threeRenderer.setSize(container.clientWidth, container.clientHeight);
@@ -1126,13 +1128,13 @@ function init3DSpace() {
   threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
   threeControls.enableDamping = true;
   threeControls.dampingFactor = 0.07;
-  threeControls.maxPolarAngle = Math.PI / 2; // 地平線より下にはいかせない
-  threeControls.target.set(0, 0, 0); // 必ず中央を見つめる
+  threeControls.maxPolarAngle = Math.PI / 2;
+  threeControls.target.set(0, 0, 0);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
   threeScene.add(ambientLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
   dirLight.position.set(5, 10, 5);
   threeScene.add(dirLight);
 
@@ -1149,7 +1151,7 @@ function init3DSpace() {
 window.open3DPolygonModal = function(imgUrl, title, event) {
   if (event) event.stopPropagation();
   
-  currentActive3DImageUrl = imgUrl.includes('?') ? `${imgUrl}&t=${Date.now()}` : `${imgUrl}?t=${Date.now()}`;
+  currentActive3DImageUrl = imgUrl;
   
   const modal = document.getElementById("three3dModal");
   document.getElementById("threeModalTitle").innerText = `📦 3D化: ${title}`;
@@ -1159,7 +1161,6 @@ window.open3DPolygonModal = function(imgUrl, title, event) {
     init3DSpace();
   }
   
-  // モーダルが開いた瞬間にサイズを強制同期してカメラのズレを防ぐ
   setTimeout(() => {
     const container = document.getElementById('three3dCanvasContainer');
     if (container && threeCamera && threeRenderer) {
@@ -1193,43 +1194,56 @@ function generate3DPolygonMesh() {
     threeMesh = null;
   }
 
-  // CORSエラーを回避するためアノニマスを設定
-  threeTextureLoader.setCrossOrigin('anonymous');
-  threeTextureLoader.load(currentActive3DImageUrl, function(texture) {
-    // セキュリティエラーを吐くCanvas解析を完全に廃止し、64x64のセグメントを持つ平面を作成
+  // HTMLImageElementを使ってCORS制限を明示的に指定しつつロード
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  
+  // キャッシュバスターとプロキシ処理を統合してCORSを完全突破
+  img.src = currentActive3DImageUrl.includes('?') 
+    ? `${currentActive3DImageUrl}&nocache=${Date.now()}` 
+    : `${currentActive3DImageUrl}?nocache=${Date.now()}`;
+
+  img.onload = function() {
+    // 完全にクリーンなCanvasを経由することでCORS汚染を防ぎ、安全なテクスチャソースを生成
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    
     const geometry = new THREE.PlaneGeometry(4.5, 4.5, 64, 64);
     const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
     const isWireframe = document.getElementById("threeCheckWireframe").checked;
     
-    // displacementMap（変位マップ）にテクスチャをそのまま指定することで、
-    // ブラウザのセキュリティロックをすり抜けて自動で安全に立体凹凸化させます
     const material = new THREE.MeshStandardMaterial({
       map: texture,
       displacementMap: texture, 
       displacementScale: depthScale,
       side: THREE.DoubleSide,
       wireframe: isWireframe,
-      roughness: 0.5,
+      roughness: 0.6,
       metalness: 0.1
     });
     
     threeMesh = new THREE.Mesh(geometry, material);
     threeMesh.position.set(0, 0, 0);
-    threeMesh.rotation.x = -Math.PI / 2; // 地面に水平に寝かせる
+    threeMesh.rotation.x = -Math.PI / 2;
     threeScene.add(threeMesh);
     
-    // カメラとコントロールの視点を中央にリセット
     if(threeCamera) threeCamera.position.set(0, 3.5, 7);
     if(threeControls) {
       threeControls.target.set(0, 0, 0);
       threeControls.reset();
     }
     document.getElementById("threeLoadingIndicator").classList.add("hidden");
+  };
 
-  }, null, function(err) {
-    console.error("Texture load error:", err);
+  img.onerror = function(err) {
+    console.error("Image DOM element load error:", err);
     fallbackMeshGeneration();
-  });
+  };
 }
 
 function fallbackMeshGeneration() {
