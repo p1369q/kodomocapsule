@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v64]</title>
+<title>コドモノート [v65]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +141,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v64</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v65</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -423,7 +423,7 @@ async function checkUrlSessionParameters(user) {
 window.forceDowngradeToFree = async function() {
   const currentUser = auth.currentUser;
   if (!currentUser) return;
-  if (!confirm("Firestore上のプラン設定を「free」に変更しますか？")) return;
+  if (!confirm("Firestore上のプラン設定を「free」変更しますか？")) return;
   
   try {
     await updateDoc(doc(db, "users", currentUser.uid), {
@@ -516,7 +516,6 @@ function formatAgeString(totalMonths) {
   return `${Math.floor(totalMonths / 12)}歳${totalMonths % 12}ヶ月`;
 }
 
-// 認証ハンドラ：Popupがセキュリティに弾かれたら自動でRedirectでリトライ
 window.toggleAuth = async function() {
   if (auth.currentUser) { 
     if(confirm("ログアウトしますか？")) {
@@ -526,11 +525,9 @@ window.toggleAuth = async function() {
     }
   } else { 
     try { 
-      // 1. まずはPopupを試す
       await signInWithPopup(auth, provider); 
     } catch (err) { 
       console.warn("Popup blocked or failed, retrying with Redirect...", err);
-      // 2. ブラウザ制限で失敗（またはブロック）された場合はリダイレクトにフォールバック
       try {
         await signInWithRedirect(auth, provider);
       } catch(redirectErr) {
@@ -541,7 +538,6 @@ window.toggleAuth = async function() {
 };
 document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
 
-// ページ読み込み時にリダイレクト元の認証結果を回収する
 async function handleRedirectResult() {
   try {
     const result = await getRedirectResult(auth);
@@ -1131,7 +1127,7 @@ window.switchPage = function(p){
 };
 
 // ==========================================
-// 3D表示：CORSプロキシによる完全回避ロジック
+// 3D表示：Firebase専用CORS回避ロジック
 // ==========================================
 function init3DSpace() {
   const container = document.getElementById('three3dCanvasContainer');
@@ -1217,15 +1213,16 @@ function generate3DPolygonMesh() {
     threeMesh = null;
   }
 
-  // 100% CORSエラーを回避するため、パブリックプロキシ経由で画像を取得
-  const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(currentActive3DImageUrl);
+  // Firebaseのトークン付きURL（&を含む）を確実にCORS回避するための安定したイメージプロキシ
+  // URLプレフィックスから https:// を除外してクエリを渡します
+  const cleanUrlParam = currentActive3DImageUrl.replace(/^https?:\/\//i, '');
+  const proxyUrl = "https://images.weserv.nl/?url=" + encodeURIComponent(cleanUrlParam);
 
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.src = proxyUrl;
 
   img.onload = function() {
-    // Canvasを介してテクスチャを固定生成
     const canvas = document.createElement('canvas');
     canvas.width = img.width;
     canvas.height = img.height;
@@ -1262,7 +1259,7 @@ function generate3DPolygonMesh() {
   };
 
   img.onerror = function(err) {
-    console.error("Image DOM element load error via proxy:", err);
+    console.error("Image DOM element load error via premium proxy:", err);
     fallbackMeshGeneration();
   };
 }
