@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v63]</title>
+<title>コドモノート [v64]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +141,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v63</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v64</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -311,7 +311,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
@@ -325,6 +325,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
 
 let currentSession = null; 
 let localChildren = [];
@@ -515,6 +516,7 @@ function formatAgeString(totalMonths) {
   return `${Math.floor(totalMonths / 12)}歳${totalMonths % 12}ヶ月`;
 }
 
+// 認証ハンドラ：Popupがセキュリティに弾かれたら自動でRedirectでリトライ
 window.toggleAuth = async function() {
   if (auth.currentUser) { 
     if(confirm("ログアウトしますか？")) {
@@ -523,10 +525,35 @@ window.toggleAuth = async function() {
       location.reload();
     }
   } else { 
-    try { await signInWithPopup(auth, provider); } catch (err) { alert("ログイン失敗: " + err.message); } 
+    try { 
+      // 1. まずはPopupを試す
+      await signInWithPopup(auth, provider); 
+    } catch (err) { 
+      console.warn("Popup blocked or failed, retrying with Redirect...", err);
+      // 2. ブラウザ制限で失敗（またはブロック）された場合はリダイレクトにフォールバック
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch(redirectErr) {
+        alert("ログインエラー: " + redirectErr.message); 
+      }
+    } 
   }
 };
 document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
+
+// ページ読み込み時にリダイレクト元の認証結果を回収する
+async function handleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      console.log("Redirect login success:", result.user.uid);
+    }
+  } catch (error) {
+    console.error("Redirect login resolution error:", error);
+    showGateError("リダイレクト認証失敗: " + error.message);
+  }
+}
+handleRedirectResult();
 
 onAuthStateChanged(auth, async (user) => {
   const btnText = document.getElementById("authBtnText");
@@ -1098,13 +1125,13 @@ window.closeDrawer = function(t){
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  if(p === \"gallery\"){ document.getElementById(\"galleryPage\").classList.add(\"active\"); document.getElementById(\"nav-gallery\").classList.add(\"active\"); renderGallery(); } 
-  else if (p === \"records\") { document.getElementById(\"recordsPage\").classList.add(\"active\"); document.getElementById(\"nav-records\").classList.add(\"active\"); renderTimeline(); } 
-  else if (p === \"trash\") { document.getElementById(\"trashPage\").classList.add(\"active\"); renderTrash(); }
+  if(p === "gallery"){ document.getElementById("galleryPage").classList.add("active"); document.getElementById("nav-gallery").classList.add("active"); renderGallery(); } 
+  else if (p === "records") { document.getElementById("recordsPage").classList.add("active"); document.getElementById("nav-records").classList.add("active"); renderTimeline(); } 
+  else if (p === "trash") { document.getElementById("trashPage").classList.add("active"); renderTrash(); }
 };
 
 // ==========================================
-// v63 3D表示：CORSプロキシによる完全回避ロジック
+// 3D表示：CORSプロキシによる完全回避ロジック
 // ==========================================
 function init3DSpace() {
   const container = document.getElementById('three3dCanvasContainer');
