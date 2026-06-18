@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v62]</title>
+<title>コドモカプセル [v63]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -139,7 +139,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <span>🔍</span>
         </button>
         <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="ゴミ箱">🗑️</button>
-        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="設定">⚙</button>
+        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="設定・ガイド">⚙</button>
       </div>
     </div>
 
@@ -166,7 +166,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v62</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v63</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -249,8 +249,59 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定</h3><button onclick="closeDrawer('child')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定・解説</h3><button onclick="closeDrawer('child')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
     
+    <!-- 💡 アプリの使い方 ＆ プレミアムプラン解説ガイドエリア（追加箇所） -->
+    <div class="mb-6 p-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 to-indigo-50/40 text-left">
+      <h4 class="text-sm font-bold text-indigo-900 flex items-center gap-1.5 mb-3">
+        <span>📖 コドモカプセルの使い方 ＆ プラン解説</span>
+      </h4>
+      <div class="space-y-3.5 text-xs text-slate-700 leading-relaxed">
+        <div>
+          <div class="font-bold text-indigo-950 mb-0.5">① 基本の使い方</div>
+          <p>画面中央下の「<span class="font-bold text-rose-500">+</span>」ボタンから、お子様の作品・テスト・おたより（画像や複数ページのPDF対応）をカプセルとして登録。カプセルごとに日付やメモ、カテゴリを自由に分類・保管できます。</p>
+        </div>
+        <div>
+          <div class="font-bold text-indigo-950 mb-0.5">② 成長に合わせた自動年齢計算</div>
+          <p>下部で事前にお子様の生年月日を登録しておくと、カプセル登録した作品の日付から「当時の年齢（◯歳◯ヶ月）」を自動で計算してバッジ表示します。上部の絞り込みタブで「乳幼児期」「園児期」「小学生」と世代別の振り返りも簡単です！</p>
+        </div>
+        <div>
+          <div class="font-bold text-indigo-950 mb-0.5">③ 夫婦・家族間でのリアルタイム同期</div>
+          <p>下記に表示される「家族コード」をコピーして、パートナーの初期画面で入力してもらうだけで、同一のギャラリーを完璧に共有・同時編集できます。</p>
+        </div>
+        <div class="pt-2 border-t border-indigo-100">
+          <div class="font-bold text-amber-700 flex items-center gap-1 mb-1">👑 プレミアム機能と無料プランの違い</div>
+          <table class="w-full border-collapse text-[11px] bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 font-bold">
+                <th class="p-2 text-left border-b">機能</th>
+                <th class="p-2 text-center border-b">無料プラン</th>
+                <th class="p-2 text-center border-b text-amber-700 bg-amber-50/50">プレミアム</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="p-2 border-b font-medium">登録できるお子様</td>
+                <td class="p-2 text-center border-b text-slate-500">1名まで</td>
+                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">無制限 ✨</td>
+              </tr>
+              <tr>
+                <td class="p-2 border-b font-medium">保存カプセル総数</td>
+                <td class="p-2 text-center border-b text-slate-500">10件まで</td>
+                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">無制限 ✨</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-medium">複数枚/PDF登録</td>
+                <td class="p-2 text-center text-slate-500">対応</td>
+                <td class="p-2 text-center font-bold text-emerald-600 bg-amber-50/20">対応</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="text-[10px] text-slate-400 mt-2">※プレミアムプランは一度アップグレードすると、保存容量や人数を気にせず全ての思い出をカプセル化できます。</p>
+        </div>
+      </div>
+    </div>
+
     <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3">
       <div class="flex justify-between items-center">
         <div>
@@ -1092,8 +1143,8 @@ function renderGallery(){
       const idx = carouselIndices[w.id] || 0;
       carouselController = `
         <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-1 pointer-events-none">
-          <button onclick="changeCarouselIndex('${w.id}', -1, event, ${mediaCount})" class="w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs font-bold pointer-events-auto backdrop-blur-sm shadow hover:bg-black/70">‹</button>
-          <button onclick="changeCarouselIndex('${w.id}', 1, event, ${mediaCount})" class="w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs font-bold pointer-events-auto backdrop-blur-sm shadow hover:bg-black/70">›</button>
+          <button onclick="changeCarouselIndex('${w.id}', -1, event, ${mediaCount})" class="w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs font-bold pointer-events-auto backdrop-blur-sm shadow pointer-events-auto hover:bg-black/70">‹</button>
+          <button onclick="changeCarouselIndex('${w.id}', 1, event, ${mediaCount})" class="w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs font-bold pointer-events-auto backdrop-blur-sm shadow pointer-events-auto hover:bg-black/70">›</button>
         </div>
         <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold select-none">${idx + 1} / ${mediaCount}</div>
       `;
