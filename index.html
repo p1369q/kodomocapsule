@@ -44,7 +44,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   pointer-events: none;
 }
 
-/* v56 ガチャガチャカプセルアイコンのアニメーション定義 */
 .app-icon {
   transition: transform 0.3s ease;
   cursor: pointer;
@@ -58,7 +57,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
   <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm flex flex-col items-center">
-    <!-- v56 新アイコンデザイン：思い出の星が詰まったカプセル（ゲート用大サイズ） -->
     <svg class="app-icon w-24 h-24 filter drop-shadow(-wrap)" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
       <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
@@ -121,7 +119,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex flex-col">
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
-        <!-- v56 新アイコンデザイン：思い出の星が詰まったカプセル（ヘッダー用インラインSVG） -->
         <button onclick="goToTopPage()" class="flex items-center gap-2 select-none tracking-tight active:scale-95 transition-transform" title="トップ画面に戻る">
           <svg class="app-icon w-9 h-9" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
@@ -348,7 +345,7 @@ function showGateError(msg) {
   }
 }
 
-// 本番稼働用に最適化したStripe決済リダイレクト処理
+// サーバーの期待するスネークケース（下線区切り）のキー名に修正
 window.redirectToStripeCheckout = async function() {
   const currentUser = auth.currentUser;
   if (!currentUser) {
@@ -359,7 +356,6 @@ window.redirectToStripeCheckout = async function() {
   const btn = document.getElementById("stripePaymentBtn");
   if (!btn) return;
 
-  // ボタンを無効化し、多重送信を防ぐ
   btn.disabled = true;
   const originalText = btn.innerText;
   btn.innerText = "本番決済画面へ移行中...";
@@ -368,7 +364,6 @@ window.redirectToStripeCheckout = async function() {
     const successUrl = window.location.origin + window.location.pathname + "?session_id={CHECKOUT_SESSION_ID}"; 
     const cancelUrl = window.location.origin + window.location.pathname;
 
-    // クラウド上の決済サーバーAPIを叩いて本番セッションを生成
     const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -376,18 +371,18 @@ window.redirectToStripeCheckout = async function() {
         uid: String(currentUser.uid),
         client_reference_id: String(currentUser.uid),
         email: String(currentUser.email || ""),
-        successUrl: String(successUrl),
-        cancelUrl: String(cancelUrl)
+        success_url: String(successUrl),
+        cancel_url: String(cancelUrl)
       })
     });
 
     if (!response.ok) {
-      throw new Error(`決済サーバーの応答コードが異常です (Status: ${response.status})`);
+      const errText = await response.text();
+      throw new Error(`決済サーバーエラー (Status: ${response.status}): ${errText}`);
     }
 
     const session = await response.json();
     if (session && session.url) { 
-      // 安全にStripeの公式本番チェックアウトページへ移動
       window.location.href = session.url; 
     } else { 
       throw new Error("決済用セッションURLの取得に失敗しました。"); 
@@ -395,11 +390,9 @@ window.redirectToStripeCheckout = async function() {
 
   } catch (e) {
     console.error("Stripe Live Checkout Error:", e);
-    // 本番用のエラー通知
-    alert("Stripe決済画面への移行に失敗しました。お手数ですがしばらく時間を置いて再度お試しください。\n詳細: " + e.message);
+    alert("Stripe決済画面への移行に失敗しました。\n詳細: " + e.message);
 
   } finally {
-    // 処理終了時（失敗時など）にボタンを再び有効化し、ユーザーが再試行できるようにする
     if (btn) {
       btn.disabled = false;
       btn.innerText = originalText;
