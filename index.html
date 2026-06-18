@@ -58,6 +58,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
   <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm flex flex-col items-center">
+    <!-- v56 新アイコンデザイン：思い出の星が詰まったカプセル（ゲート用大サイズ） -->
     <svg class="app-icon w-24 h-24 filter drop-shadow(-wrap)" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
       <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
@@ -120,6 +121,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex flex-col">
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
+        <!-- v56 新アイコンデザイン：思い出の星が詰まったカプセル（ヘッダー用インラインSVG） -->
         <button onclick="goToTopPage()" class="flex items-center gap-2 select-none tracking-tight active:scale-95 transition-transform" title="トップ画面に戻る">
           <svg class="app-icon w-9 h-9" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
@@ -393,7 +395,7 @@ window.redirectToStripeCheckout = async function() {
 
   } catch (e) {
     console.error("Stripe Live Checkout Error:", e);
-    // 本番用のエラー通知（テスト用ダミーエミュレーションは行わない安全仕様）
+    // 本番用のエラー通知
     alert("Stripe決済画面への移行に失敗しました。お手数ですがしばらく時間を置いて再度お試しください。\n詳細: " + e.message);
 
   } finally {
@@ -845,7 +847,7 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 };
 
 window.openEditWork = function(id) {
-  const w = localWorks.find(item => item.id === id); if(!w || w.isDeleted) return; 
+  const w = localWorks.find(item => item.id === id); if(w.isDeleted) return; 
   document.getElementById("editingWorkId").value = w.id;
   document.getElementById("workFormTitle").innerText = "データの編集";
   document.getElementById("inputTitle").value = w.title;
@@ -1088,9 +1090,9 @@ window.closeDrawer = function(t){
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  if(p === \"gallery\"){ document.getElementById(\"galleryPage\").classList.add(\"active\"); document.getElementById(\"nav-gallery\").classList.add(\"active\"); renderGallery(); } 
-  else if (p === \"records\") { document.getElementById(\"recordsPage\").classList.add(\"active\"); document.getElementById(\"nav-records\").classList.add(\"active\"); renderTimeline(); } 
-  else if (p === \"trash\") { document.getElementById(\"trashPage\").classList.add(\"active\"); renderTrash(); }
+  if(p === 'gallery'){ document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
+  else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderTimeline(); } 
+  else if (p === 'trash') { document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
