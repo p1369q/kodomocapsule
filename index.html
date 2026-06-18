@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v62]</title>
+<title>コドモノート [v63]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Three.js & OrbitControls (3Dポリゴン生成用) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
@@ -142,7 +141,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v62</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v63</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -278,14 +277,12 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
-<!-- v62 3Dポリゴン閲覧モーダル用UI -->
 <div id="three3dModal" class="fixed inset-0 z-[600] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
   <div class="bg-white rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto flex flex-col p-5 shadow-2xl border border-slate-200">
     <div class="flex justify-between items-center mb-3">
       <h3 id="threeModalTitle" class="text-lg font-bold text-slate-800 line-clamp-1">3D形状プレビュー</h3>
       <button onclick="close3DModal()" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 text-sm font-bold flex items-center justify-center">✕</button>
     </div>
-    <!-- 3D表示空間 -->
     <div class="relative w-full aspect-square bg-slate-900 rounded-2xl shadow-inner overflow-hidden" id="three3dCanvasContainer">
       <div id="threeLoadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 text-white z-10 hidden">
         <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-400 mb-2"></div>
@@ -293,7 +290,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
       <div class="absolute bottom-2.5 right-2.5 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded-full pointer-events-none select-none">🔄 スワイプで回転 / ピンチで拡大</div>
     </div>
-    <!-- コントローラー -->
     <div class="mt-4 p-3 bg-slate-50 rounded-xl space-y-3 border text-xs">
       <div class="flex justify-between items-center">
         <span class="font-bold text-slate-600">📐 立体感の深さ調整</span>
@@ -1102,13 +1098,13 @@ window.closeDrawer = function(t){
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  if(p === "gallery"){ document.getElementById("galleryPage").classList.add("active"); document.getElementById("nav-gallery").classList.add("active"); renderGallery(); } 
-  else if (p === "records") { document.getElementById("recordsPage").classList.add("active"); document.getElementById("nav-records").classList.add("active"); renderTimeline(); } 
-  else if (p === "trash") { document.getElementById("trashPage").classList.add("active"); renderTrash(); }
+  if(p === \"gallery\"){ document.getElementById(\"galleryPage\").classList.add(\"active\"); document.getElementById(\"nav-gallery\").classList.add(\"active\"); renderGallery(); } 
+  else if (p === \"records\") { document.getElementById(\"recordsPage\").classList.add(\"active\"); document.getElementById(\"nav-records\").classList.add(\"active\"); renderTimeline(); } 
+  else if (p === \"trash\") { document.getElementById(\"trashPage\").classList.add(\"active\"); renderTrash(); }
 };
 
 // ==========================================
-// v62 3D表示：CORS＆ベタ塗りフォールバックの完全突破ロジック
+// v63 3D表示：CORSプロキシによる完全回避ロジック
 // ==========================================
 function init3DSpace() {
   const container = document.getElementById('three3dCanvasContainer');
@@ -1194,17 +1190,15 @@ function generate3DPolygonMesh() {
     threeMesh = null;
   }
 
-  // HTMLImageElementを使ってCORS制限を明示的に指定しつつロード
+  // 100% CORSエラーを回避するため、パブリックプロキシ経由で画像を取得
+  const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(currentActive3DImageUrl);
+
   const img = new Image();
   img.crossOrigin = "anonymous";
-  
-  // キャッシュバスターとプロキシ処理を統合してCORSを完全突破
-  img.src = currentActive3DImageUrl.includes('?') 
-    ? `${currentActive3DImageUrl}&nocache=${Date.now()}` 
-    : `${currentActive3DImageUrl}?nocache=${Date.now()}`;
+  img.src = proxyUrl;
 
   img.onload = function() {
-    // 完全にクリーンなCanvasを経由することでCORS汚染を防ぎ、安全なテクスチャソースを生成
+    // Canvasを介してテクスチャを固定生成
     const canvas = document.createElement('canvas');
     canvas.width = img.width;
     canvas.height = img.height;
@@ -1241,7 +1235,7 @@ function generate3DPolygonMesh() {
   };
 
   img.onerror = function(err) {
-    console.error("Image DOM element load error:", err);
+    console.error("Image DOM element load error via proxy:", err);
     fallbackMeshGeneration();
   };
 }
