@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v59]</title>
+<title>コドモカプセル [v58]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -117,10 +117,10 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div class="sticky top-0 z-50 p-3 glass border-b border-[#E7E1D7]">
   <div class="max-w-7xl mx-auto flex flex-col">
-    <div class="flex items-center justify-between w-full gap-1.5 sm:gap-2">
-      <div class="flex items-center gap-1 sm:gap-2 shrink">
-        <button onclick="goToTopPage()" class="flex items-center gap-1 sm:gap-2 select-none tracking-tight active:scale-95 transition-transform max-w-full" title="トップ画面に戻る">
-          <svg class="app-icon w-7 h-7 sm:w-9 h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <div class="flex items-center justify-between w-full gap-2">
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="goToTopPage()" class="flex items-center gap-2 select-none tracking-tight active:scale-95 transition-transform" title="トップ画面に戻る">
+          <svg class="app-icon w-9 h-9" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
             <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
             <path d="M 25 53 A 25 25 0 0 0 75 53 Z" fill="#ff5252" opacity="0.5" />
@@ -130,16 +130,16 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             <circle cx="68" cy="28" r="2.5" fill="#ffd32a" />
             <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
           </svg>
-          <span class="text-lg sm:text-2xl font-extrabold text-[#2b2d42] text-left whitespace-nowrap overflow-hidden text-ellipsis">コドモカプセル</span>
+          <span class="text-2xl font-extrabold text-[#2b2d42] text-left whitespace-nowrap">コドモカプセル</span>
         </button>
       </div>
-      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-        <button id="authBtn" class="px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-[11px] sm:text-xs shadow-sm font-medium whitespace-nowrap"><span id="authBtnText">ログイン</span></button>
-        <button onclick="toggleSearchMenu()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none shrink-0" id="menuToggleBtn" title="条件で絞り込み">
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="authBtn" class="px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-xs shadow-sm font-medium"><span id="authBtnText">ログイン</span></button>
+        <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none" id="menuToggleBtn" title="条件で絞り込み">
           <span>🔍</span>
         </button>
-        <button onclick="switchPage('trash')" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="ゴミ箱">🗑️</button>
-        <button onclick="openDrawer('child')" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="設定">⚙</button>
+        <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="ゴミ箱">🗑️</button>
+        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs" title="設定">⚙</button>
       </div>
     </div>
 
@@ -166,7 +166,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-medium px-2 py-0.5 rounded-md shrink-0 bg-slate-100 text-slate-500 border border-slate-200 ml-1">v59</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v58</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -239,9 +239,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応）</label>
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
-        <div class="grid grid-cols-2 md:grid-cols-1 gap-2">
-          <button type="button" onclick="document.getElementById('cameraInput').click()" class="md:hidden py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
-          <button type="button" onclick="document.getElementById('fileInput').click()" class="col-span-1 md:col-span-2 py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
+          <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
         </div>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
@@ -737,6 +737,19 @@ window.deleteChild = async function(id, name) {
 
 async function processSelectedFiles(files) {
   if(!files.length) return;
+
+  // 選択された最初のファイルのタイムスタンプから日付を自動抽出して日付入力欄へセット
+  if (files[0] && files[0].lastModified) {
+    const fileDate = new Date(files[0].lastModified);
+    const yyyy = fileDate.getFullYear();
+    const mm = String(fileDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(fileDate.getDate()).padStart(2, '0');
+    const inputDateEl = document.getElementById("inputDate");
+    if (inputDateEl) {
+      inputDateEl.value = `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
   const processPromises = files.map(file => {
     return new Promise(resolve => {
       const reader = new FileReader();
@@ -762,7 +775,7 @@ async function processSelectedFiles(files) {
   renderMediaPreviews();
 }
 
- function renderMediaPreviews() {
+function renderMediaPreviews() {
   let previewHtml = "";
   base64MediaArray.forEach((item, index) => {
     const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>`;
