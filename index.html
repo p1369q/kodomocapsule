@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v67]</title>
+<title>コドモノート [v68]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Three.js & OrbitControls (3Dポリゴン生成用) -->
+<!-- Three.js & OrbitControls -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
@@ -46,7 +46,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   padding-bottom: 0px !important;
   pointer-events: none;
 }
-/* 3D表示のコンテナー */
 #three3dCanvasContainer canvas { border-radius: 20px; width:100% !important; height:100% !important; }
 </style>
 </head>
@@ -71,20 +70,17 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
         👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
       </div>
-      
       <div class="space-y-3">
         <h3 class="text-sm font-bold text-slate-800 text-left">✨ 新しく利用をスタートする場合</h3>
         <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
           🚀 新しい家族グループを作成する
         </button>
       </div>
-
       <div class="relative flex py-2 items-center text-slate-300">
         <div class="flex-grow border-t border-slate-200"></div>
         <span class="flex-shrink mx-3 text-xs text-slate-400 font-medium">または</span>
         <div class="flex-grow border-t border-slate-200"></div>
       </div>
-
       <div class="space-y-3 text-left">
         <h3 class="text-sm font-bold text-slate-800">✉️ パートナーから招待されている場合</h3>
         <p class="text-[11px] text-slate-400">共有された家族招待コード（UUID形式）を入力してください。</p>
@@ -93,7 +89,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#7C9A92] text-white text-xs font-bold shrink-0 shadow-sm">合流する</button>
         </div>
       </div>
-      
       <div class="pt-4 border-t text-left">
         <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
       </div>
@@ -142,7 +137,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v67</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v68</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -285,7 +280,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <h3 id="threeModalTitle" class="text-lg font-bold text-slate-800 line-clamp-1">3D形状プレビュー</h3>
       <button onclick="close3DModal()" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 text-sm font-bold flex items-center justify-center">✕</button>
     </div>
-    <!-- 3D表示空間 -->
     <div class="relative w-full aspect-square bg-slate-900 rounded-2xl shadow-inner overflow-hidden" id="three3dCanvasContainer">
       <div id="threeLoadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 text-white z-10 hidden">
         <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-400 mb-2"></div>
@@ -293,7 +287,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
       <div class="absolute bottom-2.5 right-2.5 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded-full pointer-events-none select-none">🔄 スワイプで回転 / ピンチで拡大</div>
     </div>
-    <!-- コントローラー -->
     <div class="mt-4 p-3 bg-slate-50 rounded-xl space-y-3 border text-xs">
       <div class="flex justify-between items-center">
         <span class="font-bold text-slate-600">📐 立体感の深さ調整</span>
@@ -314,7 +307,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 <script type="module">
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject, getBytes } from "firebase/storage";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
 const prodConfig = {
@@ -343,7 +336,6 @@ let unsubscribeUserPlan = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-// Three.js グローバル管理変数
 let threeScene, threeCamera, threeRenderer, threeControls;
 let threeMesh = null;
 let currentActive3DImageUrl = "";
@@ -358,10 +350,7 @@ function showGateError(msg) {
 
 window.redirectToStripeCheckout = async function() {
   const currentUser = auth.currentUser;
-  if (!currentUser) {
-    alert("ログイン状態が確認できません。");
-    return;
-  }
+  if (!currentUser) return;
   const btn = document.getElementById("stripePaymentBtn");
   btn.disabled = true;
   btn.innerText = "決済画面へ移行中...";
@@ -382,9 +371,7 @@ window.redirectToStripeCheckout = async function() {
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`接続確認中...`);
-    }
+    if (!response.ok) throw new Error(`接続確認中...`);
     const session = await response.json();
     if (session && session.url) { window.location.href = session.url; } 
     else { throw new Error("URLエラー"); }
@@ -450,7 +437,6 @@ function updatePlanUI() {
   
   if (isPremiumUser) {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
-    if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
     if(pBtn) pBtn.style.display = 'none';
     if(testPlanToggleArea) {
@@ -459,7 +445,6 @@ function updatePlanUI() {
     }
   } else {
     if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
-    if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
     if(pBtn) pBtn.style.display = 'block';
     if(testPlanToggleArea) {
@@ -531,7 +516,6 @@ window.toggleAuth = async function() {
     try { 
       await signInWithPopup(auth, provider); 
     } catch (err) { 
-      console.warn("Popup blocked or failed, retrying with Redirect...", err);
       try {
         await signInWithRedirect(auth, provider);
       } catch(redirectErr) {
@@ -545,11 +529,7 @@ document.getElementById("authBtn").addEventListener("click", window.toggleAuth);
 async function handleRedirectResult() {
   try {
     const result = await getRedirectResult(auth);
-    if (result && result.user) {
-      console.log("Redirect login success:", result.user.uid);
-    }
   } catch (error) {
-    console.error("Redirect login resolution error:", error);
     showGateError("リダイレクト認証失敗: " + error.message);
   }
 }
@@ -676,16 +656,12 @@ function startRealtimeSync() {
   unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
     localChildren = []; snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
     renderAll();
-  }, (err) => {
-    alert("子ども一覧の同期に失敗しました。");
   });
 
   if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
   unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
     localWorks = []; snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
     cleanupOldTrash(); renderAll();
-  }, (err) => {
-    alert("作品一覧の同期に失敗しました。");
   });
 }
 
@@ -1131,14 +1107,14 @@ window.switchPage = function(p){
 };
 
 // ==========================================
-// 3D表示：Firebase SDK 内部ダイレクトダウンロードCORS対策
+// 3D表示：CORSポリシー設定対応テクスチャローダー
 // ==========================================
 function init3DSpace() {
   const container = document.getElementById('three3dCanvasContainer');
   if(!container) return;
   
   threeScene = new THREE.Scene();
-  threeScene.background = new THREE.Color(0x0f172a); // Slate 900
+  threeScene.background = new THREE.Color(0x0f172a); 
 
   threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
   threeCamera.position.set(0, 3.5, 7);
@@ -1173,16 +1149,13 @@ function init3DSpace() {
 
 window.open3DPolygonModal = function(imgUrl, title, event) {
   if (event) event.stopPropagation();
-  
   currentActive3DImageUrl = imgUrl;
   
   const modal = document.getElementById("three3dModal");
   document.getElementById("threeModalTitle").innerText = `📦 3D化: ${title}`;
   modal.classList.remove("opacity-0", "pointer-events-none");
   
-  if(!threeScene) {
-    init3DSpace();
-  }
+  if(!threeScene) { init3DSpace(); }
   
   setTimeout(() => {
     const container = document.getElementById('three3dCanvasContainer');
@@ -1218,86 +1191,51 @@ async function generate3DPolygonMesh() {
     threeMesh = null;
   }
 
-  let blobUrl = "";
+  const textureLoader = new THREE.TextureLoader();
+  // CORS 属性を明示的に指定して、ブラウザのセキュリティブロックをパスさせる
+  textureLoader.setCrossOrigin('anonymous');
 
-  try {
-    // 1. URLがFirebase Storageへのフルパス(HTTP)かチェック
-    if (currentActive3DImageUrl.includes("firebasestorage.googleapis.com") || currentActive3DImageUrl.includes("firebasestorage.app")) {
-      const urlParts = currentActive3DImageUrl.split("/o/");
-      if (urlParts.length > 1) {
-        let storagePath = urlParts[1].split("?")[0];
-        storagePath = decodeURIComponent(storagePath);
+  textureLoader.load(
+    currentActive3DImageUrl,
+    function (texture) {
+      try {
+        const geometry = new THREE.PlaneGeometry(4.5, 4.5, 64, 64);
+        const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
+        const isWireframe = document.getElementById("threeCheckWireframe").checked;
         
-        // SDK経由で直接安全にダウンロード
-        const storageRef = ref(storage, storagePath);
-        const arrayBuffer = await getBytes(storageRef);
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          displacementMap: texture, 
+          displacementScale: depthScale,
+          side: THREE.DoubleSide,
+          wireframe: isWireframe,
+          roughness: 0.6,
+          metalness: 0.1
+        });
         
-        const blob = new Blob([new Uint8Array(arrayBuffer)], { type: "image/jpeg" });
-        blobUrl = URL.createObjectURL(blob);
+        threeMesh = new THREE.Mesh(geometry, material);
+        threeMesh.position.set(0, 0, 0);
+        threeMesh.rotation.x = -Math.PI / 2;
+        threeScene.add(threeMesh);
+        
+        if(threeCamera) threeCamera.position.set(0, 3.5, 7);
+        if(threeControls) {
+          threeControls.target.set(0, 0, 0);
+          threeControls.reset();
+        }
+      } catch (ex) {
+        console.error("Mesh calculation exception:", ex);
+        fallbackMeshGeneration();
+      } finally {
+        document.getElementById("threeLoadingIndicator").classList.add("hidden");
       }
-    }
-  } catch (error) {
-    console.error("Firebase Storage direct getBytes error:", error);
-    // エラーが起きた場合は即時フォールバックへ
-    fallbackMeshGeneration();
-    return;
-  }
-
-  // 2. もし通常のURL展開に失敗するか、ローカル環境のデータURLならそのまま使う
-  if (!blobUrl) {
-    blobUrl = currentActive3DImageUrl;
-  }
-
-  const img = new Image();
-  img.src = blobUrl;
-
-  img.onload = function() {
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const geometry = new THREE.PlaneGeometry(4.5, 4.5, 64, 64);
-      const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
-      const isWireframe = document.getElementById("threeCheckWireframe").checked;
-      
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        displacementMap: texture, 
-        displacementScale: depthScale,
-        side: THREE.DoubleSide,
-        wireframe: isWireframe,
-        roughness: 0.6,
-        metalness: 0.1
-      });
-      
-      threeMesh = new THREE.Mesh(geometry, material);
-      threeMesh.position.set(0, 0, 0);
-      threeMesh.rotation.x = -Math.PI / 2;
-      threeScene.add(threeMesh);
-      
-      if(threeCamera) threeCamera.position.set(0, 3.5, 7);
-      if(threeControls) {
-        threeControls.target.set(0, 0, 0);
-        threeControls.reset();
-      }
-    } catch(ex) {
-      console.error("Mesh synthesis failed", ex);
+    },
+    undefined,
+    function (err) {
+      console.warn("Texture load failed due to CORS or network error. Using fallback.", err);
       fallbackMeshGeneration();
-    } finally {
-      if (blobUrl.startsWith("blob:")) { URL.revokeObjectURL(blobUrl); }
-      document.getElementById("threeLoadingIndicator").classList.add("hidden");
     }
-  };
-
-  img.onerror = function(err) {
-    console.error("Image loading error from blob URL:", err);
-    if (blobUrl.startsWith("blob:")) { URL.revokeObjectURL(blobUrl); }
-    fallbackMeshGeneration();
-  };
+  );
 }
 
 function fallbackMeshGeneration() {
