@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v55]</title>
+<title>コドモカプセル [v57]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#7C9A92;--accent-dark:#56736C;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
+:root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#FF6B6B;--accent-dark:#E55B5B;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',sans-serif;}
 button{cursor:pointer;}
@@ -21,14 +21,14 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;}
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
 .nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
-.fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(86,115,108,.28);}
+.fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(229,91,91,.28);}
 
 .drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;padding-top: 48px;}
 .drawer.open{opacity:1;pointer-events:auto;}
 .drawer-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
 
-.age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(86,115,108,0.2); }
+.age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(229,91,91,0.2); }
 
 #searchMenuArea {
   transition: max-height 0.3s ease-out, opacity 0.2s ease-out, margin-top 0.3s ease-out;
@@ -43,53 +43,72 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   padding-bottom: 0px !important;
   pointer-events: none;
 }
+
+.app-icon {
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+.app-icon:hover {
+  transform: rotate(15deg) scale(1.05);
+}
 </style>
 </head>
 <body>
 
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
-  <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm">
-    <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
-    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するノートアプリ</p>
+  <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm flex flex-col items-center">
+    <svg class="app-icon w-24 h-24 filter drop-shadow(-wrap)" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
+      <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
+      <path d="M 25 53 A 25 25 0 0 0 75 53 Z" fill="#ff5252" opacity="0.5" />
+      <path d="M 80 50 A 30 30 0 0 0 20 50 Z" fill="#a5d8ff" opacity="0.6" />
+      <rect x="16" y="47" width="68" height="6" rx="3" fill="#ffffff" />
+      <path d="M 50 25 L 53 33 L 61 34 L 55 39 L 57 47 L 50 43 L 43 47 L 45 39 L 39 34 L 47 33 Z" fill="#feca57" />
+      <circle cx="68" cy="28" r="2.5" fill="#ffd32a" />
+      <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
+    </svg>
+
+    <h1 class="text-3xl font-extrabold text-[#2b2d42]">コドモカプセル</h1>
+    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するタイムカプセルアプリ</p>
     
-    <div id="gateLoading" class="text-sm text-slate-400 py-4 flex flex-col items-center justify-center gap-2">
+    <div id="gateLoading" class="text-sm text-slate-400 py-4 flex flex-col items-center justify-center gap-2 w-full">
       <div id="loadingStatusText">読み込み中...</div>
       <div id="gateErrorLog" class="text-xs text-red-500 max-w-xs break-all hidden font-mono p-2 bg-red-50 border border-red-100 rounded-lg"></div>
     </div>
     
-    <div id="gateLoginArea" class="hidden space-y-4">
+    <div id="gateLoginArea" class="hidden space-y-4 w-full">
       <p class="text-sm font-medium text-slate-700">利用を開始するにはGoogleアカウントでログインしてください</p>
-      <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#56736C] text-white font-bold text-sm shadow shadow-emerald-900/10 hover:bg-[#465e58] transition">Googleアカウントでサインイン</button>
+      <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#ff6b6b] text-white font-bold text-sm shadow shadow-rose-900/10 hover:bg-[#ff5252] transition">Googleアカウントでサインイン</button>
     </div>
 
-    <div id="gateSetupArea" class="hidden space-y-6">
+    <div id="gateSetupArea" class="hidden space-y-6 w-full">
       <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
         👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
       </div>
       
-      <div class="space-y-3">
+      <div class="space-y-3 w-full">
         <h3 class="text-sm font-bold text-slate-800 text-left">✨ 新しく利用をスタートする場合</h3>
-        <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#7C9A92] bg-[#FBFBFA] text-[#56736C] text-xs font-bold hover:bg-emerald-50/50 transition">
+        <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#ff6b6b] bg-[#FBFBFA] text-[#ff6b6b] text-xs font-bold hover:bg-rose-50/50 transition">
           🚀 新しい家族グループを作成する
         </button>
       </div>
 
-      <div class="relative flex py-2 items-center text-slate-300">
+      <div class="relative flex py-2 items-center text-slate-300 w-full">
         <div class="flex-grow border-t border-slate-200"></div>
         <span class="flex-shrink mx-3 text-xs text-slate-400 font-medium">または</span>
         <div class="flex-grow border-t border-slate-200"></div>
       </div>
 
-      <div class="space-y-3 text-left">
+      <div class="space-y-3 text-left w-full">
         <h3 class="text-sm font-bold text-slate-800">✉️ パートナーから招待されている場合</h3>
         <p class="text-[11px] text-slate-400">共有された家族招待コード（UUID形式）を入力してください。</p>
         <div class="flex gap-2">
           <input type="text" id="joinInviteCodeInput" placeholder="例：xxxxxxxx-xxxx-..." class="flex-1 py-2.5 px-3 text-xs rounded-xl bg-slate-50 border border-slate-200">
-          <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#7C9A92] text-white text-xs font-bold shrink-0 shadow-sm">合流する</button>
+          <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#ff6b6b] text-white text-xs font-bold shrink-0 shadow-sm hover:bg-[#ff5252]">合流する</button>
         </div>
       </div>
       
-      <div class="pt-4 border-t text-left">
+      <div class="pt-4 border-t text-left w-full">
         <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
       </div>
     </div>
@@ -100,8 +119,18 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="max-w-7xl mx-auto flex flex-col">
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
-          コドモノート
+        <button onclick="goToTopPage()" class="flex items-center gap-2 select-none tracking-tight active:scale-95 transition-transform" title="トップ画面に戻る">
+          <svg class="app-icon w-9 h-9" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
+            <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
+            <path d="M 25 53 A 25 25 0 0 0 75 53 Z" fill="#ff5252" opacity="0.5" />
+            <path d="M 80 50 A 30 30 0 0 0 20 50 Z" fill="#a5d8ff" opacity="0.6" />
+            <rect x="16" y="47" width="68" height="6" rx="3" fill="#ffffff" />
+            <path d="M 50 25 L 53 33 L 61 34 L 55 39 L 57 47 L 50 43 L 43 47 L 45 39 L 39 34 L 47 33 Z" fill="#feca57" />
+            <circle cx="68" cy="28" r="2.5" fill="#ffd32a" />
+            <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
+          </svg>
+          <span class="text-2xl font-extrabold text-[#2b2d42] text-left whitespace-nowrap">コドモカプセル</span>
         </button>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
@@ -137,7 +166,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v55</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v57</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -157,7 +186,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <span class="text-xl">👑</span>
       <div class="text-left">
         <div class="text-sm font-bold">プレミアムプランのご案内</div>
-        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品保存数がすべて無制限になります</div>
+        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品カプセル保存数がすべて無制限になります</div>
       </div>
     </div>
     <button onclick="openDrawer('child')" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
@@ -173,7 +202,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <section id="trashPage" class="page">
     <div class="py-2 flex justify-between items-center px-1">
       <h2 class="text-xl font-bold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
-      <button onclick="switchPage('gallery')" class="text-xs text-[#7C9A92] font-semibold">戻る</button>
+      <button onclick="switchPage('gallery')" class="text-xs text-[#ff6b6b] font-semibold">戻る</button>
     </div>
     <p class="text-[11px] text-slate-400 mb-4 px-1">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。</p>
     <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
@@ -190,7 +219,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">データ登録</h3><button onclick="closeDrawer('work')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">カプセル登録</h3><button onclick="closeDrawer('work')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
     <form id="workForm" class="space-y-5">
       <input type="hidden" id="editingWorkId" value="" />
       <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
@@ -211,12 +240,12 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-emerald-50 text-[#56736C] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
           <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
         </div>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
-      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#7C9A92]">保存する</button>
+      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#ff6b6b] hover:bg-[#ff5252] transition">保存する</button>
     </form>
   </div>
 </div>
@@ -233,7 +262,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </div>
         <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
       </div>
-      <!-- [v55修正] ボタン文言から「[テスト用]」を削除 -->
       <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
         <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
           🛠️ フリープランに戻す
@@ -266,7 +294,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </div>
       </div>
       <div class="flex gap-2 pt-2">
-        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#7C9A92]">追加する</button>
+        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#ff6b6b] hover:bg-[#ff5252] transition">追加する</button>
         <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-100 text-sm">取消</button>
       </div>
     </div>
@@ -320,12 +348,16 @@ function showGateError(msg) {
 window.redirectToStripeCheckout = async function() {
   const currentUser = auth.currentUser;
   if (!currentUser) {
-    alert("ログイン状態が確認できません。");
+    alert("ログイン状態が確認できません。もう一度ログインを行ってください。");
     return;
   }
+
   const btn = document.getElementById("stripePaymentBtn");
+  if (!btn) return;
+
   btn.disabled = true;
-  btn.innerText = "決済画面へ移行中...";
+  const originalText = btn.innerText;
+  btn.innerText = "本番決済画面へ移行中...";
 
   try {
     const successUrl = window.location.origin + window.location.pathname + "?session_id={CHECKOUT_SESSION_ID}"; 
@@ -338,29 +370,31 @@ window.redirectToStripeCheckout = async function() {
         uid: String(currentUser.uid),
         client_reference_id: String(currentUser.uid),
         email: String(currentUser.email || ""),
-        successUrl: String(successUrl),
-        cancelUrl: String(cancelUrl)
+        success_url: String(successUrl),
+        cancel_url: String(cancelUrl)
       })
     });
 
     if (!response.ok) {
-      throw new Error(`接続確認中...`);
+      const errText = await response.text();
+      throw new Error(`決済サーバーエラー (Status: ${response.status}): ${errText}`);
     }
+
     const session = await response.json();
-    if (session && session.url) { window.location.href = session.url; } 
-    else { throw new Error("URLエラー"); }
+    if (session && session.url) { 
+      window.location.href = session.url; 
+    } else { 
+      throw new Error("決済用セッションURLの取得に失敗しました。"); 
+    }
+
   } catch (e) {
-    const mockConfirm = confirm("【Stripe決済画面へジャンプします】\n(テスト環境用ローンチ：決済を直接エミュレートして完了させますか？)");
-    if(mockConfirm) {
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        plan: "premium",
-        updatedAt: Date.now()
-      });
-      alert("👑 プレミアムプランへのアップグレードが成功しました！");
-      window.location.href = window.location.origin + window.location.pathname;
-    } else {
+    console.error("Stripe Live Checkout Error:", e);
+    alert("Stripe決済画面への移行に失敗しました。\n詳細: " + e.message);
+
+  } finally {
+    if (btn) {
       btn.disabled = false;
-      btn.innerText = "プレミアムにする";
+      btn.innerText = originalText;
     }
   }
 };
@@ -414,7 +448,7 @@ function updatePlanUI() {
     if(pBtn) pBtn.classList.add("hidden");
     if(testPlanToggleArea) testPlanToggleArea.classList.remove("hidden");
   } else {
-    if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / 作品10件まで)";
+    if(currentPlanLabel) currentPlanLabel.innerHTML = "無料プラン (子ども1人 / カプセル10件まで)";
     if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
     const pBtn = document.getElementById("stripePaymentBtn");
@@ -438,10 +472,10 @@ window.toggleSearchMenu = function() {
   const toggleBtn = document.getElementById("menuToggleBtn");
   if(menuArea.classList.contains("collapsed")) {
     menuArea.classList.remove("collapsed");
-    toggleBtn.classList.add("bg-[#56736C]", "text-white");
+    toggleBtn.classList.add("bg-[#ff6b6b]", "text-white");
   } else {
     menuArea.classList.add("collapsed");
-    toggleBtn.classList.remove("bg-[#56736C]", "text-white");
+    toggleBtn.classList.remove("bg-[#ff6b6b]", "text-white");
   }
 };
 
@@ -588,7 +622,7 @@ window.joinFamilyGroup = async function() {
     const familyDoc = querySnapshot.docs[0]; const targetDocId = familyDoc.id; 
     await setDoc(doc(db, "users", user.uid), { familyId: targetDocId, email: user.email || "", plan: "free", updatedAt: Date.now() });
     await updateDoc(doc(db, "families", targetDocId), { [`members.${user.uid}`]: true });
-    alert("🎉 家族ノートへの合流に成功しました！");
+    alert("🎉 家族グループへの合流に成功しました！");
   } catch(e) {
     btn.innerText = "合流する"; btn.disabled = false;
     alert("🚨 合流エラー: " + e.message);
@@ -617,7 +651,7 @@ function startRealtimeSync() {
     localWorks = []; snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
     cleanupOldTrash(); renderAll();
   }, (err) => {
-    alert("作品一覧の同期に失敗しました。");
+    alert("カプセル一覧の同期に失敗しました。");
   });
 }
 
@@ -805,7 +839,7 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 };
 
 window.openEditWork = function(id) {
-  const w = localWorks.find(item => item.id === id); if(!w || w.isDeleted) return; 
+  const w = localWorks.find(item => item.id === id); if(w.isDeleted) return; 
   document.getElementById("editingWorkId").value = w.id;
   document.getElementById("workFormTitle").innerText = "データの編集";
   document.getElementById("inputTitle").value = w.title;
@@ -853,7 +887,7 @@ async function cleanupOldTrash() {
 function renderChildList(){
   let html = "";
   localChildren.forEach(c => { 
-    html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50"><div class="font-semibold text-slate-700">${c.name}</div><div class="flex gap-3 text-xs"><button onclick="editChild('${c.id}')" class="text-emerald-600 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`; 
+    html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50"><div class="font-semibold text-slate-700">${c.name}</div><div class="flex gap-3 text-xs"><button onclick="editChild('${c.id}')" class="text-rose-500 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`; 
   });
   const cList = document.getElementById("childList");
   if(cList) cList.innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
@@ -878,7 +912,7 @@ function populateGalleryChildFilter(){
 function getCategoryBadgeHtml(cat) {
   if (cat === "print") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">プリント</span>`;
   if (cat === "test") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">テスト</span>`;
-  return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">作品</span>`;
+  return `<span class="text-[10px] bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full">作品</span>`;
 }
 
 function renderGallery(){
@@ -975,7 +1009,7 @@ function renderGallery(){
     </div>`;
   });
   const grid = document.getElementById("galleryGrid");
-  if(grid) grid.innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>データがありません</div>";
+  if(grid) grid.innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>カプセルがありません</div>";
 }
 
 function renderTimeline(){
@@ -1032,7 +1066,7 @@ function renderTrash(){
 
 window.openDrawer = function(t){ 
   if(t === 'work' && !document.getElementById("editingWorkId").value) {
-    document.getElementById("workFormTitle").innerText = "データ登録"; document.getElementById("workForm").reset();
+    document.getElementById("workFormTitle").innerText = "カプセル登録"; document.getElementById("workForm").reset();
     document.getElementById("inputCategory").value = "artwork"; document.getElementById("mediaResultContainer").innerHTML = "";
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; base64MediaArray = [];
   }
@@ -1048,9 +1082,9 @@ window.closeDrawer = function(t){
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  if(p === "gallery"){ document.getElementById("galleryPage").classList.add("active"); document.getElementById("nav-gallery").classList.add("active"); renderGallery(); } 
-  else if (p === "records") { document.getElementById("recordsPage").classList.add("active"); document.getElementById("nav-records").classList.add("active"); renderTimeline(); } 
-  else if (p === "trash") { document.getElementById("trashPage").classList.add("active"); renderTrash(); }
+  if(p === 'gallery'){ document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
+  else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderTimeline(); } 
+  else if (p === 'trash') { document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
