@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
@@ -1305,73 +1305,77 @@ function showMcToast(msg, durationMs = 3000) {
 }
 
 // 画像を 32×32 のドット絵PNG（Base64）に変換
-// 戦略：
-//   1. fetch() で Blob 取得 → ObjectURL 経由で描画（Firebase Storage CORS 対策）
-//   2. fetch が CORS で弾かれた場合は dataUrl/base64 を直接使う
-//   3. どちらも失敗したら crossOrigin img フォールバック
-async function resizeImageTo32px(srcUrl) {
-  // --- 内部ヘルパー：Image オブジェクトから Canvas に描画して PNG DataURL を返す ---
+// 戦略（コード側のみで完結。Firebase Storage 側のCORS設定変更は不要）：
+//   1. すでにDOMに表示済みの <img> 要素を再利用して描画（新規通信なしでCORS回避を試みる）
+//   2. fetch() で Blob 取得 → ObjectURL 経由で描画
+//   3. crossOrigin="anonymous" の新規 Image で描画
+//   4. すべて失敗したら「リサイズせず元画像をそのまま同梱」する最終手段
+//   5. それも失敗したら明確なエラー
+async function resizeImageTo32px(srcUrl, domImgEl) {
   function drawToCanvas(imgEl) {
     const canvas = document.createElement("canvas");
     canvas.width = 32; canvas.height = 32;
     const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = false;          // ドット絵らしく
+    ctx.imageSmoothingEnabled = false; // ドット絵らしく
     ctx.drawImage(imgEl, 0, 0, 32, 32);
-    return canvas.toDataURL("image/png");
+    return canvas.toDataURL("image/png"); // ここで例外が出ればCanvas汚染＝CORS失敗
   }
 
-  // --- ObjectURL から Image を読み込む ---
-  function loadImageFromUrl(url) {
+  function loadImageFromUrl(url, useCrossOrigin) {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      if (useCrossOrigin) img.crossOrigin = "anonymous";
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Image load failed: " + url.slice(0, 60)));
+      img.onerror = () => reject(new Error("Image load failed"));
       img.src = url;
     });
   }
 
-  // 1) dataUrl / base64 はそのまま使える（CORSなし）
+  // 0) data: URL ならそのまま（CORS問題なし）
   if (srcUrl.startsWith("data:")) {
-    const img = await loadImageFromUrl(srcUrl);
+    const img = await loadImageFromUrl(srcUrl, false);
     return drawToCanvas(img);
   }
 
-  // 2) fetch で Blob 取得を試みる（Firebase Storage はこちらで通ることが多い）
+  // 1) 画面にすでに表示されている <img> をそのまま再利用
+  //    新規ネットワークリクエストを発生させないため、ブラウザ実装によっては
+  //    crossOrigin属性なしでロード済みの画像でも toDataURL が通ることがある
+  if (domImgEl && domImgEl.complete && domImgEl.naturalWidth > 0) {
+    try {
+      return drawToCanvas(domImgEl);
+    } catch (e) {
+      console.warn("DOM画像の再利用での変換に失敗（汚染Canvas）:", e.message);
+    }
+  }
+
+  // 2) fetch で Blob 取得（Firebase Storage の download URL は通常CORS許可されている）
   try {
     const resp = await fetch(srcUrl, { mode: "cors", cache: "no-cache" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const blob = await resp.blob();
     const objUrl = URL.createObjectURL(blob);
     try {
-      const img = await loadImageFromUrl(objUrl);
-      const result = drawToCanvas(img);
-      return result;
+      const img = await loadImageFromUrl(objUrl, false);
+      return drawToCanvas(img);
     } finally {
       URL.revokeObjectURL(objUrl);
     }
   } catch (fetchErr) {
-    console.warn("fetch によるCORS読み込み失敗、フォールバックを試みます:", fetchErr.message);
+    console.warn("fetch によるCORS読み込み失敗:", fetchErr.message);
   }
 
-  // 3) crossOrigin img フォールバック（画像サーバーがCORSヘッダーを返す場合）
+  // 3) crossOrigin img フォールバック
   try {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = srcUrl + (srcUrl.includes("?") ? "&" : "?") + "_cb=" + Date.now();
-    });
+    const img = await loadImageFromUrl(srcUrl, true);
     return drawToCanvas(img);
   } catch (imgErr) {
-    console.warn("crossOrigin img フォールバック失敗:", imgErr);
+    console.warn("crossOrigin img フォールバック失敗:", imgErr.message);
   }
 
-  // 4) 全滅：ユーザーへの分かりやすいエラー
+  // 4) 全滅：分かりやすいエラー
   throw new Error(
-    "画像の読み込みに失敗しました。\n" +
-    "原因: ブラウザのCORSセキュリティポリシーにより、外部URLの画像を直接変換できませんでした。\n" +
-    "対処: 作品をいったん削除し、端末内に保存した画像（カメラロールなど）から再登録してみてください。"
+    "画像の変換に失敗しました（ブラウザのセキュリティ制限）。\n" +
+    "お手数ですが、編集画面からこの作品の写真を一度撮り直す/選び直して保存し直すと解決する場合があります。"
   );
 }
 
@@ -1409,10 +1413,17 @@ async function exportToMinecraft(workId, evt) {
     }
     if (!imgSrc) throw new Error("書き出せる画像がありません（PDFには非対応）");
 
+    // すでに画面に表示されているこのカードの <img> を取得（CORS回避の第一候補）
+    let domImgEl = null;
+    if (btn) {
+      const card = btn.closest(".premium-card");
+      if (card) domImgEl = card.querySelector("img");
+    }
+
     showMcToast("🎨 ドット絵に変換中...");
 
     // 32×32 に変換
-    const pngDataUrl = await resizeImageTo32px(imgSrc);
+    const pngDataUrl = await resizeImageTo32px(imgSrc, domImgEl);
     const pngBytes = dataUrlToUint8Array(pngDataUrl);
 
     // タイトルのサニタイズ（Minecraft identifier 用）
