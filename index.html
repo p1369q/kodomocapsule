@@ -239,9 +239,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応）</label>
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
-          <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
+        <div class="grid grid-cols-2 md:grid-cols-1 gap-2">
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="md:hidden py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
+          <button type="button" onclick="document.getElementById('fileInput').click()" class="col-span-1 md:col-span-2 py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
         </div>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
