@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v66]</title>
+<title>コドモノート [v67]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -142,7 +142,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v66</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">v67</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -929,7 +929,7 @@ function renderChildList(){
   if(limitLabel) { limitLabel.innerText = isPremiumUser ? `(${localChildren.length}人登録中)` : `(${localChildren.length} / 1人)`; }
 }
 
-function populateChildSelect(){
+ function populateChildSelect(){
   let html = `<option value="">子どもを選択してください</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
   const sel = document.getElementById("inputWorkChild"); if(sel) sel.innerHTML = html;
@@ -1204,6 +1204,7 @@ window.close3DModal = function() {
     if(threeMesh.material) threeMesh.material.dispose();
     threeMesh = null;
   }
+  document.getElementById("threeLoadingIndicator").classList.add("hidden");
 };
 
 async function generate3DPolygonMesh() {
@@ -1217,36 +1218,41 @@ async function generate3DPolygonMesh() {
     threeMesh = null;
   }
 
-  try {
-    let blobUrl = "";
+  let blobUrl = "";
 
+  try {
     // 1. URLがFirebase Storageへのフルパス(HTTP)かチェック
-    if (currentActive3DImageUrl.includes("firebasestorage.googleapis.com")) {
-      // URLからストレージ内の実際のオブジェクトパスを抽出
+    if (currentActive3DImageUrl.includes("firebasestorage.googleapis.com") || currentActive3DImageUrl.includes("firebasestorage.app")) {
       const urlParts = currentActive3DImageUrl.split("/o/");
       if (urlParts.length > 1) {
         let storagePath = urlParts[1].split("?")[0];
         storagePath = decodeURIComponent(storagePath);
         
-        // Firebase Storage SDK経由で生バイト(ArrayBuffer)として直接安全にダウンロード
+        // SDK経由で直接安全にダウンロード
         const storageRef = ref(storage, storagePath);
         const arrayBuffer = await getBytes(storageRef);
         
-        // ブラウザ内部だけで完結する安全なBlobURLを構築（これでCORSエラーを完全に回避）
-        const blob = new Blob([arrayBuffer], { type: "image/jpeg" });
+        const blob = new Blob([new Uint8Array(arrayBuffer)], { type: "image/jpeg" });
         blobUrl = URL.createObjectURL(blob);
       }
     }
+  } catch (error) {
+    console.error("Firebase Storage direct getBytes error:", error);
+    // エラーが起きた場合は即時フォールバックへ
+    fallbackMeshGeneration();
+    return;
+  }
 
-    // 2. もし通常のURL展開に失敗するか、ローカル環境のデータURLならそのまま使う
-    if (!blobUrl) {
-      blobUrl = currentActive3DImageUrl;
-    }
+  // 2. もし通常のURL展開に失敗するか、ローカル環境のデータURLならそのまま使う
+  if (!blobUrl) {
+    blobUrl = currentActive3DImageUrl;
+  }
 
-    const img = new Image();
-    img.src = blobUrl;
+  const img = new Image();
+  img.src = blobUrl;
 
-    img.onload = function() {
+  img.onload = function() {
+    try {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
@@ -1254,7 +1260,6 @@ async function generate3DPolygonMesh() {
       ctx.drawImage(img, 0, 0);
 
       const texture = new THREE.CanvasTexture(canvas);
-      
       const geometry = new THREE.PlaneGeometry(4.5, 4.5, 64, 64);
       const depthScale = parseFloat(document.getElementById("threeSliderDepth").value || 1.2);
       const isWireframe = document.getElementById("threeCheckWireframe").checked;
@@ -1279,33 +1284,38 @@ async function generate3DPolygonMesh() {
         threeControls.target.set(0, 0, 0);
         threeControls.reset();
       }
-      
-      // 不要になったBlob URLを解放
-      if (blobUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(blobUrl);
-      }
-      document.getElementById("threeLoadingIndicator").classList.add("hidden");
-    };
-
-    img.onerror = function(err) {
-      console.error("Image loading error from blob URL:", err);
+    } catch(ex) {
+      console.error("Mesh synthesis failed", ex);
       fallbackMeshGeneration();
-    };
+    } finally {
+      if (blobUrl.startsWith("blob:")) { URL.revokeObjectURL(blobUrl); }
+      document.getElementById("threeLoadingIndicator").classList.add("hidden");
+    }
+  };
 
-  } catch (error) {
-    console.error("Firebase Storage direct getBytes error:", error);
+  img.onerror = function(err) {
+    console.error("Image loading error from blob URL:", err);
+    if (blobUrl.startsWith("blob:")) { URL.revokeObjectURL(blobUrl); }
     fallbackMeshGeneration();
-  }
+  };
 }
 
 function fallbackMeshGeneration() {
+  if (threeMesh) {
+    threeScene.remove(threeMesh);
+    if(threeMesh.geometry) threeMesh.geometry.dispose();
+    if(threeMesh.material) threeMesh.material.dispose();
+    threeMesh = null;
+  }
+
   const geometry = new THREE.PlaneGeometry(4.5, 4.5, 16, 16);
   const isWireframe = document.getElementById("threeCheckWireframe").checked;
   
   const material = new THREE.MeshStandardMaterial({
     color: 0x7C9A92,
     side: THREE.DoubleSide,
-    wireframe: isWireframe
+    wireframe: isWireframe,
+    roughness: 0.5
   });
   
   threeMesh = new THREE.Mesh(geometry, material);
