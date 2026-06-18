@@ -1305,23 +1305,74 @@ function showMcToast(msg, durationMs = 3000) {
 }
 
 // 画像を 32×32 のドット絵PNG（Base64）に変換
-function resizeImageTo32px(srcUrl) {
-  return new Promise((resolve, reject) => {
+// 戦略：
+//   1. fetch() で Blob 取得 → ObjectURL 経由で描画（Firebase Storage CORS 対策）
+//   2. fetch が CORS で弾かれた場合は dataUrl/base64 を直接使う
+//   3. どちらも失敗したら crossOrigin img フォールバック
+async function resizeImageTo32px(srcUrl) {
+  // --- 内部ヘルパー：Image オブジェクトから Canvas に描画して PNG DataURL を返す ---
+  function drawToCanvas(imgEl) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 32; canvas.height = 32;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;          // ドット絵らしく
+    ctx.drawImage(imgEl, 0, 0, 32, 32);
+    return canvas.toDataURL("image/png");
+  }
+
+  // --- ObjectURL から Image を読み込む ---
+  function loadImageFromUrl(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Image load failed: " + url.slice(0, 60)));
+      img.src = url;
+    });
+  }
+
+  // 1) dataUrl / base64 はそのまま使える（CORSなし）
+  if (srcUrl.startsWith("data:")) {
+    const img = await loadImageFromUrl(srcUrl);
+    return drawToCanvas(img);
+  }
+
+  // 2) fetch で Blob 取得を試みる（Firebase Storage はこちらで通ることが多い）
+  try {
+    const resp = await fetch(srcUrl, { mode: "cors", cache: "no-cache" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const objUrl = URL.createObjectURL(blob);
+    try {
+      const img = await loadImageFromUrl(objUrl);
+      const result = drawToCanvas(img);
+      return result;
+    } finally {
+      URL.revokeObjectURL(objUrl);
+    }
+  } catch (fetchErr) {
+    console.warn("fetch によるCORS読み込み失敗、フォールバックを試みます:", fetchErr.message);
+  }
+
+  // 3) crossOrigin img フォールバック（画像サーバーがCORSヘッダーを返す場合）
+  try {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 32; canvas.height = 32;
-      const ctx = canvas.getContext("2d");
-      // ピクセルアートらしさを出すためアンチエイリアス無効化
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(img, 0, 0, 32, 32);
-      // PNG の Base64（data:image/png;base64,xxx）
-      resolve(canvas.toDataURL("image/png"));
-    };
-    img.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
-    img.src = srcUrl;
-  });
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = srcUrl + (srcUrl.includes("?") ? "&" : "?") + "_cb=" + Date.now();
+    });
+    return drawToCanvas(img);
+  } catch (imgErr) {
+    console.warn("crossOrigin img フォールバック失敗:", imgErr);
+  }
+
+  // 4) 全滅：ユーザーへの分かりやすいエラー
+  throw new Error(
+    "画像の読み込みに失敗しました。\n" +
+    "原因: ブラウザのCORSセキュリティポリシーにより、外部URLの画像を直接変換できませんでした。\n" +
+    "対処: 作品をいったん削除し、端末内に保存した画像（カメラロールなど）から再登録してみてください。"
+  );
 }
 
 // Base64 データURL → Uint8Array
@@ -1467,7 +1518,13 @@ async function exportToMinecraft(workId, evt) {
 
   } catch (err) {
     console.error("Minecraft書き出しエラー:", err);
-    showMcToast(`❌ エラー: ${err.message}`, 5000);
+    // 改行を含む長いエラーは最初の1行だけトーストに出す
+    const firstLine = err.message.split("\n")[0];
+    showMcToast(`❌ ${firstLine}`, 6000);
+    // 詳細はコンソールとアラートで
+    if (err.message.includes("CORS") || err.message.includes("再登録")) {
+      setTimeout(() => alert(err.message), 400);
+    }
   } finally {
     if (btn) {
       btn.disabled = false;
