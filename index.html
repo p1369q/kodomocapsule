@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモノート [v55]</title>
+<title>コドモカプセル [v55]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,8 +49,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
   <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm">
-    <h1 class="text-3xl font-extrabold text-[#56736C]">コドモノート</h1>
-    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するノートアプリ</p>
+    <h1 class="text-3xl font-extrabold text-[#56736C]">コドモカプセル</h1>
+    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するカプセルアプリ</p>
     
     <div id="gateLoading" class="text-sm text-slate-400 py-4 flex flex-col items-center justify-center gap-2">
       <div id="loadingStatusText">読み込み中...</div>
@@ -101,7 +101,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="goToTopPage()" class="text-2xl font-extrabold text-[#56736C] select-none tracking-tight active:scale-95 transition-transform text-left whitespace-nowrap" title="トップ画面に戻る">
-          コドモノート
+          コドモカプセル
         </button>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
@@ -233,7 +233,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </div>
         <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
       </div>
-      <!-- [v55修正] ボタン文言から「[テスト用]」を削除 -->
       <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
         <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
           🛠️ フリープランに戻す
@@ -588,7 +587,7 @@ window.joinFamilyGroup = async function() {
     const familyDoc = querySnapshot.docs[0]; const targetDocId = familyDoc.id; 
     await setDoc(doc(db, "users", user.uid), { familyId: targetDocId, email: user.email || "", plan: "free", updatedAt: Date.now() });
     await updateDoc(doc(db, "families", targetDocId), { [`members.${user.uid}`]: true });
-    alert("🎉 家族ノートへの合流に成功しました！");
+    alert("🎉 家族カプセルへの合流に成功しました！");
   } catch(e) {
     btn.innerText = "合流する"; btn.disabled = false;
     alert("🚨 合流エラー: " + e.message);
@@ -1038,6 +1037,11 @@ window.openDrawer = function(t){
   }
   if(t === 'child') cancelChildEdit();
   const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
+};
+
+window.closeDrawer = function(t){ 
+  if(t) { const el = document.getElementById(t+"Drawer"); if(el) el.classList.remove('open'); } 
+  else { document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); }
 };
 
 window.closeDrawer = function(t){ 
