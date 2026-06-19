@@ -1307,10 +1307,14 @@ function showMcToast(msg, durationMs = 3000) {
 // 画像を 32×32 のドット絵PNG（Base64）に変換
 // 戦略（コード側のみで完結。Firebase Storage 側のCORS設定変更は不要）：
 //   1. すでにDOMに表示済みの <img> 要素を再利用して描画（新規通信なしでCORS回避を試みる）
-//   2. fetch() で Blob 取得 → ObjectURL 経由で描画
-//   3. crossOrigin="anonymous" の新規 Image で描画
-//   4. すべて失敗したら「リサイズせず元画像をそのまま同梱」する最終手段
-//   5. それも失敗したら明確なエラー
+//   2. fetch() で Blob 取得 → ObjectURL 経由で描画（キャッシュを強制バイパス）
+//   3. crossOrigin="anonymous" の新規 Image で描画（キャッシュを強制バイパス）
+//   4. それも失敗したら明確なエラー
+//
+// 注意：Firebase Storage の download URL には署名トークン（?token=...）が
+// 含まれているため、URL末尾に独自のクエリパラメータ（?cb=timestamp 等）を
+// 付け足すと署名検証が崩れて 403 になる恐れがある。そのため、キャッシュの
+// バイパスは URL改変ではなく fetch の cache オプション（'reload'）で行う。
 async function resizeImageTo32px(srcUrl, domImgEl) {
   function drawToCanvas(imgEl) {
     const canvas = document.createElement("canvas");
@@ -1349,8 +1353,11 @@ async function resizeImageTo32px(srcUrl, domImgEl) {
   }
 
   // 2) fetch で Blob 取得（Firebase Storage の download URL は通常CORS許可されている）
+  //    cache: 'reload' でブラウザキャッシュを無視し、必ずネットワークから
+  //    レスポンスを取得し直す（古いCORSヘッダーなしのキャッシュ実体を握っている
+  //    ケースを回避する）。URLそのものは一切改変しないので署名トークンは壊れない。
   try {
-    const resp = await fetch(srcUrl, { mode: "cors", cache: "no-cache" });
+    const resp = await fetch(srcUrl, { mode: "cors", cache: "reload" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const blob = await resp.blob();
     const objUrl = URL.createObjectURL(blob);
@@ -1365,6 +1372,25 @@ async function resizeImageTo32px(srcUrl, domImgEl) {
   }
 
   // 3) crossOrigin img フォールバック
+  //    こちらも同様に、まず fetch(cache:'reload') でレスポンスを強制的に
+  //    取り直してから ObjectURL を Image に渡す（<img src> 直指定だと
+  //    ブラウザの画像キャッシュ／HTTPキャッシュが優先されることがあるため）
+  try {
+    const resp2 = await fetch(srcUrl, { mode: "cors", cache: "reload", credentials: "omit" });
+    if (resp2.ok) {
+      const blob2 = await resp2.blob();
+      const objUrl2 = URL.createObjectURL(blob2);
+      try {
+        const img2 = await loadImageFromUrl(objUrl2, false);
+        return drawToCanvas(img2);
+      } finally {
+        URL.revokeObjectURL(objUrl2);
+      }
+    }
+  } catch (e2) {
+    console.warn("再fetch(reload)フォールバック失敗:", e2.message);
+  }
+  // 最終手段として crossOrigin 付き直接ロード
   try {
     const img = await loadImageFromUrl(srcUrl, true);
     return drawToCanvas(img);
