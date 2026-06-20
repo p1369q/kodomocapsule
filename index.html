@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v66]</title>
+<title>コドモカプセル [v67]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,7 +53,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   transform: rotate(15deg) scale(1.05);
 }
 
-/* マインクラフト用トーストの簡易スタイル */
+/* トーストのスタイル */
 #mcToast {
   position: fixed;
   top: 20px;
@@ -192,7 +192,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v66</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v67</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -437,12 +437,14 @@ let unsubscribeUserPlan = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 
-function showGateError(msg) {
-  const errLog = document.getElementById("gateErrorLog");
-  if(errLog) {
-    errLog.innerText = "情報: " + msg;
-    errLog.classList.remove("hidden");
-  }
+function showMcToast(message, duration = 4000) {
+  const toast = document.getElementById("mcToast");
+  if (!toast) return;
+  toast.innerText = message;
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, duration);
 }
 
 window.redirectToStripeCheckout = async function() {
@@ -1097,18 +1099,7 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
   renderGallery();
 };
 
-// 共通トースト通知
-function showMcToast(message, duration = 4000) {
-  const toast = document.getElementById("mcToast");
-  if (!toast) return;
-  toast.innerText = message;
-  toast.classList.add("show");
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, duration);
-}
-
-// 🎮 マインクラフトアドオン（.mcaddon）書き出し用ロジック（v66安全版）
+// 🎮 マインクラフトアドオン（.mcaddon）強制キャッシュ破棄回避版ロジック (v67)
 window.exportCurrentWorkToMinecraft = async function() {
   const currentId = document.getElementById("editingWorkId").value;
   if (!currentId) {
@@ -1121,7 +1112,6 @@ window.exportCurrentWorkToMinecraft = async function() {
     return;
   }
 
-  // 先頭の有効な画像を探す
   let targetImageUrl = null;
   if (base64MediaArray && base64MediaArray.length > 0) {
     const firstImg = base64MediaArray.find(m => m.type !== "pdf");
@@ -1133,25 +1123,30 @@ window.exportCurrentWorkToMinecraft = async function() {
   }
 
   if (!targetImageUrl) {
-    showMcToast("❌ 有効な画像が登録されていないため、書き出せません(PDFは非対応)");
+    showMcToast("❌ 有効な画像が登録されていないため、書き出せません");
     return;
+  }
+
+  // ⚡【CORS強行打破対策】外部URLの場合に古い配信キャッシュをバイパスするクエリパラメータを注入
+  if (targetImageUrl.startsWith("http")) {
+    const separator = targetImageUrl.includes("?") ? "&" : "?";
+    targetImageUrl = `${targetImageUrl}${separator}_cb=${Date.now()}`;
   }
 
   const btn = document.getElementById("detailMcExportBtn");
   if (btn) btn.disabled = true;
-  showMcToast("🎮 .mcaddon を構築中...");
+  showMcToast("🎮 強制キャッシュバイパスで構築中...");
 
   try {
     const img = new Image();
-    img.crossOrigin = "anonymous"; // CORSセキュリティエラーを防止
+    img.crossOrigin = "anonymous"; 
     
     await new Promise((resolve, reject) => {
       img.onload = resolve;
-      img.onerror = () => reject(new Error("画像の読み込みに失敗しました。CORS制限またはデータ不整合の可能性があります。"));
+      img.onerror = () => reject(new Error("画像のフェッチに失敗しました。CORSキャッシュが原因です。一度別画像をアップするか時間を置いてください。"));
       img.src = targetImageUrl;
     });
 
-    // Minecraft用に最大512pxにインテリジェントリサイズ
     const maxDim = 512;
     let wDim = img.width;
     let hDim = img.height;
@@ -1180,7 +1175,6 @@ window.exportCurrentWorkToMinecraft = async function() {
     const uuidPack = crypto.randomUUID();
     const uuidModule = crypto.randomUUID();
 
-    // マニフェスト及びカスタムブロック設定JSON
     const manifest = {
       format_version: 2,
       header: {
@@ -1229,7 +1223,6 @@ window.exportCurrentWorkToMinecraft = async function() {
       }
     };
 
-    // パッケージングとダウンロードの実行
     const zip = new JSZip();
     zip.file("manifest.json",                 JSON.stringify(manifest, null, 2));
     zip.file("blocks.json",                   JSON.stringify(blocksJson, null, 2));
@@ -1280,7 +1273,6 @@ window.openEditWork = function(id) {
   }
   renderMediaPreviews();
   
-  // 詳細画面が開かれた時のみ、マインクラフト書き出しボタンを表示する
   const mcExportBtn = document.getElementById("detailMcExportBtn");
   if(mcExportBtn) mcExportBtn.classList.remove("hidden");
 
@@ -1531,7 +1523,6 @@ window.openDrawer = function(t){
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; 
     base64MediaArray = [];
     
-    // 新規登録の時はマインクラフト書き出しボタンを非表示にする
     const mcExportBtn = document.getElementById("detailMcExportBtn");
     if(mcExportBtn) mcExportBtn.classList.add("hidden");
 
