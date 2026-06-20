@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v67]</title>
+<title>コドモカプセル [v68]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -192,14 +192,13 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v67</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v68</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
         <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
         <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
-        <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
-        <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
+        <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button> <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
         <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
       </div>
     </div>
@@ -584,17 +583,20 @@ function initBirthdaySelectboxes() {
   const monthSelect = document.getElementById("childBirthMonth");
   const daySelect = document.getElementById("childBirthDay");
   if(!yearSelect || !monthSelect || !daySelect) return;
+
   const currentYear = new Date().getFullYear();
   let yearHtml = "";
   for (let y = currentYear; y >= currentYear - 20; y--) {
     yearHtml += `<option value="${y}">${y}</option>`;
   }
   yearSelect.innerHTML = yearHtml;
+
   let monthHtml = "";
   for (let m = 1; m <= 12; m++) {
     monthHtml += `<option value="${String(m).padStart(2, '0')}">${m}</option>`;
   }
   monthSelect.innerHTML = monthHtml;
+
   let dayHtml = "";
   for (let d = 1; d <= 31; d++) {
     dayHtml += `<option value="${String(d).padStart(2, '0')}">${d}</option>`;
@@ -608,6 +610,7 @@ function calculateAgeInMonths(birthDateStr, workDateStr) {
   const birth = new Date(birthDateStr);
   const work = new Date(workDateStr);
   if (isNaN(birth.getTime()) || isNaN(work.getTime())) return null;
+
   let months = (work.getFullYear() - birth.getFullYear()) * 12 + (work.getMonth() - birth.getMonth());
   if (work.getDate() < birth.getDate()) {
     months--;
@@ -625,9 +628,9 @@ function formatAgeString(totalMonths) {
 function getAgeStage(birthDateStr, workDateStr) {
   const m = calculateAgeInMonths(birthDateStr, workDateStr);
   if (m === null || m < 0) return "unknown";
-  if (m <= 35) return "baby";     
-  if (m <= 71) return "kinder";   
-  return "school";                
+  if (m <= 35) return "baby"; 
+  if (m <= 71) return "kinder"; 
+  return "school"; 
 }
 
 window.toggleAuth = function() {
@@ -663,17 +666,17 @@ onAuthStateChanged(auth, async (user) => {
     btnText.innerText = "ログアウト";
     gateLoginArea.classList.add("hidden");
     gateLoading.classList.remove("hidden");
-    
+
     try {
       await checkUrlSessionParameters(user);
-      
+
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
-      
+
       if (userDocSnap.exists()) {
         const uData = userDocSnap.data();
         const fId = uData.familyId;
-        
+
         if (unsubscribeUserPlan) unsubscribeUserPlan();
         unsubscribeUserPlan = onSnapshot(userDocRef, (snap) => {
           if (snap.exists()) {
@@ -683,843 +686,164 @@ onAuthStateChanged(auth, async (user) => {
         });
 
         currentSession = { uid: user.uid, familyId: fId };
-        
         const famSnap = await getDoc(doc(db, "families", fId));
         if (famSnap.exists()) {
           const invCode = famSnap.data().inviteCode || "なし";
           document.getElementById("displayFamilyIdCode").value = invCode;
-        } else {
-          document.getElementById("displayFamilyIdCode").value = fId;
         }
-        await verifyAndSetupDefaultCategories(fId);
+        startRealtimeSync(fId);
         gateScreen.classList.add("hidden");
-        startRealtimeSync();
+
       } else {
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
       }
-    } catch (innerErr) {
-      showGateError(innerErr.message);
-      gateLoading.classList.add("hidden");
-      gateSetupArea.classList.remove("hidden");
+    } catch(e) {
+      console.error(e);
+      document.getElementById("gateErrorLog").innerText = "エラー詳細:\n" + e.stack;
+      document.getElementById("gateErrorLog").classList.remove("hidden");
+      document.getElementById("loadingStatusText").innerText = "❌ データの読み込みに失敗しました。";
     }
   } else {
     btnText.innerText = "ログイン";
     currentSession = null;
     stopRealtimeSync();
-    if (unsubscribeUserPlan) {
-      unsubscribeUserPlan();
-      unsubscribeUserPlan = null;
-    }
-    localChildren = [];
-    localWorks = [];
-    localCategories = [];
-    gateLoading.classList.add("hidden");
     gateSetupArea.classList.add("hidden");
+    gateLoading.classList.add("hidden");
     gateLoginArea.classList.remove("hidden");
     gateScreen.classList.remove("hidden");
-    renderAll();
   }
 });
-
-async function verifyAndSetupDefaultCategories(familyId) {
-  const catRef = collection(db, "families", familyId, "categories");
-  const snapshot = await getDocs(catRef);
-  if(snapshot.empty) {
-    const defaults = ["作品", "プリント", "テスト"];
-    for(const name of defaults) {
-      await addDoc(catRef, { id: crypto.randomUUID(), name: name, createdAt: Date.now() });
-    }
-  }
-}
 
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
   if (!user) return;
-  if (!confirm("新しい家族グループを生成しますか？")) return;
+  if (!confirm("新しい家族グループを作成して利用を開始しますか？")) return;
+
   const btn = document.getElementById("btnCreateFamily");
-  btn.innerText = "作成中...";
   btn.disabled = true;
-  const docFamilyId = crypto.randomUUID();
-  const inviteCodeUuid = crypto.randomUUID();
+  btn.innerText = "グループ作成中...";
+
   try {
-    await setDoc(doc(db, "users", user.uid), { familyId: docFamilyId, email: user.email || "", plan: "free", updatedAt: Date.now() });
-    await setDoc(doc(db, "families", docFamilyId), { inviteCode: inviteCodeUuid, createdAt: Date.now(), createdBy: user.uid, members: { [user.uid]: true } });
-    alert("🎉 家族グループを新規に作成しました！");
-  } catch (e) {
-    btn.innerText = "🚀 新しい家族グループを作成する";
+    const newFamilyId = doc(collection(db, "families")).id;
+    const inviteCode = crypto.randomUUID();
+
+    await setDoc(doc(db, "families", newFamilyId), {
+      createdAt: Date.now(),
+      createdBy: user.uid,
+      inviteCode: inviteCode
+    });
+
+    const defaultCategories = ["🎨 作品", "📝 テスト・プリント", "📅 おたより", "🧸 その他"];
+    for (const catName of defaultCategories) {
+      await addDoc(collection(db, "families", newFamilyId, "categories"), {
+        name: catName,
+        createdAt: Date.now()
+      });
+    }
+
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email || "",
+      familyId: newFamilyId,
+      plan: "free",
+      createdAt: Date.now()
+    });
+
+    showMcToast("🎉 家族グループの作成が完了しました！");
+    window.location.reload();
+
+  } catch(e) {
+    alert("作成失敗: " + e.message);
     btn.disabled = false;
-    alert("🚨 作成エラー: " + e.message);
+    btn.innerText = "🚀 新しい家族グループを作成する";
   }
 };
 
 window.joinFamilyGroup = async function() {
   const user = auth.currentUser;
-  const inviteCode = document.getElementById("joinInviteCodeInput").value.trim();
-  if(!user) return;
-  if(!inviteCode) {
-    alert("招待コードを入力してください");
+  if (!user) return;
+  const rawCode = document.getElementById("joinInviteCodeInput").value.trim();
+  if (!rawCode) {
+    alert("招待コードを入力してください。");
     return;
   }
+
   const btn = document.getElementById("btnJoinFamily");
-  btn.innerText = "合流中...";
   btn.disabled = true;
+  btn.innerText = "照合中...";
+
   try {
-    const q = query(collection(db, "families"), where("inviteCode", "==", inviteCode));
-    const qSnap = await getDocs(q);
-    if(qSnap.empty) {
-      alert("❌ 該当する招待コードの家族グループが見つかりませんでした。");
-      btn.innerText = "合流する";
+    const q = query(collection(db, "families"), where("inviteCode", "==", rawCode));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      alert("❌ 入力された招待コードが見つかりません。コードが正しいか確認してください。");
       btn.disabled = false;
+      btn.innerText = "合流する";
       return;
     }
-    const targetFamilyDoc = qSnap.docs[0];
+
+    const targetFamilyDoc = querySnapshot.docs[0];
     const targetFamilyId = targetFamilyDoc.id;
-    await setDoc(doc(db, "users", user.uid), { familyId: targetFamilyId, email: user.email || "", plan: "free", updatedAt: Date.now() });
-    const updateObj = {};
-    updateObj[`members.${user.uid}`] = true;
-    await updateDoc(doc(db, "families", targetFamilyId), updateObj);
-    alert("🎉 家族グループへの合流に成功しました！");
+
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email || "",
+      familyId: targetFamilyId,
+      plan: "free", 
+      createdAt: Date.now()
+    });
+
+    showMcToast("🤝 パートナーの家族グループへの合流に成功しました！");
+    window.location.reload();
+
   } catch(e) {
     alert("合流失敗: " + e.message);
-    btn.innerText = "合流する";
     btn.disabled = false;
+    btn.innerText = "合流する";
   }
 };
 
-function startRealtimeSync() {
-  if(!currentSession) return;
-  if (unsubscribeChildren) { unsubscribeChildren(); unsubscribeChildren = null; }
-  unsubscribeChildren = onSnapshot(collection(db, "families", currentSession.familyId, "children"), (snapshot) => {
-    localChildren = [];
-    snapshot.forEach(d => localChildren.push({ docId: d.id, ...d.data() }));
-    localChildren.sort((a,b) => a.createdAt - b.createdAt);
-    renderChildList();
-    populateChildSelect();
-    populateGalleryChildFilter();
+function startRealtimeSync(familyId) {
+  stopRealtimeSync();
+
+  unsubscribeChildren = onSnapshot(collection(db, "families", familyId, "children"), (snapshot) => {
+    localChildren = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateChildListUI();
+    updateChildFormSelectUI();
     renderGallery();
-    renderTimeline();
-  }, (err) => {
-    alert("子ども一覧の同期に失敗しました。");
   });
 
-  if (unsubscribeCategories) { unsubscribeCategories(); unsubscribeCategories = null; }
-  unsubscribeCategories = onSnapshot(collection(db, "families", currentSession.familyId, "categories"), (snapshot) => {
-    localCategories = [];
-    snapshot.forEach(d => localCategories.push({ docId: d.id, ...d.data() }));
-    localCategories.sort((a,b) => a.createdAt - b.createdAt);
-    populateCategorySelect();
-    renderCategoryList();
+  unsubscribeCategories = onSnapshot(collection(db, "families", familyId, "categories"), (snapshot) => {
+    localCategories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateCategoryListUI();
+    updateCategoryFormSelectUI();
     renderGallery();
-    renderTimeline();
-  }, (err) => {
-    alert("カテゴリ一覧の同期に失敗しました。");
   });
 
-  if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
-  unsubscribeWorks = onSnapshot(collection(db, "families", currentSession.familyId, "artworks"), (snapshot) => {
-    localWorks = [];
-    snapshot.forEach(d => localWorks.push({ docId: d.id, ...d.data() }));
-    cleanupOldTrash();
-    renderAll();
-  }, (err) => {
-    alert("カプセル一覧の同期に失敗しました。");
+  unsubscribeWorks = onSnapshot(collection(db, "families", familyId, "works"), (snapshot) => {
+    localWorks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderGallery();
+    renderTimeline();
+    renderTrash();
   });
 }
 
 function stopRealtimeSync() {
   if (unsubscribeChildren) { unsubscribeChildren(); unsubscribeChildren = null; }
-  if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
   if (unsubscribeCategories) { unsubscribeCategories(); unsubscribeCategories = null; }
+  if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
 }
 
-function renderAll(){
-  renderChildList();
-  populateChildSelect();
-  populateGalleryChildFilter();
-  populateCategorySelect();
-  renderCategoryList();
-  renderGallery();
-  renderTimeline();
-  renderTrash();
-}
-
-document.getElementById("gallerySortSelect").addEventListener("change", renderGallery);
-document.getElementById("galleryChildFilterSelect").addEventListener("change", renderGallery);
-document.getElementById("gallerySearchInput").addEventListener("input", renderGallery);
-
-window.setAgeStageFilter = function(stage) {
-  currentAgeStageFilter = stage;
-  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
-  document.getElementById(`ageTab-${stage}`).classList.add("active");
-  renderGallery();
-};
-
-window.goToTopPage = function() {
-  document.getElementById("gallerySearchInput").value = "";
-  document.getElementById("galleryChildFilterSelect").value = "all";
-  document.getElementById("gallerySortSelect").value = "createdDesc";
-  currentAgeStageFilter = "all";
-  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
-  if(document.getElementById("ageTab-all")) document.getElementById("ageTab-all").classList.add("active");
-  closeDrawer();
-  switchPage('gallery');
-};
-
-window.saveChild = async function(){
-  if(!currentSession) return;
-  const name = document.getElementById("childName").value.trim();
-  const editingId = document.getElementById("editingChildId").value;
-  if(!name){ alert("名前を入力してください"); return; }
-  if (!isPremiumUser && !editingId && localChildren.length >= 1) {
-    alert("⚠️ 無料プランではお子様は1名様までとなります。");
-    return;
-  }
-  const birthday = `${document.getElementById("childBirthYear").value}-${document.getElementById("childBirthMonth").value}-${document.getElementById("childBirthDay").value}`;
-  document.getElementById("childSubmitBtn").disabled = true;
-  try {
-    if(editingId) {
-      const target = localChildren.find(c => c.id === editingId);
-      if(target) await updateDoc(doc(db, "families", currentSession.familyId, "children", target.docId), { name, birthday });
-    } else {
-      await addDoc(collection(db, "families", currentSession.familyId, "children"), { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() });
-    }
-    cancelChildEdit();
-  } catch(e) {
-    alert("子どもの保存に失敗しました: " + e.message);
-  } finally {
-    document.getElementById("childSubmitBtn").disabled = false;
-  }
-};
-
-window.editChild = function(id) {
-  const c = localChildren.find(item => item.id === id);
-  if(!c) return;
-  document.getElementById("editingChildId").value = c.id;
-  document.getElementById("childName").value = c.name;
-  if(c.birthday && c.birthday.includes("-")) {
-    const parts = c.birthday.split("-");
-    document.getElementById("childBirthYear").value = parts[0];
-    document.getElementById("childBirthMonth").value = parts[1];
-    document.getElementById("childBirthDay").value = parts[2];
-  }
-  document.getElementById("childSubmitBtn").innerText = "更新する";
-  document.getElementById("childCancelBtn").classList.remove("hidden");
-};
-
-window.cancelChildEdit = function() {
-  document.getElementById("editingChildId").value = "";
-  document.getElementById("childName").value = "";
-  document.getElementById("childSubmitBtn").innerText = "追加する";
-  document.getElementById("childCancelBtn").classList.add("hidden");
-};
-
-window.deleteChild = async function(id, name) {
-  if(!confirm(`「${name}」ちゃんを一覧から削除しますか？\n（※既存のカプセルデータは消えませんが年齢が計算できなくなります）`)) return;
-  const target = localChildren.find(c => c.id === id);
-  if(target) await deleteDoc(doc(db, "families", currentSession.familyId, "children", target.docId));
-};
-
-function renderChildList() {
-  let html = "";
-  localChildren.forEach(c => {
-    html += `<div class="premium-card p-3 flex justify-between items-center bg-slate-50 border-slate-200 text-xs"><div class="font-semibold text-slate-700">👶 ${c.name} (${c.birthday || "生年月日なし"})</div><div class="flex gap-3"><button onclick="editChild('${c.id}')" class="text-slate-500 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`;
-  });
-  const listEl = document.getElementById("childList");
-  if(listEl) listEl.innerHTML = html;
-  const countLabel = document.getElementById("childLimitCountLabel");
-  if(countLabel) countLabel.innerText = `(${localChildren.length} / ${isPremiumUser ? "無制限" : "1人"})`;
-}
-
-function populateChildSelect() {
-  let html = `<option value="">指定なし</option>`;
-  localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
-  const sel = document.getElementById("inputWorkChild");
-  if(sel) sel.innerHTML = html;
-}
-
-function populateGalleryChildFilter() {
-  const sel = document.getElementById("galleryChildFilterSelect");
-  if(!sel) return;
-  const currentVal = sel.value;
-  let html = `<option value="all">すべての子ども</option><option value="favorite">⭐ お気に入り</option>`;
-  localChildren.forEach(c => { html += `<option value="${c.id}">👶 ${c.name}</option>`; });
-  sel.innerHTML = html;
-  sel.value = currentVal;
-  if(!sel.value) sel.value = "all";
-}
-
-window.saveCategory = async function() {
-  if(!currentSession) return;
-  const name = document.getElementById("categoryName").value.trim();
-  const editingId = document.getElementById("editingCategoryId").value;
-  if(!name){ alert("カテゴリ名を入力してください"); return; }
-  try {
-    if(editingId) {
-      const target = localCategories.find(c => c.id === editingId);
-      if(target) await updateDoc(doc(db, "families", currentSession.familyId, "categories", target.docId), { name });
-    } else {
-      await addDoc(collection(db, "families", currentSession.familyId, "categories"), { id: crypto.randomUUID(), name, createdAt: Date.now() });
-    }
-    cancelCategoryEdit();
-  } catch(e) {
-    alert("カテゴリの保存に失敗しました: " + e.message);
-  }
-};
-
-window.editCategory = function(id) {
-  const c = localCategories.find(item => item.id === id);
-  if(!c) return;
-  document.getElementById("editingCategoryId").value = c.id;
-  document.getElementById("categoryName").value = c.name;
-  document.getElementById("categorySubmitBtn").innerText = "更新する";
-  document.getElementById("categoryCancelBtn").classList.remove("hidden");
-};
-
-window.cancelCategoryEdit = function() {
-  document.getElementById("editingCategoryId").value = "";
-  document.getElementById("categoryName").value = "";
-  document.getElementById("categorySubmitBtn").innerText = "カテゴリを追加";
-  document.getElementById("categoryCancelBtn").classList.add("hidden");
-};
-
-window.deleteCategory = async function(id, name) {
-  if(!confirm(`カテゴリ「${name}」を削除しますか？\n（※既存のカプセルデータのカテゴリ表示が未分類になります）`)) return;
-  const target = localCategories.find(c => c.id === id);
-  if(target) await deleteDoc(doc(db, "families", currentSession.familyId, "categories", target.docId));
-};
-
-function populateCategorySelect() {
-  let html = "";
-  localCategories.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
-  const sel = document.getElementById("inputCategory");
-  if(sel) sel.innerHTML = html;
-}
-
-function renderCategoryList() {
-  let html = "";
-  localCategories.forEach(c => {
-    html += `<div class="premium-card p-3 flex justify-between items-center bg-slate-50 border-slate-200 text-xs"><div class="font-semibold text-slate-700">🏷️ ${c.name}</div><div class="flex gap-3"><button onclick="editCategory('${c.id}')" class="text-slate-500 font-medium">✏️ 編集</button><button onclick="deleteCategory('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`;
-  });
-  const listEl = document.getElementById("categoryList");
-  if(listEl) listEl.innerHTML = html || "<p class='text-xs text-slate-400'>カテゴリがありません</p>";
-}
-
-function processSelectedFiles(files) {
-  files.forEach(file => {
-    const reader = new FileReader();
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-    reader.onload = function(e) {
-      base64MediaArray.push({ type: isPdf ? "pdf" : "image", dataUrl: e.target.result });
-      renderMediaPreviews();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function renderMediaPreviews() {
-  let previewHtml = "";
-  base64MediaArray.forEach((item, index) => {
-    const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>`;
-    if(item.type === "pdf") {
-      previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
-    } else {
-      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
-    }
-  });
-  document.getElementById("mediaResultContainer").innerHTML = previewHtml;
-}
-
-window.removeSelectedMedia = function(index, event) {
-  if(event) event.stopPropagation();
-  base64MediaArray.splice(index, 1);
-  renderMediaPreviews();
-};
-
-document.getElementById("fileInput").addEventListener("change", function(e){ processSelectedFiles(Array.from(e.target.files)); e.target.value = ""; });
-document.getElementById("cameraInput").addEventListener("change", function(e){ processSelectedFiles(Array.from(e.target.files)); e.target.value = ""; });
-
-document.getElementById("workForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  if(!currentSession) return;
-  const editingId = document.getElementById("editingWorkId").value;
-  const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
-  if (!isPremiumUser && !editingId && activeWorksCount >= 10) {
-    alert("⚠️ 無料プラン上限に達しているため新規登録できません。");
-    return;
-  }
-  const title = document.getElementById("inputTitle").value.trim();
-  const category = document.getElementById("inputCategory").value;
-  const childId = document.getElementById("inputWorkChild").value;
-  const date = document.getElementById("inputDate").value;
-  const memo = document.getElementById("inputMemo").value.trim();
-  document.getElementById("workSubmitBtn").innerText = "送信中...";
-  document.getElementById("workSubmitBtn").disabled = true;
-  try {
-    if(editingId) {
-      const target = localWorks.find(w => w.id === editingId);
-      let mediaUrls = [];
-      for(let i=0; i<base64MediaArray.length; i++) {
-        const currentItem = base64MediaArray[i];
-        if (currentItem.dataUrl.startsWith("http")) {
-          mediaUrls.push({ type: currentItem.type, url: currentItem.dataUrl });
-        } else {
-          const sRef = ref(storage, `families/${currentSession.familyId}/artworks/${target.id}/${i}.${currentItem.type==="pdf"?"pdf":"jpg"}`);
-          await uploadString(sRef, currentItem.dataUrl, 'data_url');
-          const dUrl = await getDownloadURL(sRef);
-          mediaUrls.push({ type: currentItem.type, url: dUrl });
-        }
-      }
-      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls, updatedAt: Date.now() });
-    } else {
-      const newId = crypto.randomUUID();
-      let mediaUrls = [];
-      for(let i=0; i<base64MediaArray.length; i++) {
-        const currentItem = base64MediaArray[i];
-        const sRef = ref(storage, `families/${currentSession.familyId}/artworks/${newId}/${i}.${currentItem.type==="pdf"?"pdf":"jpg"}`);
-        await uploadString(sRef, currentItem.dataUrl, 'data_url');
-        const dUrl = await getDownloadURL(sRef);
-        mediaUrls.push({ type: currentItem.type, url: dUrl });
-      }
-      await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: newId, title, category, childId, date, memo, mediaUrls, isFavorite: false, isDeleted: false, createdAt: Date.now() });
-    }
-    closeDrawer('work');
-  } catch(err) {
-    alert("エラー: " + err.message);
-  } finally {
-    document.getElementById("workSubmitBtn").innerText = "保存する";
-    document.getElementById("workSubmitBtn").disabled = false;
-  }
-});
-
-window.changeCarouselIndex = function(id, direction, event, maxCount) {
-  if (event) event.stopPropagation();
-  if (!carouselIndices[id]) carouselIndices[id] = 0;
-  carouselIndices[id] = (carouselIndices[id] + direction + maxCount) % maxCount;
-  renderGallery();
-};
-
-// 🎮 マインクラフトアドオン（.mcaddon）強制キャッシュ破棄回避版ロジック (v67)
-window.exportCurrentWorkToMinecraft = async function() {
-  const currentId = document.getElementById("editingWorkId").value;
-  if (!currentId) {
-    showMcToast("❌ 作品データが特定できません");
-    return;
-  }
-  const w = localWorks.find(item => item.id === currentId);
-  if (!w) {
-    showMcToast("❌ 該当する作品データが見つかりません");
-    return;
-  }
-
-  let targetImageUrl = null;
-  if (base64MediaArray && base64MediaArray.length > 0) {
-    const firstImg = base64MediaArray.find(m => m.type !== "pdf");
-    if (firstImg) targetImageUrl = firstImg.dataUrl;
-  }
-  if (!targetImageUrl && w.mediaUrls && w.mediaUrls.length > 0) {
-    const firstUrlObj = w.mediaUrls.find(m => m.type !== "pdf");
-    if (firstUrlObj) targetImageUrl = firstUrlObj.url;
-  }
-
-  if (!targetImageUrl) {
-    showMcToast("❌ 有効な画像が登録されていないため、書き出せません");
-    return;
-  }
-
-  // ⚡【CORS強行打破対策】外部URLの場合に古い配信キャッシュをバイパスするクエリパラメータを注入
-  if (targetImageUrl.startsWith("http")) {
-    const separator = targetImageUrl.includes("?") ? "&" : "?";
-    targetImageUrl = `${targetImageUrl}${separator}_cb=${Date.now()}`;
-  }
-
-  const btn = document.getElementById("detailMcExportBtn");
-  if (btn) btn.disabled = true;
-  showMcToast("🎮 強制キャッシュバイパスで構築中...");
-
-  try {
-    const img = new Image();
-    img.crossOrigin = "anonymous"; 
-    
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = () => reject(new Error("画像のフェッチに失敗しました。CORSキャッシュが原因です。一度別画像をアップするか時間を置いてください。"));
-      img.src = targetImageUrl;
-    });
-
-    const maxDim = 512;
-    let wDim = img.width;
-    let hDim = img.height;
-    if (wDim > maxDim || hDim > maxDim) {
-      if (wDim > hDim) {
-        hDim = Math.round((hDim * maxDim) / wDim);
-        wDim = maxDim;
-      } else {
-        wDim = Math.round((wDim * maxDim) / hDim);
-        hDim = maxDim;
-      }
-    }
-
-    const canvas = document.createElement("canvas");
-    canvas.width = wDim;
-    canvas.height = hDim;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, wDim, hDim);
-
-    const pngBlob = await new Promise(r => canvas.toBlob(r, "image/png"));
-    const arrayBuffer = await pngBlob.arrayBuffer();
-    const pngBytes = new Uint8Array(arrayBuffer);
-
-    const title = w.title || "無題の作品";
-    const safeTitle = title.replace(/[^a-zA-Z0-9ぁ-んァ-ヶ一-龠ー]/g, "").substring(0, 16) || "artwork";
-    const uuidPack = crypto.randomUUID();
-    const uuidModule = crypto.randomUUID();
-
-    const manifest = {
-      format_version: 2,
-      header: {
-        description: `コドモカプセル: ${title} のカスタムブロック`,
-        name: `${title} Pack`,
-        uuid: uuidPack,
-        version: [1, 0, 0],
-        min_engine_version: [1, 20, 0]
-      },
-      modules: [
-        {
-          description: "ブロックテクスチャモジュール",
-          type: "resources",
-          uuid: uuidModule,
-          version: [1, 0, 0]
-        }
-      ]
-    };
-
-    const blocksJson = {
-      format_version: "1.20.0",
-      "kodomo:artwork_block": { sound: "stone" }
-    };
-
-    const blockDef = {
-      format_version: "1.20.0",
-      "minecraft:block": {
-        description: {
-          identifier: "kodomo:artwork_block",
-          menu_category: { category: "nature", group: "itemGroup.name.stone" }
-        },
-        components: {
-          "minecraft:light_emission": 2,
-          "minecraft:material_instances": {
-            "*": { texture: "artwork_tex", render_method: "opaque" }
-          }
-        }
-      }
-    };
-
-    const terrainTexture = {
-      resource_pack_name: "kodomo_art",
-      texture_name: "atlas.terrain",
-      texture_data: {
-        "artwork_tex": { textures: "textures/artwork" }
-      }
-    };
-
-    const zip = new JSZip();
-    zip.file("manifest.json",                 JSON.stringify(manifest, null, 2));
-    zip.file("blocks.json",                   JSON.stringify(blocksJson, null, 2));
-    zip.file("blocks/artwork_block.json",     JSON.stringify(blockDef, null, 2));
-    zip.file("textures/terrain_texture.json", JSON.stringify(terrainTexture, null, 2));
-    zip.file("textures/artwork.png",          pngBytes, { binary: true });
-
-    const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
-    const fileName = `${safeTitle}_artwork.mcaddon`;
-
-    const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 2000);
-
-    showMcToast(`✅ ${fileName} を書き出しました！`);
-
-  } catch (err) {
-    console.error(err);
-    showMcToast(`❌ エラー: ${err.message.split("\n")[0]}`);
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-};
-
-window.openEditWork = function(id) {
-  const w = localWorks.find(item => item.id === id);
-  if(w.isDeleted) return;
-  document.getElementById("editingWorkId").value = w.id;
-  document.getElementById("workFormTitle").innerText = "データの詳細・編集";
-  document.getElementById("inputTitle").value = w.title;
-  document.getElementById("inputCategory").value = w.category || "";
-  document.getElementById("inputWorkChild").value = w.childId || "";
-  document.getElementById("inputDate").value = w.date || "";
-  document.getElementById("inputMemo").value = w.memo || "";
-  base64MediaArray = [];
-  if(w.mediaUrls?.length) {
-    w.mediaUrls.forEach(m => {
-      base64MediaArray.push({ type: m.type, dataUrl: m.url || m });
-    });
-  }
-  renderMediaPreviews();
-  
-  const mcExportBtn = document.getElementById("detailMcExportBtn");
-  if(mcExportBtn) mcExportBtn.classList.remove("hidden");
-
-  openDrawer("work");
-};
-
-window.trashWork = async function(id, title) {
-  if(!confirm(`「${title}」をゴミ箱に移動しますか？`)) return;
-  const target = localWorks.find(w => w.id === id);
-  if(target) await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isDeleted: true, deletedAt: Date.now() });
-};
-
-window.restoreWork = async function(id) {
-  const target = localWorks.find(w => w.id === id);
-  if(target) await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isDeleted: false });
-};
-
-window.deleteWorkPermanently = async function(id, title, silent = false) {
-  if(!silent && !confirm(`「${title}」を完全に消去しますか？`)) return;
-  const target = localWorks.find(w => w.id === id);
-  if(!target) return;
-  try {
-    if(target.mediaUrls?.length) {
-      for(let i=0; i<target.mediaUrls.length; i++) {
-        try {
-          await deleteObject(ref(storage, `families/${currentSession.familyId}/artworks/${target.id}/${i}.${target.mediaUrls[i].type==="pdf"?"pdf":"jpg"}`));
-        } catch(se){}
-      }
-    }
-    await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
-  } catch(e) {
-    alert("完全消去に失敗しました: " + e.message);
-  }
-};
-
-window.toggleFavorite = async function(id, event) {
-  if(event) event.stopPropagation();
-  const target = localWorks.find(w => w.id === id);
-  if(target) {
-    const nextFav = !target.isFavorite;
-    await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isFavorite: nextFav });
-  }
-};
-
-async function cleanupOldTrash() {
-  if(!currentSession) return;
-  const now = Date.now();
-  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-  const trashItems = localWorks.filter(w => w.isDeleted && w.deletedAt);
-  for(const w of trashItems) {
-    if(now - w.deletedAt > thirtyDaysMs) {
-      await deleteWorkPermanently(w.id, w.title, true);
-    }
-  }
-}
-
-function getChildNameAndAge(childId, workDate) {
-  const c = localChildren.find(item => item.id === childId);
-  if(!c) return { name: "指定なし", ageInfo: "" };
-  const totalMonths = calculateAgeInMonths(c.birthday, workDate);
-  return { name: c.name, ageInfo: formatAgeString(totalMonths) };
-}
-
-function getCategoryBadgeHtml(catId) {
-  const c = localCategories.find(item => item.id === catId);
-  const catName = c ? c.name : "未分類";
-  if (catName === "プリント") return `<span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">プリント</span>`;
-  if (catName === "テスト") return `<span class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">テスト</span>`;
-  if (catName === "作品") return `<span class="text-[10px] bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full">作品</span>`;
-  return `<span class="text-[10px] bg-slate-50 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full">${catName}</span>`;
-}
-
-function renderGallery(){
-  let html = "";
-  const sortSelect = document.getElementById("gallerySortSelect");
-  const filterSelect = document.getElementById("galleryChildFilterSelect");
-  const searchInput = document.getElementById("gallerySearchInput");
-  if(!sortSelect || !filterSelect || !searchInput) return;
-  const sortValue = sortSelect.value;
-  const filterValue = filterSelect.value;
-  const searchQuery = searchInput.value.toLowerCase().trim();
-  let displayWorks = localWorks.filter(w => !w.isDeleted);
-  const totalActiveCount = displayWorks.length;
-  if (!isPremiumUser) {
-    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span></div>`;
-  }
-  if (filterValue === "favorite") {
-    displayWorks = displayWorks.filter(w => w.isFavorite === true);
-  } else if (filterValue !== "all") {
-    displayWorks = displayWorks.filter(w => w.childId === filterValue);
-  }
-  if (currentAgeStageFilter !== "all") {
-    displayWorks = displayWorks.filter(w => {
-      const c = localChildren.find(item => item.id === w.childId);
-      const stage = getAgeStage(c?.birthday, w.date);
-      return stage === currentAgeStageFilter;
-    });
-  }
-  if(searchQuery) {
-    displayWorks = displayWorks.filter(w => (w.title && w.title.toLowerCase().includes(searchQuery)) || (w.memo && w.memo.toLowerCase().includes(searchQuery)));
-  }
-  displayWorks.sort((a,b) => {
-    if(sortValue === "createdDesc") return b.createdAt - a.createdAt;
-    if(sortValue === "createdAsc") return a.createdAt - b.createdAt;
-    if(sortValue === "dateDesc") return new Date(b.date || 0) - new Date(a.date || 0);
-    if(sortValue === "dateAsc") return new Date(a.date || 0) - new Date(b.date || 0);
-    if(sortValue === "ageAsc" || sortValue === "ageDesc") {
-      const ca = localChildren.find(item => item.id === a.childId);
-      const cb = localChildren.find(item => item.id === b.childId);
-      const ma = calculateAgeInMonths(ca?.birthday, a.date) || 0;
-      const mb = calculateAgeInMonths(cb?.birthday, b.date) || 0;
-      return sortValue === "ageAsc" ? ma - mb : mb - ma;
-    }
-    return b.createdAt - a.createdAt;
-  });
-  if(displayWorks.length === 0) {
-    html += `<div class="col-span-2 md:col-span-4 py-16 text-center text-slate-400 text-sm font-medium">該当するカプセルはありません</div>`;
-    document.getElementById("galleryGrid").innerHTML = html;
-    return;
-  }
-  displayWorks.forEach(w => {
-    const { name: childName, ageInfo } = getChildNameAndAge(w.childId, w.date);
-    const badge = getCategoryBadgeHtml(w.category);
-    let mediaPreview = '';
-    const mediaCount = w.mediaUrls?.length || 0;
-    if (mediaCount > 0) {
-      if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
-      const currentIndex = carouselIndices[w.id] >= mediaCount ? 0 : carouselIndices[w.id];
-      const activeMedia = w.mediaUrls[currentIndex];
-      const sourceUrl = activeMedia.url || activeMedia.dataUrl || activeMedia;
-      const isPdf = activeMedia.type === "pdf" || (typeof sourceUrl === 'string' && sourceUrl.includes('pdf'));
-      if (isPdf) {
-        mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
-      } else {
-        mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openEditWork('${w.id}')"/>`;
-      }
-    } else {
-      mediaPreview = `<div class="w-full h-44 bg-slate-100 flex items-center justify-center text-xs text-slate-400 border-b">画像なし</div>`;
-    }
-    let carouselController = '';
-    if (mediaCount > 1) {
-      const idx = carouselIndices[w.id] || 0;
-      carouselController = `
-        <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-1 pointer-events-none">
-          <button onclick="changeCarouselIndex('${w.id}', -1, event, ${mediaCount})" class="w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs font-bold pointer-events-auto backdrop-blur-sm shadow hover:bg-black/70">‹</button>
-          <button onclick="changeCarouselIndex('${w.id}', 1, event, ${mediaCount})" class="w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs font-bold pointer-events-auto backdrop-blur-sm shadow hover:bg-black/70">›</button>
-        </div>
-        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-black/50 backdrop-blur-sm text-[10px] text-white font-bold rounded-full select-none">${idx + 1} / ${mediaCount}</div>
-      `;
-    }
-    html += `
-      <div class="premium-card overflow-hidden flex flex-col justify-between group">
-        <div class="relative w-full h-44 bg-slate-50 overflow-hidden">
-          ${mediaPreview}
-          ${carouselController}
-          <button onclick="toggleFavorite('${w.id}', event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-sm active:scale-90 transition-transform">${w.isFavorite ? '⭐' : '☆'}</button>
-        </div>
-        <div class="p-3 flex-1 flex flex-col justify-between gap-2 text-left">
-          <div>
-            <div class="flex items-center gap-1.5 mb-1 flex-wrap">${badge}</div>
-            <h4 class="font-bold text-sm text-slate-800 line-clamp-1 cursor-pointer" onclick="openEditWork('${w.id}')">${w.title}</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5 font-medium">${w.date || "日付未設定"}</p>
-            <p class="text-[11px] text-slate-500 font-bold mt-0.5 truncate">👶 ${childName}${ageInfo}</p>
-          </div>
-          <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs font-medium">
-            <button onclick="openEditWork('${w.id}')" class="text-slate-500 hover:text-slate-700">✏️ 詳細</button>
-            <button onclick="trashWork('${w.id}', '${w.title}')" class="text-rose-400 hover:text-rose-600">🗑️ 移動</button>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  document.getElementById("galleryGrid").innerHTML = html;
-}
-
-function renderTimeline(){
-  let html = "";
-  let activeWorks = localWorks.filter(w => !w.isDeleted);
-  activeWorks.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
-  if(activeWorks.length === 0) {
-    if(document.getElementById("recordsTimeline")) document.getElementById("recordsTimeline").innerHTML = "<p class='text-center py-12 text-slate-400 text-sm'>タイムラインデータはありません</p>";
-    return;
-  }
-  activeWorks.forEach(w => {
-    const { name: childName, ageInfo } = getChildNameAndAge(w.childId, w.date);
-    let thumbs = "";
-    if(w.mediaUrls?.length) {
-      w.mediaUrls.forEach(m => {
-        const src = m.url || m.dataUrl || m;
-        const isPdf = m.type === "pdf" || (typeof src === 'string' && src.includes('pdf'));
-        thumbs += isPdf ? `<div class="w-10 h-10 bg-slate-200 border rounded-md flex items-center justify-center text-sm">📄</div>` : `<img src="${src}" class="w-10 h-10 object-cover rounded-md border"/>`;
-      });
-    }
-    html += `
-      <div class="premium-card p-4 text-left">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="font-bold text-slate-800 flex items-center gap-1">${w.title}${w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : ''}</div>
-            <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo}</div>
-          </div>
-          <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
-        </div>
-        <div class="flex gap-1.5 mt-3 overflow-x-auto py-1">${thumbs}</div>
-        ${w.memo ? `<div class="text-xs text-slate-500 mt-2 bg-slate-50 p-2 rounded-xl border border-slate-100 whitespace-pre-wrap">${w.memo}</div>` : ''}
-      </div>
-    `;
-  });
-  if(document.getElementById("recordsTimeline")) document.getElementById("recordsTimeline").innerHTML = html;
-}
-
-function renderTrash() {
-  let html = "";
-  const trashWorks = localWorks.filter(w => w.isDeleted);
-  if(trashWorks.length === 0) {
-    if(document.getElementById("trashGrid")) document.getElementById("trashGrid").innerHTML = "<div class='col-span-2 md:col-span-4 py-12 text-center text-slate-400 text-sm font-medium'>ゴミ箱は空っぽです</div>";
-    return;
-  }
-  trashWorks.forEach(w => {
-    let mediaSrc = 'https://via.placeholder.com/150?text=No+Image';
-    if(w.mediaUrls?.length) {
-      const activeMedia = w.mediaUrls[0];
-      mediaSrc = activeMedia.url || activeMedia.dataUrl || activeMedia;
-    }
-    const isPdf = mediaSrc.includes("pdf") || (w.mediaUrls && w.mediaUrls[0]?.type === "pdf");
-    const previewArea = isPdf ? `<div class="w-full h-32 bg-slate-100 flex items-center justify-center text-3xl border-b">📄</div>` : `<img src="${mediaSrc}" class="w-full h-32 object-cover border-b"/>`;
-    html += `
-      <div class="premium-card overflow-hidden flex flex-col justify-between text-left">
-        <div class="relative bg-slate-50">${previewArea}</div>
-        <div class="p-3">
-          <h4 class="font-bold text-xs text-slate-700 truncate">${w.title}</h4>
-          <div class="flex justify-between items-center gap-1 mt-3 pt-2 border-t border-slate-100 text-[11px] font-semibold">
-            <button onclick="restoreWork('${w.id}')" class="text-emerald-500">🔄 復元</button>
-            <button onclick="deleteWorkPermanently('${w.id}','${w.title}')" class="text-rose-500">❌ 消去</button>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  if(document.getElementById("trashGrid")) document.getElementById("trashGrid").innerHTML = html;
-}
-
-window.openDrawer = function(t){
-  if(t === 'work' && !document.getElementById("editingWorkId").value) {
-    document.getElementById("workFormTitle").innerText = "カプセル登録";
+window.openDrawer = function(t, id = null){
+  if (t === 'work') {
+    const form = document.getElementById("workForm");
+    form.reset();
     document.getElementById("editingWorkId").value = "";
-    document.getElementById("workForm").reset();
+    document.getElementById("workFormTitle").innerText = "カプセル登録";
     document.getElementById("mediaResultContainer").innerHTML = "";
+    document.getElementById("fileInputContainer").classList.remove("hidden");
+    document.getElementById("workSubmitBtn").innerText = "保存する";
+    
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; 
     base64MediaArray = [];
     
@@ -1537,15 +861,860 @@ window.closeDrawer = function(t){
   else { document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); }
 };
 
-window.switchPage = function(p){
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+window.switchPage = function(p){\n  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   if(p === 'gallery'){ document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
   else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderTimeline(); } 
   else if (p === 'trash') { document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 
-document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+document.getElementById("gallerySearchInput").addEventListener("input", () => renderGallery());
+document.getElementById("galleryChildFilterSelect").addEventListener("change", () => renderGallery());
+document.getElementById("gallerySortSelect").addEventListener("change", () => renderGallery());
+
+window.setAgeStageFilter = function(stage) {
+  currentAgeStageFilter = stage;
+  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
+  const activeBtn = document.getElementById(`ageTab-${stage}`);
+  if(activeBtn) activeBtn.classList.add("active");
+  renderGallery();
+};
+
+window.goToTopPage = function() {
+  switchPage('gallery');
+  document.getElementById("gallerySearchInput").value = "";
+  document.getElementById("galleryChildFilterSelect").value = "all";
+  document.getElementById("gallerySortSelect").value = "createdDesc";
+  setAgeStageFilter('all');
+  const menuArea = document.getElementById("searchMenuArea");
+  if(menuArea) menuArea.classList.add("collapsed");
+  const toggleBtn = document.getElementById("menuToggleBtn");
+  if(toggleBtn) toggleBtn.classList.remove("bg-[#ff6b6b]", "text-white");
+};
+
+function getFilteredAndSortedWorks() {
+  const searchWord = document.getElementById("gallerySearchInput").value.toLowerCase().trim();
+  const childFilter = document.getElementById("galleryChildFilterSelect").value;
+  const sortVal = document.getElementById("gallerySortSelect").value;
+
+  let result = localWorks.filter(w => !w.isDeleted);
+
+  if (searchWord) {
+    result = result.filter(w => {
+      const tMatch = w.title && w.title.toLowerCase().includes(searchWord);
+      const mMatch = w.memo && w.memo.toLowerCase().includes(searchWord);
+      return tMatch || mMatch;
+    });
+  }
+
+  if (childFilter === "favorite") {
+    result = result.filter(w => w.isFavorite);
+  } else if (childFilter !== "all") {
+    result = result.filter(w => w.childId === childFilter);
+  }
+
+  if (currentAgeStageFilter !== "all") {
+    result = result.filter(w => {
+      const child = localChildren.find(c => c.id === w.childId);
+      const bDate = child ? `${child.birthYear}-${child.birthMonth}-${child.birthDay}` : null;
+      const stage = getAgeStage(bDate, w.date);
+      return stage === currentAgeStageFilter;
+    });
+  }
+
+  result.sort((a, b) => {
+    if (sortVal === "createdDesc") return (b.createdAt || 0) - (a.createdAt || 0);
+    if (sortVal === "createdAsc") return (a.createdAt || 0) - (b.createdAt || 0);
+    if (sortVal === "dateDesc") return new Date(b.date || 0) - new Date(a.date || 0);
+    if (sortVal === "dateAsc") return new Date(a.date || 0) - new Date(b.date || 0);
+    
+    if (sortVal === "ageAsc" || sortVal === "ageDesc") {
+      const childA = localChildren.find(c => c.id === a.childId);
+      const bDateA = childA ? `${childA.birthYear}-${childA.birthMonth}-${childA.birthDay}` : null;
+      const monthsA = calculateAgeInMonths(bDateA, a.date) ?? -1;
+
+      const childB = localChildren.find(c => c.id === b.childId);
+      const bDateB = childB ? `${childB.birthYear}-${childB.birthMonth}-${childB.birthDay}` : null;
+      const monthsB = calculateAgeInMonths(bDateB, b.date) ?? -1;
+
+      return sortVal === "ageAsc" ? monthsA - monthsB : monthsB - monthsA;
+    }
+    return 0;
+  });
+
+  return result;
+}
+
+function renderGallery() {
+  const grid = document.getElementById("galleryGrid");
+  if(!grid) return;
+  const works = getFilteredAndSortedWorks();
+
+  if(works.length === 0) {
+    grid.innerHTML = `<div class="col-span-2 md:col-span-4 py-20 text-center text-slate-400 text-xs font-medium">該当するカプセルが見つかりません。</div>`;
+    return;
+  }
+
+  grid.innerHTML = works.map(w => {
+    const child = localChildren.find(c => c.id === w.childId);
+    const cat = localCategories.find(c => c.id === w.categoryId);
+    
+    const bDate = child ? `${child.birthYear}-${child.birthMonth}-${child.birthDay}` : null;
+    const ageString = formatAgeString(calculateAgeInMonths(bDate, w.date));
+    const childLabel = child ? `${child.name}${ageString}` : "未分類";
+    
+    const mediaCount = (w.mediaUrls && w.mediaUrls.length) || 0;
+    let coverHtml = `<div class="w-full aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300 text-2xl">📦</div>`;
+    
+    if (mediaCount > 0) {
+      const firstUrl = w.mediaUrls[0];
+      if (firstUrl.toLowerCase().includes(".pdf") || firstUrl.startsWith("data:application/pdf")) {
+        coverHtml = `<div class="w-full aspect-[4/3] bg-rose-50 flex flex-col items-center justify-center border-b"><span class="text-3xl">📄</span><span class="text-[9px] text-rose-500 font-bold mt-1 font-mono">PDF DOCUMENT</span></div>`;
+      } else {
+        coverHtml = `<img src="${firstUrl}" class="w-full aspect-[4/3] object-cover border-b" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'75\'><rect width=\'100\' height=\'75\' fill=\'%23f1f5f9\'/><text x=\'50\' y=\'40\' font-size=\'12\' fill=\'%23cbd5e1\' text-anchor=\'middle\'>Image Error</text></svg>';" />`;
+      }
+    }
+
+    const badgeStyle = child ? `background-color: #ff6b6b; color: white;` : `background-color: #E2E8F0; color: #64748B;`;
+
+    return `
+      <div class="premium-card overflow-hidden flex flex-col justify-between group cursor-pointer active:scale-[0.99] transition" onclick="openWorkDetail('${w.id}')">
+        <div>
+          <div class="relative">
+            ${coverHtml}
+            ${mediaCount > 1 ? `<span class="absolute top-2 right-2 bg-black/60 text-white font-mono font-bold text-[10px] px-1.5 py-0.5 rounded-md flex items-center gap-1">📋 ${mediaCount}</span>` : ''}
+            ${w.isFavorite ? `<span class="absolute top-2 left-2 text-base filter drop-shadow">⭐</span>` : ''}
+          </div>
+          <div class="p-3 text-left">
+            <div class="flex flex-wrap gap-1 mb-1.5">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full truncate max-w-[110px]" style="${badgeStyle}">${childLabel}</span>
+              ${cat ? `<span class="text-[10px] bg-slate-100 text-slate-500 font-medium px-1.5 py-0.5 rounded-full truncate max-w-[100px]">${cat.name}</span>` : ''}
+            </div>
+            <h4 class="text-sm font-bold text-slate-800 line-clamp-2 leading-snug mb-1">${escapeHtml(w.title || "無題")}</h4>
+          </div>
+        </div>
+        <div class="px-3 pb-3 pt-0 flex items-center justify-between text-[11px] text-slate-400 font-medium font-mono">
+          <span>${w.date || ""}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderTimeline() {
+  const container = document.getElementById("recordsTimeline");
+  if(!container) return;
+  const works = localWorks.filter(w => !w.isDeleted);
+
+  works.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+  if(works.length === 0) {
+    container.innerHTML = `<div class="py-16 text-center text-slate-400 text-xs">タイムラインに表示するカプセルがありません。</div>`;
+    return;
+  }
+
+  container.innerHTML = works.map(w => {
+    const child = localChildren.find(c => c.id === w.childId);
+    const cat = localCategories.find(c => c.id === w.categoryId);
+    const bDate = child ? `${child.birthYear}-${child.birthMonth}-${child.birthDay}` : null;
+    const ageString = formatAgeString(calculateAgeInMonths(bDate, w.date));
+
+    let imgHtml = "";
+    if(w.mediaUrls && w.mediaUrls.length > 0) {
+      const u = w.mediaUrls[0];
+      if (u.toLowerCase().includes(".pdf") || u.startsWith("data:application/pdf")) {
+        imgHtml = `<div class="w-14 h-14 shrink-0 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-xl">📄</div>`;
+      } else {
+        imgHtml = `<img src="${u}" class="w-14 h-14 shrink-0 object-cover rounded-xl border bg-slate-50" loading="lazy" />`;
+      }
+    } else {
+      imgHtml = `<div class="w-14 h-14 shrink-0 rounded-xl bg-slate-100 flex items-center justify-center text-xl text-slate-300">📦</div>`;
+    }
+
+    return `
+      <div class="flex gap-3 items-start bg-white p-3.5 rounded-2xl border border-[#E7E1D7] cursor-pointer active:scale-[0.99] transition text-left" onclick="openWorkDetail('${w.id}')">
+        ${imgHtml}
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2 mb-0.5">
+            <span class="text-xs font-bold font-mono text-slate-400">${w.date || ""}</span>
+            <span class="text-[10px] font-bold text-[#ff6b6b] truncate shrink-0">${child ? child.name + ageString : "未分類"}</span>
+          </div>
+          <h4 class="text-sm font-bold text-slate-800 truncate mb-1">${escapeHtml(w.title || "無題")}</h4>
+          <p class="text-xs text-slate-500 line-clamp-1">${escapeHtml(w.memo || "")}</p>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderTrash() {
+  const grid = document.getElementById("trashGrid");
+  if(!grid) return;
+  const works = localWorks.filter(w => w.isDeleted);
+
+  if(works.length === 0) {
+    grid.innerHTML = `<div class="col-span-2 md:col-span-4 py-16 text-center text-slate-400 text-xs">ゴミ箱は空っぽです。</div>`;
+    return;
+  }
+
+  grid.innerHTML = works.map(w => {
+    let coverHtml = `<div class="w-full aspect-[4/3] bg-slate-100 flex items-center justify-center text-slate-300 text-xl">📦</div>`;
+    if(w.mediaUrls && w.mediaUrls.length > 0) {
+      const first = w.mediaUrls[0];
+      if (first.toLowerCase().includes(".pdf") || first.startsWith("data:application/pdf")) {
+        coverHtml = `<div class="w-full aspect-[4/3] bg-rose-50 border-b flex items-center justify-center text-2xl">📄</div>`;
+      } else {
+        coverHtml = `<img src="${first}" class="w-full aspect-[4/3] object-cover border-b" opacity="0.6" />`;
+      }
+    }
+    return `
+      <div class="premium-card overflow-hidden flex flex-col justify-between opacity-75">
+        <div>
+          ${coverHtml}
+          <div class="p-2 text-left">
+            <h4 class="text-xs font-bold text-slate-700 truncate">${escapeHtml(w.title || "無題")}</h4>
+          </div>
+        </div>
+        <div class="p-2 pt-0 grid grid-cols-2 gap-1">
+          <button onclick="restoreWork('${w.id}')" class="py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-[10px] hover:bg-slate-200 transition">復元</button>
+          <button onclick="permanentlyDeleteWork('${w.id}')" class="py-1 rounded-lg bg-red-50 text-red-600 font-bold text-[10px] hover:bg-red-100 transition">完全消去</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+window.openWorkDetail = async function(id) {
+  const w = localWorks.find(item => item.id === id);
+  if(!w) return;
+
+  openDrawer('work');
+  document.getElementById("workFormTitle").innerText = "カプセル詳細・編集";
+  document.getElementById("editingWorkId").value = w.id;
+  document.getElementById("inputTitle").value = w.title || "";
+  document.getElementById("inputCategory").value = w.categoryId || "";
+  document.getElementById("inputWorkChild").value = w.childId || "";
+  document.getElementById("inputDate").value = w.date || "";
+  document.getElementById("inputMemo").value = w.memo || "";
+  
+  document.getElementById("fileInputContainer").classList.add("hidden");
+  document.getElementById("workSubmitBtn").innerText = "変更を保存する";
+
+  const mcExportBtn = document.getElementById("detailMcExportBtn");
+  if(mcExportBtn) mcExportBtn.classList.remove("hidden");
+
+  const container = document.getElementById("mediaResultContainer");
+  container.innerHTML = "";
+  base64MediaArray = w.mediaUrls || [];
+  carouselIndices[w.id] = 0;
+
+  renderDetailViewerCarousel(w);
+};
+
+function renderDetailViewerCarousel(w) {
+  const container = document.getElementById("mediaResultContainer");
+  if (!container) return;
+
+  if (!w.mediaUrls || w.mediaUrls.length === 0) {
+    container.className = "hidden";
+    return;
+  }
+  container.className = "block col-span-1 sm:col-span-1 space-y-3 mt-2";
+
+  const idx = carouselIndices[w.id] || 0;
+  const currentUrl = w.mediaUrls[idx];
+  const total = w.mediaUrls.length;
+
+  let displayItemHtml = "";
+  if (currentUrl.toLowerCase().includes(".pdf") || currentUrl.startsWith("data:application/pdf")) {
+    displayItemHtml = `
+      <div class="w-full aspect-[4/3] bg-rose-50 border rounded-2xl flex flex-col items-center justify-center relative shadow-inner">
+        <span class="text-4xl">📄</span>
+        <span class="text-[10px] text-rose-500 font-bold mt-1 font-mono">PDF DOCUMENT</span>
+        <a href="${currentUrl}" target="_blank" class="absolute bottom-3 px-3 py-1 bg-rose-600 text-white font-bold rounded-lg text-[10px] shadow hover:bg-rose-700 transition flex items-center gap-1">✨ 別タブで開いて確認</a>
+      </div>
+    `;
+  } else {
+    displayItemHtml = `
+      <div class="relative w-full aspect-[4/3] bg-slate-50 border rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+        <img src="${currentUrl}" class="max-w-full max-h-full object-contain" />
+        <a href="${currentUrl}" target="_blank" class="absolute bottom-2 right-2 bg-black/50 text-white p-1 rounded-md text-xs font-bold hover:bg-black/70 transition" title="大きな画像で見る">🔍</a>
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    <div class="space-y-2">
+      ${displayItemHtml}
+      
+      ${total > 1 ? `
+        <div class="flex items-center justify-between bg-slate-100 p-2 rounded-xl border">
+          <button type="button" onclick="switchCarouselIndex('${w.id}', -1)" class="w-8 h-8 rounded-lg bg-white border font-bold text-xs shadow-sm active:scale-90 transition">◀</button>
+          <span class="text-xs font-mono font-bold text-slate-600">${idx + 1} / ${total} 枚目</span>
+          <button type="button" onclick="switchCarouselIndex('${w.id}', 1)" class="w-8 h-8 rounded-lg bg-white border font-bold text-xs shadow-sm active:scale-90 transition">▶</button>
+        </div>
+      ` : ''}
+
+      <div class="pt-2 border-t border-dashed flex justify-between gap-2">
+        <button type="button" onclick="toggleWorkFavorite('${w.id}')" class="flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1 ${w.isFavorite ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-white text-slate-500 hover:bg-slate-50'}">
+          <span>${w.isFavorite ? '⭐ お気に入り中' : '☆ お気に入りに入れる'}</span>
+        </button>
+        <button type="button" onclick="trashWork('${w.id}')" class="py-2 px-3 rounded-xl bg-red-50 text-red-600 border border-red-100 text-xs font-bold hover:bg-red-100 transition shrink-0">🗑️ ゴミ箱へ</button>
+      </div>
+    </div>
+  `;
+}
+
+window.switchCarouselIndex = function(workId, offset) {
+  const w = localWorks.find(item => item.id === workId);
+  if(!w || !w.mediaUrls) return;
+  
+  let currentIdx = carouselIndices[workId] || 0;
+  currentIdx += offset;
+  if (currentIdx < 0) currentIdx = w.mediaUrls.length - 1;
+  if (currentIdx >= w.mediaUrls.length) currentIdx = 0;
+
+  carouselIndices[workId] = currentIdx;
+  renderDetailViewerCarousel(w);
+};
+
+window.toggleWorkFavorite = async function(id) {
+  if(!currentSession) return;
+  const w = localWorks.find(item => item.id === id);
+  if(!w) return;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "works", id), {
+      isFavorite: !w.isFavorite,
+      updatedAt: Date.now()
+    });
+    w.isFavorite = !w.isFavorite;
+    renderDetailViewerCarousel(w);
+    showMcToast(w.isFavorite ? "⭐ お気に入りに追加しました" : "☆ お気に入りを解除しました");
+  } catch(e) {
+    alert("エラー: " + e.message);
+  }
+};
+
+window.trashWork = async function(id) {
+  if(!currentSession) return;
+  if(!confirm("このカプセルをゴミ箱に移動しますか？")) return;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "works", id), {
+      isDeleted: true,
+      deletedAt: Date.now()
+    });
+    closeDrawer('work');
+    showMcToast("🗑️ カプセルをゴミ箱へ移動しました");
+  } catch(e) {
+    alert("エラー: " + e.message);
+  }
+};
+
+window.restoreWork = async function(id) {
+  if(!currentSession) return;
+  try {
+    await updateDoc(doc(db, "families", currentSession.familyId, "works", id), {
+      isDeleted: false,
+      deletedAt: null
+    });
+    showMcToast("✨ カプセルを通常ギャラリーに復元しました");
+  } catch(e) {
+    alert("復元失敗: " + e.message);
+  }
+};
+
+window.permanentlyDeleteWork = async function(id) {
+  if(!currentSession) return;
+  if(!confirm("⚠️ 本当にこのデータを完全に消去しますか？\nこの操作は取り消せません。")) return;
+  try {
+    await deleteDoc(doc(db, "families", currentSession.familyId, "works", id));
+    showMcToast("💥 データを完全に削除しました");
+  } catch(e) {
+    alert("削除失敗: " + e.message);
+  }
+};
+
+function handleFileInputChange(e) {
+  const files = e.target.files;
+  if(!files || files.length === 0) return;
+  processSelectedFiles(files);
+}
+document.getElementById("fileInput").addEventListener("change", handleFileInputChange);
+document.getElementById("cameraInput").addEventListener("change", handleFileInputChange);
+
+function processSelectedFiles(files) {
+  const container = document.getElementById("mediaResultContainer");
+  const submitBtn = document.getElementById("workSubmitBtn");
+  
+  submitBtn.disabled = true;
+  submitBtn.innerText = "メディア処理中...";
+
+  let loadedCount = 0;
+  const targetCount = files.length;
+
+  for (let i = 0; i < targetCount; i++) {
+    const file = files[i];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const base64Str = evt.target.result;
+      base64MediaArray.push(base64Str);
+      loadedCount++;
+      if (loadedCount === targetCount) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "保存する";
+        renderFormMediaPreviews();
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function renderFormMediaPreviews() {
+  const container = document.getElementById("mediaResultContainer");
+  if(!container) return;
+  container.className = "grid grid-cols-3 gap-2 mt-4";
+
+  if (base64MediaArray.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = base64MediaArray.map((dataUrl, idx) => {
+    let previewHtml = "";
+    if (dataUrl.toLowerCase().includes("application/pdf") || dataUrl.startsWith("data:application/pdf")) {
+      previewHtml = `<div class="w-full aspect-square rounded-xl bg-rose-100 border border-rose-200 flex flex-col items-center justify-center font-bold text-rose-700 text-xs"><span>📄</span><span class="text-[8px] mt-0.5">PDF</span></div>`;
+    } else {
+      previewHtml = `<img src="${dataUrl}" class="w-full aspect-square object-cover rounded-xl border bg-slate-50" />`;
+    }
+    return `
+      <div class="relative group">
+        ${previewHtml}
+        <button type="button" onclick="removeFormMediaPreview(${idx})" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-800/80 hover:bg-slate-950 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow">✕</button>
+      </div>
+    `;
+  }).join("");
+}
+
+window.removeFormMediaPreview = function(idx) {
+  base64MediaArray.splice(idx, 1);
+  renderFormMediaPreviews();
+};
+
+document.getElementById("workForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if(!currentSession) return;
+
+  const submitBtn = document.getElementById("workSubmitBtn");
+  submitBtn.disabled = true;
+  submitBtn.innerText = "クラウドへ保存中...";
+
+  const editingId = document.getElementById("editingWorkId").value;
+  const title = document.getElementById("inputTitle").value.trim();
+  const categoryId = document.getElementById("inputCategory").value;
+  const childId = document.getElementById("inputWorkChild").value;
+  const date = document.getElementById("inputDate").value;
+  const memo = document.getElementById("inputMemo").value.trim();
+
+  try {
+    let finalUrls = [];
+    if (base64MediaArray.length > 0) {
+      for (let i = 0; i < base64MediaArray.length; i++) {
+        const item = base64MediaArray[i];
+        if (item.startsWith("http")) {
+          finalUrls.push(item);
+        } else {
+          const isPdf = item.startsWith("data:application/pdf");
+          const ext = isPdf ? "pdf" : "jpg";
+          const storagePath = `families/${currentSession.familyId}/works/${Date.now()}_${i}.${ext}`;
+          const storageRef = ref(storage, storagePath);
+          await uploadString(storageRef, item, "data_url");
+          const dUrl = await getDownloadURL(storageRef);
+          finalUrls.push(dUrl);
+        }
+      }
+    }
+
+    if (editingId) {
+      await updateDoc(doc(db, "families", currentSession.familyId, "works", editingId), {
+        title, categoryId, childId, date, memo,
+        mediaUrls: finalUrls,
+        updatedAt: Date.now()
+      });
+      showMcToast("✨ カプセルの変更内容を保存しました！");
+    } else {
+      await addDoc(collection(db, "families", currentSession.familyId, "works"), {
+        title, categoryId, childId, date, memo,
+        mediaUrls: finalUrls,
+        isFavorite: false,
+        isDeleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
+      showMcToast("🎉 新しい思い出カプセルを密封保存しました！");
+    }
+
+    closeDrawer('work');
+
+  } catch(err) {
+    alert("保存に失敗しました: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+window.saveChild = async function() {
+  if(!currentSession) return;
+  const name = document.getElementById("childName").value.trim();
+  const year = document.getElementById("childBirthYear").value;
+  const month = document.getElementById("childBirthMonth").value;
+  const day = document.getElementById("childBirthDay").value;
+  const editingId = document.getElementById("editingChildId").value;
+
+  if(!name) { alert("お名前を入力してください。"); return; }
+
+  if (!editingId && !isPremiumUser && localChildren.length >= 1) {
+    alert("⚠️ 無料プランでお子様を追加登録できるのは1名までです。2人以上登録する場合はプレミアムプランへのアップグレードをご検討ください。");
+    return;
+  }
+
+  const btn = document.getElementById("childSubmitBtn");
+  btn.disabled = true;
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, "families", currentSession.familyId, "children", editingId), {
+        name, birthYear: year, birthMonth: month, birthDay: day, updatedAt: Date.now()
+      });
+      showMcToast("👶 お子様の情報を更新しました");
+    } else {
+      await addDoc(collection(db, "families", currentSession.familyId, "children"), {
+        name, birthYear: year, birthMonth: month, birthDay: day, createdAt: Date.now(), updatedAt: Date.now()
+      });
+      showMcToast("👶 新しいお子様を登録しました");
+    }
+    cancelChildEdit();
+  } catch(e) {
+    alert("子どもの保存に失敗: " + e.message);
+    btn.disabled = false;
+  }
+};
+
+window.editChild = function(id) {
+  const c = localChildren.find(item => item.id === id);
+  if(!c) return;
+  document.getElementById("editingChildId").value = c.id;
+  document.getElementById("childName").value = c.name || "";
+  document.getElementById("childBirthYear").value = c.birthYear || "";
+  document.getElementById("childBirthMonth").value = c.birthMonth || "";
+  document.getElementById("childBirthDay").value = c.birthDay || "";
+
+  document.getElementById("childSubmitBtn").innerText = "変更を反映する";
+  document.getElementById("childCancelBtn").classList.remove("hidden");
+};
+
+window.clearChildForm = function(){
+  document.getElementById("childId").value = "";
+  document.getElementById("childName").value = "";
+  document.getElementById("childBirthday").value = "";
+  document.getElementById("childColor").value = "#FF6B6B";
+  const delBtn = document.getElementById("deleteChildBtn");
+  if(delBtn) delBtn.classList.add("hidden");
+};
+
+window.cancelChildEdit = function(){
+  document.getElementById("editingChildId").value = "";
+  document.getElementById("childName").value = "";
+  document.getElementById("childSubmitBtn").innerText = "追加する";
+  document.getElementById("childSubmitBtn").disabled = false;
+  document.getElementById("childCancelBtn").classList.add("hidden");
+};
+
+window.deleteChild = async function(id) {
+  if(!currentSession) return;
+  if(!confirm("このお子様を削除しますか？\n（作品データ自体は削除されず未分類になります）")) return;
+  try {
+    await deleteDoc(doc(db, "families", currentSession.familyId, "children", id));
+    showMcToast("お子様を削除しました");
+    cancelChildEdit();
+  } catch(e) {
+    alert("削除失敗: " + e.message);
+  }
+};
+
+function updateChildListUI() {
+  const container = document.getElementById("childList");
+  const countLabel = document.getElementById("childLimitCountLabel");
+  if(!container) return;
+
+  if (countLabel) {
+    countLabel.innerText = `(${localChildren.length} / ${isPremiumUser ? '無制限' : '1人'})`;
+  }
+
+  if (localChildren.length === 0) {
+    container.innerHTML = `<div class="text-[11px] text-slate-400 py-2">お子様が未登録です。上のフォームから登録してください。</div>`;
+    return;
+  }
+
+  container.innerHTML = localChildren.map(c => `
+    <div class="flex items-center justify-between p-2.5 bg-slate-50 border rounded-xl text-xs">
+      <div class="text-left">
+        <span class="font-bold text-slate-800 text-sm">${escapeHtml(c.name)}</span>
+        <span class="text-slate-400 font-mono ml-2">(${c.birthYear}/${c.birthMonth}/${c.birthDay}生)</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="editChild('${c.id}')" class="text-indigo-600 font-medium hover:underline">編集</button>
+        <button onclick="deleteChild('${c.id}')" class="text-red-500 font-medium hover:underline">削除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateChildFormSelectUI() {
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  const formSelect = document.getElementById("inputWorkChild");
+
+  const defaultFilterOpts = `
+    <option value="all">すべての子ども</option>
+    <option value="favorite">⭐ お気に入り</option>
+  `;
+  const filterListOpts = localChildren.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  if(filterSelect) filterSelect.innerHTML = defaultFilterOpts + filterListOpts;
+
+  const defaultFormOpts = `<option value="">選択しない (未分類)</option>`;
+  const formListOpts = localChildren.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  if(formSelect) formSelect.innerHTML = defaultFormOpts + formListOpts;
+}
+
+window.saveCategory = async function() {
+  if(!currentSession) return;
+  const name = document.getElementById("categoryName").value.trim();
+  const editingId = document.getElementById("editingCategoryId").value;
+
+  if(!name) { alert("カテゴリ名を入力してください。"); return; }
+  const btn = document.getElementById("categorySubmitBtn");
+  btn.disabled = true;
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, "families", currentSession.familyId, "categories", editingId), { name, updatedAt: Date.now() });
+      showMcToast("🏷️ カテゴリ名を更新しました");
+    } else {
+      await addDoc(collection(db, "families", currentSession.familyId, "categories"), { name, createdAt: Date.now() });
+      showMcToast("🏷️ 新しいカテゴリを作成しました");
+    }
+    cancelCategoryEdit();
+  } catch(e) {
+    alert("カテゴリの保存に失敗: " + e.message);
+    btn.disabled = false;
+  }
+};
+
+window.editCategory = function(id) {
+  const cat = localCategories.find(item => item.id === id);
+  if(!cat) return;
+  document.getElementById("editingCategoryId").value = cat.id;
+  document.getElementById("categoryName").value = cat.name || "";
+  document.getElementById("categorySubmitBtn").innerText = "カテゴリ名を変更";
+  document.getElementById("categoryCancelBtn").classList.remove("hidden");
+};
+
+window.cancelCategoryEdit = function() {
+  document.getElementById("editingCategoryId").value = "";
+  document.getElementById("categoryName").value = "";
+  document.getElementById("categorySubmitBtn").innerText = "カテゴリを追加";
+  document.getElementById("categorySubmitBtn").disabled = false;
+  document.getElementById("categoryCancelBtn").classList.add("hidden");
+};
+
+window.deleteCategory = async function(id) {
+  if(!currentSession) return;
+  if(!confirm("このカテゴリを削除しますか？\n（カプセル内のデータは削除されず未分類になります）")) return;
+  try {
+    await deleteDoc(doc(db, "families", currentSession.familyId, "categories", id));
+    showMcToast("カテゴリを削除しました");
+    cancelCategoryEdit();
+  } catch(e) {
+    alert("削除に失敗: " + e.message);
+  }
+};
+
+function updateCategoryListUI() {
+  const container = document.getElementById("categoryList");
+  if(!container) return;
+
+  if (localCategories.length === 0) {
+    container.innerHTML = `<div class="text-[11px] text-slate-400 py-2">カスタムカテゴリはありません。</div>`;
+    return;
+  }
+
+  container.innerHTML = localCategories.map(c => `
+    <div class="flex items-center justify-between p-2 bg-slate-50 border rounded-xl text-xs">
+      <span class="font-bold text-slate-700">${escapeHtml(c.name)}</span>
+      <div class="flex gap-2">
+        <button onclick="editCategory('${c.id}')" class="text-indigo-600 font-medium hover:underline">名称変更</button>
+        <button onclick="deleteCategory('${c.id}')" class="text-red-500 font-medium hover:underline">削除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateCategoryFormSelectUI() {
+  const formSelect = document.getElementById("inputCategory");
+  if(!formSelect) return;
+
+  if (localCategories.length === 0) {
+    formSelect.innerHTML = `<option value="">カテゴリがありません</option>`;
+    return;
+  }
+  formSelect.innerHTML = localCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+}
+
+window.exportCurrentWorkToMinecraft = async function() {
+  const workId = document.getElementById("editingWorkId").value;
+  if (!workId) return;
+  const w = localWorks.find(item => item.id === workId);
+  if (!w || !w.mediaUrls || w.mediaUrls.length === 0) {
+    alert("書き出す写真・画像が含まれていません。");
+    return;
+  }
+
+  const targetMediaUrl = w.mediaUrls[carouselIndices[workId] || 0];
+  if (targetMediaUrl.toLowerCase().includes(".pdf") || targetMediaUrl.startsWith("data:application/pdf")) {
+    alert("⚠️ PDFファイルはMinecraftカスタムブロックとしての書き出しに対応していません。画像データ（写真）を選択してください。");
+    return;
+  }
+
+  const exportBtn = document.getElementById("detailMcExportBtn");
+  exportBtn.disabled = true;
+  const originalText = exportBtn.innerText;
+  exportBtn.innerText = "🎮 マインクラフト用パックを構築中...";
+
+  try {
+    let imgBlob = null;
+    if (targetMediaUrl.startsWith("data:")) {
+      const parts = targetMediaUrl.split(',');
+      const byteString = atob(parts[1]);
+      const mimeString = parts[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      imgBlob = new Blob([ab], {type: mimeString});
+    } else {
+      const proxyUrl = "https://images.weserv.nl/?url=" + encodeURIComponent(targetMediaUrl);
+      const res = await fetch(proxyUrl);
+      if(!res.ok) throw new Error("外部サーバーからの画像取得に失敗しました。");
+      imgBlob = await res.blob();
+    }
+
+    const resizedBase64 = await resizeImageToMax128(imgBlob);
+
+    const zip = new JSZip();
+    const cleanTitleId = "work_" + workId.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().substring(0,10);
+    const packName = `KodomoCapsule_${cleanTitleId}`;
+
+    const manifest = {
+      format_version: 2,
+      header: {
+        description: `Kodomo Capsule Album Block - ${w.title || 'Memory'}`,
+        name: packName,
+        uuid: crypto.randomUUID(),
+        version: [1, 0, 0],
+        min_engine_version: [1, 20, 0]
+      },
+      modules: [
+        {
+          description: "Kodomo Capsule Block Resource",
+          type: "resources",
+          uuid: crypto.randomUUID(),
+          version: [1, 0, 0]
+        }
+      ]
+    };
+    zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+    const blocksJson = {
+      format_version: "1.20.0",
+      [`kc:${cleanTitleId}`]: {
+        textures: `kc_${cleanTitleId}`,
+        sound: "stone"
+      }
+    };
+    zip.file("blocks.json", JSON.stringify(blocksJson, null, 2));
+
+    const terrainTexture = {
+      resource_pack_name: packName,
+      texture_name: "atlas.terrain",
+      texture_data: {
+        [`kc_${cleanTitleId}`]: {
+          textures: `textures/blocks/${cleanTitleId}`
+        }
+      }
+    };
+    zip.file("textures/terrain_texture.json", JSON.stringify(terrainTexture, null, 2));
+
+    const base64Data = resizedBase64.split(',')[1];
+    zip.file(`textures/blocks/${cleanTitleId}.png`, base64Data, {base64: true});
+
+    const langText = `tile.kc:${cleanTitleId}.name=📋 カプセル: ${w.title || 'おもいで'}\n`;
+    zip.file("texts/en_US.lang", langText);
+    zip.file("texts/ja_JP.lang", langText);
+
+    const content = await zip.generateAsync({type: "blob"});
+    
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(content);
+    link.download = `${packName}.mcpack`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showMcToast("🎮 Minecraft用アドオン(.mcpack)の生成・ダウンロードが完了しました！");
+    alert("✨ 生成完了！ ✨\nダウンロードされた「.mcpack」ファイルをダブルクリックしてMinecraftにインポートすると、ゲーム内でカスタムブロックとして飾ることができます。\n\n【配置コマンド例】\n/setblock ~ ~ ~ kc:" + cleanTitleId);
+
+  } catch(e) {
+    console.error(e);
+    alert("Minecraftデータの作成に失敗しました。\n詳細: " + e.message);
+  } finally {
+    exportBtn.disabled = false;
+    exportBtn.innerText = originalText;
+  }
+};
+
+function resizeImageToMax128(blob) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(blob);
+    img.onload = function() {
+      const canvas = document.createElement("canvas");
+      let w = img.width;
+      let h = img.height;
+      
+      if (w > 128 || h > 128) {
+        if (w > h) {
+          h = Math.round((h * 128) / w);
+          w = 128;
+        } else {
+          w = Math.round((w * 128) / h);
+          h = 128;
+        }
+      }
+      
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = function(e) { reject(e); };
+  });
+}
+
+function escapeHtml(str) {
+  if(!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 </script>
 </body>
 </html>
