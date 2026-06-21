@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v72]</title>
+<title>コドモカプセル [v73]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,7 +190,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v72</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v73</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -691,7 +691,6 @@ onAuthStateChanged(auth, async (user) => {
           document.getElementById("displayFamilyIdCode").value = inviteCode;
         }
         
-        // セッションに正しいinviteCodeをバインド
         currentSession = { uid: user.uid, familyId: fId, inviteCode: inviteCode };
         
         startRealtimeSync(fId);
@@ -731,7 +730,7 @@ window.createNewFamilyGroup = async function() {
     const newFamilyId = doc(collection(db, "families")).id;
     const inviteCode = crypto.randomUUID();
 
-    await setDoc(doc(db, "families", newFamilyId), {
+    await setDoc(doc(doc(db, "families", newFamilyId)), {
       createdAt: Date.now(),
       createdBy: user.uid,
       inviteCode: inviteCode
@@ -1330,7 +1329,7 @@ document.getElementById("workForm").addEventListener("submit", async (e) => {
           const isPdf = item.startsWith("data:application/pdf");
           const ext = isPdf ? "pdf" : "jpg";
           
-          // 【最重要セキュリティ修正】 ドキュメントIDの代わりに正しいinviteCode(家族のUUIDコード)を動的にパスに利用
+          // 【セキュリティルール対応：パスの第2階層をfamilyIdからinviteCodeへピンポイントで変更】
           const storagePath = `families/${currentSession.inviteCode}/works/${Date.now()}_${i}.${ext}`;
           const storageRef = ref(storage, storagePath);
           await uploadString(storageRef, item, "data_url");
