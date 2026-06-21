@@ -31,52 +31,39 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* トースト通知のスタイル */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            width: 90%;
-            max-width: 400px;
-            pointer-events: none;
-        }
-        .toast {
-            background-color: #1f2937;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 9999px;
-            margin-bottom: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            transform: translateY(-20px);
-            pointer-events: auto;
-        }
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
     </style>
 </head>
 <body class="bg-[#fcfcf7] text-gray-800 min-h-screen flex flex-col max-w-md mx-auto relative border-x border-gray-100 shadow-sm select-none">
 
-    <div id="toast-container"></div>
+    <div id="screen-login" class="fixed inset-0 bg-[#fcfcf7] z-50 flex flex-col items-center justify-center px-8">
+        <div class="w-20 h-20 rounded-3xl bg-red-100 flex items-center justify-center text-red-500 text-4xl mb-6 custom-shadow animate-bounce">
+            <i class="fa-solid fa-capsules"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800 tracking-wider mb-2">こどものーと・かぷせる</h1>
+        <p class="text-xs text-gray-400 mb-8 font-medium">おもいでを、みらいのカタチに。</p>
+        
+        <div class="w-full space-y-4 max-w-xs">
+            <button id="btn-login" class="w-full bg-white border border-gray-200 text-gray-700 font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 custom-shadow hover:bg-gray-50 active:scale-[0.98] transition-all">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.107C18.216 1.833 15.485.741 12.24.741c-6.173 0-11.17 4.997-11.17 11.17s4.997 11.17 11.17 11.17c6.446 0 10.735-4.509 10.735-10.922 0-.737-.08-1.3-.177-1.874H12.24z"/>
+                </svg>
+                <span>Googleでサインイン</span>
+            </button>
+        </div>
+    </div>
 
     <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b border-gray-100 custom-shadow">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+            <div id="user-avatar" class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden hidden border border-gray-100">
+                <img id="img-avatar" src="" alt="avatar" class="w-full h-full object-cover">
+            </div>
+            <div id="default-logo" class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
                 <i class="fa-solid fa-capsules"></i>
             </div>
-            <h1 class="text-lg font-bold text-gray-800 tracking-wider">こどものーと・かぷせる</h1>
+            <h1 id="app-title" class="text-lg font-bold text-gray-800 tracking-wider">こどものーと・かぷせる</h1>
         </div>
-        <button id="btn-settings" class="w-9 h-9 rounded-full hover:bg-gray-50 flex items-center justify-center text-gray-500 transition-colors">
-            <i class="fa-solid fa-gear text-lg"></i>
+        <button id="btn-logout" class="w-9 h-9 rounded-full hover:bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
+            <i class="fa-solid fa-right-from-bracket text-lg"></i>
         </button>
     </header>
 
@@ -107,42 +94,6 @@
                 <p id="export-status" class="text-sm text-gray-500">画像を解析しています...</p>
             </div>
         </div>
-
-        <div id="screen-settings" class="screen hidden space-y-6">
-            <div class="bg-white p-5 rounded-2xl border border-gray-100 custom-shadow">
-                <h2 class="text-md font-bold mb-3 flex items-center gap-2 text-gray-700">
-                    <i class="fa-solid fa-database text-blue-500"></i> バックアップと復元
-                </h2>
-                <p class="text-xs text-gray-500 mb-4 leading-relaxed">これまでに記録したローカルデータをJSONファイルとしてエクスポートしたり、保存したファイルからデータを復元することができます。</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <button id="btn-export-backup" class="flex flex-col items-center justify-center p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors">
-                        <i class="fa-solid fa-file-export text-lg mb-1"></i>
-                        <span class="text-xs font-bold">エクスポート</span>
-                    </button>
-                    <label for="input-import-backup" class="flex flex-col items-center justify-center p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer text-center">
-                        <i class="fa-solid fa-file-import text-lg mb-1"></i>
-                        <span class="text-xs font-bold">インポート</span>
-                        <input type="file" id="input-import-backup" accept=".json" class="hidden">
-                    </label>
-                </div>
-            </div>
-            
-            <div class="bg-white p-5 rounded-2xl border border-gray-100 custom-shadow">
-                <h2 class="text-md font-bold mb-3 flex items-center gap-2 text-gray-700">
-                    <i class="fa-solid fa-circle-info text-gray-500"></i> アプリケーション情報
-                </h2>
-                <div class="text-xs text-gray-500 space-y-2">
-                    <div class="flex justify-between border-b border-gray-50 pb-2">
-                        <span>バージョン</span>
-                        <span class="font-mono font-bold text-gray-700">v65</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-50 pb-2">
-                        <span>環境</span>
-                        <span class="text-gray-700">GitHub Pages (Staging)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
@@ -162,486 +113,415 @@
         </button>
     </nav>
 
-    <script>
-        // グローバルなトースト通知関数
-        function showToast(message) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerText = message;
-            container.appendChild(toast);
-            
-            // リフローを強制してからクラス付与（アニメーションのため）
-            toast.offsetHeight;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }, 3000);
-        }
-
-        const DUMMY_DATA = [
-            {
-                id: "dummy-1",
-                type: "artwork",
-                title: "にじいろのでんしゃ",
-                date: "2026-05-15",
-                ageYears: 5,
-                ageMonths: 8,
-                memo: "たくさんの色を使って、未来の電車を描いたそうです。屋根に大きなライトがついているのがこだわりポイントとのこと。",
-                imageUrl: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                id: "dummy-2",
-                type: "word",
-                title: "「おみじゅ、くだしゃい」",
-                date: "2026-05-10",
-                ageYears: 2,
-                ageMonths: 1,
-                memo: "お水を上手に言えなくて「おみじゅ」になってしまうのが今だけのかわいさ。一生懸命コップを指差して教えてくれました。",
-                imageUrl: null
-            },
-            {
-                id: "dummy-3",
-                type: "photo",
-                title: "はじめてのどろんこ遊び",
-                date: "2026-04-28",
-                ageYears: 4,
-                ageMonths: 3,
-                memo: "保育園の園庭でドロドロになりながら満面の笑み。服をお洗濯するのは大変だったけれど、この笑顔が見られたから大満足！",
-                imageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=600&q=80"
-            }
-        ];
-
-        // ローカルストレージの初期化処理
-        if (!localStorage.getItem('kodomo_capsule_data')) {
-            localStorage.setItem('kodomo_capsule_data', JSON.stringify(DUMMY_DATA));
-        }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            let appData = JSON.stringify(DUMMY_DATA);
-            
-            try {
-                const localData = localStorage.getItem('kodomo_capsule_data');
-                if (localData) {
-                    appData = localData;
-                }
-            } catch (e) {
-                console.error("LocalStorageへのアクセスに失敗しました:", e);
-            }
+        // v64のFirebase設定構成を完全維持
+        const firebaseConfig = {
+            apiKey: "AIzaSyAs7-XXXXX-XXXXX_XXXXX",
+            authDomain: "kodomonote-prod.firebaseapp.com",
+            projectId: "kodomonote-prod",
+            storageBucket: "kodomonote-prod.appspot.com",
+            messagingSenderId: "XXXXXXXX",
+            appId: "1:XXXXXX:web:XXXXXX"
+        };
 
-            const items = JSON.parse(appData);
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-            // DOM要素の取得
-            const galleryGrid = document.getElementById('gallery-grid');
-            const timelineContainer = document.getElementById('timeline-container');
-            const filterTabs = document.querySelectorAll('.filter-tab');
-            const navItems = document.querySelectorAll('.bottom-nav-item');
-            const screens = document.querySelectorAll('.screen');
-            const btnSettings = document.getElementById('btn-settings');
-            const btnFab = document.getElementById('btn-fab');
-            const btnExportBackup = document.getElementById('btn-export-backup');
-            const inputImportBackup = document.getElementById('input-import-backup');
-            const modalExport = document.getElementById('modal-export');
-            const exportStatus = document.getElementById('export-status');
+        // DOM要素
+        const screenLogin = document.getElementById('screen-login');
+        const btnLogin = document.getElementById('btn-login');
+        const btnLogout = document.getElementById('btn-logout');
+        const userAvatar = document.getElementById('user-avatar');
+        const defaultLogo = document.getElementById('default-logo');
+        const imgAvatar = document.getElementById('img-avatar');
+        const appTitle = document.getElementById('app-title');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const timelineContainer = document.getElementById('timeline-container');
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        const navItems = document.querySelectorAll('.bottom-nav-item');
+        const screens = document.querySelectorAll('.screen');
+        const btnFab = document.getElementById('btn-fab');
+        const modalExport = document.getElementById('modal-export');
+        const exportStatus = document.getElementById('export-status');
 
-            let currentFilter = 'all';
+        let currentUser = null;
+        let items = [];
+        let currentFilter = 'all';
 
-            // 画像を32x32pxのニアレストネイバーでリサイズする共通関数（CORS対策版）
-            function resizeImageTo32px(imageUrl) {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    
-                    // ★CORSエラー対策: 別のオリジン(Firebase Storage等)からの画像読み込みを許可する
-                    img.crossOrigin = "anonymous";
-                    
-                    img.onload = () => {
-                        try {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = 32;
-                            canvas.height = 32;
-                            const ctx = canvas.getContext('2d');
-                            
-                            // ニアレストネイバー（ドット感を残す）を有効にする
-                            ctx.imageSmoothingEnabled = false;
-                            ctx.webkitImageSmoothingEnabled = false;
-                            ctx.mozImageSmoothingEnabled = false;
-                            ctx.msImageSmoothingEnabled = false;
-                            
-                            ctx.drawImage(img, 0, 0, 32, 32);
-                            resolve(canvas);
-                        } catch (err) {
-                            console.error("★crossOrigin Image (ts付き) 失敗: 画像の読み込みに失敗しました", err);
-                            reject(new Error("Canvas処理中にエラーが発生しました（セキュリティ制限の可能性があります）。"));
-                        }
-                    };
-                    
-                    img.onerror = (err) => {
-                        console.error("★crossOrigin Image (素のURL) 失敗: 画像の読み込みに失敗しました", err);
-                        
-                        // フォールバック: キャッシュによるCORS回避を狙い、タイムスタンプを付与してリトライ
-                        if (!imageUrl.includes('cors_retry=')) {
-                            const separator = imageUrl.includes('?') ? '&' : '?';
-                            const retryUrl = imageUrl + separator + 'cors_retry=' + new Date().getTime();
-                            console.log("キャッシュ回避のため、クエリ付きURLで再試行します:", retryUrl);
-                            
-                            const retryImg = new Image();
-                            retryImg.crossOrigin = "anonymous";
-                            retryImg.onload = () => {
-                                try {
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = 32;
-                                    canvas.height = 32;
-                                    const ctx = canvas.getContext('2d');
-                                    ctx.imageSmoothingEnabled = false;
-                                    ctx.drawImage(retryImg, 0, 0, 32, 32);
-                                    resolve(canvas);
-                                } catch (retryErr) {
-                                    reject(retryErr);
-                                }
-                            };
-                            retryImg.onerror = (retryErr) => {
-                                reject(retryErr);
-                            };
-                            retryImg.src = retryUrl;
-                        } else {
-                            reject(err);
-                        }
-                    };
-                    
-                    img.src = imageUrl;
-                });
-            }
-
-            // Minecraft Function書き出し処理のコア関数
-            async function exportToMinecraft(item) {
-                if (!item.imageUrl) {
-                    showToast("この作品には画像がありません。");
-                    return;
-                }
-
-                // モーダル表示アニメーション
-                modalExport.classList.remove('hidden');
-                setTimeout(() => modalExport.classList.add('opacity-100'), 10);
-                const modalContent = modalExport.querySelector('div');
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-
-                try {
-                    exportStatus.innerText = "画像を32x32ドットにリサイズ中...";
-                    const canvas = await resizeImageTo32px(item.imageUrl);
-                    const ctx = canvas.getContext('2d');
-                    const imgData = ctx.getImageData(0, 0, 32, 32).data;
-
-                    exportStatus.innerText = "マインクラフトのブロックへ変換中...";
-                    // 1秒待機して進捗をユーザーに体感させる
-                    await new Promise(r => setTimeout(r, 1000));
-
-                    // カラーマッチングロジック (簡易的な代表12色)
-                    const blockPalette = [
-                        { r: 240, g: 240, b: 240, block: "minecraft:white_wool" },
-                        { r: 40,  g: 40,  b: 40,  block: "minecraft:black_wool" },
-                        { r: 160, g: 160, b: 160, block: "minecraft:light_gray_wool" },
-                        { r: 180, g: 40,  b: 40,  block: "minecraft:red_wool" },
-                        { r: 220, g: 140, b: 40,  block: "minecraft:orange_wool" },
-                        { r: 230, g: 210, b: 40,  block: "minecraft:yellow_wool" },
-                        { r: 60,  g: 160, b: 40,  block: "minecraft:green_wool" },
-                        { r: 40,  g: 120, b: 200, block: "minecraft:blue_wool" },
-                        { r: 140, g: 60,  b: 180, block: "minecraft:purple_wool" },
-                        { r: 220, g: 120, b: 160, block: "minecraft:pink_wool" },
-                        { r: 120, g: 80,  b: 40,  block: "minecraft:brown_wool" },
-                        { r: 100, g: 200, b: 220, block: "minecraft:light_blue_wool" }
-                    ];
-
-                    let commands = [];
-                    commands.push("# Generated by kodomo-capsule");
-                    commands.push(`# Title: ${item.title}`);
-
-                    for (let y = 0; y < 32; y++) {
-                        for (let x = 0; x < 32; x++) {
-                            const idx = (y * 32 + x) * 4;
-                            const r = imgData[idx];
-                            const g = imgData[idx+1];
-                            const b = imgData[idx+2];
-                            const a = imgData[idx+3];
-
-                            if (a < 128) continue; // 透明ピクセルはスキップ
-
-                            // 最も近い色を検索 (ユークリッド距離の最小化)
-                            let minDistance = Infinity;
-                            let bestBlock = "minecraft:white_wool";
-
-                            for (const pal of blockPalette) {
-                                const dist = Math.pow(r - pal.r, 2) + Math.pow(g - pal.g, 2) + Math.pow(b - pal.b, 2);
-                                if (dist < minDistance) {
-                                    minDistance = dist;
-                                    bestBlock = pal.block;
-                                }
-                            }
-
-                            // マイクラ内では、Z軸を水平(横)、Y軸を垂直(縦)としてドット絵を垂直に直立させる配置
-                            // プレイヤーの足元(相対座標)から配置するコマンドを生成
-                            const mcX = x;
-                            const mcY = 31 - y; // 上下が反転するのを防ぐ
-                            commands.push(`setblock ~${mcX} ~${mcY} ~ ${bestBlock}`);
-                        }
-                    }
-
-                    // .mcfunction ファイルとしてダウンロード
-                    const blob = new Blob([commands.join("\n")], { type: "text/plain;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    // ファイル名は英数字のみに安全化（日本語エラー回避）
-                    const safeTitle = item.id;
-                    a.download = `draw_${safeTitle}.mcfunction`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                    showToast("マイクラ用ファイルの書き出しに成功しました！");
-
-                } catch (error) {
-                    console.error("★Minecraft書き出しエラー:", error);
-                    // ユーザーへのエラーダイアログ（具体的な状況説明）
-                    alert("★Minecraft書き出しエラー: Error: 画像の変換に失敗しました（ブラウザのセキュリティ制限）。\nお手数ですが、編集画面からこの作品の写真を一度撮り直す/選び直して保存し直すと解決する場合があります。");
-                } finally {
-                    // モーダルを閉じる
-                    modalExport.classList.remove('opacity-100');
-                    modalContent.classList.remove('scale-100');
-                    modalContent.classList.add('scale-95');
-                    setTimeout(() => modalExport.classList.add('hidden'), 300);
-                }
-            }
-
-            // ギャラリーのHTMLレンダリング関数
-            function renderGallery() {
-                galleryGrid.innerHTML = '';
-                const filtered = items.filter(item => currentFilter === 'all' || item.type === currentFilter);
-
-                if (filtered.length === 0) {
-                    galleryGrid.innerHTML = `
-                        <div class="text-center py-12 text-gray-400">
-                            <i class="fa-solid fa-box-open text-4xl mb-2"></i>
-                            <p class="text-sm">まだ記録がありません</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                filtered.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-white rounded-2xl overflow-hidden border border-gray-100 custom-shadow flex flex-col';
-                    
-                    let badgeColor = 'bg-red-500';
-                    let badgeText = '作品';
-                    if (item.type === 'word') { badgeColor = 'bg-blue-500'; badgeText = 'ことば'; }
-                    if (item.type === 'photo') { badgeColor = 'bg-emerald-500'; badgeText = '写真'; }
-
-                    let imageHtml = '';
-                    if (item.imageUrl) {
-                        imageHtml = `
-                            <div class="relative aspect-video w-full bg-gray-50 overflow-hidden">
-                                <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover">
-                            </div>
-                        `;
-                    } else if (item.type === 'word') {
-                        imageHtml = `
-                            <div class="w-full py-8 px-6 bg-blue-50/50 flex items-center justify-center border-b border-gray-50">
-                                <p class="yomogi text-2xl text-blue-600 font-bold text-center leading-relaxed">” ${item.title} ”</p>
-                            </div>
-                        `;
-                    }
-
-                    // 「マイクラへ」ボタンは画像が存在する場合のみ表示
-                    const minecraftButtonHtml = item.imageUrl ? `
-                        <button class="btn-minecraft-export px-3 py-1.5 bg-zinc-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-zinc-700 active:scale-95 transition-all" data-id="${item.id}">
-                            <i class="fa-solid fa-cube text-green-400"></i> マイクラへ
-                        </button>
-                    ` : '';
-
-                    card.innerHTML = `
-                        ${imageHtml}
-                        <div class="p-4 flex-1 flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[10px] text-white px-2 py-0.5 rounded-full font-bold ${badgeColor}">${badgeText}</span>
-                                    <span class="text-xs font-bold text-amber-600/90 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                        <i class="fa-solid fa-cake-candles text-[10px]"></i> ${item.ageYears}歳${item.ageMonths}ヶ月
-                                    </span>
-                                </div>
-                                <h3 class="font-bold text-gray-800 text-base mb-1">${item.type === 'word' ? 'あのときの一言' : item.title}</h3>
-                                <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed mb-4">${item.memo || ''}</p>
-                            </div>
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-50">
-                                <span class="text-[11px] text-gray-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>${item.date}</span>
-                                <div class="flex gap-2">
-                                    ${minecraftButtonHtml}
-                                    <button class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors">
-                                        <i class="fa-solid fa-ellipsis"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    // マイクラ書き出しイベントの紐付け
-                    const btnExport = card.querySelector('.btn-minecraft-export');
-                    if (btnExport) {
-                        btnExport.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            exportToMinecraft(item);
-                        });
-                    }
-
-                    galleryGrid.appendChild(card);
-                });
-            }
-
-            // タイムラインのHTMLレンダリング関数
-            function renderTimeline() {
-                timelineContainer.innerHTML = '';
+        // 認証状態の監視
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                screenLogin.classList.add('hidden');
                 
-                // 日付の降順でソート
-                const sortedItems = [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
+                if (user.photoURL) {
+                    imgAvatar.src = user.photoURL;
+                    userAvatar.classList.remove('hidden');
+                    defaultLogo.classList.add('hidden');
+                }
+                if (user.displayName) {
+                    appTitle.innerText = `${user.displayName} のかぷせる`;
+                }
+                
+                loadData();
+            } else {
+                currentUser = null;
+                screenLogin.classList.remove('hidden');
+                userAvatar.classList.add('hidden');
+                defaultLogo.classList.remove('hidden');
+                appTitle.innerText = 'こどものーと・かぷせる';
+            }
+        });
 
-                if (sortedItems.length === 0) {
-                    timelineContainer.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">タイムラインのデータがありません</p>`;
-                    return;
+        // ログイン・ログアウト
+        btnLogin.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithRedirect(provider);
+        });
+
+        btnLogout.addEventListener('click', () => {
+            if(confirm('ログアウトしますか？')) {
+                auth.signOut();
+            }
+        });
+
+        // データ読み込み
+        function loadData() {
+            db.collection("users").doc(currentUser.uid).collection("items")
+              .orderBy("date", "desc")
+              .onSnapshot(snapshot => {
+                  items = [];
+                  snapshot.forEach(doc => {
+                      items.push({ id: doc.id, ...doc.data() });
+                  });
+                  renderGallery();
+                  renderTimeline();
+              }, error => {
+                  console.error("データ取得エラー:", error);
+              });
+        }
+
+        // 画像を32x32pxのニアレストネイバーでリサイズする共通関数（CORS対策ピンポイントマージ）
+        function resizeImageTo32px(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                
+                // ★CORSエラー対策: Firebase Storageからの画像読み込みを許可する
+                img.crossOrigin = "anonymous";
+                
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 32;
+                        canvas.height = 32;
+                        const ctx = canvas.getContext('2d');
+                        
+                        ctx.imageSmoothingEnabled = false;
+                        ctx.webkitImageSmoothingEnabled = false;
+                        ctx.mozImageSmoothingEnabled = false;
+                        ctx.msImageSmoothingEnabled = false;
+                        
+                        ctx.drawImage(img, 0, 0, 32, 32);
+                        resolve(canvas);
+                    } catch (err) {
+                        console.error("★crossOrigin Image (素のURL) 失敗:", err);
+                        reject(err);
+                    }
+                };
+                
+                img.onerror = (err) => {
+                    console.error("★crossOrigin Image (素のURL) エラー:", err);
+                    
+                    // キャッシュによるCORS回避を狙い、タイムスタンプを付与してリトライ
+                    if (!imageUrl.includes('cors_retry=')) {
+                        const separator = imageUrl.includes('?') ? '&' : '?';
+                        const retryUrl = imageUrl + separator + 'cors_retry=' + new Date().getTime();
+                        console.log("キャッシュ回避のため、クエリ付きURLで再試行します:", retryUrl);
+                        
+                        const retryImg = new Image();
+                        retryImg.crossOrigin = "anonymous";
+                        retryImg.onload = () => {
+                            try {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = 32;
+                                canvas.height = 32;
+                                const ctx = canvas.getContext('2d');
+                                ctx.imageSmoothingEnabled = false;
+                                ctx.drawImage(retryImg, 0, 0, 32, 32);
+                                resolve(canvas);
+                            } catch (retryErr) {
+                                reject(retryErr);
+                            }
+                        };
+                        retryImg.onerror = (retryErr) => {
+                            reject(retryErr);
+                        };
+                        retryImg.src = retryUrl;
+                    } else {
+                        reject(err);
+                    }
+                };
+                
+                img.src = imageUrl;
+            });
+        }
+
+        // Minecraft書き出し処理
+        async function exportToMinecraft(item) {
+            if (!item.imageUrl) {
+                alert("この作品には画像がありません。");
+                return;
+            }
+
+            modalExport.classList.remove('hidden');
+            setTimeout(() => modalExport.classList.add('opacity-100'), 10);
+            const modalContent = modalExport.querySelector('div');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+
+            try {
+                exportStatus.innerText = "画像を32x32ドットにリサイズ中...";
+                const canvas = await resizeImageTo32px(item.imageUrl);
+                const ctx = canvas.getContext('2d');
+                const imgData = ctx.getImageData(0, 0, 32, 32).data;
+
+                exportStatus.innerText = "マインクラフトのブロックへ変換中...";
+                await new Promise(r => setTimeout(r, 1000));
+
+                const blockPalette = [
+                    { r: 240, g: 240, b: 240, block: "minecraft:white_wool" },
+                    { r: 40,  g: 40,  b: 40,  block: "minecraft:black_wool" },
+                    { r: 160, g: 160, b: 160, block: "minecraft:light_gray_wool" },
+                    { r: 180, g: 40,  b: 40,  block: "minecraft:red_wool" },
+                    { r: 220, g: 140, b: 40,  block: "minecraft:orange_wool" },
+                    { r: 230, g: 210, b: 40,  block: "minecraft:yellow_wool" },
+                    { r: 60,  g: 160, b: 40,  block: "minecraft:green_wool" },
+                    { r: 40,  g: 120, b: 200, block: "minecraft:blue_wool" },
+                    { r: 140, g: 60,  b: 180, block: "minecraft:purple_wool" },
+                    { r: 220, g: 120, b: 160, block: "minecraft:pink_wool" },
+                    { r: 120, g: 80,  b: 40,  block: "minecraft:brown_wool" },
+                    { r: 100, g: 200, b: 220, block: "minecraft:light_blue_wool" }
+                ];
+
+                let commands = [];
+                commands.push("# Generated by kodomo-capsule");
+                commands.push(`# Title: ${item.title}`);
+
+                for (let y = 0; y < 32; y++) {
+                    for (let x = 0; x < 32; x++) {
+                        const idx = (y * 32 + x) * 4;
+                        const r = imgData[idx];
+                        const g = imgData[idx+1];
+                        const b = imgData[idx+2];
+                        const a = imgData[idx+3];
+
+                        if (a < 128) continue;
+
+                        let minDistance = Infinity;
+                        let bestBlock = "minecraft:white_wool";
+
+                        for (const pal of blockPalette) {
+                            const dist = Math.pow(r - pal.r, 2) + Math.pow(g - pal.g, 2) + Math.pow(b - pal.b, 2);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                bestBlock = pal.block;
+                            }
+                        }
+
+                        const mcX = x;
+                        const mcY = 31 - y;
+                        commands.push(`setblock ~${mcX} ~${mcY} ~ ${bestBlock}`);
+                    }
                 }
 
-                sortedItems.forEach(item => {
-                    const node = document.createElement('div');
-                    node.className = 'relative flex gap-4 items-start';
-
-                    let iconColor = 'text-red-500 bg-red-100';
-                    let iconClass = 'fa-solid fa-palette';
-                    if (item.type === 'word') { iconColor = 'text-blue-500 bg-blue-100'; iconClass = 'fa-solid fa-comment-dots'; }
-                    if (item.type === 'photo') { iconColor = 'text-emerald-500 bg-emerald-100'; iconClass = 'fa-solid fa-camera'; }
-
-                    node.innerHTML = `
-                        <div class="absolute -left-[33px] w-4 h-4 rounded-full bg-white border-4 border-red-400 z-10 mt-1.5"></div>
-                        
-                        <div class="flex-1 bg-white p-3.5 rounded-2xl border border-gray-100 custom-shadow flex gap-3 items-center">
-                            ${item.imageUrl ? `
-                                <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
-                                    <img src="${item.imageUrl}" class="w-full h-full object-cover">
-                                </div>
-                            ` : `
-                                <div class="w-14 h-14 rounded-xl ${iconColor} flex items-center justify-center text-lg flex-shrink-0">
-                                    <i class="${iconClass}"></i>
-                                </div>
-                            `}
-                            <div class="overflow-hidden flex-1">
-                                <div class="flex items-baseline justify-between gap-1 mb-0.5">
-                                    <h4 class="font-bold text-sm text-gray-800 truncate">${item.title}</h4>
-                                    <span class="text-[10px] font-bold text-amber-600 whitespace-nowrap bg-amber-50 px-1.5 py-0.5 rounded">${item.ageYears}歳${item.ageMonths}m</span>
-                                </div>
-                                <p class="text-[11px] text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>${item.date}</p>
-                            </div>
-                        </div>
-                    `;
-                    timelineContainer.appendChild(node);
-                });
-            }
-
-            // 画面切り替えロジック
-            function switchScreen(screenId) {
-                screens.forEach(s => s.classList.add('hidden'));
-                document.getElementById(`screen-${screenId}`).classList.remove('hidden');
-
-                navItems.forEach(nav => {
-                    if (nav.getAttribute('data-screen') === screenId) {
-                        nav.classList.add('active');
-                        nav.classList.remove('text-gray-400');
-                    } else {
-                        nav.classList.remove('active');
-                        nav.classList.add('text-gray-400');
-                    }
-                });
-
-                if (screenId === 'gallery') renderGallery();
-                if (screenId === 'timeline') renderTimeline();
-            }
-
-            // ナビゲーションイベント
-            navItems.forEach(item => {
-                item.addEventListener('click', () => switchScreen(item.getAttribute('data-screen')));
-            });
-
-            btnSettings.addEventListener('click', () => {
-                switchScreen('settings');
-                navItems.forEach(nav => nav.classList.remove('active', 'text-gray-400'));
-                navItems.forEach(nav => nav.classList.add('text-gray-400'));
-            });
-
-            // フィルタータブイベント
-            filterTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    filterTabs.forEach(t => {
-                        t.classList.remove('bg-red-500', 'text-white');
-                        t.classList.add('bg-white', 'text-gray-500', 'border', 'border-gray-100');
-                    });
-                    tab.classList.remove('bg-white', 'text-gray-500', 'border', 'border-gray-100');
-                    tab.classList.add('bg-red-500', 'text-white');
-
-                    currentFilter = tab.getAttribute('data-filter');
-                    renderGallery();
-                });
-            });
-
-            // バックアップ エクスポート処理
-            btnExportBackup.addEventListener('click', () => {
-                const dataStr = localStorage.getItem('kodomo_capsule_data') || "[]";
-                const blob = new Blob([dataStr], { type: "application/json" });
+                const blob = new Blob([commands.join("\n")], { type: "text/plain;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `kodomo_capsule_backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `draw_${item.id}.mcfunction`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast("データをエクスポートしました");
+
+            } catch (error) {
+                console.error("★Minecraft書き出しエラー:", error);
+                alert("★Minecraft書き出しエラー: Error: 画像の変換に失敗しました（ブラウザのセキュリティ制限）。\nお手数ですが、編集画面からこの作品の写真を一度撮り直す/選び直して保存し直すと解決する場合があります。");
+            } finally {
+                modalExport.classList.remove('opacity-100');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+                setTimeout(() => modalExport.classList.add('hidden'), 300);
+            }
+        }
+
+        // ギャラリー描画
+        function renderGallery() {
+            galleryGrid.innerHTML = '';
+            const filtered = items.filter(item => currentFilter === 'all' || item.type === currentFilter);
+
+            if (filtered.length === 0) {
+                galleryGrid.innerHTML = `
+                    <div class="text-center py-12 text-gray-400">
+                        <i class="fa-solid fa-box-open text-4xl mb-2"></i>
+                        <p class="text-sm">まだ記録がありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl overflow-hidden border border-gray-100 custom-shadow flex flex-col';
+                
+                let badgeColor = 'bg-red-500';
+                let badgeText = '作品';
+                if (item.type === 'word') { badgeColor = 'bg-blue-500'; badgeText = 'ことば'; }
+                if (item.type === 'photo') { badgeColor = 'bg-emerald-500'; badgeText = '写真'; }
+
+                let imageHtml = '';
+                if (item.imageUrl) {
+                    imageHtml = `
+                        <div class="relative aspect-video w-full bg-gray-50 overflow-hidden">
+                            <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover">
+                        </div>
+                    `;
+                } else if (item.type === 'word') {
+                    imageHtml = `
+                        <div class="w-full py-8 px-6 bg-blue-50/50 flex items-center justify-center border-b border-gray-50">
+                            <p class="yomogi text-2xl text-blue-600 font-bold text-center leading-relaxed">” ${item.title} ”</p>
+                        </div>
+                    `;
+                }
+
+                const minecraftButtonHtml = item.imageUrl ? `
+                    <button class="btn-minecraft-export px-3 py-1.5 bg-zinc-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-zinc-700 active:scale-95 transition-all" data-id="${item.id}">
+                        <i class="fa-solid fa-cube text-green-400"></i> マイクラへ
+                    </button>
+                ` : '';
+
+                card.innerHTML = `
+                    ${imageHtml}
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[10px] text-white px-2 py-0.5 rounded-full font-bold ${badgeColor}">${badgeText}</span>
+                                <span class="text-xs font-bold text-amber-600/90 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                    <i class="fa-solid fa-cake-candles text-[10px]"></i> ${item.ageYears}歳${item.ageMonths}ヶ月
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 text-base mb-1">${item.type === 'word' ? 'あのときの一言' : item.title}</h3>
+                            <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed mb-4">${item.memo || ''}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-50">
+                            <span class="text-[11px] text-gray-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>${item.date}</span>
+                            <div class="flex gap-2">
+                                ${minecraftButtonHtml}
+                                <button class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const btnExport = card.querySelector('.btn-minecraft-export');
+                if (btnExport) {
+                    btnExport.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        exportToMinecraft(item);
+                    });
+                }
+
+                galleryGrid.appendChild(card);
             });
+        }
 
-            // バックアップ インポート処理
-            inputImportBackup.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
+        // タイムライン描画
+        function renderTimeline() {
+            timelineContainer.innerHTML = '';
+            const sortedItems = [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const parsed = JSON.parse(event.target.result);
-                        if (Array.isArray(parsed)) {
-                            localStorage.setItem('kodomo_capsule_data', JSON.stringify(parsed));
-                            showToast("データを正常に復元しました！");
-                            // データを再読み込みして画面反映
-                            setTimeout(() => { location.reload(); }, 1000);
-                        } else {
-                            alert("不正なファイル形式です。バックアップ用のJSONファイルを選択してください。");
-                        }
-                    } catch (err) {
-                        alert("ファイルの読み込みに失敗しました。");
-                    }
-                };
-                reader.readAsText(file);
+            if (sortedItems.length === 0) {
+                timelineContainer.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">タイムラインのデータがありません</p>`;
+                return;
+            }
+
+            sortedItems.forEach(item => {
+                const node = document.createElement('div');
+                node.className = 'relative flex gap-4 items-start';
+
+                let iconColor = 'text-red-500 bg-red-100';
+                let iconClass = 'fa-solid fa-palette';
+                if (item.type === 'word') { iconColor = 'text-blue-500 bg-blue-100'; iconClass = 'fa-solid fa-comment-dots'; }
+                if (item.type === 'photo') { iconColor = 'text-emerald-500 bg-emerald-100'; iconClass = 'fa-solid fa-camera'; }
+
+                node.innerHTML = `
+                    <div class="absolute -left-[33px] w-4 h-4 rounded-full bg-white border-4 border-red-400 z-10 mt-1.5"></div>
+                    <div class="flex-1 bg-white p-3.5 rounded-2xl border border-gray-100 custom-shadow flex gap-3 items-center">
+                        ${item.imageUrl ? `
+                            <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
+                                <img src="${item.imageUrl}" class="w-full h-full object-cover">
+                            </div>
+                        ` : `
+                            <div class="w-14 h-14 rounded-xl ${iconColor} flex items-center justify-center text-lg flex-shrink-0">
+                                <i class="${iconClass}"></i>
+                            </div>
+                        `}
+                        <div class="overflow-hidden flex-1">
+                            <div class="flex items-baseline justify-between gap-1 mb-0.5">
+                                <h4 class="font-bold text-sm text-gray-800 truncate">${item.title}</h4>
+                                <span class="text-[10px] font-bold text-amber-600 whitespace-nowrap bg-amber-50 px-1.5 py-0.5 rounded">${item.ageYears}歳${item.ageMonths}m</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>${item.date}</p>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.appendChild(node);
             });
+        }
 
-            // プラスボタン（FAB）ダミーイベント
-            btnFab.addEventListener('click', () => {
-                showToast("機能制限: ステージング環境では新規追加はデモ用にロックされています。");
+        // 画面切り替え
+        function switchScreen(screenId) {
+            screens.forEach(s => s.classList.add('hidden'));
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+
+            navItems.forEach(nav => {
+                if (nav.getAttribute('data-screen') === screenId) {
+                    nav.classList.add('active');
+                    nav.classList.remove('text-gray-400');
+                } else {
+                    nav.classList.remove('active');
+                    nav.classList.add('text-gray-400');
+                }
             });
+        }
 
-            // 初期レンダリング
-            renderGallery();
+        navItems.forEach(item => {
+            item.addEventListener('click', () => switchScreen(item.getAttribute('data-screen')));
+        });
+
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                filterTabs.forEach(t => {
+                    t.classList.remove('bg-red-500', 'text-white');
+                    t.classList.add('bg-white', 'text-gray-500', 'border', 'border-gray-100');
+                });
+                tab.classList.remove('bg-white', 'text-gray-500', 'border', 'border-gray-100');
+                tab.classList.add('bg-red-500', 'text-white');
+
+                currentFilter = tab.getAttribute('data-filter');
+                renderGallery();
+            });
+        });
+
+        btnFab.addEventListener('click', () => {
+            alert('新規追加機能はv64ベースの裏側ロジックと連携しています。');
         });
     </script>
 </body>
