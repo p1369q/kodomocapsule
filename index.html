@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v71]</title>
+<title>コドモカプセル [v72]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,7 +190,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v71</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v72</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -685,13 +685,13 @@ onAuthStateChanged(auth, async (user) => {
         });
 
         const famSnap = await getDoc(doc(db, "families", fId));
-        let inviteCode = fId; // フォールバック
+        let inviteCode = fId; 
         if (famSnap.exists()) {
           inviteCode = famSnap.data().inviteCode || fId;
           document.getElementById("displayFamilyIdCode").value = inviteCode;
         }
         
-        // パス修正の肝：セッションデータにドキュメントIDと正しい「inviteCode」の両方を乗せる
+        // セッションに正しいinviteCodeをバインド
         currentSession = { uid: user.uid, familyId: fId, inviteCode: inviteCode };
         
         startRealtimeSync(fId);
@@ -1330,7 +1330,7 @@ document.getElementById("workForm").addEventListener("submit", async (e) => {
           const isPdf = item.startsWith("data:application/pdf");
           const ext = isPdf ? "pdf" : "jpg";
           
-          // ★最重要修正箇所: セキュリティルールの監査を突破できるよう、ドキュメントID(familyId)ではなく「inviteCode」をパスに利用
+          // 【最重要セキュリティ修正】 ドキュメントIDの代わりに正しいinviteCode(家族のUUIDコード)を動的にパスに利用
           const storagePath = `families/${currentSession.inviteCode}/works/${Date.now()}_${i}.${ext}`;
           const storageRef = ref(storage, storagePath);
           await uploadString(storageRef, item, "data_url");
@@ -1379,7 +1379,7 @@ window.saveChild = async function() {
   if(!name) { alert("お名前を入力してください。"); return; }
 
   if (!editingId && !isPremiumUser && localChildren.length >= 1) {
-    alert("⚠️ 無料プランでお子様を追加登録できるのは1名までです。2人以上登録する場合はプレミアムプランへのアップグレードをご検討ください。");
+    alert("⚠️ 無料プランでお子様を追加登録できるのは1名までです。");
     return;
   }
 
@@ -1585,7 +1585,7 @@ window.exportCurrentWorkToMinecraft = async function() {
 
   const targetMediaUrl = w.mediaUrls[carouselIndices[workId] || 0];
   if (targetMediaUrl.toLowerCase().includes(".pdf") || targetMediaUrl.startsWith("data:application/pdf")) {
-    alert("⚠️ PDFファイルはMinecraftカスタムブロックとしての書き出しに対応していません。画像データ（写真）を選択してください。");
+    alert("⚠️ PDFファイルはMinecraftカスタムブロックとしての書き出しに対応していません。");
     return;
   }
 
@@ -1675,8 +1675,8 @@ window.exportCurrentWorkToMinecraft = async function() {
     link.click();
     document.body.removeChild(link);
 
-    showMcToast("🎮 Minecraft用アドオン(.mcpack)の生成・ダウンロードが完了しました！");
-    alert("✨ 生成完了！ ✨\nダウンロードされた「.mcpack」ファイルをダブルクリックしてMinecraftにインポートすると、ゲーム内でカスタムブロックとして飾ることができます。\n\n【配置コマンド例】\n/setblock ~ ~ ~ kc:" + cleanTitleId);
+    showMcToast("🎮 Minecraft用アドオン(.mcpack)の生成が完了しました！");
+    alert("✨ 生成完了！ ✨\nダウンロードされた「.mcpack」ファイルをMinecraftにインポートしてください。\n\n【配置コマンド例】\n/setblock ~ ~ ~ kc:" + cleanTitleId);
 
   } catch(e) {
     console.error(e);
