@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v70]</title>
+<title>コドモカプセル [v71]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,6 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(229,91,91,.28);}
 
 .drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;padding-top: 48px;}
-.drawer.open{opacity:1;pointer-events:auto;}
 .drawer-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
 
@@ -191,7 +190,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v70</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v71</div>
       </div>
 
       <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
@@ -257,7 +256,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
       
       <div id="fileInputContainer" class="space-y-2">
-        <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応）</label>
+        <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応)</label>
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         
@@ -409,7 +408,6 @@ import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
-// 元々正しく動いていた本番環境の設定のまま固定します
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
   authDomain: "kodomonote-prod.firebaseapp.com",
@@ -686,12 +684,16 @@ onAuthStateChanged(auth, async (user) => {
           }
         });
 
-        currentSession = { uid: user.uid, familyId: fId };
         const famSnap = await getDoc(doc(db, "families", fId));
+        let inviteCode = fId; // フォールバック
         if (famSnap.exists()) {
-          const invCode = famSnap.data().inviteCode || "なし";
-          document.getElementById("displayFamilyIdCode").value = invCode;
+          inviteCode = famSnap.data().inviteCode || fId;
+          document.getElementById("displayFamilyIdCode").value = inviteCode;
         }
+        
+        // パス修正の肝：セッションデータにドキュメントIDと正しい「inviteCode」の両方を乗せる
+        currentSession = { uid: user.uid, familyId: fId, inviteCode: inviteCode };
+        
         startRealtimeSync(fId);
         gateScreen.classList.add("hidden");
 
@@ -1191,7 +1193,7 @@ window.toggleWorkFavorite = async function(id) {
     });
     w.isFavorite = !w.isFavorite;
     renderDetailViewerCarousel(w);
-    showMcToast(w.isFavorite ? "⭐ お気に入りに追加しました" : "☆ お気に入りを解除しました");
+    showMcToast("⭐ お気に入りに追加しました");
   } catch(e) {
     alert("エラー: " + e.message);
   }
@@ -1327,7 +1329,9 @@ document.getElementById("workForm").addEventListener("submit", async (e) => {
         } else {
           const isPdf = item.startsWith("data:application/pdf");
           const ext = isPdf ? "pdf" : "jpg";
-          const storagePath = `families/${currentSession.familyId}/works/${Date.now()}_${i}.${ext}`;
+          
+          // ★最重要修正箇所: セキュリティルールの監査を突破できるよう、ドキュメントID(familyId)ではなく「inviteCode」をパスに利用
+          const storagePath = `families/${currentSession.inviteCode}/works/${Date.now()}_${i}.${ext}`;
           const storageRef = ref(storage, storagePath);
           await uploadString(storageRef, item, "data_url");
           const dUrl = await getDownloadURL(storageRef);
