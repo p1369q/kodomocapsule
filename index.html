@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v78]</title>
+<title>コドモカプセル [v77]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,7 +306,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v78</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v77</div>
       </div>
 
       <div>
@@ -733,30 +733,33 @@ function getDownloadExtension(media, sourceUrl) {
   return ".jpg";
 }
 
-function buildDownloadUrl(sourceUrl, fileName) {
-  const src = String(sourceUrl || "");
-  if (src.startsWith("data:") || src.startsWith("blob:")) return src;
-
-  try {
-    const url = new URL(src, window.location.href);
-    url.searchParams.set("response-content-disposition", `attachment; filename="${fileName}"`);
-    return url.toString();
-  } catch (e) {
-    return src;
-  }
-}
-
 async function downloadUrlToDevice(sourceUrl, fileName) {
   if (!sourceUrl) throw new Error("ダウンロード対象のURLがありません。");
 
-  const link = document.createElement("a");
-  link.href = buildDownloadUrl(sourceUrl, fileName);
-  link.download = fileName;
-  link.rel = "noopener";
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
-  link.remove();
+  let objectUrl = null;
+
+  try {
+    const response = await fetch(sourceUrl, { mode: "cors" });
+    if (!response.ok) throw new Error(`画像の取得に失敗しました。Status: ${response.status}`);
+    const blob = await response.blob();
+    objectUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    link.remove();
+
+    setTimeout(() => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    }, 1500);
+  } catch (e) {
+    console.error("Download failed:", e);
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    alert("自動ダウンロードに失敗しました。\nブラウザの保存制限、または画像URLの取得制限により保存できない可能性があります。");
+  }
 }
 
 window.downloadWorkMedia = async function(workId, mediaIndex, event) {
