@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v66]</title>
+<title>コドモカプセル [v67]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -226,7 +226,12 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
               <div id="savedFamilyGroupsList" class="space-y-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">最後に選択した家族グループを記憶します。次回ログイン時も、参加済み一覧から自由に選び直せます。</p>
+            <div id="pendingFamilyRequestsArea" class="hidden p-4 rounded-2xl border border-amber-200 bg-amber-50 text-left">
+              <div class="text-xs font-bold text-amber-800">⏳ 承認待ちの参加申請</div>
+              <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
+            </div>
+
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。主ユーザーの承認後は、参加済み一覧からコードなしで開けます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -303,7 +308,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v66</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v67</div>
       </div>
 
       <div>
@@ -435,11 +440,11 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <button onclick="closeDrawer('child')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
 
-    <div class="grid grid-cols-4 gap-2 mb-5">
-      <button onclick="document.getElementById('settingsChildren').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-100">👶<span class="block mt-1">子ども</span></button>
-      <button onclick="document.getElementById('settingsCategories').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-sky-50 text-sky-700 text-[10px] font-bold border border-sky-100">🏷️<span class="block mt-1">カテゴリ</span></button>
-      <button onclick="document.getElementById('settingsFamily').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100">🤝<span class="block mt-1">家族共有</span></button>
-      <button onclick="document.getElementById('settingsPlan').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100">💎<span class="block mt-1">プラン</span></button>
+    <div class="grid grid-cols-4 gap-2 mb-5 p-1.5 rounded-2xl bg-slate-100">
+      <button id="settingsTab-children" onclick="switchSettingsTab('children')" class="settings-tab py-3 rounded-xl bg-white text-rose-700 text-[10px] font-bold shadow-sm">👶<span class="block mt-1">子ども</span></button>
+      <button id="settingsTab-categories" onclick="switchSettingsTab('categories')" class="settings-tab py-3 rounded-xl text-slate-500 text-[10px] font-bold">🏷️<span class="block mt-1">カテゴリ</span></button>
+      <button id="settingsTab-family" onclick="switchSettingsTab('family')" class="settings-tab py-3 rounded-xl text-slate-500 text-[10px] font-bold">🤝<span class="block mt-1">家族共有</span></button>
+      <button id="settingsTab-plan" onclick="switchSettingsTab('plan')" class="settings-tab py-3 rounded-xl text-slate-500 text-[10px] font-bold">💎<span class="block mt-1">プラン</span></button>
     </div>
     
     <details class="mb-6 p-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 to-indigo-50/40 text-left">
@@ -456,7 +461,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </div>
         <div>
           <div class="font-bold text-indigo-950 mb-0.5">③ 夫婦・家族間でのリアルタイム同期</div>
-          <p>下記に表示される「家族コード」をコピーして、パートナーの初期画面で入力してもらうだけで、同一のギャラリーを完璧に共有・同時編集できます。</p>
+          <p>下記に表示される「家族コード」をパートナーが入力すると参加申請が届きます。主ユーザーが承認した後、同じギャラリーを安全に共有・同時編集できます。</p>
         </div>
         <div class="pt-2 border-t border-indigo-100">
           <div class="font-bold text-amber-700 flex items-center gap-1 mb-1">👑 プレミアム機能と無料プランの違い</div>
@@ -498,7 +503,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </details>
 
-    <div id="settingsPlan" class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3 scroll-mt-4">
+    <div id="settingsPlan" class="settings-tab-panel hidden mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex-col gap-3">
       <div class="flex justify-between items-center">
         <div>
           <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 家族グループのプラン設定</div>
@@ -513,14 +518,19 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </div>
 
-    <div id="settingsFamily" class="mb-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 scroll-mt-4">
+    <div id="settingsFamily" class="settings-tab-panel hidden mb-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
       <label class="block text-xs font-bold text-emerald-800 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
         <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
         <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
       </div>
-      <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力すると、データとプレミアム状態を家族グループ全員で共有できます。</p>
+      <p class="text-[10px] text-slate-400 mt-2">パートナーがこのコードで参加申請し、主ユーザーが承認すると、データとプレミアム状態を家族グループ全員で共有できます。</p>
       <div class="mt-4 pt-4 border-t border-emerald-100">
+        <div id="familyJoinRequestArea" class="hidden mb-4">
+          <div class="text-xs font-bold text-amber-700 mb-1">🔔 参加申請</div>
+          <p class="text-[10px] text-slate-400 mb-2">承認するまで、申請者は家族データを見ることができません。</p>
+          <div id="familyJoinRequestList" class="space-y-2"></div>
+        </div>
         <div class="flex items-center justify-between gap-2 mb-2">
           <div>
             <div class="text-xs font-bold text-emerald-800">👥 参加メンバー</div>
@@ -531,7 +541,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </div>
 
-    <div id="settingsChildren" class="form-section space-y-4 mb-6 scroll-mt-4">
+    <div id="settingsChildren" class="settings-tab-panel form-section space-y-4 mb-6">
       <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
         <span>👶 子どもの追加・編集</span>
         <span id="childLimitCountLabel" class="text-xs font-medium text-slate-500">(0 / 1人)</span>
@@ -553,7 +563,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div id="childList" class="mt-2 space-y-2"></div>
     </div>
 
-    <div id="settingsCategories" class="form-section space-y-4 mb-6 scroll-mt-4">
+    <div id="settingsCategories" class="settings-tab-panel hidden form-section space-y-4 mb-6">
       <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
         <span>🏷️ カテゴリの追加・編集</span>
       </h4>
@@ -574,7 +584,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <script type="module">
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs, arrayUnion, deleteField } from "firebase/firestore";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteField } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
@@ -604,6 +614,8 @@ let unsubscribeWorks = null;
 let unsubscribeCategories = null;
 let unsubscribeUserPlan = null; 
 let unsubscribeFamilyPlan = null;
+let unsubscribeJoinRequests = null;
+let unsubscribeUserJoinRequests = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 let pendingOwnFamilyId = null;
@@ -611,6 +623,7 @@ let hasSelectedFamilyGroup = false;
 let legacyUserPlan = "free";
 let isResolvingFamilyChoice = false;
 let savedJoinedFamilies = [];
+let pendingJoinFamilies = [];
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -896,6 +909,32 @@ function updateFamilyChoiceUI() {
   }
 }
 
+window.switchSettingsTab = function(tabName) {
+  const panelMap = {
+    children: "settingsChildren",
+    categories: "settingsCategories",
+    family: "settingsFamily",
+    plan: "settingsPlan"
+  };
+  document.querySelectorAll(".settings-tab-panel").forEach(panel => panel.classList.add("hidden"));
+  document.querySelectorAll(".settings-tab").forEach(tab => {
+    tab.classList.remove("bg-white", "shadow-sm", "text-rose-700", "text-sky-700", "text-emerald-700", "text-amber-700");
+    tab.classList.add("text-slate-500");
+  });
+
+  const panel = document.getElementById(panelMap[tabName]);
+  const tab = document.getElementById(`settingsTab-${tabName}`);
+  if(panel) panel.classList.remove("hidden");
+  if(tab) {
+    tab.classList.remove("text-slate-500");
+    tab.classList.add("bg-white", "shadow-sm");
+    if(tabName === "children") tab.classList.add("text-rose-700");
+    if(tabName === "categories") tab.classList.add("text-sky-700");
+    if(tabName === "family") tab.classList.add("text-emerald-700");
+    if(tabName === "plan") tab.classList.add("text-amber-700");
+  }
+};
+
 function renderSavedFamilyGroups() {
   const area = document.getElementById("savedFamilyGroupsArea");
   const list = document.getElementById("savedFamilyGroupsList");
@@ -920,6 +959,85 @@ function renderSavedFamilyGroups() {
       <span class="text-[10px] font-bold text-emerald-700 shrink-0">開く →</span>
     </button>`;
   }).join("");
+}
+
+function renderPendingFamilyRequests() {
+  const area = document.getElementById("pendingFamilyRequestsArea");
+  const list = document.getElementById("pendingFamilyRequestsList");
+  if (!area || !list) return;
+
+  if (!pendingJoinFamilies.length) {
+    area.classList.add("hidden");
+    list.innerHTML = "";
+    return;
+  }
+
+  area.classList.remove("hidden");
+  list.innerHTML = pendingJoinFamilies.map((request) => {
+    const requestedDate = request.requestedAt ? new Date(request.requestedAt).toLocaleDateString("ja-JP") : "";
+    return `<div class="p-3 rounded-xl bg-white border border-amber-100">
+      <div class="text-xs font-bold text-slate-700">${request.familyName || "家族グループ"}</div>
+      <div class="text-[10px] text-amber-700 mt-1">主ユーザーの承認待ち${requestedDate ? ` ・ ${requestedDate}申請` : ""}</div>
+    </div>`;
+  }).join("");
+}
+
+async function resolvePendingJoinRequests(user, userData) {
+  const pendingIds = Array.isArray(userData.pendingFamilyIds) ? userData.pendingFamilyIds : [];
+  const pending = [];
+
+  for (const familyId of pendingIds) {
+    try {
+      const requestRef = doc(db, "familyJoinRequests", `${familyId}_${user.uid}`);
+      const requestSnap = await getDoc(requestRef);
+      if (!requestSnap.exists()) continue;
+      const requestData = requestSnap.data();
+
+      if (requestData.status === "approved") {
+        await setDoc(doc(db, "users", user.uid), {
+          joinedFamilyIds: arrayUnion(familyId),
+          pendingFamilyIds: arrayRemove(familyId),
+          updatedAt: Date.now()
+        }, { merge: true });
+        continue;
+      }
+      if (requestData.status === "rejected" || requestData.status === "revoked") {
+        await setDoc(doc(db, "users", user.uid), {
+          pendingFamilyIds: arrayRemove(familyId),
+          updatedAt: Date.now()
+        }, { merge: true });
+        continue;
+      }
+      pending.push({ familyId, ...requestData });
+    } catch (e) {
+      console.warn("Pending family request lookup skipped:", e);
+    }
+  }
+
+  pendingJoinFamilies = pending;
+  renderPendingFamilyRequests();
+}
+
+function startUserJoinRequestSync(user) {
+  if (unsubscribeUserJoinRequests) { unsubscribeUserJoinRequests(); unsubscribeUserJoinRequests = null; }
+  const requestQuery = query(collection(db, "familyJoinRequests"), where("userId", "==", user.uid));
+  unsubscribeUserJoinRequests = onSnapshot(requestQuery, async (snapshot) => {
+    for (const requestDoc of snapshot.docs) {
+      const requestData = requestDoc.data();
+      if (requestData.status === "approved") {
+        await setDoc(doc(db, "users", user.uid), {
+          joinedFamilyIds: arrayUnion(requestData.familyId),
+          pendingFamilyIds: arrayRemove(requestData.familyId),
+          updatedAt: Date.now()
+        }, { merge: true });
+      } else if (requestData.status === "rejected" || requestData.status === "revoked") {
+        await setDoc(doc(db, "users", user.uid), {
+          pendingFamilyIds: arrayRemove(requestData.familyId),
+          updatedAt: Date.now()
+        }, { merge: true });
+      }
+    }
+  });
 }
 
 async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
@@ -952,6 +1070,107 @@ async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
   }
   return resolved;
 }
+
+function startJoinRequestSync(familyId, familyData, user) {
+  const area = document.getElementById("familyJoinRequestArea");
+  const list = document.getElementById("familyJoinRequestList");
+  if (!area || !list) return;
+  if (unsubscribeJoinRequests) { unsubscribeJoinRequests(); unsubscribeJoinRequests = null; }
+
+  if (familyData.createdBy !== user.uid) {
+    area.classList.add("hidden");
+    list.innerHTML = "";
+    return;
+  }
+
+  const requestQuery = query(
+    collection(db, "familyJoinRequests"),
+    where("familyId", "==", familyId)
+  );
+  unsubscribeJoinRequests = onSnapshot(requestQuery, (snapshot) => {
+    const requests = [];
+    snapshot.forEach(requestDoc => {
+      if(requestDoc.data().status === "pending") requests.push({ docId: requestDoc.id, ...requestDoc.data() });
+    });
+    if (!requests.length) {
+      area.classList.add("hidden");
+      list.innerHTML = "";
+      return;
+    }
+    area.classList.remove("hidden");
+    list.innerHTML = requests.map(request => {
+      const name = request.displayName || request.email || `ユーザー ${request.userId.slice(0, 6)}`;
+      return `<div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+        <div class="text-xs font-bold text-slate-700">${name}</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">${request.email || ""}</div>
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          <button onclick="approveFamilyJoinRequest('${request.docId}')" class="py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-bold">承認する</button>
+          <button onclick="rejectFamilyJoinRequest('${request.docId}')" class="py-2 rounded-lg bg-white border border-rose-200 text-rose-600 text-[10px] font-bold">拒否する</button>
+        </div>
+      </div>`;
+    }).join("");
+  }, () => {
+    area.classList.add("hidden");
+  });
+}
+
+window.approveFamilyJoinRequest = async function(requestDocId) {
+  const user = auth.currentUser;
+  if (!user || !currentSession?.familyId || !requestDocId) return;
+  const familyRef = doc(db, "families", currentSession.familyId);
+  const familySnap = await getDoc(familyRef);
+  if (!familySnap.exists() || familySnap.data().createdBy !== user.uid) {
+    alert("参加申請を承認できるのはグループ作成者だけです。");
+    return;
+  }
+
+  const requestRef = doc(db, "familyJoinRequests", requestDocId);
+  const requestSnap = await getDoc(requestRef);
+  if (!requestSnap.exists() || requestSnap.data().familyId !== currentSession.familyId) return;
+  const requestData = requestSnap.data();
+
+  try {
+    await updateDoc(familyRef, {
+      [`members.${requestData.userId}`]: true,
+      [`memberProfiles.${requestData.userId}`]: {
+        email: requestData.email || "",
+        displayName: requestData.displayName || "",
+        approvedAt: Date.now()
+      },
+      updatedAt: Date.now()
+    });
+    await updateDoc(requestRef, {
+      status: "approved",
+      approvedAt: Date.now(),
+      approvedBy: user.uid
+    });
+    alert("参加申請を承認しました。");
+  } catch (e) {
+    alert("参加申請の承認に失敗しました: " + e.message);
+  }
+};
+
+window.rejectFamilyJoinRequest = async function(requestDocId) {
+  const user = auth.currentUser;
+  if (!user || !currentSession?.familyId || !requestDocId) return;
+  const familySnap = await getDoc(doc(db, "families", currentSession.familyId));
+  if (!familySnap.exists() || familySnap.data().createdBy !== user.uid) {
+    alert("参加申請を拒否できるのはグループ作成者だけです。");
+    return;
+  }
+  if (!confirm("この参加申請を拒否しますか？")) return;
+
+  try {
+    await updateDoc(doc(db, "familyJoinRequests", requestDocId), {
+      status: "rejected",
+      rejectedAt: Date.now(),
+      rejectedBy: user.uid
+    });
+    alert("参加申請を拒否しました。");
+  } catch (e) {
+    alert("参加申請の拒否に失敗しました: " + e.message);
+  }
+};
 
 function renderFamilyMembers(familyData, user) {
   const list = document.getElementById("familyMemberList");
@@ -1017,6 +1236,15 @@ window.removeFamilyMember = async function(memberUid) {
       [`memberProfiles.${memberUid}`]: deleteField(),
       updatedAt: Date.now()
     });
+    const requestRef = doc(db, "familyJoinRequests", `${currentSession.familyId}_${memberUid}`);
+    const requestSnap = await getDoc(requestRef);
+    if (requestSnap.exists()) {
+      await updateDoc(requestRef, {
+        status: "revoked",
+        revokedAt: Date.now(),
+        revokedBy: user.uid
+      });
+    }
     alert("メンバーを家族グループから削除しました。");
   } catch (e) {
     alert("メンバーの削除に失敗しました: " + e.message);
@@ -1053,6 +1281,14 @@ async function activateFamilyGroup(familyId, user) {
   if (!famSnap.exists()) throw new Error("家族グループが見つかりません。");
 
   const familyData = famSnap.data();
+  const isFamilyOwner = familyData.createdBy === user.uid;
+  const isApprovedMember = familyData.members?.[user.uid] === true;
+  if (!isFamilyOwner && !isApprovedMember) {
+    hasSelectedFamilyGroup = false;
+    currentSession = null;
+    throw new Error("この家族グループは主ユーザーの承認待ちです。");
+  }
+
   if (!familyData.plan) {
     let migratedPlan = "free";
     if (familyData.createdBy === user.uid) {
@@ -1072,19 +1308,19 @@ async function activateFamilyGroup(familyId, user) {
     famSnap = await getDoc(doc(db, "families", familyId));
   }
 
-  await updateDoc(doc(db, "families", familyId), {
-    [`members.${user.uid}`]: true,
-    [`memberProfiles.${user.uid}`]: {
-      email: user.email || "",
-      displayName: user.displayName || "",
-      lastSeenAt: Date.now()
-    }
-  });
-  famSnap = await getDoc(doc(db, "families", familyId));
+  if (isFamilyOwner && famSnap.data().inviteCode) {
+    await setDoc(doc(db, "familyInvites", famSnap.data().inviteCode), {
+      familyId,
+      createdBy: user.uid,
+      active: true,
+      updatedAt: Date.now()
+    }, { merge: true });
+  }
 
   isPremiumUser = famSnap.data().plan === "premium";
   updatePlanUI();
   renderFamilyMembers(famSnap.data(), user);
+  startJoinRequestSync(familyId, famSnap.data(), user);
 
   if(famSnap.exists() && famSnap.data().inviteCode) {
     document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
@@ -1104,6 +1340,7 @@ async function activateFamilyGroup(familyId, user) {
     isPremiumUser = latestFamilyData.plan === "premium";
     updatePlanUI();
     renderFamilyMembers(latestFamilyData, user);
+    startJoinRequestSync(familyId, latestFamilyData, user);
   });
 
   await verifyAndSetupDefaultCategories(familyId);
@@ -1158,6 +1395,7 @@ onAuthStateChanged(auth, async (user) => {
     if(errLog) errLog.classList.add("hidden");
 
     await checkUrlSessionParameters(user);
+    startUserJoinRequestSync(user);
 
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
 
@@ -1168,6 +1406,7 @@ onAuthStateChanged(auth, async (user) => {
         const userData = userSnap.exists() ? userSnap.data() : {};
         legacyUserPlan = userData.plan || "free";
         pendingOwnFamilyId = await resolveOwnedFamilyId(user, userData);
+        await resolvePendingJoinRequests(user, userData);
         await resolveJoinedFamilyGroups(user, userData, pendingOwnFamilyId);
         updateFamilyChoiceUI();
         if (hasSelectedFamilyGroup) {
@@ -1197,10 +1436,14 @@ onAuthStateChanged(auth, async (user) => {
     legacyUserPlan = "free";
     isResolvingFamilyChoice = false;
     savedJoinedFamilies = [];
+    pendingJoinFamilies = [];
     renderSavedFamilyGroups();
+    renderPendingFamilyRequests();
     stopRealtimeSync();
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
     if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
+    if (unsubscribeJoinRequests) { unsubscribeJoinRequests(); unsubscribeJoinRequests = null; }
+    if (unsubscribeUserJoinRequests) { unsubscribeUserJoinRequests(); unsubscribeUserJoinRequests = null; }
     localChildren = []; localWorks = []; localCategories = [];
     gateLoading.classList.add("hidden");
     gateSetupArea.classList.add("hidden");
@@ -1252,6 +1495,12 @@ window.createNewFamilyGroup = async function() {
       },
       plan: legacyUserPlan === "premium" ? "premium" : "free"
     });
+    await setDoc(doc(db, "familyInvites", inviteCodeUuid), {
+      familyId: docFamilyId,
+      createdBy: user.uid,
+      active: true,
+      createdAt: Date.now()
+    });
     pendingOwnFamilyId = docFamilyId;
     await activateFamilyGroup(docFamilyId, user);
     alert("🎉 家族グループを新規に作成しました！");
@@ -1267,38 +1516,51 @@ window.joinFamilyGroup = async function() {
   if(!user) return; if(!inviteCode) { alert("招待コードを入力してください"); return; }
 
   const btn = document.getElementById("btnJoinFamily");
-  btn.innerText = "合流中..."; btn.disabled = true;
+  btn.innerText = "申請中..."; btn.disabled = true;
 
   try {
-    const q = query(collection(db, "families"), where("inviteCode", "==", inviteCode));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
+    const inviteSnap = await getDoc(doc(db, "familyInvites", inviteCode));
+    if (!inviteSnap.exists() || inviteSnap.data().active !== true) {
       alert("⚠️ 有効な家族招待コードが見つかりません。");
       btn.innerText = "招待コードで参加する"; btn.disabled = false; return;
     }
-    const familyDoc = querySnapshot.docs[0]; const targetDocId = familyDoc.id;
-    hasSelectedFamilyGroup = true;
-    await setDoc(doc(db, "users", user.uid), {
+    const targetDocId = inviteSnap.data().familyId;
+    const requestRef = doc(db, "familyJoinRequests", `${targetDocId}_${user.uid}`);
+    const existingRequest = await getDoc(requestRef);
+
+    if (existingRequest.exists() && existingRequest.data().status === "approved") {
+      await setDoc(doc(db, "users", user.uid), {
+        joinedFamilyIds: arrayUnion(targetDocId),
+        pendingFamilyIds: arrayRemove(targetDocId),
+        updatedAt: Date.now()
+      }, { merge: true });
+      await activateFamilyGroup(targetDocId, user);
+      return;
+    }
+
+    await setDoc(requestRef, {
       familyId: targetDocId,
-      joinedFamilyIds: arrayUnion(targetDocId),
+      userId: user.uid,
+      email: user.email || "",
+      displayName: user.displayName || "",
+      familyName: "招待された家族グループ",
+      status: "pending",
+      requestedAt: Date.now()
+    });
+    await setDoc(doc(db, "users", user.uid), {
+      pendingFamilyIds: arrayUnion(targetDocId),
       email: user.email || "",
       updatedAt: Date.now()
     }, { merge: true });
-    await updateDoc(doc(db, "families", targetDocId), {
-      [`members.${user.uid}`]: true,
-      [`memberProfiles.${user.uid}`]: {
-        email: user.email || "",
-        displayName: user.displayName || "",
-        lastSeenAt: Date.now()
-      },
-      updatedAt: Date.now()
-    });
-    await activateFamilyGroup(targetDocId, user);
-    alert("🎉 家族グループへの合流に成功しました！");
+    document.getElementById("joinInviteCodeInput").value = "";
+    alert("参加申請を送信しました。\n主ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
-    hasSelectedFamilyGroup = false;
     btn.innerText = "招待コードで参加する"; btn.disabled = false;
-    alert("🚨 合流エラー: " + e.message);
+    alert("🚨 参加申請エラー: " + e.message);
+    return;
+  } finally {
+    btn.innerText = "招待コードで参加する";
+    btn.disabled = false;
   }
 };
 
@@ -1844,7 +2106,7 @@ window.openDrawer = function(t){
       document.getElementById("inputCategory").value = localCategories[0].id;
     }
   }
-  if(t === 'child') { cancelChildEdit(); cancelCategoryEdit(); }
+  if(t === 'child') { cancelChildEdit(); cancelCategoryEdit(); switchSettingsTab('children'); }
   const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
 };
 
