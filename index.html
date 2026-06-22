@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v71]</title>
+<title>コドモカプセル [v72]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +308,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v70</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v72</div>
       </div>
 
       <div>
@@ -1554,7 +1554,7 @@ window.joinFamilyGroup = async function() {
   } catch(e) {
     btn.innerText = "招待コードで参加する"; btn.disabled = false;
     if (e.code === "permission-denied") {
-      alert("参加申請を送信できませんでした。\n\n主ユーザーが一度v70で家族グループを開いていることと、v70のFirestore Rulesが公開済みか確認してください。");
+      alert("参加申請を送信できませんでした。\n\n主ユーザーが一度v72で家族グループを開いていることと、v72のFirestore Rulesが公開済みか確認してください。");
     } else {
       alert("🚨 参加申請エラー: " + e.message);
     }
@@ -1610,15 +1610,16 @@ function renderAll(){
   renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash();
 }
 
-document.getElementById("gallerySortSelect").addEventListener("change", renderGallery);
-document.getElementById("galleryChildFilterSelect").addEventListener("change", renderGallery);
-document.getElementById("gallerySearchInput").addEventListener("input", renderGallery);
+document.getElementById("gallerySortSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
+document.getElementById("galleryChildFilterSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
+document.getElementById("gallerySearchInput").addEventListener("input", () => { renderGallery(); renderPhotoWall(); });
 
 window.setAgeStageFilter = function(stage) {
   currentAgeStageFilter = stage;
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
   document.getElementById(`ageTab-${stage}`).classList.add("active");
   renderGallery();
+  renderPhotoWall();
 };
 
 window.goToTopPage = function() {
@@ -2047,8 +2048,58 @@ function renderGallery(){
 }
 
 function renderPhotoWall(){
+  const wall = document.getElementById("photoWallGrid");
+  const sortSelect = document.getElementById("gallerySortSelect");
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  const searchInput = document.getElementById("gallerySearchInput");
+  if(!wall || !sortSelect || !filterSelect || !searchInput) return;
+
+  const sortValue = sortSelect.value;
+  const filterValue = filterSelect.value;
+  const searchQuery = searchInput.value.toLowerCase().trim();
+  let displayWorks = localWorks.filter(w => !w.isDeleted);
+
+  if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
+  else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
+
+  if (currentAgeStageFilter !== "all") {
+    displayWorks = displayWorks.filter(w => {
+      if (!w.childId) return currentAgeStageFilter === "unknown";
+      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
+      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
+      const ageYears = Math.floor(totalMonths / 12);
+      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
+      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
+      if (currentAgeStageFilter === "school") return ageYears >= 6;
+      return false;
+    });
+  }
+
+  if (searchQuery !== "") {
+    displayWorks = displayWorks.filter(w => (w.title && w.title.toLowerCase().includes(searchQuery)) || (w.memo && w.memo.toLowerCase().includes(searchQuery)));
+  }
+
+  displayWorks.sort((a, b) => {
+    const createdA = a.createdAt || 0;
+    const createdB = b.createdAt || 0;
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    const childA = localChildren.find(c => c.id === a.childId);
+    const childB = localChildren.find(c => c.id === b.childId);
+    const ageA = childA ? calculateAgeInMonths(childA.birthday, a.date) : null;
+    const ageB = childB ? calculateAgeInMonths(childB.birthday, b.date) : null;
+
+    if (sortValue === "createdDesc") return createdB - createdA;
+    if (sortValue === "createdAsc") return createdA - createdB;
+    if (sortValue === "dateDesc") return dateB - dateA;
+    if (sortValue === "dateAsc") return dateA - dateB;
+    if (sortValue === "ageAsc") return (ageA ?? 99999) - (ageB ?? 99999);
+    if (sortValue === "ageDesc") return (ageB ?? -1) - (ageA ?? -1);
+    return 0;
+  });
+
   const photoItems = [];
-  localWorks.filter(w => !w.isDeleted).forEach(w => {
+  displayWorks.forEach(w => {
     if(w.mediaUrls?.length) {
       w.mediaUrls.forEach((m, index) => {
         const src = m.url || m.dataUrl || m;
@@ -2057,21 +2108,12 @@ function renderPhotoWall(){
           photoItems.push({
             workId: w.id,
             title: w.title || "写真",
-            date: w.date || "",
-            createdAt: w.createdAt || 0,
             src,
             index
           });
         }
       });
     }
-  });
-
-  photoItems.sort((a,b) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    if(dateA !== dateB) return dateB - dateA;
-    return b.createdAt - a.createdAt;
   });
 
   let html = "";
@@ -2081,8 +2123,7 @@ function renderPhotoWall(){
     </button>`;
   });
 
-  const wall = document.getElementById("photoWallGrid");
-  if(wall) wall.innerHTML = html || "<div class='page-intro text-center py-10 break-inside-avoid'><div class='text-4xl mb-3'>📷</div><div class='font-extrabold text-slate-700'>写真はまだありません</div><p class='text-xs text-slate-400 mt-2'>写真付きのカプセルを追加すると、ここに写真だけが並びます。</p></div>";
+  wall.innerHTML = html || "<div class='page-intro text-center py-10 break-inside-avoid'><div class='text-4xl mb-3'>📷</div><div class='font-extrabold text-slate-700'>条件に合う写真はありません</div><p class='text-xs text-slate-400 mt-2'>検索条件を変えるか、写真付きのカプセルを追加してみましょう。</p></div>";
 }
 
 function renderTrash(){
