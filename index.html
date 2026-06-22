@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v75]</title>
+<title>コドモカプセル [v76]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,7 +306,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v75</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v76</div>
       </div>
 
       <div>
@@ -349,10 +349,18 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"></div>
   </section>
   <section id="recordsPage" class="page">
-    <div class="page-intro mb-5">
-      <div class="text-[10px] font-bold tracking-widest text-purple-500 mb-1">PHOTO WALL</div>
-      <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">写真一覧</h2>
-      <p class="text-xs text-slate-500 mt-1.5">登録した写真だけを、アルバムのようにずらっと表示します。</p>
+    <div class="page-intro mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-purple-500 mb-1">PHOTO WALL</div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">写真一覧</h2>
+        <p class="text-xs text-slate-500 mt-1.5">登録した写真だけを、アルバムのようにずらっと表示します。</p>
+      </div>
+      <button onclick="downloadDisplayedPhotos(event)" id="photoWallBulkDownloadBtn" class="hidden sm:flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition">
+        <span>⬇</span> 表示中の写真をまとめてDL
+      </button>
+    </div>
+    <div class="sm:hidden mb-4">
+      <button onclick="downloadDisplayedPhotos(event)" class="w-full py-3.5 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition">⬇ 表示中の写真をまとめてDL</button>
     </div>
     <div id="photoWallGrid" class="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4"></div>
   </section>
@@ -778,6 +786,118 @@ window.downloadWorkMedia = async function(workId, mediaIndex, event) {
   const titlePart = sanitizeDownloadFileName(target.title || "photo");
   const fileName = sanitizeDownloadFileName(`${datePart}_${titlePart}_${mediaIndex + 1}`) + ext;
   await downloadUrlToDevice(sourceUrl, fileName);
+};
+
+function getFilteredPhotoWallItems() {
+  const sortSelect = document.getElementById("gallerySortSelect");
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  const searchInput = document.getElementById("gallerySearchInput");
+  if(!sortSelect || !filterSelect || !searchInput) return [];
+
+  const sortValue = sortSelect.value;
+  const filterValue = filterSelect.value;
+  const searchQuery = searchInput.value.toLowerCase().trim();
+  let displayWorks = localWorks.filter(w => !w.isDeleted);
+
+  if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
+  else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
+
+  if (currentAgeStageFilter !== "all") {
+    displayWorks = displayWorks.filter(w => {
+      if (!w.childId) return currentAgeStageFilter === "unknown";
+      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
+      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
+      const ageYears = Math.floor(totalMonths / 12);
+      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
+      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
+      if (currentAgeStageFilter === "school") return ageYears >= 6;
+      return false;
+    });
+  }
+
+  if (searchQuery !== "") {
+    displayWorks = displayWorks.filter(w => (w.title && w.title.toLowerCase().includes(searchQuery)) || (w.memo && w.memo.toLowerCase().includes(searchQuery)));
+  }
+
+  displayWorks.sort((a, b) => {
+    const createdA = a.createdAt || 0;
+    const createdB = b.createdAt || 0;
+    const dateA = a.date ? new Date(a.date + "T00:00:00").getTime() : null;
+    const dateB = b.date ? new Date(b.date + "T00:00:00").getTime() : null;
+    const validDateA = Number.isFinite(dateA) ? dateA : null;
+    const validDateB = Number.isFinite(dateB) ? dateB : null;
+
+    if (sortValue === "dateDesc") {
+      if (validDateA === null && validDateB === null) return createdB - createdA;
+      if (validDateA === null) return 1;
+      if (validDateB === null) return -1;
+      return (validDateB - validDateA) || (createdB - createdA);
+    }
+    if (sortValue === "dateAsc") {
+      if (validDateA === null && validDateB === null) return createdA - createdB;
+      if (validDateA === null) return 1;
+      if (validDateB === null) return -1;
+      return (validDateA - validDateB) || (createdA - createdB);
+    }
+    if (sortValue === "createdDesc") return createdB - createdA;
+    if (sortValue === "createdAsc") return createdA - createdB;
+    return 0;
+  });
+
+  const photoItems = [];
+  displayWorks.forEach(w => {
+    if(w.mediaUrls?.length) {
+      w.mediaUrls.forEach((m, index) => {
+        const src = m.url || m.dataUrl || m;
+        const isPdf = m.type === "pdf" || (typeof src === 'string' && src.includes('pdf'));
+        if(!isPdf && src) {
+          photoItems.push({
+            workId: w.id,
+            title: w.title || "写真",
+            date: w.date || "date-none",
+            src,
+            media: m,
+            index
+          });
+        }
+      });
+    }
+  });
+  return photoItems;
+}
+
+window.downloadDisplayedPhotos = async function(event) {
+  if (event) event.stopPropagation();
+  const photoItems = getFilteredPhotoWallItems();
+  if (!photoItems.length) {
+    alert("現在の条件でダウンロードできる写真がありません。");
+    return;
+  }
+
+  if (!confirm(`現在表示中の写真 ${photoItems.length} 枚をまとめてダウンロードしますか？
+※ブラウザや端末によっては、複数ファイルの保存許可が表示されることがあります。`)) return;
+
+  const btn = document.getElementById("photoWallBulkDownloadBtn");
+  const originalText = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "⬇ ダウンロード中...";
+  }
+
+  try {
+    for (let i = 0; i < photoItems.length; i++) {
+      const item = photoItems[i];
+      const ext = getDownloadExtension(item.media, item.src);
+      const fileName = sanitizeDownloadFileName(`${String(i + 1).padStart(2, "0")}_${item.date}_${item.title}_${item.index + 1}`) + ext;
+      await downloadUrlToDevice(item.src, fileName);
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
 };
 
 window.redirectToStripeCheckout = async function() {
@@ -2142,78 +2262,15 @@ function renderGallery(){
 
 function renderPhotoWall(){
   const wall = document.getElementById("photoWallGrid");
-  const sortSelect = document.getElementById("gallerySortSelect");
-  const filterSelect = document.getElementById("galleryChildFilterSelect");
-  const searchInput = document.getElementById("gallerySearchInput");
-  if(!wall || !sortSelect || !filterSelect || !searchInput) return;
+  if(!wall) return;
 
-  const sortValue = sortSelect.value;
-  const filterValue = filterSelect.value;
-  const searchQuery = searchInput.value.toLowerCase().trim();
-  let displayWorks = localWorks.filter(w => !w.isDeleted);
-
-  if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
-  else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
-
-  if (currentAgeStageFilter !== "all") {
-    displayWorks = displayWorks.filter(w => {
-      if (!w.childId) return currentAgeStageFilter === "unknown";
-      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
-      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
-      const ageYears = Math.floor(totalMonths / 12);
-      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
-      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
-      if (currentAgeStageFilter === "school") return ageYears >= 6;
-      return false;
-    });
+  const photoItems = getFilteredPhotoWallItems();
+  const bulkBtn = document.getElementById("photoWallBulkDownloadBtn");
+  if (bulkBtn) {
+    bulkBtn.disabled = photoItems.length === 0;
+    bulkBtn.classList.toggle("opacity-40", photoItems.length === 0);
+    bulkBtn.classList.toggle("cursor-not-allowed", photoItems.length === 0);
   }
-
-  if (searchQuery !== "") {
-    displayWorks = displayWorks.filter(w => (w.title && w.title.toLowerCase().includes(searchQuery)) || (w.memo && w.memo.toLowerCase().includes(searchQuery)));
-  }
-
-  displayWorks.sort((a, b) => {
-    const createdA = a.createdAt || 0;
-    const createdB = b.createdAt || 0;
-    const dateA = a.date ? new Date(a.date + "T00:00:00").getTime() : null;
-    const dateB = b.date ? new Date(b.date + "T00:00:00").getTime() : null;
-    const validDateA = Number.isFinite(dateA) ? dateA : null;
-    const validDateB = Number.isFinite(dateB) ? dateB : null;
-
-    if (sortValue === "dateDesc") {
-      if (validDateA === null && validDateB === null) return createdB - createdA;
-      if (validDateA === null) return 1;
-      if (validDateB === null) return -1;
-      return (validDateB - validDateA) || (createdB - createdA);
-    }
-    if (sortValue === "dateAsc") {
-      if (validDateA === null && validDateB === null) return createdA - createdB;
-      if (validDateA === null) return 1;
-      if (validDateB === null) return -1;
-      return (validDateA - validDateB) || (createdA - createdB);
-    }
-    if (sortValue === "createdDesc") return createdB - createdA;
-    if (sortValue === "createdAsc") return createdA - createdB;
-    return 0;
-  });
-
-  const photoItems = [];
-  displayWorks.forEach(w => {
-    if(w.mediaUrls?.length) {
-      w.mediaUrls.forEach((m, index) => {
-        const src = m.url || m.dataUrl || m;
-        const isPdf = m.type === "pdf" || (typeof src === 'string' && src.includes('pdf'));
-        if(!isPdf && src) {
-          photoItems.push({
-            workId: w.id,
-            title: w.title || "写真",
-            src,
-            index
-          });
-        }
-      });
-    }
-  });
 
   let html = "";
   photoItems.forEach(item => {
