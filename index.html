@@ -3,763 +3,1443 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル</title>
+<title>コドモカプセル [v64]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #F7F4EE;
-  --card: #FFFFFF;
-  --ink: #1E293B;
-  --muted: #64748B;
-  --accent: #FF6B6B;
-  --accent-dark: #E55B5B;
-  --gold: #D6B25E;
-  --border: #E7E1D7;
-  --danger: #D66A5E;
+:root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#FF6B6B;--accent-dark:#E55B5B;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',sans-serif;}
+button{cursor:pointer;}
+input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:white;outline:none;}
+.hidden{display:none !important;}
+.page{display:none;}
+.page.active{display:block;}
+.glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.78);}
+.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
+.nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
+.fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(229,91,91,.28);}
+
+.drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;padding-top: 48px;}
+.drawer.open{opacity:1;pointer-events:auto;}
+.drawer-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
+.drawer.open .drawer-panel{transform:translateY(0);}
+
+.age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(229,91,91,0.2); }
+
+#searchMenuArea {
+  transition: max-height 0.3s ease-out, opacity 0.2s ease-out, margin-top 0.3s ease-out;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
 }
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+#searchMenuArea.collapsed {
+  max-height: 0px !important;
+  opacity: 0 !important;
+  margin-top: 0px !important;
+  padding-bottom: 0px !important;
+  pointer-events: none;
 }
-html, body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Noto Sans JP', sans-serif;
-}
-button {
+
+.app-icon {
+  transition: transform 0.3s ease;
   cursor: pointer;
 }
-input, select, textarea {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 14px 16px;
-  background: white;
-  outline: none;
-}
-.hidden {
-  display: none;
-}
-.drawer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 32px 32px 0 0;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.05);
-  transform: translateY(105%);
-  transition: transform 0.35s cubic-bezier(0.15, 1, 0.3, 1);
-  z-index: 50;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding-bottom: env(safe-area-inset-bottom, 24px);
-}
-.drawer.open {
-  transform: translateY(0);
-}
-.page {
-  display: none;
-  min-height: 100vh;
-  padding-bottom: 100px;
-}
-.page.active {
-  display: block;
-}
-.premium-badge {
-  background: linear-gradient(135deg, #E2B653 0%, #D6B25E 40%, #F3DF95 70%, #D6B25E 100%);
-  color: #4A370A;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(214, 178, 94, 0.2);
-}
-.btn-scale:active {
-  transform: scale(0.97);
-}
-.masonry-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-@media (min-width: 768px) {
-  .masonry-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-}
-@media (min-width: 1024px) {
-  .masonry-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  z-index: 30;
-}
-.nav-tab {
-  color: var(--muted);
-  transition: all 0.2s ease;
-}
-.nav-tab.active {
-  color: var(--accent);
-  font-weight: 700;
-}
-.media-scroll::-webkit-scrollbar {
-  display: none;
-}
-.media-scroll {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.aspect-card {
-  position: relative;
-  width: 100%;
-  padding-top: 100%;
-  overflow: hidden;
-  border-radius: 20px;
-}
-.aspect-card img, .aspect-card video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.skeleton {
-  background: linear-gradient(90deg, #EFEBE4 25%, #E5DFD5 50%, #EFEBE4 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.app-icon:hover {
+  transform: rotate(15deg) scale(1.05);
 }
 </style>
 </head>
-<body class="antialiased selection:bg-red-100">
+<body>
 
-<div id="backdrop" class="fixed inset-0 bg-slate-900/20 backdrop-blur-xs z-40 hidden" onclick="closeDrawer()"></div>
+<div id="authGatescreen" class="fixed inset-0 z-[1000] bg-[#F7F4EE] flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
+  <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-3xl border border-[#E7E1D7] shadow-sm flex flex-col items-center">
+    <svg class="app-icon w-24 h-24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
+      <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
+      <path d="M 25 53 A 25 25 0 0 0 75 53 Z" fill="#ff5252" opacity="0.5" />
+      <path d="M 80 50 A 30 30 0 0 0 20 50 Z" fill="#a5d8ff" opacity="0.6" />
+      <rect x="16" y="47" width="68" height="6" rx="3" fill="#ffffff" />
+      <path d="M 50 25 L 53 33 L 61 34 L 55 39 L 57 47 L 50 43 L 43 47 L 45 39 L 39 34 L 47 33 Z" fill="#feca57" />
+      <circle cx="68" cy="28" r="2.5" fill="#ffd32a" />
+      <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
+    </svg>
 
-<div id="galleryPage" class="page active">
-  <header class="sticky top-0 bg-[#F7F4EE]/80 backdrop-blur-md z-20 px-4 py-3 flex items-center justify-between border-b border-[#E7E1D7]">
-    <div class="flex items-center gap-2.5">
-      <div class="w-9 h-9 bg-[#FF6B6B] rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm">コ</div>
-      <div>
-        <h1 class="text-lg font-extrabold tracking-tight text-slate-800">コドモカプセル</h1>
-        <p class="text-[9px] text-slate-400 font-bold -mt-0.5">成長をきれいに残すタイムカプセル</p>
+    <h1 class="text-3xl font-extrabold text-[#2b2d42]">コドモカプセル</h1>
+    <p class="text-xs text-slate-500 leading-relaxed">子どもの作品・プリント・テストを家族で共有して、年齢ごとにスッキリ整理・自動保管するタイムカプセルアプリ</p>
+    
+    <div id="gateLoading" class="text-sm text-slate-400 py-4 flex flex-col items-center justify-center gap-2 w-full">
+      <div id="loadingStatusText">読み込み中...</div>
+      <div id="gateErrorLog" class="text-xs text-red-500 max-w-xs break-all hidden font-mono p-2 bg-red-50 border border-red-100 rounded-lg"></div>
+    </div>
+    
+    <div id="gateLoginArea" class="hidden space-y-4 w-full">
+      <p class="text-sm font-medium text-slate-700">利用を開始するにはGoogleアカウントでログインしてください</p>
+      <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#ff6b6b] text-white font-bold text-sm shadow shadow-rose-900/10 hover:bg-[#ff5252] transition">Googleアカウントでサインイン</button>
+    </div>
+
+    <div id="gateSetupArea" class="hidden space-y-6 w-full">
+      <div class="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-800 border border-emerald-100 font-medium text-left">
+        👋 ログインが成功しました！<br>次に、家族グループの設定を行ってください。
+      </div>
+      
+      <div class="space-y-3 w-full">
+        <h3 class="text-sm font-bold text-slate-800 text-left">✨ 新しく利用をスタートする場合</h3>
+        <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="w-full py-3.5 rounded-xl border-2 border-dashed border-[#ff6b6b] bg-[#FBFBFA] text-[#ff6b6b] text-xs font-bold hover:bg-rose-50/50 transition">
+          🚀 新しい家族グループを作成する
+        </button>
+      </div>
+
+      <div class="relative flex py-2 items-center text-slate-300 w-full">
+        <div class="flex-grow border-t border-slate-200"></div>
+        <span class="flex-shrink mx-3 text-xs text-slate-400 font-medium">または</span>
+        <div class="flex-grow border-t border-slate-200"></div>
+      </div>
+
+      <div class="space-y-3 text-left w-full">
+        <h3 class="text-sm font-bold text-slate-800">✉️ パートナーから招待されている場合</h3>
+        <p class="text-[11px] text-slate-400">共有された家族招待コード（UUID形式）を入力してください。</p>
+        <div class="flex gap-2">
+          <input type="text" id="joinInviteCodeInput" placeholder="例：xxxxxxxx-xxxx-..." class="flex-1 py-2.5 px-3 text-xs rounded-xl bg-slate-50 border border-slate-200">
+          <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="px-4 rounded-xl bg-[#ff6b6b] text-white text-xs font-bold shrink-0 shadow-sm hover:bg-[#ff5252]">合流する</button>
+        </div>
+      </div>
+      
+      <div class="pt-4 border-t text-left w-full">
+        <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
       </div>
     </div>
-    <div class="flex items-center gap-1.5">
-      <button onclick="openDrawer('premium')" id="premiumNavBtn" class="premium-badge text-[11px] px-3 py-1.5 rounded-full flex items-center gap-1 btn-scale transition-transform">
-        <span>✨ プレミアム</span>
-      </button>
-      <button onclick="openDrawer('settings')" class="w-9 h-9 bg-white rounded-xl border border-[#E7E1D7] flex items-center justify-center text-slate-500 shadow-xs btn-scale transition-transform">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.767a1.123 1.123 0 0 0-.417 1.03c.004.074.006.148.006.222 0 .074-.002.148-.006.222a1.123 1.123 0 0 0 .417 1.03l1.003.767a1.125 1.125 0 0 1 .26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.216-.456a1.125 1.125 0 0 0-1.076.124a2.08 2.08 0 0 1-.22.127c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281a1.125 1.125 0 0 0-.646-.87a2.08 2.08 0 0 1-.22-.127a1.125 1.125 0 0 0-1.074-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.767a1.122 1.122 0 0 0 .416-1.03c-.004-.074-.006-.148-.006-.222 0-.074.002-.148.006-.222a1.122 1.122 0 0 0-.416-1.03l-1.004-.767a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.49l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-      </button>
-    </div>
-  </header>
-
-  <div class="px-4 pt-3 pb-1">
-    <div id="childSelectorContainer" class="flex gap-1.5 overflow-x-auto media-scroll pb-2"></div>
-    <div id="categorySelectorContainer" class="flex gap-1.5 overflow-x-auto media-scroll py-1"></div>
   </div>
-
-  <main class="px-4 py-2">
-    <div id="galleryZeroState" class="hidden text-center py-16 text-slate-400 bg-white/50 rounded-2xl border border-dashed border-[#E7E1D7] px-4">
-      <p class="text-3xl mb-2">🎨</p>
-      <p class="text-sm font-bold text-slate-600">作品がまだありません</p>
-      <p class="text-xs text-slate-400 mt-1">下の「＋」ボタンから追加してください</p>
-    </div>
-
-    <div id="gallerySkeleton" class="masonry-grid">
-      <div class="bg-white p-2.5 rounded-2xl border border-[#E7E1D7]"><div class="aspect-card skeleton"></div><div class="h-4 skeleton mt-2.5 w-2/3 rounded"></div></div>
-      <div class="bg-white p-2.5 rounded-2xl border border-[#E7E1D7]"><div class="aspect-card skeleton"></div><div class="h-4 skeleton mt-2.5 w-1/2 rounded"></div></div>
-    </div>
-
-    <div id="galleryGrid" class="masonry-grid hidden"></div>
-  </main>
 </div>
 
-<div id="recordsPage" class="page">
-  <header class="sticky top-0 bg-[#F7F4EE]/80 backdrop-blur-md z-20 px-4 py-4 border-b border-[#E7E1D7]">
-    <h1 class="text-lg font-extrabold tracking-tight text-slate-800">思い出年表</h1>
-  </header>
-  <main class="p-4 max-w-md mx-auto">
-    <div id="timelineContainer" class="relative border-l-2 border-[#E7E1D7] ml-4 pl-5 space-y-6 py-2"></div>
-  </main>
-</div>
-
-<div id="trashPage" class="page">
-  <header class="sticky top-0 bg-[#F7F4EE]/80 backdrop-blur-md z-20 px-4 py-3 border-b border-[#E7E1D7] flex items-center justify-between">
-    <h1 class="text-lg font-extrabold tracking-tight text-slate-800">ゴミ箱</h1>
-    <button onclick="switchPage('gallery')" class="text-xs font-bold text-slate-500 px-3 py-1.5 bg-white border border-[#E7E1D7] rounded-full">戻る</button>
-  </header>
-  <main class="p-4">
-    <div id="trashGrid" class="masonry-grid"></div>
-    <div id="trashZeroState" class="hidden text-center py-16 text-slate-400">
-      <p class="text-2xl mb-1">🗑️</p>
-      <p class="text-xs">ゴミ箱は空です</p>
+<div class="sticky top-0 z-50 p-2 sm:p-3 glass border-b border-[#E7E1D7]">
+  <div class="max-w-7xl mx-auto flex flex-col">
+    <div class="flex items-center justify-between w-full gap-1 sm:gap-2">
+      <div class="flex items-center gap-1 sm:gap-2 shrink min-w-0">
+        <button onclick="goToTopPage()" class="flex items-center gap-1 sm:gap-2 select-none tracking-tight active:scale-95 transition-transform min-w-0" title="トップ画面に戻る">
+          <svg class="app-icon w-7 h-7 sm:w-9 sm:h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
+            <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
+            <path d="M 25 53 A 25 25 0 0 0 75 53 Z" fill="#ff5252" opacity="0.5" />
+            <path d="M 80 50 A 30 30 0 0 0 20 50 Z" fill="#a5d8ff" opacity="0.6" />
+            <rect x="16" y="47" width="68" height="6" rx="3" fill="#ffffff" />
+            <path d="M 50 25 L 53 33 L 61 34 L 55 39 L 57 47 L 50 43 L 43 47 L 45 39 L 39 34 L 47 33 Z" fill="#feca57" />
+            <circle cx="68" cy="28" r="2.5" fill="#ffd32a" />
+            <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
+          </svg>
+          <span class="text-lg sm:text-xl md:text-2xl font-extrabold text-[#2b2d42] text-left truncate whitespace-nowrap">コドモカプセル</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <button id="authBtn" onclick="toggleAuth()" class="px-2 sm:px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-[11px] sm:text-xs shadow-sm font-medium whitespace-nowrap"><span id="authBtnText">ログイン</span></button>
+        <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none shrink-0" id="menuToggleBtn" title="条件で絞り込み">
+          <span>🔍</span>
+        </button>
+        <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="ゴミ箱">🗑️</button>
+        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="設定・ガイド">⚙</button>
+      </div>
     </div>
-  </main>
-</div>
 
-<nav class="tab-bar flex items-center justify-around h-16 shadow-xs">
-  <button id="nav-gallery" onclick="switchPage('gallery')" class="nav-tab active flex flex-col items-center justify-center w-16 h-full gap-0.5">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-    <span class="text-[9px]">作品</span>
-  </button>
-  
-  <div class="relative -top-3">
-    <button onclick="openDrawer('upload')" class="w-13 h-13 bg-[#FF6B6B] text-white rounded-full flex items-center justify-center shadow-md shadow-red-200 border-4 border-[#F7F4EE] btn-scale transition-transform">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-    </button>
-  </div>
-
-  <button id="nav-records" onclick="switchPage('records')" class="nav-tab flex flex-col items-center justify-center w-16 h-full gap-0.5">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-    <span class="text-[9px]">年表</span>
-  </button>
-</nav>
-
-<div id="uploadDrawer" class="drawer">
-  <div class="p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-base font-bold text-slate-800">カプセルに作品を入れる</h2>
-      <button onclick="closeDrawer()" class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 font-bold text-xs">✕</button>
-    </div>
-    <form id="workForm" onsubmit="handleUploadSubmit(event)" class="space-y-3.5">
-      <input type="hidden" id="editArtworkId" value="">
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">メディア（写真、動画、音声）</label>
-        <div class="grid grid-cols-4 gap-2">
-          <div onclick="document.getElementById('fileInput').click()" class="aspect-square bg-slate-50 border-2 border-dashed border-[#E7E1D7] rounded-xl flex flex-col items-center justify-center cursor-pointer text-slate-400">
-            <span class="text-xl">+</span>
-            <span class="text-[8px] font-bold">追加</span>
+    <div id="searchMenuArea" class="flex flex-col gap-2.5 mt-2.5">
+      <div class="w-full">
+        <input type="text" id="gallerySearchInput" oninput="renderGallery()" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+      </div>
+      <div class="flex gap-2 items-center w-full justify-between">
+        <div class="flex gap-2 flex-1">
+          <div class="w-1/2">
+            <select id="galleryChildFilterSelect" onchange="renderGallery()" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="all">すべての子ども</option>
+              <option value="favorite">⭐ お気に入り</option>
+            </select>
           </div>
-          <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*" class="hidden" onchange="processLocalMedia(this)">
-          <div id="mediaResultContainer" class="contents"></div>
+          <div class="w-1/2">
+            <select id="gallerySortSelect" onchange="renderGallery()" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="createdDesc">登録が新しい順</option>
+              <option value="createdAsc">登録が古い順</option>
+              <option value="dateDesc">作品の日付が新しい順</option>
+              <option value="dateAsc">作品の日付が古い順</option>
+              <option value="ageAsc">年齢が若い順</option>
+              <option value="ageDesc">年齢が高い順</option>
+            </select>
+          </div>
         </div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v64</div>
       </div>
+
+      <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
+        <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+        <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button> <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
+        <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
+        <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
+  <div id="premiumBannerArea" class="hidden mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">👑</span>
+      <div class="text-left">
+        <div class="text-sm font-bold">プレミアムプランのご案内</div>
+        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品カプセル保存数がすべて無制限になります</div>
+      </div>
+    </div>
+    <button onclick="openDrawer('child')" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
+  </div>
+
+  <section id="galleryPage" class="page active">
+    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </section>
+  <section id="recordsPage" class="page">
+    <div class="py-2"><h2 class="text-xl font-bold px-1">タイムライン</h2></div>
+    <div id="recordsTimeline" class="space-y-4"></div>
+  </section>
+  <section id="trashPage" class="page">
+    <div class="py-2 flex justify-between items-center px-1">
+      <h2 class="text-xl font-bold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
+      <button onclick="switchPage('gallery')" class="text-xs text-[#ff6b6b] font-semibold">戻る</button>
+    </div>
+    <p class="text-[11px] text-slate-400 mb-4 px-1">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。</p>
+    <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  </section>
+</main>
+
+<div class="bottom-nav flex justify-center items-center">
+  <div class="w-full max-w-lg px-8 flex items-center justify-between">
+    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">ギャラリー</span></button>
+    <button onclick="handleFabClick()" class="fab">+</button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">タイムライン</span></button>
+  </div>
+</div>
+
+<div id="workDrawer" class="drawer">
+  <div class="drawer-panel">
+    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">カプセル登録</h3><button onclick="closeDrawer('work')" type="button" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
+    <form id="workForm" onsubmit="saveWorkForm(event)" class="space-y-5">
+      <input type="hidden" id="editingWorkId" value="" />
+      <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
       <div>
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">だれの作品？</label>
-        <select id="inputChild" required></select>
+        <label class="block text-sm font-semibold mb-2">カテゴリ</label>
+        <select id="inputCategory" required></select>
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-[11px] font-bold text-slate-400 mb-1">いつ作った？</label>
-          <input type="date" id="inputDate" required class="py-2.5 text-sm">
+      <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
+      <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
+      <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
+      
+      <div id="fileInputContainer" class="space-y-2">
+        <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応）</label>
+        <input id="fileInput" type="file" accept="image/*,application/pdf" multiple onchange="handleFileSelection(event)" class="hidden"/>
+        <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple onchange="handleFileSelection(event)" class="hidden"/>
+        
+        <div class="grid grid-cols-2 gap-2" id="inputActionButtonsGroup">
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
+          <button type="button" onclick="document.getElementById('fileInput').click()" class="py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
         </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-400 mb-1">カテゴリ</label>
-          <select id="inputCategory" required class="py-2.5 text-sm"></select>
-        </div>
+        <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">タイトル・お名前</label>
-        <input type="text" id="inputTitle" placeholder="無題" class="py-2.5 text-sm">
-      </div>
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">メモ・成長エピソード</label>
-        <textarea id="inputMemo" rows="2" placeholder="エピソードを残せます" class="py-2.5 text-sm rounded-xl"></textarea>
-      </div>
-      <div class="pt-1 flex gap-2">
-        <button type="button" onclick="closeDrawer()" class="w-1/3 bg-slate-100 text-slate-500 font-bold py-3 rounded-xl text-sm">戻る</button>
-        <button type="submit" id="saveWorkBtn" class="flex-1 bg-[#FF6B6B] text-white font-bold py-3 rounded-xl text-sm shadow-sm"><span id="saveWorkBtnText">保存する</span></button>
-      </div>
+      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#ff6b6b] hover:bg-[#ff5252] transition">保存する</button>
     </form>
   </div>
 </div>
 
-<div id="detailDrawer" class="drawer">
-  <div class="p-5">
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex gap-1.5">
-        <span id="detailChildBadge" class="bg-red-50 text-[#FF6B6B] text-[10px] font-bold px-2 py-0.5 rounded-md"></span>
-        <span id="detailAgeBadge" class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-md"></span>
-      </div>
-      <button onclick="closeDrawer()" class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 font-bold text-xs">✕</button>
-    </div>
-    <div id="detailMediaSlider" class="w-full flex gap-2 overflow-x-auto media-scroll snap-x snap-mandatory rounded-xl mb-3"></div>
-    <div class="space-y-2">
-      <div class="flex justify-between items-start">
+<div id="childDrawer" class="drawer">
+  <div class="drawer-panel">
+    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定・解説</h3><button onclick="closeDrawer('child')" type="button" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
+    
+    <div class="mb-6 p-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 to-indigo-50/40 text-left">
+      <h4 class="text-sm font-bold text-indigo-900 flex items-center gap-1.5 mb-3">
+        <span>📖 コドモカプセルの使い方 ＆ プラン解説</span>
+      </h4>
+      <div class="space-y-3.5 text-xs text-slate-700 leading-relaxed">
         <div>
-          <h3 id="detailTitle" class="text-base font-bold text-slate-800"></h3>
-          <p id="detailMeta" class="text-[10px] text-slate-400 font-medium"></p>
+          <div class="font-bold text-indigo-950 mb-0.5">① 基本の使い方</div>
+          <p>画面中央下の「<span class="font-bold text-rose-500">+</span>」ボタンから、お子様の作品・テスト・おたより（画像や複数ページのPDF対応）をカプセルとして登録。カプセルごとに日付やメモ、カテゴリを自由に分類・保管できます。</p>
         </div>
-        <span id="detailCategoryBadge" class="border border-[#E7E1D7] text-slate-500 text-[10px] px-2 py-0.5 rounded-full bg-white font-bold"></span>
-      </div>
-      <div id="detailMemoContainer" class="bg-[#F7F4EE] p-3 rounded-xl border border-[#E7E1D7] hidden">
-        <p id="detailMemo" class="text-slate-700 text-xs leading-relaxed whitespace-pre-wrap"></p>
-      </div>
-      <div class="grid grid-cols-3 gap-1.5 pt-2 border-t border-[#E7E1D7]">
-        <button id="detailEditBtn" class="bg-white border border-[#E7E1D7] text-slate-600 font-bold py-2 rounded-xl text-xs flex flex-col items-center gap-0.5">編集</button>
-        <button id="detailDownloadBtn" class="bg-white border border-[#E7E1D7] text-slate-600 font-bold py-2 rounded-xl text-xs flex flex-col items-center gap-0.5">保存</button>
-        <button id="detailDeleteBtn" class="bg-red-50 text-[#D66A5E] font-bold py-2 rounded-xl text-xs flex flex-col items-center gap-0.5">削除</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="settingsDrawer" class="drawer">
-  <div class="p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-base font-bold text-slate-800">マスター管理・各種設定</h2>
-      <button onclick="closeDrawer()" class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 font-bold text-xs">✕</button>
-    </div>
-    <div class="space-y-5">
-      <div class="bg-[#F7F4EE] p-3 rounded-xl border border-[#E7E1D7]">
-        <div class="flex justify-between mb-2 items-center"><span class="text-xs font-bold text-slate-400">子ども情報</span><button onclick="toggleSetupSection('child')" class="text-xs font-bold text-[#FF6B6B]">+ 追加</button></div>
-        <div id="setupChildForm" class="hidden space-y-2 mb-2 bg-white p-2.5 rounded-xl border border-[#E7E1D7]">
-          <input type="hidden" id="editChildId" value=""><input type="text" id="childNameInput" placeholder="お名前" class="py-2 text-xs"><input type="date" id="childBirthdayInput" class="py-2 text-xs">
-          <div class="flex gap-1.5 justify-end"><button onclick="cancelChildEdit()" class="text-[10px] font-bold text-slate-400 px-2 py-1 bg-slate-50 rounded">戻る</button><button onclick="saveChildInfo()" class="text-[10px] font-bold text-white px-2 py-1 bg-[#FF6B6B] rounded">確定</button></div>
+        <div>
+          <div class="font-bold text-indigo-950 mb-0.5">② 成長に合わせた自動年齢計算</div>
+          <p>下部で事前にお子様の生年月日を登録しておくと、カプセル登録した作品の日付から「当時の年齢（◯歳◯ヶ月）」を自動で計算してバッジ表示します。上部の絞り込みタブで「乳幼児期」「園児期」「小学生」と世代別の振り返りも簡単です！</p>
         </div>
-        <div id="settingsChildList" class="space-y-1"></div>
-      </div>
-      <div class="bg-[#F7F4EE] p-3 rounded-xl border border-[#E7E1D7]">
-        <div class="flex justify-between mb-2 items-center"><span class="text-xs font-bold text-slate-400">カテゴリ区分</span><button onclick="toggleSetupSection('category')" class="text-xs font-bold text-[#FF6B6B]">+ 追加</button></div>
-        <div id="setupCategoryForm" class="hidden space-y-2 mb-2 bg-white p-2.5 rounded-xl border border-[#E7E1D7]">
-          <input type="hidden" id="editCategoryId" value=""><input type="text" id="categoryNameInput" placeholder="工作、お絵かきなど" class="py-2 text-xs">
-          <div class="flex gap-1.5 justify-end"><button onclick="cancelCategoryEdit()" class="text-[10px] font-bold text-slate-400 px-2 py-1 bg-slate-50 rounded">戻る</button><button onclick="saveCategoryInfo()" class="text-[10px] font-bold text-white px-2 py-1 bg-[#FF6B6B] rounded">確定</button></div>
+        <div>
+          <div class="font-bold text-indigo-950 mb-0.5">③ 夫婦・家族間でのリアルタイム同期</div>
+          <p>下記に表示される「家族コード」をコピーして、パートナーの初期画面で入力してもらうだけで、同一のギャラリーを完璧に共有・同時編集できます。</p>
         </div>
-        <div id="settingsCategoryList" class="space-y-1"></div>
+        <div class="pt-2 border-t border-indigo-100">
+          <div class="font-bold text-amber-700 flex items-center gap-1 mb-1">👑 プレミアム機能と無料プランの違い</div>
+          <table class="w-full border-collapse text-[11px] bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 font-bold">
+                <th class="p-2 text-left border-b">機能</th>
+                <th class="p-2 text-center border-b">無料プラン</th>
+                <th class="p-2 text-center border-b text-amber-700 bg-amber-50/50">プレミアム</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="p-2 border-b font-medium">登録できるお子様</td>
+                <td class="p-2 text-center border-b text-slate-500">1名まで</td>
+                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">無制限 ✨</td>
+              </tr>
+              <tr>
+                <td class="p-2 border-b font-medium">保存カプセル総数</td>
+                <td class="p-2 text-center border-b text-slate-500">10件まで</td>
+                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">無制限 ✨</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-medium">複数枚/PDF登録</td>
+                <td class="p-2 text-center text-slate-500">対応</td>
+                <td class="p-2 text-center font-bold text-emerald-600 bg-amber-50/20">対応</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="text-[10px] text-slate-400 mt-2">※プレミアムプランは一度アップグレードすると、保存容量や人数を気にせずすべての思い出をカプセル化できます。</p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-[11px]">
+          <span class="text-slate-500 font-medium">ご意見・不具合・決済等のお問い合わせ：</span>
+          <a href="mailto:p1369q@gmail.com" class="text-indigo-600 font-bold hover:underline flex items-center gap-1 shrink-0">📩 p1369q@gmail.com</a>
+        </div>
       </div>
-      <div class="space-y-1.5">
-        <button onclick="closeDrawer(); switchPage('trash');" class="w-full bg-white border border-[#E7E1D7] text-slate-600 font-bold py-2.5 px-3 rounded-xl text-xs flex justify-between"><span>🗑️ ゴミ箱を確認する</span><span>➔</span></button>
-        <button onclick="handleLogout()" class="w-full bg-red-50 text-[#D66A5E] font-bold py-2.5 px-3 rounded-xl text-xs text-left">🚪 ログアウト</button>
-      </div>
-      <div class="text-center text-[10px] text-slate-400 font-medium">家族共有連携コード: <span id="familyCodeDisplay" class="select-all font-mono font-bold text-slate-600">----</span></div>
     </div>
-  </div>
-</div>
 
-<div id="premiumDrawer" class="drawer">
-  <div class="p-5 text-center">
-    <div class="w-12 h-12 premium-badge rounded-xl flex items-center justify-center text-2xl mx-auto mb-2">✨</div>
-    <h2 class="text-lg font-extrabold text-slate-800">プレミアムプラン</h2>
-    <p class="text-[10px] text-[#D6B25E] font-bold uppercase tracking-wider -mt-0.5">容量無制限カプセル</p>
-    <div class="mt-4 space-y-2.5 text-left max-w-xs mx-auto text-xs">
-      <div class="flex gap-2"><span>🚀</span><p class="text-slate-600"><b>容量無制限解放</b><br>無料枠（30個）を解除。動画や長尺の音声も全て無制限保存。</p></div>
-      <div class="flex gap-2"><span>💎</span><p class="text-slate-600"><b>最高画質原版保持</b><br>圧縮せずにお子様の描いた色彩や筆跡をそのまま未来に残せます。</p></div>
-      <div class="flex gap-2"><span>👨‍👩‍👧‍👦</span><p class="text-slate-600"><b>リアルタイム家族同期</b><br>夫婦や祖父母の端末間で一瞬で自動データ同期が行われます。</p></div>
-    </div>
-    <div class="mt-4 bg-[#F7F4EE] rounded-xl p-3 border border-[#E7E1D7] max-w-xs mx-auto"><span class="text-[10px] text-slate-400 font-bold">月額サブスクリプション</span><div class="text-xl font-black text-slate-800 mt-0.5">¥380<span class="text-xs font-normal text-slate-500"> / 月 (税込)</span></div></div>
-    <button onclick="triggerCheckout()" id="checkoutSubmitBtn" class="w-full max-w-xs mx-auto mt-4 premium-badge text-white font-bold py-3 rounded-xl text-sm shadow-sm flex items-center justify-center gap-1 btn-scale transition-transform"><span id="checkoutSubmitBtnText">登録手続きへ進む</span></button>
-    <p class="text-[8px] text-slate-400 mt-2">※Stripe安全決済画面が開きます。いつでも解約可能。</p>
-  </div>
-</div>
-
-<div id="authOverlay" class="fixed inset-0 bg-[#F7F4EE] z-50 flex flex-col justify-between p-6">
-  <div class="my-auto max-w-xs w-full mx-auto space-y-6">
-    <div class="text-center">
-      <div class="w-14 h-14 bg-[#FF6B6B] rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-3 shadow-md shadow-red-100">コ</div>
-      <h2 class="text-xl font-extrabold text-slate-800">コドモカプセル</h2>
-      <p class="text-[11px] text-slate-400 font-bold mt-0.5">思い出や作品を未来に届けるカプセル</p>
-    </div>
-    <div class="bg-white p-5 rounded-3xl border border-[#E7E1D7] shadow-xs space-y-3.5">
-      <div id="familyCodeField" class="hidden">
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">家族共有連携コード（招待された方のみ）</label>
-        <input type="text" id="authFamilyCode" placeholder="招待コードを入力" class="font-mono text-xs py-2.5">
+    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3">
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
+          <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
+        </div>
+        <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
       </div>
+      <div id="testPlanToggleArea" class="pt-2 border-t border-amber-200/60 hidden">
+        <button onclick="forceDowngradeToFree()" class="w-full py-2 bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow-sm transition">🛠️ フリープランに戻す</button>
+      </div>
+    </div>
+
+    <div class="mb-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+      <label class="block text-xs font-bold text-slate-500 mb-1">🤝 パートナー共有用 家族コード</label>
+      <div class="flex gap-2 items-center mt-1">
+        <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
+        <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力するとデータを完全共有できます。</p>
+    </div>
+
+    <div class="space-y-4 mb-6 pt-4 border-t">
+      <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
+        <span>👶 子どもの追加・編集</span>
+        <span id="childLimitCountLabel" class="text-xs font-medium text-slate-500">(0 / 1人)</span>
+      </h4>
+      <input id="editingChildId" type="hidden" value="" />
+      <div><label class="block text-sm font-semibold text-slate-600 mb-1.5">お名前</label><input id="childName" placeholder="例：ひなた"/></div>
       <div>
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">メールアドレス</label>
-        <input type="email" id="authEmail" placeholder="mail@example.com" required class="py-2.5 text-sm">
+        <label class="block text-sm font-semibold text-slate-600 mb-1.5">生年月日（誕生日）</label>
+        <div class="flex gap-2">
+          <div class="flex-1 flex items-center gap-1"><select id="childBirthYear" class="py-3 px-2 text-sm"></select><span class="text-xs text-slate-500 shrink-0">年</span></div>
+          <div class="w-24 flex items-center gap-1"><select id="childBirthMonth" class="py-3 px-2 text-sm"></select><span class="text-xs text-slate-500 shrink-0">月</span></div>
+          <div class="w-24 flex items-center gap-1"><select id="childBirthDay" class="py-3 px-2 text-sm"></select><span class="text-xs text-slate-500 shrink-0">日</span></div>
+        </div>
       </div>
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 mb-1">パスワード</label>
-        <input type="password" id="authPassword" placeholder="6文字以上の英数字" required class="py-2.5 text-sm">
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveChild()" id="childSubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-[#ff6b6b] hover:bg-[#ff5252] transition">追加する</button>
+        <button onclick="cancelChildEdit()" id="childCancelBtn" class="hidden px-4 rounded-2xl border border-slate-100 text-sm">取消</button>
       </div>
-      <button onclick="handleAuthAction()" id="mainAuthBtn" class="w-full bg-[#FF6B6B] text-white font-bold py-3 rounded-xl text-sm shadow-md shadow-red-100 btn-scale transition-transform">ログイン / アカウント作成</button>
-      <div class="text-center"><button onclick="toggleAuthMode()" id="toggleAuthBtn" class="text-[10px] text-slate-400 underline font-medium">パートナーから共有用コードを貰っている場合</button></div>
+      <div id="childList" class="mt-2 space-y-2"></div>
+    </div>
+
+    <div class="space-y-4 mb-6 pt-6 border-t">
+      <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
+        <span>🏷️ カテゴリの追加・編集</span>
+      </h4>
+      <input id="editingCategoryId" type="hidden" value="" />
+      <div><label class="block text-sm font-semibold text-slate-600 mb-1.5">カテゴリ名</label><input id="categoryName" placeholder="例：おたより、連絡帳"/></div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveCategory()" id="categorySubmitBtn" class="flex-1 py-4 rounded-2xl text-white font-semibold bg-slate-700 hover:bg-slate-800 transition">カテゴリを追加</button>
+        <button onclick="cancelCategoryEdit()" id="categoryCancelBtn" class="hidden px-4 rounded-2xl border border-slate-100 text-sm">取消</button>
+      </div>
+      <div id="categoryList" class="mt-2 space-y-2"></div>
     </div>
   </div>
-  <div class="text-center text-[9px] text-slate-400 font-medium">&copy; コドモカプセル</div>
 </div>
+
+<script type="importmap">
+  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" } }
+</script>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-  import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAs-FakeKeyForArchitectureOnly_Config",
-    authDomain: "kodomo-capsule.firebaseapp.com",
-    projectId: "kodomo-capsule",
-    storageBucket: "kodomo-capsule.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdefg123456"
-  };
+const prodConfig = {
+  apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
+  authDomain: "kodomonote-prod.firebaseapp.com",
+  projectId: "kodomonote-prod",
+  storageBucket: "kodomonote-prod.firebasestorage.app"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+const app = initializeApp(prodConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-  let currentUser = null; let currentFamilyId = null; let isPremium = false; let isRegisterMode = false;
-  let localChildren = []; let localCategories = []; let localArtworks = [];
-  let activeChildFilter = 'all'; let activeCategoryFilter = 'all'; let base64MediaArray = [];
+let currentSession = null; 
+let localChildren = [];
+let localWorks = [];
+let localCategories = [];
+let base64MediaArray = [];
+let isPremiumUser = false; 
 
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user; document.getElementById("authOverlay").classList.add("hidden");
-      await loadFamilyContext();
-    } else {
-      currentUser = null; currentFamilyId = null; isPremium = false;
-      document.getElementById("authOverlay").classList.remove("hidden");
-      hideLoaders();
+let unsubscribeChildren = null;
+let unsubscribeWorks = null;
+let unsubscribeCategories = null;
+let unsubscribeUserPlan = null; 
+let currentAgeStageFilter = "all";
+let carouselIndices = {};
+
+function showGateError(msg) {
+  const errLog = document.getElementById("gateErrorLog");
+  if(errLog) {
+    errLog.innerText = "情報: " + msg;
+    errLog.classList.remove("hidden");
+  }
+}
+
+// Stripe 連携
+window.redirectToStripeCheckout = async function() {
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    alert("ログイン状態が確認できません。もう一度ログインを行ってください。");
+    return;
+  }
+
+  const btn = document.getElementById("stripePaymentBtn");
+  if (!btn) return;
+
+  btn.disabled = true;
+  const originalText = btn.innerText;
+  btn.innerText = "本番決済画面へ移行中...";
+
+  try {
+    const successUrl = window.location.origin + window.location.pathname + "?session_id={CHECKOUT_SESSION_ID}"; 
+    const cancelUrl = window.location.origin + window.location.pathname;
+
+    const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: String(currentUser.uid),
+        client_reference_id: String(currentUser.uid),
+        email: String(currentUser.email || ""),
+        success_url: String(successUrl),
+        cancel_url: String(cancelUrl)
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`決済サーバーエラー (Status: ${response.status}): ${errText}`);
     }
-  });
 
-  window.toggleAuthMode = function(){
-    isRegisterMode = !isRegisterMode;
-    const fField = document.getElementById("familyCodeField");
-    const tBtn = document.getElementById("toggleAuthBtn");
-    const mBtn = document.getElementById("mainAuthBtn");
-    if(isRegisterMode){ fField.classList.remove("hidden"); tBtn.innerText = "通常のログインへ戻る"; mBtn.innerText = "共有コードでアカウント登録"; }
-    else { fField.classList.add("hidden"); tBtn.innerText = "パートナーから共有用コードを貰っている場合"; mBtn.innerText = "ログイン / アカウント作成"; }
-  };
+    const session = await response.json();
+    if (session && session.url) { 
+      window.location.href = session.url; 
+    } else { 
+      throw new Error("決済用セッションURLの取得に失敗しました。"); 
+    }
 
-  window.handleAuthAction = async function(){
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
-    const shareCode = document.getElementById("authFamilyCode").value.trim();
-    if(!email || password.length < 6) return alert("正しいメールアドレスと6文字以上のパスワードを入れてください。");
+  } catch (e) {
+    console.error("Stripe Live Checkout Error:", e);
+    alert("Stripe決済画面への移行に失敗しました。\n詳細: " + e.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  }
+};
+
+// URLパラメータからStripeセッションの復帰チェック
+async function checkUrlSessionParameters(user) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get('session_id');
+  if (sessionId && user) {
+    const statusText = document.getElementById("loadingStatusText");
+    if(statusText) statusText.innerText = "✨ Stripe決済完了を確認中...";
     try {
-      if(isRegisterMode && shareCode){
-        const snap = await getDoc(doc(db, "families", shareCode));
-        if(!snap.exists()) return alert("コードが見つかりません。");
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, email, familyId: shareCode, createdAt: serverTimestamp() });
-      } else {
-        try { await signInWithEmailAndPassword(auth, email, password); }
-        catch(err){
-          if(err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential'){
-            if(confirm("アカウントがないため新規作成しますか？")){
-              const res = await createUserWithEmailAndPassword(auth, email, password);
-              const newFamilyId = self.crypto.randomUUID();
-              await setDoc(doc(db, "families", newFamilyId), { familyId: newFamilyId, isPremium: false, ownerUid: res.user.uid, createdAt: serverTimestamp() });
-              await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, email, familyId: newFamilyId, createdAt: serverTimestamp() });
-            }
-          } else { throw err; }
-        }
+      await updateDoc(doc(db, "users", user.uid), {
+        plan: "premium",
+        updatedAt: Date.now(),
+        stripeSessionId: sessionId
+      });
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } catch (e) {
+      console.error("Session activation failed", e);
+    }
+  }
+}
+
+window.forceDowngradeToFree = async function() {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return;
+  if (!confirm("Firestore上のプラン設定を「free」に変更しますか？")) return;
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), { plan: "free", updatedAt: Date.now() });
+    alert("プランを「free」に更新しました！");
+  } catch(e) {
+    alert("プラン変更に失敗しました: " + e.message);
+  }
+};
+
+function updatePlanUI() {
+  const currentPlanLabel = document.getElementById("currentPlanLabel");
+  const premiumBannerArea = document.getElementById("premiumBannerArea");
+  const testPlanToggleArea = document.getElementById("testPlanToggleArea");
+  
+  if (isPremiumUser) {
+    if(currentPlanLabel) {
+      currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
+      currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
+    }
+    if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
+    const pBtn = document.getElementById("stripePaymentBtn");
+    if(pBtn) pBtn.classList.add("hidden");
+    if(testPlanToggleArea) testPlanToggleArea.classList.remove("hidden");
+  } else {
+    if(currentPlanLabel) {
+      currentPlanLabel.innerHTML = "無料プラン (子ども1人 / カプセル10件まで)";
+      currentPlanLabel.className = "text-sm font-black text-slate-700 mt-1";
+    }
+    if(premiumBannerArea) premiumBannerArea.classList.remove("hidden");
+    const pBtn = document.getElementById("stripePaymentBtn");
+    if(pBtn) pBtn.classList.remove("hidden");
+    if(testPlanToggleArea) testPlanToggleArea.classList.add("hidden");
+  }
+  renderGallery();
+}
+
+window.handleFabClick = function() {
+  const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
+  if (!isPremiumUser && activeWorksCount >= 10) {
+    alert("⚠️ 無料プランの上限（10件）に達しています。思い出をこれ以上追加するにはプレミアムプランにアップグレードしてください。");
+    return;
+  }
+  openDrawer('work');
+};
+
+window.toggleSearchMenu = function() {
+  const menuArea = document.getElementById("searchMenuArea");
+  const toggleBtn = document.getElementById("menuToggleBtn");
+  if(menuArea.classList.contains("collapsed")) {
+    menuArea.classList.remove("collapsed");
+    toggleBtn.classList.add("bg-[#ff6b6b]", "text-white");
+  } else {
+    menuArea.classList.add("collapsed");
+    toggleBtn.classList.remove("bg-[#ff6b6b]", "text-white");
+  }
+};
+
+function initBirthdaySelectboxes() {
+  const yearSelect = document.getElementById("childBirthYear");
+  const monthSelect = document.getElementById("childBirthMonth");
+  const daySelect = document.getElementById("childBirthDay");
+  if(!yearSelect || !monthSelect || !daySelect) return;
+  
+  const currentYear = new Date().getFullYear();
+  let yearHtml = "";
+  for (let y = currentYear; y >= currentYear - 20; y--) {
+    yearHtml += `<option value="${y}">${y}</option>`;
+  }
+  yearSelect.innerHTML = yearHtml;
+
+  let monthHtml = "";
+  for (let m = 1; m <= 12; m++) {
+    monthHtml += `<option value="${m}">${m}</option>`;
+  }
+  monthSelect.innerHTML = monthHtml;
+
+  let dayHtml = "";
+  for (let d = 1; d <= 31; d++) {
+    dayHtml += `<option value="${d}">${d}</option>`;
+  }
+  daySelect.innerHTML = dayHtml;
+}
+
+// 認証・セッションハンドリング
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    document.getElementById("authBtnText").innerText = "ログアウト";
+    document.getElementById("loadingStatusText").innerText = "家族設定を確認中...";
+    
+    await checkUrlSessionParameters(user);
+    
+    // ユーザー情報の初期ドキュメント取得 or 作成
+    const uRef = doc(db, "users", user.uid);
+    const uSnap = await getDoc(uRef);
+    let familyId = null;
+    
+    if (!uSnap.exists()) {
+      // 新規作成時は保留状態にする
+      await setDoc(uRef, {
+        uid: user.uid,
+        email: user.email || "",
+        displayName: user.displayName || "",
+        familyId: null,
+        plan: "free",
+        createdAt: Date.now()
+      });
+    } else {
+      familyId = uSnap.data().familyId;
+    }
+
+    // プラン監視
+    if(unsubscribeUserPlan) unsubscribeUserPlan();
+    unsubscribeUserPlan = onSnapshot(uRef, (docSec) => {
+      if(docSec.exists()) {
+        isPremiumUser = (docSec.data().plan === "premium");
+        updatePlanUI();
       }
-    } catch(e){ alert("エラー: " + e.message); }
-  };
-
-  window.handleLogout = function(){ if(confirm("ログアウトしますか？")){ closeDrawer(); signOut(auth); } };
-
-  async function loadFamilyContext(){
-    const uDoc = await getDoc(doc(db, "users", currentUser.uid)); if(!uDoc.exists()) return;
-    currentFamilyId = uDoc.data().familyId;
-    document.getElementById("familyCodeDisplay").innerText = currentFamilyId;
-    onSnapshot(doc(db, "families", currentFamilyId), (snap) => {
-      if(snap.exists()){
-        isPremium = snap.data().isPremium || false;
-        const navBadge = document.getElementById("premiumNavBtn");
-        if(isPremium){ navBadge.innerHTML = "<span>👑 プレミアム</span>"; navBadge.onclick = null; }
-        else { navBadge.innerHTML = "<span>✨ プレミアム</span>"; navBadge.onclick = () => openDrawer('premium'); }
-      }
     });
-    initRealtimeSync();
+
+    if (familyId) {
+      startFamilyRealtimeSync(familyId);
+    } else {
+      // 家族コード未設定ならセットアップ画面へ
+      document.getElementById("gateLoading").classList.add("hidden");
+      document.getElementById("gateLoginArea").classList.add("hidden");
+      document.getElementById("gateSetupArea").classList.remove("hidden");
+      document.getElementById("authGatescreen").classList.remove("hidden");
+    }
+  } else {
+    document.getElementById("authBtnText").innerText = "ログイン";
+    cleanupFamilySync();
+    document.getElementById("gateLoading").classList.add("hidden");
+    document.getElementById("gateSetupArea").classList.add("hidden");
+    document.getElementById("gateLoginArea").classList.remove("hidden");
+    document.getElementById("authGatescreen").classList.remove("hidden");
   }
+});
 
-  function initRealtimeSync(){
-    onSnapshot(query(collection(db, "families", currentFamilyId, "children"), orderBy("birthday", "asc")), (snap) => {
-      localChildren = []; snap.forEach(doc => localChildren.push({id: doc.id, ...doc.data()}));
-      renderChildSelectors(); updateFormSelects(); renderSettingsLists(); renderGallery();
-    });
-    onSnapshot(query(collection(db, "families", currentFamilyId, "categories"), orderBy("name", "asc")), (snap) => {
-      localCategories = []; snap.forEach(doc => localCategories.push({id: doc.id, ...doc.data()}));
-      renderCategorySelectors(); updateFormSelects(); renderSettingsLists(); renderGallery();
-    });
-    onSnapshot(query(collection(db, "families", currentFamilyId, "artworks"), orderBy("date", "desc")), (snap) => {
-      localArtworks = []; snap.forEach(doc => localArtworks.push({id: doc.id, ...doc.data()}));
-      hideLoaders(); renderGallery(); renderTimeline(); renderTrash();
+window.toggleAuth = function() {
+  if (auth.currentUser) {
+    if (confirm("ログアウトしますか？")) {
+      signOut(auth).catch(e => alert(e.message));
+    }
+  } else {
+    signInWithPopup(auth, provider).catch(e => {
+      console.error(e);
+      showGateError(e.message);
     });
   }
+};
 
-  function hideLoaders(){
-    document.getElementById("gallerySkeleton").classList.add("hidden");
-    document.getElementById("galleryGrid").classList.remove("hidden");
-  }
-
-  function renderChildSelectors(){
-    const container = document.getElementById("childSelectorContainer");
-    let html = `<button onclick="setChildFilter('all')" class="px-3 py-1.5 text-xs font-bold rounded-xl flex-shrink-0 ${activeChildFilter==='all'?'bg-slate-800 text-white':'bg-white text-slate-500 border border-[#E7E1D7]'}" >すべて</button>`;
-    localChildren.forEach(c => {
-      html += `<button onclick="setChildFilter('${c.id}')" class="px-3 py-1.5 text-xs font-bold rounded-xl flex-shrink-0 ${activeChildFilter===c.id?'bg-slate-800 text-white':'bg-white text-slate-500 border border-[#E7E1D7]'}">${escapeHtml(c.name)}</button>`;
+window.createNewFamilyGroup = async function() {
+  const user = auth.currentUser;
+  if(!user) return;
+  
+  const btn = document.getElementById("btnCreateFamily");
+  btn.disabled = true;
+  btn.innerText = "グループ作成中...";
+  
+  try {
+    const newFamilyId = crypto.randomUUID(); 
+    await setDoc(doc(db, "families", newFamilyId), {
+      createdOwner: user.uid,
+      createdAt: Date.now()
     });
-    container.innerHTML = html;
-  }
-
-  function renderCategorySelectors(){
-    const container = document.getElementById("categorySelectorContainer");
-    let html = `<button onclick="setCategoryFilter('all')" class="px-2.5 py-1 text-xs rounded-lg flex-shrink-0 ${activeCategoryFilter==='all'?'bg-red-400 text-white font-bold':'text-slate-400 bg-white/60 border border-[#E7E1D7]'}" >すべて</button>`;
-    localCategories.forEach(cat => {
-      html += `<button onclick="setCategoryFilter('${cat.id}')" class="px-2.5 py-1 text-xs rounded-lg flex-shrink-0 ${activeCategoryFilter===cat.id?'bg-red-400 text-white font-bold':'text-slate-400 bg-white/60 border border-[#E7E1D7]'}">${escapeHtml(cat.name)}</button>`;
+    
+    await updateDoc(doc(db, "users", user.uid), {
+      familyId: newFamilyId,
+      updatedAt: Date.now()
     });
-    container.innerHTML = html;
+    
+    startFamilyRealtimeSync(newFamilyId);
+  } catch(e) {
+    alert("家族グループ作成に失敗しました: " + e.message);
+    btn.disabled = false;
+    btn.innerText = "🚀 新しい家族グループを作成する";
   }
+};
 
-  function updateFormSelects(){
-    document.getElementById("inputChild").innerHTML = localChildren.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-    document.getElementById("inputCategory").innerHTML = localCategories.map(cat => `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`).join("");
+window.joinFamilyGroup = async function() {
+  const user = auth.currentUser;
+  if(!user) return;
+  
+  const codeInput = document.getElementById("joinInviteCodeInput");
+  const targetFamilyId = codeInput.value.trim();
+  
+  if(!targetFamilyId) {
+    alert("招待コードを入力してください。");
+    return;
   }
-
-  function renderGallery(){
-    const grid = document.getElementById("galleryGrid"); const zero = document.getElementById("galleryZeroState");
-    const valid = localArtworks.filter(a => !a.isDeleted);
-    const filtered = valid.filter(a => {
-      if(activeChildFilter !== 'all' && a.childId !== activeChildFilter) return false;
-      if(activeCategoryFilter !== 'all' && a.category !== activeCategoryFilter) return false;
-      return true;
-    });
-    if(filtered.length === 0){
-      grid.innerHTML = ""; if(valid.length === 0){ zero.classList.remove("hidden"); } else { zero.classList.add("hidden"); grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">該当データがありません</div>`; }
+  
+  const btn = document.getElementById("btnJoinFamily");
+  btn.disabled = true;
+  btn.innerText = "確認中...";
+  
+  try {
+    const fSnap = await getDoc(doc(db, "families", targetFamilyId));
+    if(!fSnap.exists()) {
+      alert("指定された家族コードが見つかりません。正確に入力されているかご確認ください。");
+      btn.disabled = false;
+      btn.innerText = "合流する";
       return;
     }
-    zero.classList.add("hidden");
-    let html = "";
-    filtered.forEach(w => {
-      const child = localChildren.find(c => c.id === w.childId);
-      const url = w.mediaUrls?.[0] || "";
-      const isVideo = w.mediaTypes?.[0]?.startsWith("video/");
-      const isAudio = w.mediaTypes?.[0]?.startsWith("audio/");
-      let ageStr = (child && child.birthday) ? calculateAgeInMonths(child.birthday, w.date) : "";
-      html += `
-        <div onclick="openDetailDrawer('${w.id}')" class="bg-white p-2 rounded-2xl border border-[#E7E1D7] shadow-xs flex flex-col justify-between cursor-pointer btn-scale transition-transform">
-          <div class="aspect-card bg-slate-50">
-            ${isVideo ? `<video src="${url}" muted playsinline class="pointer-events-none"></video>` : isAudio ? `<div class="w-full h-full flex items-center justify-center bg-amber-50 text-2xl">🎵</div>` : `<img src="${url}" loading="lazy">`}
-            <span class="absolute bottom-1.5 left-1.5 bg-slate-900/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">${escapeHtml(child?child.name:'')} ${ageStr}</span>
-          </div>
-          <div class="mt-1.5 px-0.5">
-            <h4 class="text-[11px] font-bold text-slate-700 truncate">${escapeHtml(w.title || "なまえなし")}</h4>
-            <p class="text-[8px] text-slate-400 font-medium">${w.date}</p>
-          </div>
-        </div>
-      `;
-    });
-    grid.innerHTML = html;
-  }
-
-  function renderTimeline(){
-    const container = document.getElementById("timelineContainer"); const valid = localArtworks.filter(a => !a.isDeleted);
-    if(valid.length === 0){ container.innerHTML = `<div class="text-slate-400 text-xs text-center py-6">タイムラインは空です</div>`; return; }
-    let html = "";
-    valid.forEach(w => {
-      const child = localChildren.find(c => c.id === w.childId);
-      let ageStr = (child && child.birthday) ? calculateAgeInMonths(child.birthday, w.date) : "";
-      html += `
-        <div onclick="openDetailDrawer('${w.id}')" class="relative cursor-pointer">
-          <div class="absolute -left-[26px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#FF6B6B] border-2 border-[#F7F4EE]"></div>
-          <div class="bg-white p-3 rounded-xl border border-[#E7E1D7] flex gap-3 items-center">
-            ${w.mediaUrls?.[0]?`<img src="${w.mediaUrls[0]}" class="w-10 h-10 object-cover rounded-lg flex-shrink-0">`:`<div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-sm">🎨</div>`}
-            <div class="overflow-hidden flex-1"><span class="text-[9px] text-[#FF6B6B] font-bold block">${w.date} <span class="text-slate-400">(${ageStr})</span></span><h3 class="text-xs font-bold text-slate-700 truncate mt-0.5">${escapeHtml(w.title||"無題")}</h3></div>
-          </div>
-        </div>
-      `;
-    });
-    container.innerHTML = html;
-  }
-
-  function renderTrash(){
-    const grid = document.getElementById("trashGrid"); const zero = document.getElementById("trashZeroState");
-    const trashed = localArtworks.filter(a => a.isDeleted);
-    if(trashed.length === 0){ grid.innerHTML = ""; zero.classList.remove("hidden"); return; }
-    zero.classList.add("hidden");
-    grid.innerHTML = trashed.map(w => `
-      <div class="bg-white p-2 rounded-xl border border-[#E7E1D7] opacity-80">
-        <div class="aspect-card"><img src="${w.mediaUrls?.[0]||''}"></div>
-        <div class="mt-2 flex gap-1"><button onclick="restoreFromTrash('${w.id}')" class="flex-1 bg-slate-100 text-slate-600 font-bold text-[9px] py-1 rounded">戻す</button><button onclick="permanentlyDelete('${w.id}')" class="bg-red-50 text-red-500 font-bold text-[9px] px-1.5 py-1 rounded">消去</button></div>
-      </div>
-    `).join("");
-  }
-
-  function renderSettingsLists(){
-    document.getElementById("settingsChildList").innerHTML = localChildren.map(c => `
-      <div class="bg-white px-2.5 py-1.5 rounded-lg border border-[#E7E1D7] flex justify-between text-xs">
-        <span class="font-bold text-slate-600">${escapeHtml(c.name)} <span class="text-[9px] text-slate-400">(${c.birthday})</span></span>
-        <div class="flex gap-2"><button onclick="editChildMaster('${c.id}','${escapeHtml(c.name)}','${c.birthday}')" class="text-blue-500">修正</button><button onclick="deleteChildMaster('${c.id}')" class="text-red-400">削除</button></div>
-      </div>
-    `).join("");
-    document.getElementById("settingsCategoryList").innerHTML = localCategories.map(cat => `
-      <div class="bg-white px-2.5 py-1.5 rounded-lg border border-[#E7E1D7] flex justify-between text-xs">
-        <span class="font-bold text-slate-600"># ${escapeHtml(cat.name)}</span>
-        <div class="flex gap-2"><button onclick="editCategoryMaster('${cat.id}','${escapeHtml(cat.name)}')" class="text-blue-500">修正</button><button onclick="deleteCategoryMaster('${cat.id}')" class="text-red-400">削除</button></div>
-      </div>
-    `).join("");
-  }
-
-  window.processLocalMedia = function(input){
-    Array.from(input.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = function(e){
-        base64MediaArray.push({ type: file.type, data: e.target.result });
-        const div = document.createElement("div"); div.className = "aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200";
-        if(file.type.startsWith("image/")){ div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`; }
-        else { div.innerHTML = `<div class="w-full h-full flex items-center justify-center text-[9px] bg-slate-700 text-white">動画/音声</div>`; }
-        document.getElementById("mediaResultContainer").appendChild(div);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  window.handleUploadSubmit = async function(e){
-    e.preventDefault();
-    if(!isPremium && localArtworks.filter(a=>!a.isDeleted).length >= 30){ alert("無料プランの上限は30個です。"); return openDrawer('premium'); }
-    const editId = document.getElementById("editArtworkId").value;
-    const childId = document.getElementById("inputChild").value;
-    const date = document.getElementById("inputDate").value;
-    const category = document.getElementById("inputCategory").value;
-    const title = document.getElementById("inputTitle").value.trim();
-    const memo = document.getElementById("inputMemo").value.trim();
-    if(!childId || !category) return alert("子どもとカテゴリを設定してください。");
-
-    document.getElementById("saveWorkBtn").disabled = true;
-    document.getElementById("saveWorkBtnText").innerText = "保存中...";
-    try {
-      let mediaUrls = []; let mediaTypes = [];
-      if(editId && base64MediaArray.length === 0){
-        const old = localArtworks.find(a=>a.id === editId); mediaUrls = old?.mediaUrls||[]; mediaTypes = old?.mediaTypes||[];
-      }
-      for(let i=0; i<base64MediaArray.length; i++){
-        const item = base64MediaArray[i]; const mId = self.crypto.randomUUID();
-        const sRef = ref(storage, `families/${currentFamilyId}/artworks/${mId}`);
-        await uploadString(sRef, item.data, 'data_url');
-        const dUrl = await getDownloadURL(sRef); mediaUrls.push(dUrl); mediaTypes.push(item.type);
-      }
-      const payload = { childId, date, category, title, memo, mediaUrls, mediaTypes, updatedAt: serverTimestamp() };
-      if(editId){ await updateDoc(doc(db, "families", currentFamilyId, "artworks", editId), payload); }
-      else { payload.createdAt = serverTimestamp(); payload.isDeleted = false; await addDoc(collection(db, "families", currentFamilyId, "artworks"), payload); }
-      closeDrawer(); document.getElementById("workForm").reset(); document.getElementById("mediaResultContainer").innerHTML = ""; base64MediaArray = [];
-    } catch(err){ alert("失敗: "+err.message); }
-    finally { document.getElementById("saveWorkBtn").disabled = false; document.getElementById("saveWorkBtnText").innerText = "保存する"; }
-  };
-
-  window.openDetailDrawer = function(id){
-    const w = localArtworks.find(a => a.id === id); if(!w) return;
-    const child = localChildren.find(c => c.id === w.childId); const cat = localCategories.find(c => c.id === w.category);
-    document.getElementById("detailChildBadge").innerText = child ? child.name : "不明";
-    document.getElementById("detailAgeBadge").innerText = (child && child.birthday) ? calculateAgeInMonths(child.birthday, w.date) : "";
-    document.getElementById("detailCategoryBadge").innerText = cat ? cat.name : "未分類";
-    document.getElementById("detailTitle").innerText = w.title || "なまえなし";
-    document.getElementById("detailMeta").innerText = `${w.date}`;
-    if(w.memo){ document.getElementById("detailMemoContainer").classList.remove("hidden"); document.getElementById("detailMemo").innerText = w.memo; }
-    else { document.getElementById("detailMemoContainer").classList.add("hidden"); }
     
-    let sHtml = "";
-    if(w.mediaUrls){
-      w.mediaUrls.forEach((url, idx) => {
-        const type = w.mediaTypes?.[idx] || "image/";
-        sHtml += `<div class="w-full snap-start flex-shrink-0 bg-slate-50 aspect-video flex items-center justify-center rounded-lg overflow-hidden">`;
-        if(type.startsWith("video/")){ sHtml += `<video src="${url}" controls class="w-full h-full object-contain"></video>`; }
-        else if(type.startsWith("audio/")){ sHtml += `<audio src="${url}" controls></audio>`; }
-        else { sHtml += `<img src="${url}" class="w-full h-full object-contain">`; }
-        sHtml += `</div>`;
+    await updateDoc(doc(db, "users", user.uid), {
+      familyId: targetFamilyId,
+      updatedAt: Date.now()
+    });
+    
+    startFamilyRealtimeSync(targetFamilyId);
+  } catch(e) {
+    alert("合流処理に失敗しました: " + e.message);
+    btn.disabled = false;
+    btn.innerText = "合流する";
+  }
+};
+
+function cleanupFamilySync() {
+  if (unsubscribeChildren) unsubscribeChildren();
+  if (unsubscribeWorks) unsubscribeWorks();
+  if (unsubscribeCategories) unsubscribeCategories();
+  currentSession = null;
+  localChildren = [];
+  localWorks = [];
+  localCategories = [];
+}
+
+function startFamilyRealtimeSync(familyId) {
+  currentSession = familyId;
+  document.getElementById("displayFamilyIdCode").value = familyId;
+  
+  // 子どものリアルタイム購読
+  unsubscribeChildren = onSnapshot(query(collection(db, "children"), where("familyId", "==", familyId)), (snap) => {
+    localChildren = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateChildFormSelectors();
+    renderChildList();
+    renderGallery();
+  }, e => console.error("Children sync error", e));
+  
+  // カテゴリのリアルタイム購読
+  unsubscribeCategories = onSnapshot(query(collection(db, "categories"), where("familyId", "==", familyId)), (snap) => {
+    localCategories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if(localCategories.length === 0) {
+      // 初期カテゴリ補完
+      const defaults = ["作品", "プリント", "テスト・おたより"];
+      defaults.forEach(async (cName) => {
+        await addDoc(collection(db, "categories"), { familyId: familyId, name: cName, createdAt: Date.now() });
       });
     }
-    document.getElementById("detailMediaSlider").innerHTML = sHtml;
-    document.getElementById("detailEditBtn").onclick = () => openEditMode(w);
-    document.getElementById("detailDeleteBtn").onclick = () => moveWorkToTrash(w.id);
-    document.getElementById("detailDownloadBtn").onclick = () => { if(w.mediaUrls?.[0]) window.open(w.mediaUrls[0]); };
-    openDrawer('detail');
-  };
+    updateCategoryFormSelectors();
+    renderCategoryList();
+    renderGallery();
+  }, e => console.error("Categories sync error", e));
 
-  function openEditMode(w){
-    closeDrawer(); document.getElementById("editArtworkId").value = w.id;
-    document.getElementById("inputChild").value = w.childId; document.getElementById("inputDate").value = w.date;
-    document.getElementById("inputCategory").value = w.category; document.getElementById("inputTitle").value = w.title||"";
-    document.getElementById("inputMemo").value = w.memo||"";
-    document.getElementById("mediaResultContainer").innerHTML = (w.mediaUrls||[]).map(url=>`<div class="aspect-square bg-slate-100 rounded-xl overflow-hidden opacity-60"><img src="${url}" class="w-full h-full object-cover"></div>`).join("");
-    base64MediaArray = []; document.getElementById("saveWorkBtnText").innerText = "修正を適用"; openDrawer('upload');
-  }
+  // 作品カプセルのリアルタイム購読
+  unsubscribeWorks = onSnapshot(query(collection(db, "works"), where("familyId", "==", familyId)), (snap) => {
+    localWorks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderGallery();
+    renderTimeline();
+  }, e => console.error("Works sync error", e));
 
-  async function moveWorkToTrash(id){ if(confirm("ゴミ箱へ移動しますか？")){ await updateDoc(doc(db, "families", currentFamilyId, "artworks", id), { isDeleted: true, deletedAt: serverTimestamp() }); closeDrawer(); } }
-  window.restoreFromTrash = async function(id){ await updateDoc(doc(db, "families", currentFamilyId, "artworks", id), { isDeleted: false, deletedAt: null }); };
-  window.permanentlyDelete = async function(id){ if(confirm("完全に削除しますか？")){ const b = writeBatch(db); b.delete(doc(db, "families", currentFamilyId, "artworks", id)); await b.commit(); } };
+  // 全て完了したらゲートを隠す
+  document.getElementById("authGatescreen").classList.add("hidden");
+}
 
-  window.saveChildInfo = async function(){
-    const name = document.getElementById("childNameInput").value.trim(); const bday = document.getElementById("childBirthdayInput").value; const id = document.getElementById("editChildId").value;
-    if(!name || !bday) return alert("入力してください");
-    if(id){ await updateDoc(doc(db, "families", currentFamilyId, "children", id), { name, birthday: bday }); }
-    else { await addDoc(collection(db, "families", currentFamilyId, "children"), { name, birthday: bday, createdAt: serverTimestamp() }); }
-    cancelChildEdit();
-  };
-  window.deleteChildMaster = async function(id){ if(confirm("削除しますか？")){ await writeBatch(db).delete(doc(db, "families", currentFamilyId, "children", id)).commit(); } };
+function updateChildFormSelectors() {
+  const workChildSelect = document.getElementById("inputWorkChild");
+  if(!workChildSelect) return;
+  
+  let html = `<option value="all">共通・指定なし</option>`;
+  localChildren.forEach(c => {
+    html += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+  });
+  workChildSelect.innerHTML = html;
+}
 
-  window.saveCategoryInfo = async function(){
-    const name = document.getElementById("categoryNameInput").value.trim(); const id = document.getElementById("editCategoryId").value;
-    if(!name) return alert("入力してください");
-    if(id){ await updateDoc(doc(db, "families", currentFamilyId, "categories", id), { name }); }
-    else { await addDoc(collection(db, "families", currentFamilyId, "categories"), { name, createdAt: serverTimestamp() }); }
-    cancelCategoryEdit();
-  };
-  window.deleteCategoryMaster = async function(id){ if(confirm("削除しますか？")){ await writeBatch(db).delete(doc(db, "families", currentFamilyId, "categories", id)).commit(); } };
+function updateCategoryFormSelectors() {
+  const catSelect = document.getElementById("inputCategory");
+  if(!catSelect) return;
+  
+  let html = "";
+  localCategories.forEach(c => {
+    html += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+  });
+  catSelect.innerHTML = html;
+}
 
-  window.setChildFilter = function(id){ activeChildFilter = id; renderChildSelectors(); renderGallery(); };
-  window.setCategoryFilter = function(id){ activeCategoryFilter = id; renderCategorySelectors(); renderGallery(); };
-  window.toggleSetupSection = function(t){ if(t==='child'){ document.getElementById("setupChildForm").classList.toggle("hidden"); }else{ document.getElementById("setupCategoryForm").classList.toggle("hidden"); }};
-  window.editChildMaster = function(id, name, bday){ document.getElementById("editChildId").value = id; document.getElementById("childNameInput").value = name; document.getElementById("childBirthdayInput").value = bday; document.getElementById("setupChildForm").classList.remove("hidden"); };
-  window.cancelChildEdit = function(){ document.getElementById("editChildId").value = ""; document.getElementById("childNameInput").value = ""; document.getElementById("childBirthdayInput").value = ""; document.getElementById("setupChildForm").classList.add("hidden"); };
-  window.editCategoryMaster = function(id, name){ document.getElementById("editCategoryId").value = id; document.getElementById("categoryNameInput").value = name; document.getElementById("setupCategoryForm").classList.remove("hidden"); };
-  window.cancelCategoryEdit = function(){ document.getElementById("editCategoryId").value = ""; document.getElementById("categoryNameInput").value = ""; document.getElementById("setupCategoryForm").classList.add("hidden"); };
-
-  function calculateAgeInMonths(bday, target){
-    const birth = new Date(bday); const t = new Date(target); if(isNaN(birth)||isNaN(t)||t<birth) return "";
-    let y = t.getFullYear() - birth.getFullYear(); let m = t.getMonth() - birth.getMonth();
-    if(t.getDate() - birth.getDate() < 0){ m -= 1; }
-    if(m < 0){ y -= 1; m += 12; }
-    return y === 0 ? `${m}ヶ月` : `${y}歳${m}ヶ月`;
-  }
-  function escapeHtml(str){ return str ? str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') : ""; }
-
-  window.triggerCheckout = async function(){
-    document.getElementById("checkoutSubmitBtn").disabled = true; document.getElementById("checkoutSubmitBtnText").innerText = "接続中...";
-    setTimeout(async () => {
-      await updateDoc(doc(db, "families", currentFamilyId), { isPremium: true });
-      alert("プレミアムプランへアップグレードされました！"); closeDrawer();
-      document.getElementById("checkoutSubmitBtn").disabled = false; document.getElementById("checkoutSubmitBtnText").innerText = "登録手続きへ進む";
-    }, 1200);
-  };
-
-  window.openDrawer = function(t){
-    closeDrawer(); document.getElementById("backdrop").classList.remove("hidden");
-    if(t === 'upload' && !document.getElementById("editArtworkId").value){
-      document.getElementById("workForm").reset(); document.getElementById("mediaResultContainer").innerHTML = "";
-      document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; base64MediaArray = [];
-      if(localCategories.length){ document.getElementById("inputCategory").value = localCategories[0].id; }
+// ファイル添付・Base64変換（複数対応）
+window.handleFileSelection = async function(e) {
+  const files = e.target.files;
+  if(!files || files.length === 0) return;
+  
+  const container = document.getElementById("mediaResultContainer");
+  
+  for(let i=0; i<files.length; i++) {
+    const file = files[i];
+    const reader = new FileReader();
+    
+    if (file.type === "application/pdf") {
+      // PDFマークのプレビュー
+      reader.onload = function(evt) {
+        const obj = { type: "pdf", data: evt.target.result, name: file.name };
+        base64MediaArray.push(obj);
+        renderMediaPreviewHTML();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // 通常画像
+      reader.onload = function(evt) {
+        const obj = { type: "image", data: evt.target.result, name: file.name };
+        base64MediaArray.push(obj);
+        renderMediaPreviewHTML();
+      };
+      reader.readAsDataURL(file);
     }
-    if(t === 'child'){ cancelChildEdit(); cancelCategoryEdit(); }
-    const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
-  };
+  }
+  // 入力リセット
+  e.target.value = "";
+};
 
-  window.closeDrawer = function(t){ 
-    if(t){ const el = document.getElementById(t+"Drawer"); if(el) el.classList.remove('open'); } 
-    else { document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); }
-    document.getElementById("backdrop").classList.add("hidden");
-  };
+function renderMediaPreviewHTML() {
+  const container = document.getElementById("mediaResultContainer");
+  if(!container) return;
+  
+  let html = "";
+  base64MediaArray.forEach((m, idx) => {
+    html += `
+      <div class="relative rounded-xl border border-[#E7E1D7] overflow-hidden aspect-square bg-slate-100 flex items-center justify-center">
+        ${m.type === 'pdf' ? `
+          <div class="flex flex-col items-center justify-center p-1 text-center">
+            <span class="text-2xl">📄</span>
+            <span class="text-[9px] text-slate-500 truncate max-w-[60px]">${escapeHtml(m.name || "PDF")}</span>
+          </div>
+        ` : `
+          <img src="${m.data}" class="w-full h-full object-cover" />
+        `}
+        <button type="button" onclick="removeMediaFromQueue(${idx})" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white font-bold text-xs flex items-center justify-center">✕</button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
 
-  window.switchPage = function(p){
-    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-    if(p === 'gallery'){ document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
-    else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderTimeline(); } 
-    else if (p === 'trash') { document.getElementById('trashPage').classList.add('active'); renderTrash(); }
-  };
+window.removeMediaFromQueue = function(idx) {
+  base64MediaArray.splice(idx, 1);
+  renderMediaPreviewHTML();
+};
 
-  document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+// カプセルの保存処理
+window.saveWorkForm = async function(e) {
+  e.preventDefault();
+  if(!currentSession) return;
+  
+  const wId = document.getElementById("editingWorkId").value;
+  const title = document.getElementById("inputTitle").value.trim();
+  const categoryId = document.getElementById("inputCategory").value;
+  const childId = document.getElementById("inputWorkChild").value;
+  const dateStr = document.getElementById("inputDate").value;
+  const memo = document.getElementById("inputMemo").value.trim();
+  
+  const submitBtn = document.getElementById("workSubmitBtn");
+  submitBtn.disabled = true;
+  submitBtn.innerText = "保存中...";
+  
+  try {
+    let finalUrls = [];
+    
+    // Base64から、新規にストレージへアップロード
+    for (let i = 0; i < base64MediaArray.length; i++) {
+      const item = base64MediaArray[i];
+      if (item.data.startsWith("http")) {
+        // 既存のURLはそのまま引き継ぐ
+        finalUrls.push({ type: item.type, url: item.data, name: item.name || "" });
+      } else {
+        // 新規アップロード
+        const filename = `${currentSession}_${Date.now()}_${i}`;
+        const sRef = ref(storage, `capsules/${filename}`);
+        await uploadString(sRef, item.data, 'data_url');
+        const dUrl = await getDownloadURL(sRef);
+        finalUrls.push({ type: item.type, url: dUrl, name: item.name || "" });
+      }
+    }
+    
+    if (wId) {
+      // 編集更新
+      await updateDoc(doc(db, "works", wId), {
+        title, categoryId, childId, dateStr, memo,
+        mediaFiles: finalUrls,
+        updatedAt: Date.now()
+      });
+    } else {
+      // 新規追加
+      await addDoc(collection(db, "works"), {
+        familyId: currentSession,
+        title, categoryId, childId, dateStr, memo,
+        mediaFiles: finalUrls,
+        isDeleted: false,
+        isFavorite: false,
+        createdAt: Date.now()
+      });
+    }
+    
+    closeDrawer('work');
+    document.getElementById("workForm").reset();
+    base64MediaArray = [];
+    renderMediaPreviewHTML();
+  } catch(err) {
+    alert("作品カプセルの保存に失敗しました: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = "保存する";
+  }
+};
+
+// カプセル編集の呼び出し
+window.openEditWork = function(wId) {
+  const w = localWorks.find(item => item.id === wId);
+  if(!w) return;
+  
+  document.getElementById("editingWorkId").value = w.id;
+  document.getElementById("inputTitle").value = w.title;
+  document.getElementById("inputCategory").value = w.categoryId || "";
+  document.getElementById("inputWorkChild").value = w.childId || "all";
+  document.getElementById("inputDate").value = w.dateStr || "";
+  document.getElementById("inputMemo").value = w.memo || "";
+  
+  base64MediaArray = [];
+  if (w.mediaFiles && Array.isArray(w.mediaFiles)) {
+    w.mediaFiles.forEach(m => {
+      base64MediaArray.push({ type: m.type || "image", data: m.url, name: m.name || "" });
+    });
+  }
+  renderMediaPreviewHTML();
+  
+  document.getElementById("workFormTitle").innerText = "カプセル編集";
+  openDrawer('work');
+};
+
+// カプセルのゴミ箱移動・復元・完全削除
+window.moveWorkToTrash = async function(wId) {
+  if(!confirm("このカプセルをゴミ箱に移動しますか？")) return;
+  try {
+    await updateDoc(doc(db, "works", wId), { isDeleted: true, deletedAt: Date.now() });
+  } catch(e) { alert(e.message); }
+};
+
+window.restoreWorkFromTrash = async function(wId) {
+  try {
+    await updateDoc(doc(db, "works", wId), { isDeleted: false, deletedAt: null });
+  } catch(e) { alert(e.message); }
+};
+
+window.permanentlyDeleteWork = async function(wId) {
+  if(!confirm("⚠️ 本当に完全に削除しますか？この操作は戻せません。")) return;
+  try {
+    const w = localWorks.find(item => item.id === wId);
+    if(w && w.mediaFiles) {
+      // 紐づくストレージ画像をクリーンアップ
+      for(let f of w.mediaFiles) {
+        if(f.url && f.url.includes("firebasestorage")) {
+          try {
+            const fileRef = ref(storage, f.url);
+            await deleteObject(fileRef);
+          } catch(err) { console.error("Storage delete err", err); }
+        }
+      }
+    }
+    await deleteDoc(doc(db, "works", wId));
+  } catch(e) { alert(e.message); }
+};
+
+window.toggleWorkFavorite = async function(wId, currentStatus) {
+  try {
+    await updateDoc(doc(db, "works", wId), { isFavorite: !currentStatus });
+  } catch(e) { alert(e.message); }
+};
+
+// 年齢計算ロジック (作品日付 - 誕生日)
+function calculateAgeAtWork(birthStr, workDateStr) {
+  if(!birthStr || !workDateStr) return "";
+  const b = new Date(birthStr);
+  const w = new Date(workDateStr);
+  if(isNaN(b.getTime()) || isNaN(w.getTime())) return "";
+  
+  let years = w.getFullYear() - b.getFullYear();
+  let months = w.getMonth() - b.getMonth();
+  if (w.getDate() < b.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  if (years < 0) return "誕生前";
+  return `${years}歳${months}ヶ月`;
+}
+
+function getAgeStageGroup(birthStr, workDateStr) {
+  if(!birthStr || !workDateStr) return "unknown";
+  const b = new Date(birthStr);
+  const w = new Date(workDateStr);
+  if(isNaN(b.getTime()) || isNaN(w.getTime())) return "unknown";
+  
+  let ageInMonths = (w.getFullYear() - b.getFullYear()) * 12 + (w.getMonth() - b.getMonth());
+  if (w.getDate() < b.getDate()) ageInMonths--;
+  
+  if(ageInMonths < 0) return "unknown";
+  if(ageInMonths <= 35) return "baby"; // 0~2歳
+  if(ageInMonths <= 71) return "kinder"; // 3~5歳
+  return "school"; // 6歳〜
+}
+
+// ギャラリー・タイムライン表示レンダリング
+function renderGallery() {
+  const grid = document.getElementById("galleryGrid");
+  if(!grid) return;
+  
+  const searchWord = document.getElementById("gallerySearchInput").value.toLowerCase();
+  const childFilter = document.getElementById("galleryChildFilterSelect").value;
+  const sortVal = document.getElementById("gallerySortSelect").value;
+  
+  let filtered = localWorks.filter(w => !w.isDeleted);
+  
+  // フィルタリング処理
+  if(searchWord) {
+    filtered = filtered.filter(w => (w.title && w.title.toLowerCase().includes(searchWord)) || (w.memo && w.memo.toLowerCase().includes(searchWord)));
+  }
+  if(childFilter === "favorite") {
+    filtered = filtered.filter(w => w.isFavorite);
+  } else if(childFilter !== "all") {
+    filtered = filtered.filter(w => w.childId === childFilter);
+  }
+  
+  if(currentAgeStageFilter !== "all") {
+    filtered = filtered.filter(w => {
+      const child = localChildren.find(c => c.id === w.childId);
+      const bStr = child ? child.birthStr : "";
+      return getAgeStageGroup(bStr, w.dateStr) === currentAgeStageFilter;
+    });
+  }
+
+  // ソート処理
+  filtered.sort((x, y) => {
+    const cx = x.createdAt || 0; const cy = y.createdAt || 0;
+    const dx = x.dateStr || ""; const dy = y.dateStr || "";
+    
+    const childX = localChildren.find(c => c.id === x.childId);
+    const childY = localChildren.find(c => c.id === y.childId);
+    const bx = childX ? childX.birthStr : ""; const by = childY ? childY.birthStr : "";
+    
+    let ax = 0; let ay = 0;
+    if(bx && dx) ax = new Date(dx).getTime() - new Date(bx).getTime();
+    if(by && dy) ay = new Date(dy).getTime() - new Date(by).getTime();
+
+    if(sortVal === "createdDesc") return cy - cx;
+    if(sortVal === "createdAsc") return cx - cy;
+    if(sortVal === "dateDesc") return dy.localeCompare(dx) || cy - cx;
+    if(sortVal === "dateAsc") return dx.localeCompare(dy) || cx - cy;
+    if(sortVal === "ageAsc") return ax - ay || cy - cx;
+    if(sortVal === "ageDesc") return ay - ax || cy - cx;
+    return cy - cx;
+  });
+
+  if(filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-2 md:col-span-4 py-16 text-center text-slate-400 text-xs">
+        🎨 該当する作品カプセルがまだありません。
+      </div>
+    `;
+    return;
+  }
+
+  let html = "";
+  filtered.forEach(w => {
+    const child = localChildren.find(c => c.id === w.childId);
+    const cat = localCategories.find(c => c.id === w.categoryId);
+    const ageLabel = child ? calculateAgeAtWork(child.birthStr, w.dateStr) : "";
+    
+    const files = w.mediaFiles || [];
+    if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
+    const currentIdx = carouselIndices[w.id];
+
+    html += `
+      <div class="premium-card overflow-hidden flex flex-col bg-white">
+        <div class="relative w-full aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden shrink-0 group">
+          ${files.length === 0 ? `
+            <div class="text-slate-300 text-xs">NO IMAGE</div>
+          ` : files[currentIdx].type === 'pdf' ? `
+            <div onclick="window.open('${files[currentIdx].url}')" class="w-full h-full flex flex-col items-center justify-center p-4 bg-orange-50 text-orange-700 cursor-pointer">
+              <span class="text-4xl mb-1">📄</span>
+              <span class="text-[10px] font-bold max-w-full truncate">${escapeHtml(files[currentIdx].name || "PDFドキュメント")}</span>
+              <span class="text-[9px] opacity-70 mt-1">タップして開く</span>
+            </div>
+          ` : `
+            <img src="${files[currentIdx].url}" class="w-full h-full object-cover" onclick="openEditWork('${w.id}')" />
+          `}
+
+          ${files.length > 1 ? `
+            <div class="absolute inset-x-2 bottom-2 flex justify-between items-center pointer-events-none">
+              <button type="button" onclick="stepCarousel('${w.id}', -1)" class="pointer-events-auto w-6 h-6 rounded-full bg-black/50 text-white font-bold flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow">‹</button>
+              <span class="px-2 py-0.5 rounded-full bg-black/60 text-white text-[9px] font-medium tracking-wider">
+                ${currentIdx + 1} / ${files.length}
+              </span>
+              <button type="button" onclick="stepCarousel('${w.id}', 1)" class="pointer-events-auto w-6 h-6 rounded-full bg-black/50 text-white font-bold flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow">›</button>
+            </div>
+          ` : ""}
+
+          <button onclick="toggleWorkFavorite('${w.id}', ${w.isFavorite})" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-xs shadow-sm">
+            ${w.isFavorite ? "⭐" : "☆"}
+          </button>
+        </div>
+
+        <div class="p-3 flex-1 flex flex-col justify-between text-left">
+          <div>
+            <div class="flex items-center gap-1.5 flex-wrap mb-1">
+              ${child ? `<span class="px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-600 text-[10px] font-semibold">${escapeHtml(child.name)}</span>` : ""}
+              ${ageLabel ? `<span class="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold">${ageLabel}</span>` : ""}
+            </div>
+            <h4 class="text-sm font-bold text-slate-800 line-clamp-2 leading-tight mb-1" onclick="openEditWork('${w.id}')">${escapeHtml(w.title)}</h4>
+            ${w.memo ? `<p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mb-2">${escapeHtml(w.memo)}</p>` : ""}
+          </div>
+          
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+            <span>${w.dateStr || "日付未設定"}</span>
+            <div class="flex gap-2">
+              <button onclick="openEditWork('${w.id}')" class="text-indigo-500 font-semibold">編集</button>
+              <button onclick="moveWorkToTrash('${w.id}')" class="text-rose-400">削除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  grid.innerHTML = html;
+}
+
+window.stepCarousel = function(wId, step) {
+  const w = localWorks.find(item => item.id === wId);
+  if(!w || !w.mediaFiles) return;
+  const len = w.mediaFiles.length;
+  
+  let idx = (carouselIndices[wId] || 0) + step;
+  if(idx < 0) idx = len - 1;
+  if(idx >= len) idx = 0;
+  
+  carouselIndices[wId] = idx;
+  renderGallery();
+};
+
+function renderTimeline() {
+  const container = document.getElementById("recordsTimeline");
+  if(!container) return;
+  
+  let activeWorks = localWorks.filter(w => !w.isDeleted && w.dateStr);
+  activeWorks.sort((a,b) => b.dateStr.localeCompare(a.dateStr));
+  
+  if(activeWorks.length === 0) {
+    container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">日付が入った作品カプセルを登録すると、ここに時系列の歴史が並びます。</div>`;
+    return;
+  }
+  
+  let html = `<div class="relative border-l-2 border-slate-200 ml-3 pl-4 space-y-6">`;
+  activeWorks.forEach(w => {
+    const child = localChildren.find(c => c.id === w.childId);
+    const ageLabel = child ? calculateAgeAtWork(child.birthStr, w.dateStr) : "";
+    const firstImg = (w.mediaFiles && w.mediaFiles.length > 0) ? w.mediaFiles[0] : null;
+
+    html += `
+      <div class="relative text-left">
+        <div class="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#ff6b6b] border-2 border-white"></div>
+        <div class="text-xs font-bold text-slate-400 mb-1">${w.dateStr} ${ageLabel ? `(${ageLabel})` : ""}</div>
+        <div class="p-3 rounded-xl border bg-white shadow-sm flex gap-3 items-start max-w-xl">
+          ${firstImg ? `
+            <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+              ${firstImg.type === 'pdf' ? `<span class="text-xl p-2 block">📄</span>` : `<img src="${firstImg.url}" class="w-full h-full object-cover" />`}
+            </div>
+          ` : ""}
+          <div class="min-w-0 flex-1">
+            <h5 class="text-xs font-bold text-slate-800 truncate">${escapeHtml(w.title)}</h5>
+            <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">${escapeHtml(w.memo || "")}</p>
+            ${child ? `<span class="inline-block text-[9px] px-1 bg-rose-50 text-rose-500 font-bold rounded mt-1">${escapeHtml(child.name)}</span>` : ""}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderTrash() {
+  const grid = document.getElementById("trashGrid");
+  if(!grid) return;
+  
+  let trashed = localWorks.filter(w => w.isDeleted);
+  if(trashed.length === 0) {
+    grid.innerHTML = `<div class="col-span-2 md:col-span-4 py-12 text-center text-slate-400 text-xs">ゴミ箱は空っぽです。</div>`;
+    return;
+  }
+  
+  let html = "";
+  trashed.forEach(w => {
+    const firstImg = (w.mediaFiles && w.mediaFiles.length > 0) ? w.mediaFiles[0] : null;
+    html += `
+      <div class="premium-card overflow-hidden opacity-75 bg-white text-left flex flex-col justify-between">
+        <div class="relative aspect-[4/3] bg-slate-200 flex items-center justify-center">
+          ${firstImg ? (firstImg.type === 'pdf' ? `<span class="text-3xl">📄</span>` : `<img src="${firstImg.url}" class="w-full h-full object-cover" />`) : `<span class="text-xs text-slate-400">NO IMAGE</span>`}
+        </div>
+        <div class="p-2.5 flex-1 flex flex-col justify-between">
+          <h5 class="text-xs font-bold text-slate-700 truncate mb-2">${escapeHtml(w.title)}</h5>
+          <div class="flex flex-col gap-1.5 mt-auto">
+            <button onclick="restoreWorkFromTrash('${w.id}')" class="w-full py-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 text-center">元に戻す</button>
+            <button onclick="permanentlyDeleteWork('${w.id}')" class="w-full py-1 text-[10px] font-bold text-rose-600 bg-rose-50 rounded-lg hover:bg-rose-100 text-center">完全に抹消</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  grid.innerHTML = html;
+}
+
+window.setAgeStageFilter = function(stage) {
+  currentAgeStageFilter = stage;
+  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
+  const activeBtn = document.getElementById(`ageTab-${stage}`);
+  if(activeBtn) activeBtn.classList.add("active");
+  renderGallery();
+};
+
+// 子どもの管理ロジック
+window.saveChild = async function() {
+  if(!currentSession) return;
+  
+  const cId = document.getElementById("editingChildId").value;
+  const name = document.getElementById("childName").value.trim();
+  const y = document.getElementById("childBirthYear").value;
+  const m = String(document.getElementById("childBirthMonth").value).padStart(2, '0');
+  const d = String(document.getElementById("childBirthDay").value).padStart(2, '0');
+  const birthStr = `${y}-${m}-${d}`;
+  
+  if(!name) { alert("お名前を入力してください。"); return; }
+  
+  // 無料プランの上限チェック (新規登録時のみ)
+  if (!isPremiumUser && !cId && localChildren.length >= 1) {
+    alert("⚠️ 無料プランではお子様は1名までしか登録できません。プレミアムプランへのアップグレードをご検討ください。");
+    return;
+  }
+  
+  const submitBtn = document.getElementById("childSubmitBtn");
+  submitBtn.disabled = true;
+  
+  try {
+    if(cId) {
+      await updateDoc(doc(db, "children", cId), { name, birthStr, updatedAt: Date.now() });
+    } else {
+      await addDoc(collection(db, "children"), { familyId: currentSession, name, birthStr, createdAt: Date.now() });
+    }
+    cancelChildEdit();
+  } catch(e) { alert("子どもの保存に失敗しました: " + e.message); }
+  finally { submitBtn.disabled = false; }
+};
+
+window.openEditChild = function(cId) {
+  const c = localChildren.find(item => item.id === cId);
+  if(!c) return;
+  document.getElementById("editingChildId").value = c.id;
+  document.getElementById("childName").value = c.name;
+  
+  if(c.birthStr) {
+    const parts = c.birthStr.split("-");
+    if(parts.length === 3) {
+      document.getElementById("childBirthYear").value = parseInt(parts[0]);
+      document.getElementById("childBirthMonth").value = parseInt(parts[1]);
+      document.getElementById("childBirthDay").value = parseInt(parts[2]);
+    }
+  }
+  document.getElementById("childSubmitBtn").innerText = "更新する";
+  document.getElementById("childCancelBtn").classList.remove("hidden");
+};
+
+window.cancelChildEdit = function() {
+  document.getElementById("editingChildId").value = "";
+  document.getElementById("childName").value = "";
+  document.getElementById("childSubmitBtn").innerText = "追加する";
+  document.getElementById("childCancelBtn").classList.add("hidden");
+};
+
+window.deleteChild = async function(cId) {
+  if(!confirm("このお子様を削除しますか？作品データに紐づいていた年齢が表示されなくなります。")) return;
+  try { await deleteDoc(doc(db, "children", cId)); } catch(e) { alert(e.message); }
+};
+
+function renderChildList() {
+  const list = document.getElementById("childList");
+  const countLabel = document.getElementById("childLimitCountLabel");
+  if(!list) return;
+  
+  if(countLabel) {
+    countLabel.innerText = `(${localChildren.length} / ${isPremiumUser ? '無制限' : '1人'})`;
+  }
+  
+  let html = "";
+  localChildren.forEach(c => {
+    html += `
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-xs">
+        <div>
+          <span class="font-bold text-slate-800">${escapeHtml(c.name)}</span>
+          <span class="text-slate-400 ml-2">(${c.birthStr || ""})</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openEditChild('${c.id}')" class="text-indigo-600 font-semibold">修正</button>
+          <button onclick="deleteChild('${c.id}')" class="text-rose-500">削除</button>
+        </div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+// カテゴリの管理ロジック
+window.saveCategory = async function() {
+  if(!currentSession) return;
+  const catId = document.getElementById("editingCategoryId").value;
+  const name = document.getElementById("categoryName").value.trim();
+  if(!name) { alert("カテゴリ名を入力してください。"); return; }
+  
+  try {
+    if(catId) {
+      await updateDoc(doc(db, "categories", catId), { name, updatedAt: Date.now() });
+    } else {
+      await addDoc(collection(db, "categories"), { familyId: currentSession, name, createdAt: Date.now() });
+    }
+    cancelCategoryEdit();
+  } catch(e) { alert(e.message); }
+};
+
+window.openEditCategory = function(catId) {
+  const cat = localCategories.find(c => c.id === catId);
+  if(!cat) return;
+  document.getElementById("editingCategoryId").value = cat.id;
+  document.getElementById("categoryName").value = cat.name;
+  document.getElementById("categorySubmitBtn").innerText = "更新";
+  document.getElementById("categoryCancelBtn").classList.remove("hidden");
+};
+
+window.cancelCategoryEdit = function() {
+  document.getElementById("editingCategoryId").value = "";
+  document.getElementById("categoryName").value = "";
+  document.getElementById("categorySubmitBtn").innerText = "カテゴリを追加";
+  document.getElementById("categoryCancelBtn").classList.add("hidden");
+};
+
+window.deleteCategory = async function(catId) {
+  if(!confirm("このカテゴリを削除しますか？")) return;
+  try { await deleteDoc(doc(db, "categories", catId)); } catch(e) { alert(e.message); }
+};
+
+function renderCategoryList() {
+  const list = document.getElementById("categoryList");
+  if(!list) return;
+  
+  let html = "";
+  localCategories.forEach(c => {
+    html += `
+      <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center text-xs">
+        <span class="font-medium text-slate-700">🏷️ ${escapeHtml(c.name)}</span>
+        <div class="flex gap-2">
+          <button onclick="openEditCategory('${c.id}')" class="text-slate-500 font-medium">変更</button>
+          <button onclick="deleteCategory('${c.id}')" class="text-rose-400">削除</button>
+        </div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+window.copyFamilyCode = function() {
+  const code = document.getElementById("displayFamilyIdCode").value;
+  if(!code || code === "取得中...") return;
+  navigator.clipboard.writeText(code).then(() => {
+    alert("📋 家族コードをクリップボードにコピーしました！パートナーのログイン後の画面に入力してください。");
+  }).catch(err => {
+    alert("コピーに失敗しました。手動で選択してコピーしてください。");
+  });
+};
+
+// 共通ユーティリティ・Drawer画面制御
+window.openDrawer = function(t) {
+  document.querySelectorAll(".drawer").forEach(el => el.classList.remove("open"));
+  if (t === 'work') {
+    if(!document.getElementById("editingWorkId").value) {
+      document.getElementById("workFormTitle").innerText = "カプセル登録";
+      document.getElementById("workForm").reset();
+      base64MediaArray = [];
+      renderMediaPreviewHTML();
+      document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+      if(localCategories.length) {
+        document.getElementById("inputCategory").value = localCategories[0].id;
+      }
+    }
+  }
+  if(t === 'child') {
+    cancelChildEdit();
+    cancelCategoryEdit();
+  }
+  const el = document.getElementById(t+"Drawer");
+  if(el) el.classList.add("open"); 
+};
+
+window.closeDrawer = function(t) { 
+  if(t) {
+    const el = document.getElementById(t+"Drawer");
+    if(el) el.classList.remove('open');
+  } else {
+    document.querySelectorAll('.drawer').forEach(el => el.classList.remove('open'));
+  }
+};
+
+window.switchPage = function(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  
+  if(p === 'gallery') {
+    document.getElementById('galleryPage').classList.add('active');
+    document.getElementById('nav-gallery').classList.add('active');
+    renderGallery();
+  } else if (p === 'records') {
+    document.getElementById('recordsPage').classList.add('active');
+    document.getElementById('nav-records').classList.add('active');
+    renderTimeline();
+  } else if (p === 'trash') {
+    document.getElementById('trashPage').classList.add('active');
+    renderTrash();
+  }
+};
+
+window.goToTopPage = function() {
+  switchPage('gallery');
+  document.getElementById("gallerySearchInput").value = "";
+  document.getElementById("galleryChildFilterSelect").value = "all";
+  setAgeStageFilter('all');
+  renderGallery();
+};
+
+function escapeHtml(str) {
+  if(!str) return "";
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// アプリの起動時初期化
+initBirthdaySelectboxes();
+document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+document.getElementById("searchMenuArea").classList.add("collapsed");
+
 </script>
 </body>
 </html>
