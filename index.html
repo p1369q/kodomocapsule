@@ -352,11 +352,11 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </section>
   <section id="recordsPage" class="page">
     <div class="page-intro mb-5">
-      <div class="text-[10px] font-bold tracking-widest text-purple-500 mb-1">GROWTH TIMELINE</div>
-      <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">成長タイムライン</h2>
-      <p class="text-xs text-slate-500 mt-1.5">新しい思い出から順に、家族の歩みを振り返れます。</p>
+      <div class="text-[10px] font-bold tracking-widest text-purple-500 mb-1">PHOTO WALL</div>
+      <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">写真一覧</h2>
+      <p class="text-xs text-slate-500 mt-1.5">登録した写真だけを、アルバムのようにずらっと表示します。</p>
     </div>
-    <div id="recordsTimeline" class="space-y-4"></div>
+    <div id="photoWallGrid" class="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4"></div>
   </section>
   <section id="trashPage" class="page">
     <div class="page-intro mb-5 flex justify-between items-center gap-3">
@@ -375,7 +375,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   <div class="w-full max-w-lg px-5 sm:px-8 flex items-center justify-between">
     <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center gap-0.5"><span class="text-lg leading-none">▦</span><span class="text-[10px]">ギャラリー</span></button>
     <button onclick="handleFabClick()" class="fab" title="新しいカプセルを登録">＋</button>
-    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center gap-0.5"><span class="text-lg leading-none">≡</span><span class="text-[10px]">タイムライン</span></button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center gap-0.5"><span class="text-lg leading-none">▧</span><span class="text-[10px]">写真一覧</span></button>
   </div>
 </div>
 
@@ -1586,7 +1586,7 @@ function startRealtimeSync() {
   unsubscribeCategories = onSnapshot(collection(db, "families", currentSession.familyId, "categories"), (snapshot) => {
     localCategories = []; snapshot.forEach(d => localCategories.push({ docId: d.id, ...d.data() }));
     localCategories.sort((a,b) => a.createdAt - b.createdAt);
-    populateCategorySelect(); renderCategoryList(); renderGallery(); renderTimeline();
+    populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall();
   }, (err) => {
     alert("カテゴリ一覧の同期に失敗しました。");
   });
@@ -1607,7 +1607,7 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderTimeline(); renderTrash();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash();
 }
 
 document.getElementById("gallerySortSelect").addEventListener("change", renderGallery);
@@ -2046,35 +2046,43 @@ function renderGallery(){
   if(grid) grid.innerHTML = html;
 }
 
-function renderTimeline(){
-  let html = "";
-  localWorks.filter(w => !w.isDeleted).sort((a,b)=>b.createdAt-a.createdAt).forEach(w => {
-    let childName = "共通"; let ageInfo = "";
-    if(w.childId) { 
-      const c = localChildren.find(item => item.id === w.childId); 
-      if(c) { childName = c.name; const totalMonths = calculateAgeInMonths(c.birthday, w.date); const ageStr = formatAgeString(totalMonths); if(ageStr) ageInfo = ` (${ageStr})`; } 
-    }
-    let thumbs = "";
+function renderPhotoWall(){
+  const photoItems = [];
+  localWorks.filter(w => !w.isDeleted).forEach(w => {
     if(w.mediaUrls?.length) {
-      w.mediaUrls.forEach(m => {
+      w.mediaUrls.forEach((m, index) => {
         const src = m.url || m.dataUrl || m;
         const isPdf = m.type === "pdf" || (typeof src === 'string' && src.includes('pdf'));
-        thumbs += isPdf ? `<div class="w-10 h-10 bg-slate-200 border rounded-md flex items-center justify-center text-sm">📄</div>` : `<img src="${src}" class="w-10 h-10 object-cover rounded-md border"/>`; 
+        if(!isPdf && src) {
+          photoItems.push({
+            workId: w.id,
+            title: w.title || "写真",
+            date: w.date || "",
+            createdAt: w.createdAt || 0,
+            src,
+            index
+          });
+        }
       });
     }
-    html += `<div class="premium-card p-4 sm:p-5 border-l-4 border-l-purple-200">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="font-extrabold text-slate-800 flex items-center gap-1">${w.title}${w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : ''}</div>
-          <div class="text-xs text-slate-400 mt-1.5">${w.date || "日付なし"} ・ <span class="font-semibold text-purple-600">${childName}${ageInfo}</span></div>
-        </div>
-        <button onclick="openEditWork('${w.id}')" class="text-[11px] px-3 py-1.5 bg-slate-100 rounded-full text-slate-600 font-bold">詳しく見る</button>
-      </div>
-      <div class="flex gap-2 mt-3 overflow-x-auto py-1">${thumbs}</div>
-      ${w.memo ? `<div class="text-xs text-slate-500 mt-3 bg-slate-50 p-3 rounded-xl leading-relaxed">${w.memo}</div>` : ''}
-    </div>`;
   });
-  const tl = document.getElementById("recordsTimeline"); if(tl) tl.innerHTML = html || "<div class='page-intro text-center py-10'><div class='text-4xl mb-3'>🕰️</div><div class='font-extrabold text-slate-700'>タイムラインはまだ空です</div><p class='text-xs text-slate-400 mt-2'>カプセルを追加すると、ここに成長の記録が並びます。</p></div>";
+
+  photoItems.sort((a,b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    if(dateA !== dateB) return dateB - dateA;
+    return b.createdAt - a.createdAt;
+  });
+
+  let html = "";
+  photoItems.forEach(item => {
+    html += `<button onclick="openEditWork('${item.workId}')" class="break-inside-avoid mb-3 sm:mb-4 w-full rounded-3xl overflow-hidden bg-white border border-[#E7E1D7] shadow-sm hover:shadow-md transition text-left">
+      <img src="${item.src}" alt="${item.title}" class="w-full h-auto object-cover block"/>
+    </button>`;
+  });
+
+  const wall = document.getElementById("photoWallGrid");
+  if(wall) wall.innerHTML = html || "<div class='page-intro text-center py-10 break-inside-avoid'><div class='text-4xl mb-3'>📷</div><div class='font-extrabold text-slate-700'>写真はまだありません</div><p class='text-xs text-slate-400 mt-2'>写真付きのカプセルを追加すると、ここに写真だけが並びます。</p></div>";
 }
 
 function renderTrash(){
@@ -2120,7 +2128,7 @@ window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   if(p === 'gallery'){ document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
-  else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderTimeline(); } 
+  else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderPhotoWall(); } 
   else if (p === 'trash') { document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 
