@@ -169,9 +169,7 @@ input, select, textarea {
 
 <div id="backdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
 
-<!-- 1. メインギャラリーページ -->
 <div id="galleryPage" class="page active">
-  <!-- ヘッダー -->
   <header class="sticky top-0 bg-[#F7F4EE]/90 backdrop-blur-md z-20 px-4 py-3 flex items-center justify-between border-b border-[#E7E1D7]">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 bg-gradient-to-tr from-[#FF6B6B] to-[#FF8E8E] rounded-2xl flex items-center justify-center shadow-md shadow-red-100">
@@ -194,20 +192,14 @@ input, select, textarea {
     </div>
   </header>
 
-  <!-- 上部ステータス / フィルターエリア -->
   <div class="px-4 pt-4 pb-2">
-    <!-- 子ども切り替えスクロールタブ -->
     <div id="childSelectorContainer" class="flex gap-2 overflow-x-auto media-scroll pb-2">
-      <!-- JSで動的レンダリング -->
-    </div>
+      </div>
 
-    <!-- カテゴリ切り替えスクロールタブ -->
     <div id="categorySelectorContainer" class="flex gap-2 overflow-x-auto media-scroll py-1 mt-1">
-      <!-- JSで動的レンダリング -->
-    </div>
+      </div>
   </div>
 
-  <!-- メインギャラリー表示 -->
   <main class="px-4 py-2">
     <div id="galleryZeroState" class="hidden flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-dashed border-[#E7E1D7] px-6">
       <div class="w-16 h-16 bg-[#F7F4EE] rounded-full flex items-center justify-center text-3xl mb-4">🎨</div>
@@ -218,7 +210,6 @@ input, select, textarea {
       </button>
     </div>
 
-    <!-- スケルトンローダー -->
     <div id="gallerySkeleton" class="masonry-grid">
       <div class="bg-white p-3 rounded-3xl border border-[#E7E1D7]"><div class="aspect-card skeleton"></div><div class="h-4 skeleton mt-3 w-2/3 rounded-md"></div><div class="h-3 skeleton mt-2 w-1/3 rounded-md"></div></div>
       <div class="bg-white p-3 rounded-3xl border border-[#E7E1D7]"><div class="aspect-card skeleton"></div><div class="h-4 skeleton mt-3 w-1/2 rounded-md"></div><div class="h-3 skeleton mt-2 w-1/4 rounded-md"></div></div>
@@ -226,14 +217,11 @@ input, select, textarea {
       <div class="bg-white p-3 rounded-3xl border border-[#E7E1D7]"><div class="aspect-card skeleton"></div><div class="h-4 skeleton mt-3 w-1/2 rounded-md"></div><div class="h-3 skeleton mt-2 w-1/3 rounded-md"></div></div>
     </div>
 
-    <!-- 実グリッド -->
     <div id="galleryGrid" class="masonry-grid hidden">
-      <!-- JSで動的生成 -->
-    </div>
+      </div>
   </main>
 </div>
 
-<!-- 2. 年表・思い出記録ページ -->
 <div id="recordsPage" class="page">
   <header class="sticky top-0 bg-[#F7F4EE]/90 backdrop-blur-md z-20 px-4 py-4 border-b border-[#E7E1D7]">
     <h1 class="text-xl font-bold tracking-tight text-slate-800">思い出年表</h1>
@@ -241,12 +229,10 @@ input, select, textarea {
   </header>
   <main class="p-4 max-w-xl mx-auto">
     <div id="timelineContainer" class="relative border-l-2 border-[#E7E1D7] ml-4 pl-6 space-y-8 py-4">
-      <!-- JSでタイムラインアイテムを挿入 -->
-    </div>
+      </div>
   </main>
 </div>
 
-<!-- 3. ゴミ箱ページ -->
 <div id="trashPage" class="page">
   <header class="sticky top-0 bg-[#F7F4EE]/90 backdrop-blur-md z-20 px-4 py-4 border-b border-[#E7E1D7] flex items-center justify-between">
     <div>
@@ -257,8 +243,7 @@ input, select, textarea {
   </header>
   <main class="p-4">
     <div id="trashGrid" class="masonry-grid">
-      <!-- JSでゴミ箱データを挿入 -->
-    </div>
+      </div>
     <div id="trashZeroState" class="hidden text-center py-20 text-slate-400">
       <p class="text-3xl mb-2">🗑️</p>
       <p class="text-sm">ゴミ箱は空っぽです</p>
@@ -267,14 +252,12 @@ input, select, textarea {
 </div>
 
 
-<!-- 固定下部ナビゲーションタブバー -->
 <nav class="tab-bar flex items-center justify-around h-16 shadow-lg shadow-slate-900/10">
   <button id="nav-gallery" onclick="switchPage('gallery')" class="nav-tab active flex flex-col items-center justify-center w-16 h-full gap-0.5">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
     <span class="text-[10px]">ギャラリー</span>
   </button>
   
-  <!-- 中央メインアクションボタン -->
   <div class="relative -top-3">
     <button onclick="openDrawer('upload')" class="w-14 h-14 bg-[#FF6B6B] hover:bg-[#E55B5B] text-white rounded-full flex items-center justify-center shadow-lg shadow-red-200 border-4 border-[#F7F4EE] btn-scale transition-transform">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -288,11 +271,6 @@ input, select, textarea {
 </nav>
 
 
-<!-- ======================================================== -->
-<!-- DRAWER LAYERS (ドロワー・シート) -->
-<!-- ======================================================== -->
-
-<!-- A. 作品登録ドロワー -->
 <div id="uploadDrawer" class="drawer">
   <div class="p-6">
     <div class="flex items-center justify-between mb-5">
@@ -306,26 +284,23 @@ input, select, textarea {
     <form id="workForm" onsubmit="handleUploadSubmit(event)" class="space-y-4">
       <input type="hidden" id="editArtworkId" value="">
       
-      <!-- メディアピッカー (カスタムUI) -->
       <div>
         <label class="block text-xs font-bold text-slate-500 mb-1.5">写真・動画・音声</label>
         <div class="grid grid-cols-4 gap-2">
           <div onclick="document.getElementById('fileInput').click()" class="aspect-square bg-slate-50 border-2 border-dashed border-[#E7E1D7] rounded-2xl flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:bg-slate-100 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+            <svg xmlns="http://www.w3.org/2000/xl" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
             <span class="text-[9px] font-bold mt-1">追加</span>
           </div>
           <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*" class="hidden" onchange="processLocalMedia(this)">
           <div id="mediaResultContainer" class="contents">
-            <!-- プレビュープレースホルダ -->
-          </div>
+            </div>
         </div>
       </div>
 
       <div>
         <label class="block text-xs font-bold text-slate-500 mb-1">だれの作品？</label>
         <select id="inputChild" required>
-          <!-- 動的 -->
-        </select>
+          </select>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
@@ -336,8 +311,7 @@ input, select, textarea {
         <div>
           <label class="block text-xs font-bold text-slate-500 mb-1">カテゴリ</label>
           <select id="inputCategory" required>
-            <!-- 動的 -->
-          </select>
+            </select>
         </div>
       </div>
 
@@ -361,7 +335,6 @@ input, select, textarea {
   </div>
 </div>
 
-<!-- B. 作品詳細ドロワー -->
 <div id="detailDrawer" class="drawer">
   <div class="p-6">
     <div class="flex items-center justify-between mb-4">
@@ -372,10 +345,8 @@ input, select, textarea {
       <button onclick="closeDrawer()" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 font-bold text-sm">✕</button>
     </div>
 
-    <!-- メディアスライダー表示域 -->
     <div id="detailMediaSlider" class="w-full flex gap-3 overflow-x-auto media-scroll snap-x snap-mandatory rounded-2xl mb-4">
-      <!-- メディアプレビュー群 -->
-    </div>
+      </div>
 
     <div class="space-y-3">
       <div class="flex items-start justify-between">
@@ -391,7 +362,6 @@ input, select, textarea {
         <p id="detailMemo" class="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap"></p>
       </div>
 
-      <!-- 操作ボタン -->
       <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[#E7E1D7]">
         <button id="detailEditBtn" class="bg-white border border-[#E7E1D7] text-slate-600 font-bold py-3 rounded-xl text-xs flex flex-col items-center justify-center gap-1 btn-scale transition-transform">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
@@ -410,7 +380,6 @@ input, select, textarea {
   </div>
 </div>
 
-<!-- C. 管理・設定ドロワー -->
 <div id="settingsDrawer" class="drawer">
   <div class="p-6">
     <div class="flex items-center justify-between mb-5">
@@ -422,7 +391,6 @@ input, select, textarea {
     </div>
 
     <div class="space-y-6">
-      <!-- 子どもリスト管理 -->
       <div class="bg-[#F7F4EE] p-4 rounded-2xl border border-[#E7E1D7]">
         <div class="flex items-center justify-between mb-3">
           <span class="text-xs font-bold text-slate-500">👦👧 お子様の管理</span>
@@ -438,11 +406,9 @@ input, select, textarea {
           </div>
         </div>
         <div id="settingsChildList" class="space-y-1.5">
-          <!-- 動的 -->
-        </div>
+          </div>
       </div>
 
-      <!-- カテゴリ管理 -->
       <div class="bg-[#F7F4EE] p-4 rounded-2xl border border-[#E7E1D7]">
         <div class="flex items-center justify-between mb-3">
           <span class="text-xs font-bold text-slate-500">🗂️ カテゴリの管理</span>
@@ -457,11 +423,9 @@ input, select, textarea {
           </div>
         </div>
         <div id="settingsCategoryList" class="space-y-1.5">
-          <!-- 動的 -->
-        </div>
+          </div>
       </div>
 
-      <!-- ゴミ箱・データ関連 -->
       <div class="space-y-2">
         <button onclick="closeDrawer(); switchPage('trash');" class="w-full bg-white border border-[#E7E1D7] text-slate-600 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-between btn-scale transition-transform">
           <span class="flex items-center gap-1.5">🗑️ ゴミ箱を見る</span>
@@ -479,7 +443,6 @@ input, select, textarea {
   </div>
 </div>
 
-<!-- D. プレミアム案内ドロワー -->
 <div id="premiumDrawer" class="drawer">
   <div class="p-6">
     <div class="flex justify-end">
@@ -534,10 +497,7 @@ input, select, textarea {
 </div>
 
 
-<!-- ======================================================== -->
-<!-- AUTH LAYER (認証オーバレイ) -->
-<!-- ======================================================== -->
-<div id="authOverlay" class="fixed inset-0 bg-[#F7F4EE] z-50 flex flex-col justify-between p-6 hidden">
+<div id="authOverlay" class="fixed inset-0 bg-[#F7F4EE] z-50 flex flex-col justify-between p-6">
   <div class="my-auto max-w-sm w-full mx-auto space-y-8">
     <div class="text-center">
       <div class="w-16 h-16 bg-gradient-to-tr from-[#FF6B6B] to-[#FF8E8E] rounded-3xl flex items-center justify-center shadow-lg shadow-red-100 mx-auto mb-4">
@@ -547,7 +507,6 @@ input, select, textarea {
       <p class="text-xs text-slate-400 font-medium mt-1">思い出、作品、テストを未来に届けるカプセル</p>
     </div>
 
-    <!-- 認証フォーム -->
     <div class="bg-white p-6 rounded-3xl border border-[#E7E1D7] shadow-sm space-y-4">
       <div id="familyCodeField" class="hidden">
         <label class="block text-xs font-bold text-slate-500 mb-1.5">家族共有コード（お持ちの方のみ）</label>
@@ -582,10 +541,6 @@ input, select, textarea {
 </div>
 
 
-<!-- ======================================================== -->
-<!-- JAVASCRIPT SDK & SYSTEM LOGIC -->
-<!-- ======================================================== -->
-<!-- Firebase App, Auth, Firestore, Storage Modules -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -679,10 +634,12 @@ input, select, textarea {
           familyId: shareCode,
           createdAt: serverTimestamp()
         });
+        document.getElementById("authOverlay").classList.add("hidden"); // 追加：画面隠し
       } else {
         // 通常サインイン試行、失敗時は自動的に新規家族アカウントとして新規登録する親切設計
         try {
           await signInWithEmailAndPassword(auth, email, password);
+          document.getElementById("authOverlay").classList.add("hidden"); // 追加：画面隠し
         } catch (err) {
           if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
             const confirmNew = confirm("アカウントが見つかりません。この情報で新しく家族カプセルを作成して登録しますか?");
@@ -704,6 +661,7 @@ input, select, textarea {
                 familyId: newFamilyId,
                 createdAt: serverTimestamp()
               });
+              document.getElementById("authOverlay").classList.add("hidden"); // 追加：画面隠し
             }
           } else {
             throw err;
@@ -912,7 +870,6 @@ input, select, textarea {
 
       html += `
         <div onclick="openDetailDrawer('${w.id}')" class="relative group cursor-pointer">
-          <!-- タイムラインの丸ポチ -->
           <div class="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-[#FF6B6B] border-2 border-[#F7F4EE] group-hover:scale-125 transition-transform"></div>
           <div class="bg-white p-4 rounded-2xl border border-[#E7E1D7] shadow-xs flex gap-4 items-center">
             ${img ? `<img src="${img}" class="w-14 h-14 object-cover rounded-xl bg-slate-50 border border-slate-100 flex-shrink-0">` : `<div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center text-xl">🎨</div>`}
