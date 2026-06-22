@@ -490,7 +490,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     <div id="settingsPlan" class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3 scroll-mt-4">
       <div class="flex justify-between items-center">
         <div>
-          <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
+          <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 家族グループのプラン設定</div>
           <div id="currentPlanLabel" class="text-sm font-black text-slate-700 mt-1">無料プラン (制限あり)</div>
         </div>
         <button id="stripePaymentBtn" onclick="redirectToStripeCheckout()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition">プレミアムにする</button>
@@ -508,7 +508,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
         <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
       </div>
-      <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力するとデータを完全共有できます。</p>
+      <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力すると、データとプレミアム状態を家族グループ全員で共有できます。</p>
     </div>
 
     <div id="settingsChildren" class="form-section space-y-4 mb-6 scroll-mt-4">
@@ -583,10 +583,13 @@ let unsubscribeChildren = null;
 let unsubscribeWorks = null;
 let unsubscribeCategories = null;
 let unsubscribeUserPlan = null; 
+let unsubscribeFamilyPlan = null;
 let currentAgeStageFilter = "all";
 let carouselIndices = {};
 let pendingOwnFamilyId = null;
 let hasSelectedFamilyGroup = false;
+let legacyUserPlan = "free";
+let isResolvingFamilyChoice = false;
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -686,7 +689,9 @@ window.redirectToStripeCheckout = async function() {
   btn.innerText = "本番決済画面へ移行中...";
 
   try {
-    const successUrl = window.location.origin + window.location.pathname + "?session_id={CHECKOUT_SESSION_ID}"; 
+    if (!currentSession?.familyId) throw new Error("利用中の家族グループが確認できません。");
+    const familyId = currentSession.familyId;
+    const successUrl = window.location.origin + window.location.pathname + "?session_id={CHECKOUT_SESSION_ID}&family_id=" + encodeURIComponent(familyId); 
     const cancelUrl = window.location.origin + window.location.pathname;
 
     const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
@@ -695,6 +700,7 @@ window.redirectToStripeCheckout = async function() {
       body: JSON.stringify({
         uid: String(currentUser.uid),
         client_reference_id: String(currentUser.uid),
+        familyId: String(familyId),
         email: String(currentUser.email || ""),
         success_url: String(successUrl),
         cancel_url: String(cancelUrl)
@@ -728,11 +734,17 @@ window.redirectToStripeCheckout = async function() {
 async function checkUrlSessionParameters(user) {
   const urlParams = new URLSearchParams(window.location.search);
   const sessionId = urlParams.get('session_id');
+  let familyId = urlParams.get('family_id');
   if (sessionId && user) {
     const statusText = document.getElementById("loadingStatusText");
     if(statusText) statusText.innerText = "✨ Stripe決済完了を確認中...";
     try {
-      await updateDoc(doc(db, "users", user.uid), {
+      if (!familyId) {
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        familyId = userSnap.exists() ? userSnap.data().familyId : null;
+      }
+      if (!familyId) throw new Error("プレミアムを適用する家族グループが確認できません。");
+      await updateDoc(doc(db, "families", familyId), {
         plan: "premium",
         updatedAt: Date.now(),
         stripeSessionId: sessionId
@@ -746,16 +758,15 @@ async function checkUrlSessionParameters(user) {
 }
 
 window.forceDowngradeToFree = async function() {
-  const currentUser = auth.currentUser;
-  if (!currentUser) return;
-  if (!confirm("Firestore上のプラン設定を「free」に変更しますか？")) return;
+  if (!currentSession?.familyId) return;
+  if (!confirm("現在の家族グループのプラン設定を「free」に変更しますか？")) return;
   
   try {
-    await updateDoc(doc(db, "users", currentUser.uid), {
+    await updateDoc(doc(db, "families", currentSession.familyId), {
       plan: "free",
       updatedAt: Date.now()
     });
-    alert("プランを「free」に更新しました！");
+    alert("家族グループのプランを「free」に更新しました！");
   } catch(e) {
     alert("プラン変更に失敗しました: " + e.message);
   }
@@ -864,18 +875,70 @@ function updateFamilyChoiceUI() {
   }
 }
 
+async function resolveOwnedFamilyId(user, userData) {
+  if (userData.ownedFamilyId) return userData.ownedFamilyId;
+
+  const ownedQuery = query(collection(db, "families"), where("createdBy", "==", user.uid));
+  const ownedSnapshot = await getDocs(ownedQuery);
+  if (!ownedSnapshot.empty) {
+    const ownedFamilyId = ownedSnapshot.docs[0].id;
+    await setDoc(doc(db, "users", user.uid), { ownedFamilyId, updatedAt: Date.now() }, { merge: true });
+    return ownedFamilyId;
+  }
+
+  if (userData.familyId) {
+    const currentFamilySnap = await getDoc(doc(db, "families", userData.familyId));
+    if (currentFamilySnap.exists() && currentFamilySnap.data().createdBy === user.uid) {
+      await setDoc(doc(db, "users", user.uid), { ownedFamilyId: userData.familyId, updatedAt: Date.now() }, { merge: true });
+      return userData.familyId;
+    }
+  }
+  return null;
+}
+
 async function activateFamilyGroup(familyId, user) {
   if (!familyId || !user) return;
   hasSelectedFamilyGroup = true;
   currentSession = { familyId, userId: user.uid };
+
+  let famSnap = await getDoc(doc(db, "families", familyId));
+  if (!famSnap.exists()) throw new Error("家族グループが見つかりません。");
+
+  const familyData = famSnap.data();
+  if (!familyData.plan) {
+    let migratedPlan = "free";
+    if (familyData.createdBy === user.uid) {
+      migratedPlan = legacyUserPlan === "premium" ? "premium" : "free";
+    } else if (familyData.createdBy) {
+      try {
+        const ownerSnap = await getDoc(doc(db, "users", familyData.createdBy));
+        if (ownerSnap.exists() && ownerSnap.data().plan === "premium") migratedPlan = "premium";
+      } catch (e) {
+        console.warn("Legacy family plan migration skipped:", e);
+      }
+    }
+    await updateDoc(doc(db, "families", familyId), {
+      plan: migratedPlan,
+      updatedAt: Date.now()
+    });
+    famSnap = await getDoc(doc(db, "families", familyId));
+  }
+
+  isPremiumUser = famSnap.data().plan === "premium";
   updatePlanUI();
 
-  const famSnap = await getDoc(doc(db, "families", familyId));
   if(famSnap.exists() && famSnap.data().inviteCode) {
     document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
   } else {
     document.getElementById("displayFamilyIdCode").value = familyId;
   }
+
+  if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
+  unsubscribeFamilyPlan = onSnapshot(doc(db, "families", familyId), (familySnap) => {
+    if (!familySnap.exists()) return;
+    isPremiumUser = familySnap.data().plan === "premium";
+    updatePlanUI();
+  });
 
   await verifyAndSetupDefaultCategories(familyId);
   document.getElementById("authGatescreen").classList.add("hidden");
@@ -895,6 +958,11 @@ window.useOwnFamilyGroup = async function() {
   btn.innerText = "接続中...";
   btn.disabled = true;
   try {
+    hasSelectedFamilyGroup = true;
+    await setDoc(doc(db, "users", user.uid), {
+      familyId: pendingOwnFamilyId,
+      updatedAt: Date.now()
+    }, { merge: true });
     await activateFamilyGroup(pendingOwnFamilyId, user);
   } catch (e) {
     hasSelectedFamilyGroup = false;
@@ -929,12 +997,13 @@ onAuthStateChanged(auth, async (user) => {
 
     unsubscribeUserPlan = onSnapshot(doc(db, "users", user.uid), async (userSnap) => {
       try {
+        if (isResolvingFamilyChoice) return;
+        isResolvingFamilyChoice = true;
         const userData = userSnap.exists() ? userSnap.data() : {};
-        pendingOwnFamilyId = userData.familyId || null;
-        isPremiumUser = userData.plan === "premium";
+        legacyUserPlan = userData.plan || "free";
+        pendingOwnFamilyId = await resolveOwnedFamilyId(user, userData);
         updateFamilyChoiceUI();
         if (hasSelectedFamilyGroup) {
-          updatePlanUI();
           return;
         }
         gateLoading.classList.add("hidden");
@@ -943,6 +1012,8 @@ onAuthStateChanged(auth, async (user) => {
         showGateError(innerErr.message);
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
+      } finally {
+        isResolvingFamilyChoice = false;
       }
     }, (err) => {
       showGateError(err.code + " / " + err.message);
@@ -956,8 +1027,11 @@ onAuthStateChanged(auth, async (user) => {
     currentSession = null;
     pendingOwnFamilyId = null;
     hasSelectedFamilyGroup = false;
+    legacyUserPlan = "free";
+    isResolvingFamilyChoice = false;
     stopRealtimeSync();
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
+    if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
     localChildren = []; localWorks = []; localCategories = [];
     gateLoading.classList.add("hidden");
     gateSetupArea.classList.add("hidden");
@@ -989,8 +1063,19 @@ window.createNewFamilyGroup = async function() {
   hasSelectedFamilyGroup = true;
   
   try {
-    await setDoc(doc(db, "users", user.uid), { familyId: docFamilyId, email: user.email || "", plan: isPremiumUser ? "premium" : "free", updatedAt: Date.now() }, { merge: true });
-    await setDoc(doc(db, "families", docFamilyId), { inviteCode: inviteCodeUuid, createdAt: Date.now(), createdBy: user.uid, members: { [user.uid]: true } });
+    await setDoc(doc(db, "users", user.uid), {
+      familyId: docFamilyId,
+      ownedFamilyId: docFamilyId,
+      email: user.email || "",
+      updatedAt: Date.now()
+    }, { merge: true });
+    await setDoc(doc(db, "families", docFamilyId), {
+      inviteCode: inviteCodeUuid,
+      createdAt: Date.now(),
+      createdBy: user.uid,
+      members: { [user.uid]: true },
+      plan: legacyUserPlan === "premium" ? "premium" : "free"
+    });
     pendingOwnFamilyId = docFamilyId;
     await activateFamilyGroup(docFamilyId, user);
     alert("🎉 家族グループを新規に作成しました！");
@@ -1017,9 +1102,12 @@ window.joinFamilyGroup = async function() {
     }
     const familyDoc = querySnapshot.docs[0]; const targetDocId = familyDoc.id;
     hasSelectedFamilyGroup = true;
-    await setDoc(doc(db, "users", user.uid), { familyId: targetDocId, email: user.email || "", plan: isPremiumUser ? "premium" : "free", updatedAt: Date.now() }, { merge: true });
+    await setDoc(doc(db, "users", user.uid), {
+      familyId: targetDocId,
+      email: user.email || "",
+      updatedAt: Date.now()
+    }, { merge: true });
     await updateDoc(doc(db, "families", targetDocId), { [`members.${user.uid}`]: true });
-    pendingOwnFamilyId = targetDocId;
     await activateFamilyGroup(targetDocId, user);
     alert("🎉 家族グループへの合流に成功しました！");
   } catch(e) {
