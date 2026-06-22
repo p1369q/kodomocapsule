@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v69]</title>
+<title>コドモカプセル [v70]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +308,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v69</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v70</div>
       </div>
 
       <div>
@@ -1535,18 +1535,6 @@ window.joinFamilyGroup = async function() {
     }
     const targetDocId = inviteSnap.data().familyId;
     const requestRef = doc(db, "familyJoinRequests", `${targetDocId}_${user.uid}`);
-    const existingRequest = await getDoc(requestRef);
-
-    if (existingRequest.exists() && existingRequest.data().status === "approved") {
-      await setDoc(doc(db, "users", user.uid), {
-        joinedFamilyIds: arrayUnion(targetDocId),
-        pendingFamilyIds: arrayRemove(targetDocId),
-        updatedAt: Date.now()
-      }, { merge: true });
-      await activateFamilyGroup(targetDocId, user);
-      return;
-    }
-
     await setDoc(requestRef, {
       familyId: targetDocId,
       userId: user.uid,
@@ -1566,7 +1554,7 @@ window.joinFamilyGroup = async function() {
   } catch(e) {
     btn.innerText = "招待コードで参加する"; btn.disabled = false;
     if (e.code === "permission-denied") {
-      alert("参加申請機能を利用するには、v67以降のFirestore Rulesを反映してください。");
+      alert("参加申請を送信できませんでした。\n\n主ユーザーが一度v70で家族グループを開いていることと、v70のFirestore Rulesが公開済みか確認してください。");
     } else {
       alert("🚨 参加申請エラー: " + e.message);
     }
