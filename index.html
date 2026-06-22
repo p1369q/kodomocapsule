@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v73]</title>
+<title>コドモカプセル [v74]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -301,14 +301,12 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="dateDesc">作品の日付が新しい順</option>
               <option value="dateAsc">作品の日付が古い順</option>
-              <option value="ageAsc">年齢が若い順</option>
-              <option value="ageDesc">年齢が高い順</option>
               <option value="createdDesc">登録が新しい順</option>
               <option value="createdAsc">登録が古い順</option>
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v73</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v74</div>
       </div>
 
       <div>
@@ -1978,8 +1976,27 @@ function renderGallery(){
   }
   
   displayWorks.sort((a, b) => {
-    if (sortValue === "createdDesc") return b.createdAt - a.createdAt;
-    if (sortValue === "createdAsc") return a.createdAt - b.createdAt;
+    const createdA = a.createdAt || 0;
+    const createdB = b.createdAt || 0;
+    const dateA = a.date ? new Date(a.date + "T00:00:00").getTime() : null;
+    const dateB = b.date ? new Date(b.date + "T00:00:00").getTime() : null;
+    const validDateA = Number.isFinite(dateA) ? dateA : null;
+    const validDateB = Number.isFinite(dateB) ? dateB : null;
+
+    if (sortValue === "dateDesc") {
+      if (validDateA === null && validDateB === null) return createdB - createdA;
+      if (validDateA === null) return 1;
+      if (validDateB === null) return -1;
+      return (validDateB - validDateA) || (createdB - createdA);
+    }
+    if (sortValue === "dateAsc") {
+      if (validDateA === null && validDateB === null) return createdA - createdB;
+      if (validDateA === null) return 1;
+      if (validDateB === null) return -1;
+      return (validDateA - validDateB) || (createdA - createdB);
+    }
+    if (sortValue === "createdDesc") return createdB - createdA;
+    if (sortValue === "createdAsc") return createdA - createdB;
     return 0;
   });
 
@@ -2082,19 +2099,25 @@ function renderPhotoWall(){
   displayWorks.sort((a, b) => {
     const createdA = a.createdAt || 0;
     const createdB = b.createdAt || 0;
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    const childA = localChildren.find(c => c.id === a.childId);
-    const childB = localChildren.find(c => c.id === b.childId);
-    const ageA = childA ? calculateAgeInMonths(childA.birthday, a.date) : null;
-    const ageB = childB ? calculateAgeInMonths(childB.birthday, b.date) : null;
+    const dateA = a.date ? new Date(a.date + "T00:00:00").getTime() : null;
+    const dateB = b.date ? new Date(b.date + "T00:00:00").getTime() : null;
+    const validDateA = Number.isFinite(dateA) ? dateA : null;
+    const validDateB = Number.isFinite(dateB) ? dateB : null;
 
+    if (sortValue === "dateDesc") {
+      if (validDateA === null && validDateB === null) return createdB - createdA;
+      if (validDateA === null) return 1;
+      if (validDateB === null) return -1;
+      return (validDateB - validDateA) || (createdB - createdA);
+    }
+    if (sortValue === "dateAsc") {
+      if (validDateA === null && validDateB === null) return createdA - createdB;
+      if (validDateA === null) return 1;
+      if (validDateB === null) return -1;
+      return (validDateA - validDateB) || (createdA - createdB);
+    }
     if (sortValue === "createdDesc") return createdB - createdA;
     if (sortValue === "createdAsc") return createdA - createdB;
-    if (sortValue === "dateDesc") return dateB - dateA;
-    if (sortValue === "dateAsc") return dateA - dateB;
-    if (sortValue === "ageAsc") return (ageA ?? 99999) - (ageB ?? 99999);
-    if (sortValue === "ageDesc") return (ageB ?? -1) - (ageA ?? -1);
     return 0;
   });
 
