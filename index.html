@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル</title>
+<title>コドモカプセル [v65]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,11 +17,18 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .hidden{display:none !important;}
 .page{display:none;}
 .page.active{display:block;}
-.glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.78);}
-.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:84px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(30px);border-top:1px solid var(--border);}
-.nav-tab{color:#94A3B8;transition:.25s;}.nav-tab.active{color:var(--accent-dark);font-weight:700;}
-.fab{width:68px;height:68px;border:none;border-radius:50%;color:white;font-size:34px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(229,91,91,.28);}
+.glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.88);}
+.premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;transition:transform .2s ease,box-shadow .2s ease;}
+.premium-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(15,23,42,.07);}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:82px;z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(30px);border-top:1px solid var(--border);box-shadow:0 -10px 30px rgba(15,23,42,.05);}
+.nav-tab{min-width:88px;color:#94A3B8;transition:.25s;padding:8px 12px;border-radius:18px;}.nav-tab.active{color:var(--accent-dark);font-weight:700;background:#FFF1F2;}
+.fab{width:66px;height:66px;border:none;border-radius:23px;color:white;font-size:30px;line-height:1;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(229,91,91,.28);transform:translateY(-8px);transition:.2s;}
+.fab:hover{transform:translateY(-10px) scale(1.03);}
+.app-toolbar-button{height:38px;min-width:38px;border:1px solid var(--border);background:white;border-radius:13px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;color:#475569;font-size:11px;font-weight:700;box-shadow:0 3px 10px rgba(15,23,42,.04);}
+.filter-panel{background:rgba(247,244,238,.72);border:1px solid #EEE8DE;border-radius:20px;padding:12px;}
+.page-intro{background:linear-gradient(135deg,#fff 0%,#fff8f7 55%,#f3f8ff 100%);border:1px solid var(--border);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.035);}
+.field-help{font-size:10px;color:#94A3B8;margin-top:6px;line-height:1.6;}
+.form-section{padding:18px;border-radius:22px;background:#FAFAF9;border:1px solid #EEEAE3;}
 
 .drawer{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:.35s;padding-top: 48px;}
 .drawer.open{opacity:1;pointer-events:auto;}
@@ -50,6 +57,11 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 }
 .app-icon:hover {
   transform: rotate(15deg) scale(1.05);
+}
+@media (min-width:768px){
+  .bottom-nav{left:50%;right:auto;bottom:18px;width:440px;transform:translateX(-50%);border:1px solid var(--border);border-radius:26px;height:76px;}
+  .drawer{align-items:center;padding:28px;}
+  .drawer-panel{border-radius:32px;max-height:90vh;}
 }
 </style>
 </head>
@@ -199,9 +211,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
-<div class="sticky top-0 z-50 p-2 sm:p-3 glass border-b border-[#E7E1D7]">
+<div class="sticky top-0 z-50 px-3 py-2.5 sm:px-5 sm:py-3 glass border-b border-[#E7E1D7]">
   <div class="max-w-7xl mx-auto flex flex-col">
-    <div class="flex items-center justify-between w-full gap-1 sm:gap-2">
+    <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-1 sm:gap-2 shrink min-w-0">
         <button onclick="goToTopPage()" class="flex items-center gap-1 sm:gap-2 select-none tracking-tight active:scale-95 transition-transform min-w-0" title="トップ画面に戻る">
           <svg class="app-icon w-7 h-7 sm:w-9 sm:h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -214,32 +226,45 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             <circle cx="68" cy="28" r="2.5" fill="#ffd32a" />
             <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
           </svg>
-          <span class="text-lg sm:text-xl md:text-2xl font-extrabold text-[#2b2d42] text-left truncate whitespace-nowrap">コドモカプセル</span>
+          <span class="text-left min-w-0">
+            <span class="block text-base sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
+            <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
+          </span>
         </button>
       </div>
-      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-        <button id="authBtn" class="px-2 sm:px-3 py-1.5 rounded-xl bg-white border border-[#E7E1D7] text-[11px] sm:text-xs shadow-sm font-medium whitespace-nowrap"><span id="authBtnText">ログイン</span></button>
-        <button onclick="toggleSearchMenu()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shadow-sm active:scale-95 select-none shrink-0" id="menuToggleBtn" title="条件で絞り込み">
-          <span>🔍</span>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="toggleSearchMenu()" class="app-toolbar-button bg-slate-100 hover:bg-slate-200 transition active:scale-95 select-none" id="menuToggleBtn" title="検索・絞り込み">
+          <span>🔍</span><span class="hidden md:inline">検索</span>
         </button>
-        <button onclick="switchPage('trash')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="ゴミ箱">🗑️</button>
-        <button onclick="openDrawer('child')" class="w-8 h-8 rounded-xl bg-white border border-[#E7E1D7] shadow-sm flex items-center justify-center text-xs shrink-0" title="設定・ガイド">⚙</button>
+        <button onclick="switchPage('trash')" class="app-toolbar-button" title="ゴミ箱"><span>🗑️</span><span class="hidden md:inline">ゴミ箱</span></button>
+        <button onclick="openDrawer('child')" class="app-toolbar-button" title="設定・ガイド"><span>⚙️</span><span class="hidden md:inline">設定</span></button>
+        <button id="authBtn" class="app-toolbar-button"><span class="hidden sm:inline">👤</span><span id="authBtnText">ログイン</span></button>
       </div>
     </div>
 
-    <div id="searchMenuArea" class="flex flex-col gap-2.5 mt-2.5">
-      <div class="w-full">
-        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモで検索..." class="w-full py-2 px-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
+    <div id="searchMenuArea" class="filter-panel flex flex-col gap-3 mt-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-xs font-extrabold text-slate-700">思い出を探す</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">キーワード・子ども・年齢から絞り込めます</div>
+        </div>
+        <button onclick="toggleSearchMenu()" class="text-[10px] text-slate-400 font-bold px-2 py-1">閉じる</button>
+      </div>
+      <div class="w-full relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔎</span>
+        <input type="text" id="gallerySearchInput" placeholder="タイトルやメモを入力" class="w-full py-2.5 pl-9 pr-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
       <div class="flex gap-2 items-center w-full justify-between">
         <div class="flex gap-2 flex-1">
           <div class="w-1/2">
+            <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">表示する子ども</label>
             <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="all">すべての子ども</option>
               <option value="favorite">⭐ お気に入り</option>
             </select>
           </div>
           <div class="w-1/2">
+            <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">並び順</label>
             <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="createdDesc">登録が新しい順</option>
               <option value="createdAsc">登録が古い順</option>
@@ -253,19 +278,22 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v65</div>
       </div>
 
-      <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
+      <div>
+        <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">作品を作ったころの年齢</div>
+        <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
         <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
         <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
         <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
         <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
         <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<main class="max-w-7xl mx-auto px-3 pt-3 pb-32">
-  <div id="premiumBannerArea" class="hidden mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm flex justify-between items-center">
+<main class="max-w-7xl mx-auto px-3 sm:px-5 pt-4 sm:pt-6 pb-32">
+  <div id="premiumBannerArea" class="hidden mb-5 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-900/10 flex justify-between items-center gap-3">
     <div class="flex items-center gap-2">
       <span class="text-xl">👑</span>
       <div class="text-left">
@@ -277,69 +305,119 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 
   <section id="galleryPage" class="page active">
-    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    <div class="page-intro mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">FAMILY CAPSULES</div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">思い出ギャラリー</h2>
+        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">作品・プリント・テストを、成長した年齢と一緒に残していきましょう。</p>
+      </div>
+      <button onclick="handleFabClick()" class="hidden sm:flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition">
+        <span class="text-lg leading-none">＋</span> 新しいカプセル
+      </button>
+    </div>
+    <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5"></div>
   </section>
   <section id="recordsPage" class="page">
-    <div class="py-2"><h2 class="text-xl font-bold px-1">タイムライン</h2></div>
+    <div class="page-intro mb-5">
+      <div class="text-[10px] font-bold tracking-widest text-purple-500 mb-1">GROWTH TIMELINE</div>
+      <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">成長タイムライン</h2>
+      <p class="text-xs text-slate-500 mt-1.5">新しい思い出から順に、家族の歩みを振り返れます。</p>
+    </div>
     <div id="recordsTimeline" class="space-y-4"></div>
   </section>
   <section id="trashPage" class="page">
-    <div class="py-2 flex justify-between items-center px-1">
-      <h2 class="text-xl font-bold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
-      <button onclick="switchPage('gallery')" class="text-xs text-[#ff6b6b] font-semibold">戻る</button>
+    <div class="page-intro mb-5 flex justify-between items-center gap-3">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 mb-1">TRASH</div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-700 flex items-center gap-1.5">🗑️ ゴミ箱</h2>
+        <p class="text-[11px] text-slate-400 mt-1.5">ここに移したデータは30日後に自動で完全削除されます。</p>
+      </div>
+      <button onclick="switchPage('gallery')" class="px-4 py-2 rounded-xl bg-white border border-[#E7E1D7] text-xs text-[#ff6b6b] font-bold shadow-sm whitespace-nowrap">ギャラリーへ</button>
     </div>
-    <p class="text-[11px] text-slate-400 mb-4 px-1">ゴミ箱に入れたデータは30日後に自動で完全に消去されます。</p>
     <div id="trashGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
   </section>
 </main>
 
 <div class="bottom-nav flex justify-center items-center">
-  <div class="w-full max-w-lg px-8 flex items-center justify-between">
-    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center"><span class="text-xs">ギャラリー</span></button>
-    <button onclick="handleFabClick()" class="fab">+</button>
-    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center"><span class="text-xs">タイムライン</span></button>
+  <div class="w-full max-w-lg px-5 sm:px-8 flex items-center justify-between">
+    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center gap-0.5"><span class="text-lg leading-none">▦</span><span class="text-[10px]">ギャラリー</span></button>
+    <button onclick="handleFabClick()" class="fab" title="新しいカプセルを登録">＋</button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center gap-0.5"><span class="text-lg leading-none">≡</span><span class="text-[10px]">タイムライン</span></button>
   </div>
 </div>
 
 <div id="workDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 id="workFormTitle" class="text-2xl font-bold">カプセル登録</h3><button onclick="closeDrawer('work')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">NEW MEMORY</div>
+        <h3 id="workFormTitle" class="text-2xl font-extrabold text-slate-800">カプセル登録</h3>
+        <p class="text-xs text-slate-400 mt-1">写真と少しの情報だけで、成長の記録が完成します。</p>
+      </div>
+      <button onclick="closeDrawer('work')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
+    </div>
     <form id="workForm" class="space-y-5">
       <input type="hidden" id="editingWorkId" value="" />
-      <div><label class="block text-sm font-semibold mb-2">タイトル</label><input id="inputTitle" required/></div>
-      <div>
-        <label class="block text-sm font-semibold mb-2">カテゴリ</label>
-        <select id="inputCategory" required></select>
+      <div class="form-section space-y-4">
+        <div class="flex items-center gap-2 mb-1"><span class="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] font-bold">1</span><span class="text-sm font-extrabold text-slate-700">思い出の基本情報</span></div>
+        <div><label class="block text-sm font-semibold mb-2">タイトル <span class="text-rose-500">*</span></label><input id="inputTitle" placeholder="例：はじめて描いた家族の絵" required/><p class="field-help">あとから探しやすい短い名前がおすすめです。</p></div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold mb-2">子ども</label>
+            <select id="inputWorkChild"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-2">作品の日付</label>
+            <input id="inputDate" type="date"/>
+            <p class="field-help">この日付から当時の年齢を計算します。</p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-2">カテゴリ <span class="text-rose-500">*</span></label>
+          <select id="inputCategory" required></select>
+        </div>
+        <div><label class="block text-sm font-semibold mb-2">メモ <span class="text-xs font-normal text-slate-400">（任意）</span></label><textarea id="inputMemo" rows="3" placeholder="そのときの様子や、子どもの言葉を残せます"></textarea></div>
       </div>
-      <div><label class="block text-sm font-semibold mb-2">子ども</label><select id="inputWorkChild"></select></div>
-      <div><label class="block text-sm font-semibold mb-2">日付</label><input id="inputDate" type="date"/></div>
-      <div><label class="block text-sm font-semibold mb-2">メモ</label><textarea id="inputMemo"></textarea></div>
       
-      <div id="fileInputContainer" class="space-y-2">
-        <label class="block text-sm font-semibold mb-1">写真・PDFの追加（複数枚対応）</label>
+      <div id="fileInputContainer" class="form-section space-y-3">
+        <div class="flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-[10px] font-bold">2</span><span class="text-sm font-extrabold text-slate-700">写真・PDFを追加</span></div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">作品の表裏や複数ページも、まとめてひとつのカプセルにできます。</p>
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         
-        <div class="grid grid-cols-1 sm:grid-cols-1 gap-2" id="inputActionButtonsGroup">
-          <button type="button" onclick="document.getElementById('cameraInput').click()" class="sm:hidden py-3.5 rounded-2xl border border-[#CBD5E1] bg-rose-50 text-[#ff6b6b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 写真を撮る</button>
-          <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-3.5 rounded-2xl border border-[#CBD5E1] bg-slate-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm">🖼️ ライブラリから選ぶ</button>
+        <div class="grid grid-cols-1 gap-2" id="inputActionButtonsGroup">
+          <button type="button" onclick="document.getElementById('cameraInput').click()" class="sm:hidden py-3.5 rounded-2xl border border-rose-200 bg-rose-50 text-[#e55b5b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 今すぐ写真を撮る</button>
+          <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-3.5 rounded-2xl border-2 border-dashed border-slate-300 bg-white text-slate-600 text-xs font-bold flex items-center justify-center gap-1.5">🖼️ 写真・PDFを選ぶ</button>
         </div>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
-      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-semibold text-base bg-[#ff6b6b] hover:bg-[#ff5252] transition">保存する</button>
+      <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-bold text-base bg-[#ff6b6b] hover:bg-[#ff5252] shadow-lg shadow-rose-900/10 transition">この内容でカプセルを保存</button>
     </form>
   </div>
 </div>
 
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-slate-800">アカウント・設定・解説</h3><button onclick="closeDrawer('child')" class="p-2 -mr-2 text-slate-400 text-xl font-bold">✕</button></div>
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 mb-1">SETTINGS</div>
+        <h3 class="text-2xl font-extrabold text-slate-800">設定・家族管理</h3>
+        <p class="text-xs text-slate-400 mt-1">お子さま、カテゴリ、家族共有をここで管理できます。</p>
+      </div>
+      <button onclick="closeDrawer('child')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
+    </div>
+
+    <div class="grid grid-cols-4 gap-2 mb-5">
+      <button onclick="document.getElementById('settingsChildren').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-100">👶<span class="block mt-1">子ども</span></button>
+      <button onclick="document.getElementById('settingsCategories').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-sky-50 text-sky-700 text-[10px] font-bold border border-sky-100">🏷️<span class="block mt-1">カテゴリ</span></button>
+      <button onclick="document.getElementById('settingsFamily').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100">🤝<span class="block mt-1">家族共有</span></button>
+      <button onclick="document.getElementById('settingsPlan').scrollIntoView({behavior:'smooth'})" class="py-3 rounded-2xl bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100">💎<span class="block mt-1">プラン</span></button>
+    </div>
     
-    <div class="mb-6 p-5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 to-indigo-50/40 text-left">
-      <h4 class="text-sm font-bold text-indigo-900 flex items-center gap-1.5 mb-3">
-        <span>📖 コドモカプセルの使い方 ＆ プラン解説</span>
-      </h4>
+    <details class="mb-6 p-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 to-indigo-50/40 text-left">
+      <summary class="text-sm font-bold text-indigo-900 cursor-pointer select-none">📖 使い方とプランの詳しい説明を見る</summary>
       <div class="space-y-3.5 text-xs text-slate-700 leading-relaxed">
+        <div class="pt-4"></div>
         <div>
           <div class="font-bold text-indigo-950 mb-0.5">① 基本の使い方</div>
           <p>画面中央下の「<span class="font-bold text-rose-500">+</span>」ボタンから、お子様の作品・テスト・おたより（画像や複数ページのPDF対応）をカプセルとして登録。カプセルごとに日付やメモ、カテゴリを自由に分類・保管できます。</p>
@@ -390,9 +468,9 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           </a>
         </div>
       </div>
-    </div>
+    </details>
 
-    <div class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3">
+    <div id="settingsPlan" class="mb-4 p-4 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col gap-3 scroll-mt-4">
       <div class="flex justify-between items-center">
         <div>
           <div class="text-xs font-bold text-amber-800 flex items-center gap-1">💎 アプリプラン設定</div>
@@ -407,8 +485,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </div>
 
-    <div class="mb-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-      <label class="block text-xs font-bold text-slate-500 mb-1">🤝 パートナー共有用 家族コード</label>
+    <div id="settingsFamily" class="mb-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 scroll-mt-4">
+      <label class="block text-xs font-bold text-emerald-800 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
         <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
         <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
@@ -416,7 +494,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力するとデータを完全共有できます。</p>
     </div>
 
-    <div class="space-y-4 mb-6 pt-4 border-t">
+    <div id="settingsChildren" class="form-section space-y-4 mb-6 scroll-mt-4">
       <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
         <span>👶 子どもの追加・編集</span>
         <span id="childLimitCountLabel" class="text-xs font-medium text-slate-500">(0 / 1人)</span>
@@ -438,7 +516,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       <div id="childList" class="mt-2 space-y-2"></div>
     </div>
 
-    <div class="space-y-4 mb-6 pt-6 border-t">
+    <div id="settingsCategories" class="form-section space-y-4 mb-6 scroll-mt-4">
       <h4 class="text-sm font-bold text-slate-800 flex justify-between items-center">
         <span>🏷️ カテゴリの追加・編集</span>
       </h4>
@@ -1148,7 +1226,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false });
     }
     closeDrawer("work");
-  } catch(err) { alert("保存エラー: " + err.message); } finally { document.getElementById("workSubmitBtn").innerText = "保存する"; document.getElementById("workSubmitBtn").disabled = false; }
+  } catch(err) { alert("保存エラー: " + err.message); } finally { document.getElementById("workSubmitBtn").innerText = "この内容でカプセルを保存"; document.getElementById("workSubmitBtn").disabled = false; }
 });
 
 window.toggleFavorite = async function(id, event) {
@@ -1259,9 +1337,9 @@ function renderGallery(){
   const totalActiveCount = displayWorks.length;
 
   if (isGuestMode) {
-    html += `<div class="col-span-2 md:col-span-4 p-3 bg-rose-50 rounded-xl border border-rose-100 text-xs text-rose-700 font-bold text-center">🚀 ゲスト体験中：操作感を確認できます。実際の保存・家族共有はGoogleログイン後に利用できます。</div>`;
+    html += `<div class="col-span-full p-3 sm:p-4 bg-rose-50 rounded-2xl border border-rose-100 text-xs text-rose-700 font-bold text-center">🚀 ゲスト体験中：お気に入りや絞り込みを自由に試せます。実際の保存・家族共有はGoogleログイン後に利用できます。</div>`;
   } else if (!isPremiumUser) {
-    html += `<div class="col-span-2 md:col-span-4 p-3 bg-slate-100 rounded-xl border text-xs text-slate-600 font-medium text-center">📊 現在の保存数: <span class="font-bold text-slate-900">${totalActiveCount} / 10 件</span></div>`;
+    html += `<div class="col-span-full flex items-center justify-between gap-3 p-3 sm:px-4 bg-white rounded-2xl border border-[#E7E1D7] text-xs text-slate-500"><span>無料プランの保存状況</span><span class="font-extrabold text-slate-800">${totalActiveCount} / 10 カプセル</span></div>`;
   }
 
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
@@ -1330,23 +1408,28 @@ function renderGallery(){
       `;
     }
     const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
-    html += `<div class="premium-card overflow-hidden">
+    html += `<div class="premium-card overflow-hidden group">
       <div class="relative">${mediaPreview}${carouselController}</div>
-      <div class="p-3">
+      <div class="p-3 sm:p-4">
         <div class="flex justify-between items-start gap-1 mb-1">
-          <div class="font-bold text-sm text-slate-800 line-clamp-1">${w.title}</div>
+          <div class="font-extrabold text-sm text-slate-800 line-clamp-1">${w.title}</div>
           <div class="flex gap-2 shrink-0 items-center">
-            <button onclick="toggleFavorite('${w.id}', event)" class="text-base transition ${favBtnColor}">★</button>
-            <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100">🗑️</button>
+            <button onclick="toggleFavorite('${w.id}', event)" class="text-base transition ${favBtnColor}" title="お気に入り">★</button>
+            <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100" title="ゴミ箱へ移動">🗑️</button>
           </div>
         </div>
+        <div class="text-[10px] text-slate-400 mt-1">${w.date || "日付なし"}</div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
-        <div class="flex justify-end mt-2"><button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-400 hover:text-slate-700">✏️ 編集</button></div>
+        ${w.memo ? `<p class="text-[11px] text-slate-500 mt-2 line-clamp-2 leading-relaxed">${w.memo}</p>` : ''}
+        <div class="flex justify-end mt-3 pt-2 border-t border-slate-100"><button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-500 font-bold hover:text-[#e55b5b]">詳しく見る・編集 →</button></div>
       </div>
     </div>`;
   });
+  if(displayWorks.length === 0) {
+    html += `<div class="col-span-full page-intro text-center py-10"><div class="text-4xl mb-3">🌱</div><div class="font-extrabold text-slate-700">条件に合うカプセルがありません</div><p class="text-xs text-slate-400 mt-2">検索条件を変えるか、新しい思い出を追加してみましょう。</p><button onclick="handleFabClick()" class="mt-4 px-5 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold">＋ カプセルを追加</button></div>`;
+  }
   const grid = document.getElementById("galleryGrid");
-  if(grid) grid.innerHTML = html || "<div class='col-span-2 md:col-span-4 text-center py-12 text-slate-400 text-sm'>カプセルがありません</div>";
+  if(grid) grid.innerHTML = html;
 }
 
 function renderTimeline(){
@@ -1365,19 +1448,19 @@ function renderTimeline(){
         thumbs += isPdf ? `<div class="w-10 h-10 bg-slate-200 border rounded-md flex items-center justify-center text-sm">📄</div>` : `<img src="${src}" class="w-10 h-10 object-cover rounded-md border"/>`; 
       });
     }
-    html += `<div class="premium-card p-4">
+    html += `<div class="premium-card p-4 sm:p-5 border-l-4 border-l-purple-200">
       <div class="flex justify-between items-start">
         <div>
-          <div class="font-bold text-slate-800 flex items-center gap-1">${w.title}${w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : ''}</div>
-          <div class="text-xs text-slate-400 mt-1">${w.date || "日付なし"} ・ ${childName}${ageInfo}</div>
+          <div class="font-extrabold text-slate-800 flex items-center gap-1">${w.title}${w.isFavorite ? '<span class="text-amber-500 text-sm">★</span>' : ''}</div>
+          <div class="text-xs text-slate-400 mt-1.5">${w.date || "日付なし"} ・ <span class="font-semibold text-purple-600">${childName}${ageInfo}</span></div>
         </div>
-        <button onclick="openEditWork('${w.id}')" class="text-xs px-3 py-1 bg-slate-100 rounded-full text-slate-600">確認/編集</button>
+        <button onclick="openEditWork('${w.id}')" class="text-[11px] px-3 py-1.5 bg-slate-100 rounded-full text-slate-600 font-bold">詳しく見る</button>
       </div>
-      <div class="flex gap-1.5 mt-3 overflow-x-auto py-1">${thumbs}</div>
-      ${w.memo ? `<div class="text-xs text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg">${w.memo}</div>` : ''}
+      <div class="flex gap-2 mt-3 overflow-x-auto py-1">${thumbs}</div>
+      ${w.memo ? `<div class="text-xs text-slate-500 mt-3 bg-slate-50 p-3 rounded-xl leading-relaxed">${w.memo}</div>` : ''}
     </div>`;
   });
-  const tl = document.getElementById("recordsTimeline"); if(tl) tl.innerHTML = html || "<p class='center py-8 text-slate-400 text-sm'>データがありません</p>";
+  const tl = document.getElementById("recordsTimeline"); if(tl) tl.innerHTML = html || "<div class='page-intro text-center py-10'><div class='text-4xl mb-3'>🕰️</div><div class='font-extrabold text-slate-700'>タイムラインはまだ空です</div><p class='text-xs text-slate-400 mt-2'>カプセルを追加すると、ここに成長の記録が並びます。</p></div>";
 }
 
 function renderTrash(){
@@ -1398,7 +1481,7 @@ function renderTrash(){
       </div>
     </div>`;
   });
-  const tGrid = document.getElementById("trashGrid"); if(tGrid) tGrid.innerHTML = html || "<div class='text-center py-12 text-slate-400 text-xs'>ゴミ箱は空です</div>";
+  const tGrid = document.getElementById("trashGrid"); if(tGrid) tGrid.innerHTML = html || "<div class='col-span-full page-intro text-center py-10'><div class='text-4xl mb-3'>✨</div><div class='font-extrabold text-slate-700'>ゴミ箱は空です</div><p class='text-xs text-slate-400 mt-2'>削除したカプセルは、30日間ここから元に戻せます。</p></div>";
 }
 
 window.openDrawer = function(t){ 
