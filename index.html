@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v67]</title>
+<title>コドモカプセル [v68]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +308,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v67</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v68</div>
       </div>
 
       <div>
@@ -1037,6 +1037,8 @@ function startUserJoinRequestSync(user) {
         }, { merge: true });
       }
     }
+  }, (error) => {
+    console.warn("参加申請の自動確認はFirestore Rules適用後に有効になります:", error.code);
   });
 }
 
@@ -1308,15 +1310,6 @@ async function activateFamilyGroup(familyId, user) {
     famSnap = await getDoc(doc(db, "families", familyId));
   }
 
-  if (isFamilyOwner && famSnap.data().inviteCode) {
-    await setDoc(doc(db, "familyInvites", famSnap.data().inviteCode), {
-      familyId,
-      createdBy: user.uid,
-      active: true,
-      updatedAt: Date.now()
-    }, { merge: true });
-  }
-
   isPremiumUser = famSnap.data().plan === "premium";
   updatePlanUI();
   renderFamilyMembers(famSnap.data(), user);
@@ -1495,12 +1488,16 @@ window.createNewFamilyGroup = async function() {
       },
       plan: legacyUserPlan === "premium" ? "premium" : "free"
     });
-    await setDoc(doc(db, "familyInvites", inviteCodeUuid), {
-      familyId: docFamilyId,
-      createdBy: user.uid,
-      active: true,
-      createdAt: Date.now()
-    });
+    try {
+      await setDoc(doc(db, "familyInvites", inviteCodeUuid), {
+        familyId: docFamilyId,
+        createdBy: user.uid,
+        active: true,
+        createdAt: Date.now()
+      });
+    } catch (inviteError) {
+      console.warn("招待コード索引はFirestore Rules適用後に作成されます:", inviteError.code);
+    }
     pendingOwnFamilyId = docFamilyId;
     await activateFamilyGroup(docFamilyId, user);
     alert("🎉 家族グループを新規に作成しました！");
@@ -1519,12 +1516,13 @@ window.joinFamilyGroup = async function() {
   btn.innerText = "申請中..."; btn.disabled = true;
 
   try {
-    const inviteSnap = await getDoc(doc(db, "familyInvites", inviteCode));
-    if (!inviteSnap.exists() || inviteSnap.data().active !== true) {
+    const familyQuery = query(collection(db, "families"), where("inviteCode", "==", inviteCode));
+    const familySnapshot = await getDocs(familyQuery);
+    if (familySnapshot.empty) {
       alert("⚠️ 有効な家族招待コードが見つかりません。");
       btn.innerText = "招待コードで参加する"; btn.disabled = false; return;
     }
-    const targetDocId = inviteSnap.data().familyId;
+    const targetDocId = familySnapshot.docs[0].id;
     const requestRef = doc(db, "familyJoinRequests", `${targetDocId}_${user.uid}`);
     const existingRequest = await getDoc(requestRef);
 
@@ -1556,7 +1554,11 @@ window.joinFamilyGroup = async function() {
     alert("参加申請を送信しました。\n主ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
     btn.innerText = "招待コードで参加する"; btn.disabled = false;
-    alert("🚨 参加申請エラー: " + e.message);
+    if (e.code === "permission-denied") {
+      alert("参加申請機能を利用するには、v67以降のFirestore Rulesを反映してください。");
+    } else {
+      alert("🚨 参加申請エラー: " + e.message);
+    }
     return;
   } finally {
     btn.innerText = "招待コードで参加する";
