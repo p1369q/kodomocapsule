@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v68]</title>
+<title>コドモカプセル [v69]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,7 +308,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v68</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v69</div>
       </div>
 
       <div>
@@ -1291,6 +1291,15 @@ async function activateFamilyGroup(familyId, user) {
     throw new Error("この家族グループは主ユーザーの承認待ちです。");
   }
 
+  if (isFamilyOwner && familyData.inviteCode) {
+    await setDoc(doc(db, "familyInvites", familyData.inviteCode), {
+      familyId,
+      createdBy: user.uid,
+      active: true,
+      updatedAt: Date.now()
+    }, { merge: true });
+  }
+
   if (!familyData.plan) {
     let migratedPlan = "free";
     if (familyData.createdBy === user.uid) {
@@ -1416,8 +1425,11 @@ onAuthStateChanged(auth, async (user) => {
       }
     }, (err) => {
       showGateError(err.code + " / " + err.message);
-      gateLoading.classList.add("hidden");
-      gateLoginArea.classList.remove("hidden"); 
+      const statusText = document.getElementById("loadingStatusText");
+      if(statusText) statusText.innerText = "ログインは成功しましたが、Firestoreの読み取り権限がありません。統合版Rulesを確認してください。";
+      gateLoading.classList.remove("hidden");
+      gateLoginArea.classList.add("hidden");
+      gateSetupArea.classList.add("hidden");
     });
 
   } else {
@@ -1516,13 +1528,12 @@ window.joinFamilyGroup = async function() {
   btn.innerText = "申請中..."; btn.disabled = true;
 
   try {
-    const familyQuery = query(collection(db, "families"), where("inviteCode", "==", inviteCode));
-    const familySnapshot = await getDocs(familyQuery);
-    if (familySnapshot.empty) {
+    const inviteSnap = await getDoc(doc(db, "familyInvites", inviteCode));
+    if (!inviteSnap.exists() || inviteSnap.data().active !== true) {
       alert("⚠️ 有効な家族招待コードが見つかりません。");
       btn.innerText = "招待コードで参加する"; btn.disabled = false; return;
     }
-    const targetDocId = familySnapshot.docs[0].id;
+    const targetDocId = inviteSnap.data().familyId;
     const requestRef = doc(db, "familyJoinRequests", `${targetDocId}_${user.uid}`);
     const existingRequest = await getDoc(requestRef);
 
