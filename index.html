@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v74]</title>
+<title>コドモカプセル [v75]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,7 +306,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v74</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v75</div>
       </div>
 
       <div>
@@ -704,6 +704,81 @@ window.enterGuestMode = function() {
 function showGuestModeSaveAlert() {
   alert("体験版です。\nGoogleログインすると実際に保存・家族共有できます。");
 }
+
+
+function sanitizeDownloadFileName(value) {
+  const base = String(value || "kodomo-capsule")
+    .replace(/[\\/:*?"<>|#%&{}$!'@+`=]/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+  return base || "kodomo-capsule";
+}
+
+function getDownloadExtension(media, sourceUrl) {
+  const src = String(sourceUrl || "").toLowerCase();
+  if (media?.type === "pdf" || src.includes(".pdf")) return ".pdf";
+  if (src.startsWith("data:image/png") || src.includes(".png")) return ".png";
+  if (src.startsWith("data:image/webp") || src.includes(".webp")) return ".webp";
+  if (src.startsWith("data:image/gif") || src.includes(".gif")) return ".gif";
+  return ".jpg";
+}
+
+async function downloadUrlToDevice(sourceUrl, fileName) {
+  if (!sourceUrl) throw new Error("ダウンロード対象のURLがありません。");
+
+  let downloadUrl = sourceUrl;
+  let shouldRevoke = false;
+
+  try {
+    if (!String(sourceUrl).startsWith("data:")) {
+      const response = await fetch(sourceUrl, { mode: "cors" });
+      if (!response.ok) throw new Error(`画像の取得に失敗しました。Status: ${response.status}`);
+      const blob = await response.blob();
+      downloadUrl = URL.createObjectURL(blob);
+      shouldRevoke = true;
+    }
+
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = fileName;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    if (shouldRevoke) {
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    }
+  } catch (e) {
+    console.error("Download failed:", e);
+    if (shouldRevoke) URL.revokeObjectURL(downloadUrl);
+    const openInstead = confirm("自動ダウンロードに失敗しました。画像を新しいタブで開きますか？\n開いた画像を長押しまたは右クリックして保存してください。");
+    if (openInstead) window.open(sourceUrl, "_blank", "noopener");
+  }
+}
+
+window.downloadWorkMedia = async function(workId, mediaIndex, event) {
+  if (event) event.stopPropagation();
+  const target = localWorks.find(w => w.id === workId);
+  if (!target || !target.mediaUrls?.length) return;
+
+  const media = target.mediaUrls[mediaIndex];
+  const sourceUrl = media?.url || media?.dataUrl || media;
+  if (!sourceUrl) return;
+
+  if (media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes(".pdf"))) {
+    alert("PDFではなく、写真データをダウンロード対象にしてください。");
+    return;
+  }
+
+  const ext = getDownloadExtension(media, sourceUrl);
+  const datePart = target.date || "date-none";
+  const titlePart = sanitizeDownloadFileName(target.title || "photo");
+  const fileName = sanitizeDownloadFileName(`${datePart}_${titlePart}_${mediaIndex + 1}`) + ext;
+  await downloadUrlToDevice(sourceUrl, fileName);
+};
 
 window.redirectToStripeCheckout = async function() {
   if (isGuestMode) { showGuestModeSaveAlert(); return; }
@@ -2011,7 +2086,7 @@ function renderGallery(){
       } 
     }
     let categoryTag = getCategoryBadgeHtml(w.category);
-    let mediaPreview = ''; const mediaCount = w.mediaUrls?.length || 0;
+    let mediaPreview = ''; let mediaDownloadButton = ''; const mediaCount = w.mediaUrls?.length || 0;
     if (mediaCount > 0) {
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
       const currentIndex = carouselIndices[w.id] >= mediaCount ? 0 : carouselIndices[w.id];
@@ -2023,6 +2098,7 @@ function renderGallery(){
         mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
       } else {
         mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openEditWork('${w.id}')"/>`;
+        mediaDownloadButton = `<button onclick="downloadWorkMedia('${w.id}', ${currentIndex}, event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 text-slate-700 text-sm font-bold shadow backdrop-blur hover:bg-white z-10" title="写真をダウンロード">⬇</button>`;
       }
     } else {
       mediaPreview = `<div class="w-full h-44 bg-slate-100 flex items-center justify-center text-xs text-slate-400 border-b">画像なし</div>`;
@@ -2041,7 +2117,7 @@ function renderGallery(){
     }
     const favBtnColor = w.isFavorite ? 'text-amber-500 opacity-100' : 'text-slate-300 opacity-60 hover:opacity-100';
     html += `<div class="premium-card overflow-hidden group">
-      <div class="relative">${mediaPreview}${carouselController}</div>
+      <div class="relative">${mediaPreview}${mediaDownloadButton}${carouselController}</div>
       <div class="p-3 sm:p-4">
         <div class="flex justify-between items-start gap-1 mb-1">
           <div class="font-extrabold text-sm text-slate-800 line-clamp-1">${w.title}</div>
@@ -2141,9 +2217,12 @@ function renderPhotoWall(){
 
   let html = "";
   photoItems.forEach(item => {
-    html += `<button onclick="openEditWork('${item.workId}')" class="break-inside-avoid mb-3 sm:mb-4 w-full rounded-3xl overflow-hidden bg-white border border-[#E7E1D7] shadow-sm hover:shadow-md transition text-left">
-      <img src="${item.src}" alt="${item.title}" class="w-full h-auto object-cover block"/>
-    </button>`;
+    html += `<div class="break-inside-avoid mb-3 sm:mb-4 relative rounded-3xl overflow-hidden bg-white border border-[#E7E1D7] shadow-sm hover:shadow-md transition">
+      <button onclick="openEditWork('${item.workId}')" class="w-full block text-left">
+        <img src="${item.src}" alt="${item.title}" class="w-full h-auto object-cover block"/>
+      </button>
+      <button onclick="downloadWorkMedia('${item.workId}', ${item.index}, event)" class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 text-slate-700 text-sm font-bold shadow backdrop-blur hover:bg-white" title="写真をダウンロード">⬇</button>
+    </div>`;
   });
 
   wall.innerHTML = html || "<div class='page-intro text-center py-10 break-inside-avoid'><div class='text-4xl mb-3'>📷</div><div class='font-extrabold text-slate-700'>条件に合う写真はありません</div><p class='text-xs text-slate-400 mt-2'>検索条件を変えるか、写真付きのカプセルを追加してみましょう。</p></div>";
