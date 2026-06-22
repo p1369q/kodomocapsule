@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v72]</title>
+<title>コドモカプセル [v73]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -299,16 +299,16 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <div class="w-1/2">
             <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">並び順</label>
             <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-              <option value="createdDesc">登録が新しい順</option>
-              <option value="createdAsc">登録が古い順</option>
               <option value="dateDesc">作品の日付が新しい順</option>
               <option value="dateAsc">作品の日付が古い順</option>
               <option value="ageAsc">年齢が若い順</option>
               <option value="ageDesc">年齢が高い順</option>
+              <option value="createdDesc">登録が新しい順</option>
+              <option value="createdAsc">登録が古い順</option>
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v72</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v73</div>
       </div>
 
       <div>
@@ -1625,7 +1625,7 @@ window.setAgeStageFilter = function(stage) {
 window.goToTopPage = function() {
   document.getElementById("gallerySearchInput").value = "";
   document.getElementById("galleryChildFilterSelect").value = "all";
-  document.getElementById("gallerySortSelect").value = "createdDesc";
+  document.getElementById("gallerySortSelect").value = "dateDesc";
   currentAgeStageFilter = "all";
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
   if(document.getElementById("ageTab-all")) document.getElementById("ageTab-all").classList.add("active");
