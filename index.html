@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v65]</title>
+<title>コドモカプセル [v66]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -215,7 +215,18 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
               <button id="btnJoinFamily" onclick="joinFamilyGroup()" class="w-full mt-2 py-3.5 rounded-xl bg-slate-700 text-white text-xs font-bold shadow-sm hover:bg-slate-800 transition">招待コードで参加する</button>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードで参加すると、このアカウントが利用する家族グループは招待先へ切り替わります。</p>
+            <div id="savedFamilyGroupsArea" class="hidden p-4 rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 text-left">
+              <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">🔖</div>
+                <div>
+                  <div class="text-sm font-extrabold text-slate-800">参加済みの家族グループ</div>
+                  <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">一度参加したグループは、次回からコード入力なしで開けます。</p>
+                </div>
+              </div>
+              <div id="savedFamilyGroupsList" class="space-y-2"></div>
+            </div>
+
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">最後に選択した家族グループを記憶します。次回ログイン時も、参加済み一覧から自由に選び直せます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -292,7 +303,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v65</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v66</div>
       </div>
 
       <div>
@@ -509,6 +520,15 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
       </div>
       <p class="text-[10px] text-slate-400 mt-2">このコードをパートナーのアプリログイン画面に入力すると、データとプレミアム状態を家族グループ全員で共有できます。</p>
+      <div class="mt-4 pt-4 border-t border-emerald-100">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div>
+            <div class="text-xs font-bold text-emerald-800">👥 参加メンバー</div>
+            <p id="familyMemberManageHint" class="text-[10px] text-slate-400 mt-1">メンバー情報を読み込んでいます。</p>
+          </div>
+        </div>
+        <div id="familyMemberList" class="space-y-2"></div>
+      </div>
     </div>
 
     <div id="settingsChildren" class="form-section space-y-4 mb-6 scroll-mt-4">
@@ -554,7 +574,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 
 <script type="module">
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs, arrayUnion, deleteField } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 
@@ -590,6 +610,7 @@ let pendingOwnFamilyId = null;
 let hasSelectedFamilyGroup = false;
 let legacyUserPlan = "free";
 let isResolvingFamilyChoice = false;
+let savedJoinedFamilies = [];
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -875,6 +896,133 @@ function updateFamilyChoiceUI() {
   }
 }
 
+function renderSavedFamilyGroups() {
+  const area = document.getElementById("savedFamilyGroupsArea");
+  const list = document.getElementById("savedFamilyGroupsList");
+  if (!area || !list) return;
+
+  if (!savedJoinedFamilies.length) {
+    area.classList.add("hidden");
+    list.innerHTML = "";
+    return;
+  }
+
+  area.classList.remove("hidden");
+  list.innerHTML = savedJoinedFamilies.map((family) => {
+    const ownerProfile = family.memberProfiles?.[family.createdBy] || {};
+    const ownerLabel = ownerProfile.displayName || ownerProfile.email || "家族";
+    const shortCode = family.inviteCode ? family.inviteCode.slice(-8) : family.id.slice(-8);
+    return `<button onclick="useSavedFamilyGroup('${family.id}')" class="w-full flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-emerald-100 text-left hover:border-emerald-300 transition">
+      <span class="min-w-0">
+        <span class="block text-xs font-bold text-slate-700 truncate">${ownerLabel}の家族グループ</span>
+        <span class="block text-[10px] text-slate-400 mt-0.5">コード末尾：${shortCode}</span>
+      </span>
+      <span class="text-[10px] font-bold text-emerald-700 shrink-0">開く →</span>
+    </button>`;
+  }).join("");
+}
+
+async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
+  const candidateIds = new Set(Array.isArray(userData.joinedFamilyIds) ? userData.joinedFamilyIds : []);
+  if (userData.familyId && userData.familyId !== ownedFamilyId) candidateIds.add(userData.familyId);
+
+  const resolved = [];
+  for (const familyId of candidateIds) {
+    try {
+      const familySnap = await getDoc(doc(db, "families", familyId));
+      if (!familySnap.exists()) continue;
+      const familyData = familySnap.data();
+      if (!familyData.members?.[user.uid] || familyData.createdBy === user.uid) continue;
+      resolved.push({ id: familyId, ...familyData });
+    } catch (e) {
+      console.warn("Joined family lookup skipped:", e);
+    }
+  }
+
+  savedJoinedFamilies = resolved;
+  renderSavedFamilyGroups();
+  if (userData.familyId && userData.familyId !== ownedFamilyId && resolved.some(f => f.id === userData.familyId)) {
+    const alreadySaved = Array.isArray(userData.joinedFamilyIds) && userData.joinedFamilyIds.includes(userData.familyId);
+    if (!alreadySaved) {
+      await setDoc(doc(db, "users", user.uid), {
+        joinedFamilyIds: arrayUnion(userData.familyId),
+        updatedAt: Date.now()
+      }, { merge: true });
+    }
+  }
+  return resolved;
+}
+
+function renderFamilyMembers(familyData, user) {
+  const list = document.getElementById("familyMemberList");
+  const hint = document.getElementById("familyMemberManageHint");
+  if (!list || !hint || !user) return;
+
+  const memberIds = Object.keys(familyData.members || {});
+  const isOwner = familyData.createdBy === user.uid;
+  hint.innerText = isOwner
+    ? "グループ作成者は、招待したメンバーの利用を解除できます。"
+    : "メンバーの追加・削除はグループ作成者のみ行えます。";
+
+  list.innerHTML = memberIds.map((uid) => {
+    const profile = familyData.memberProfiles?.[uid] || {};
+    const isCurrentUser = uid === user.uid;
+    const isGroupOwner = uid === familyData.createdBy;
+    const name = profile.displayName || profile.email || (isCurrentUser ? "あなた" : `メンバー ${uid.slice(0, 6)}`);
+    const role = isGroupOwner ? "管理者" : "メンバー";
+    const removeButton = isOwner && !isGroupOwner
+      ? `<button onclick="removeFamilyMember('${uid}')" class="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-[10px] text-rose-600 font-bold">削除</button>`
+      : "";
+    return `<div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-emerald-100">
+      <div class="min-w-0">
+        <div class="text-xs font-bold text-slate-700 truncate">${name}${isCurrentUser ? "（あなた）" : ""}</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">${role}</div>
+      </div>
+      ${removeButton}
+    </div>`;
+  }).join("") || "<p class='text-[10px] text-slate-400'>参加メンバーが見つかりません。</p>";
+}
+
+window.useSavedFamilyGroup = async function(familyId) {
+  const user = auth.currentUser;
+  if (!user || !familyId) return;
+  try {
+    hasSelectedFamilyGroup = true;
+    await setDoc(doc(db, "users", user.uid), {
+      familyId,
+      updatedAt: Date.now()
+    }, { merge: true });
+    await activateFamilyGroup(familyId, user);
+  } catch (e) {
+    hasSelectedFamilyGroup = false;
+    alert("保存済みの家族グループを開けませんでした: " + e.message);
+  }
+};
+
+window.removeFamilyMember = async function(memberUid) {
+  const user = auth.currentUser;
+  if (!user || !currentSession?.familyId || !memberUid) return;
+  const familyRef = doc(db, "families", currentSession.familyId);
+  const familySnap = await getDoc(familyRef);
+  if (!familySnap.exists() || familySnap.data().createdBy !== user.uid) {
+    alert("メンバーを削除できるのはグループ作成者だけです。");
+    return;
+  }
+  if (memberUid === user.uid) return;
+  if (!confirm("このメンバーを家族グループから削除しますか？")) return;
+
+  try {
+    await updateDoc(familyRef, {
+      [`members.${memberUid}`]: deleteField(),
+      [`memberProfiles.${memberUid}`]: deleteField(),
+      updatedAt: Date.now()
+    });
+    alert("メンバーを家族グループから削除しました。");
+  } catch (e) {
+    alert("メンバーの削除に失敗しました: " + e.message);
+  }
+};
+
 async function resolveOwnedFamilyId(user, userData) {
   if (userData.ownedFamilyId) return userData.ownedFamilyId;
 
@@ -924,8 +1072,19 @@ async function activateFamilyGroup(familyId, user) {
     famSnap = await getDoc(doc(db, "families", familyId));
   }
 
+  await updateDoc(doc(db, "families", familyId), {
+    [`members.${user.uid}`]: true,
+    [`memberProfiles.${user.uid}`]: {
+      email: user.email || "",
+      displayName: user.displayName || "",
+      lastSeenAt: Date.now()
+    }
+  });
+  famSnap = await getDoc(doc(db, "families", familyId));
+
   isPremiumUser = famSnap.data().plan === "premium";
   updatePlanUI();
+  renderFamilyMembers(famSnap.data(), user);
 
   if(famSnap.exists() && famSnap.data().inviteCode) {
     document.getElementById("displayFamilyIdCode").value = famSnap.data().inviteCode;
@@ -936,8 +1095,15 @@ async function activateFamilyGroup(familyId, user) {
   if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
   unsubscribeFamilyPlan = onSnapshot(doc(db, "families", familyId), (familySnap) => {
     if (!familySnap.exists()) return;
-    isPremiumUser = familySnap.data().plan === "premium";
+    const latestFamilyData = familySnap.data();
+    if (latestFamilyData.createdBy !== user.uid && !latestFamilyData.members?.[user.uid]) {
+      alert("この家族グループへの参加が解除されました。");
+      location.reload();
+      return;
+    }
+    isPremiumUser = latestFamilyData.plan === "premium";
     updatePlanUI();
+    renderFamilyMembers(latestFamilyData, user);
   });
 
   await verifyAndSetupDefaultCategories(familyId);
@@ -1002,6 +1168,7 @@ onAuthStateChanged(auth, async (user) => {
         const userData = userSnap.exists() ? userSnap.data() : {};
         legacyUserPlan = userData.plan || "free";
         pendingOwnFamilyId = await resolveOwnedFamilyId(user, userData);
+        await resolveJoinedFamilyGroups(user, userData, pendingOwnFamilyId);
         updateFamilyChoiceUI();
         if (hasSelectedFamilyGroup) {
           return;
@@ -1029,6 +1196,8 @@ onAuthStateChanged(auth, async (user) => {
     hasSelectedFamilyGroup = false;
     legacyUserPlan = "free";
     isResolvingFamilyChoice = false;
+    savedJoinedFamilies = [];
+    renderSavedFamilyGroups();
     stopRealtimeSync();
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
     if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
@@ -1074,6 +1243,13 @@ window.createNewFamilyGroup = async function() {
       createdAt: Date.now(),
       createdBy: user.uid,
       members: { [user.uid]: true },
+      memberProfiles: {
+        [user.uid]: {
+          email: user.email || "",
+          displayName: user.displayName || "",
+          lastSeenAt: Date.now()
+        }
+      },
       plan: legacyUserPlan === "premium" ? "premium" : "free"
     });
     pendingOwnFamilyId = docFamilyId;
@@ -1104,10 +1280,19 @@ window.joinFamilyGroup = async function() {
     hasSelectedFamilyGroup = true;
     await setDoc(doc(db, "users", user.uid), {
       familyId: targetDocId,
+      joinedFamilyIds: arrayUnion(targetDocId),
       email: user.email || "",
       updatedAt: Date.now()
     }, { merge: true });
-    await updateDoc(doc(db, "families", targetDocId), { [`members.${user.uid}`]: true });
+    await updateDoc(doc(db, "families", targetDocId), {
+      [`members.${user.uid}`]: true,
+      [`memberProfiles.${user.uid}`]: {
+        email: user.email || "",
+        displayName: user.displayName || "",
+        lastSeenAt: Date.now()
+      },
+      updatedAt: Date.now()
+    });
     await activateFamilyGroup(targetDocId, user);
     alert("🎉 家族グループへの合流に成功しました！");
   } catch(e) {
