@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v88]</title>
+<title>コドモカプセル [v89]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v88</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v89</div>
       </div>
 
       <div>
@@ -565,6 +565,17 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           🛠️ フリープランに戻す
         </button>
       </div>
+      <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/70 rounded-2xl p-4">
+        <div class="text-xs font-bold text-rose-700 flex items-center gap-1">⚠️ アカウント削除</div>
+        <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">動作確認用の削除機能です。削除すると、現在利用中の家族グループ、子ども、カテゴリ、作品、写真・PDF、ユーザー情報を削除します。</p>
+        <div id="accountDeletionStatus" class="hidden mt-3 p-3 rounded-xl bg-rose-50 border border-rose-100 text-[10px] text-rose-700 leading-relaxed"></div>
+        <div class="grid sm:grid-cols-2 gap-2 mt-3">
+          <button id="deleteAccountNowBtn" onclick="deleteAccountImmediately()" class="py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition">今すぐ削除</button>
+          <button id="scheduleAccountDeleteBtn" onclick="scheduleAccountDeletion()" class="py-3 rounded-xl bg-white border border-rose-200 text-rose-600 text-xs font-bold shadow-sm transition">1週間後に削除予約</button>
+        </div>
+        <button id="cancelAccountDeleteBtn" onclick="cancelAccountDeletionSchedule()" class="hidden w-full mt-2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition">削除予約をキャンセル</button>
+        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※1週間後削除は、次回ログイン時またはアプリ起動時に期限を確認して削除を実行します。完全な自動削除にはサーバー処理が必要です。</p>
+      </div>
     </div>
 
     <div id="settingsFamily" class="settings-tab-panel hidden mb-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
@@ -739,7 +750,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteField } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, deleteUser } from "firebase/auth";
 import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
 
 const prodConfig = {
@@ -787,6 +798,7 @@ let legacyUserPlan = "free";
 let isResolvingFamilyChoice = false;
 let savedJoinedFamilies = [];
 let pendingJoinFamilies = [];
+let accountDeletionState = null;
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -800,7 +812,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v88",
+        app_version: "v89",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1869,6 +1881,7 @@ onAuthStateChanged(auth, async (user) => {
         if (isResolvingFamilyChoice) return;
         isResolvingFamilyChoice = true;
         const userData = userSnap.exists() ? userSnap.data() : {};
+        if (await runScheduledAccountDeletionIfNeeded(user, userData)) return;
         legacyUserPlan = userData.plan || "free";
         pendingOwnFamilyId = await resolveOwnedFamilyId(user, userData);
         await resolvePendingJoinRequests(user, userData);
@@ -1905,6 +1918,8 @@ onAuthStateChanged(auth, async (user) => {
     isResolvingFamilyChoice = false;
     savedJoinedFamilies = [];
     pendingJoinFamilies = [];
+    accountDeletionState = null;
+    renderAccountDeletionStatus();
     renderSavedFamilyGroups();
     renderPendingFamilyRequests();
     stopRealtimeSync();
@@ -2065,6 +2080,227 @@ function startRealtimeSync() {
   });
 }
 
+
+function formatDeletionDateTime(ms) {
+  if (!ms) return "";
+  try {
+    return new Date(ms).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  } catch(e) {
+    return "";
+  }
+}
+
+function renderAccountDeletionStatus() {
+  const statusEl = document.getElementById("accountDeletionStatus");
+  const cancelBtn = document.getElementById("cancelAccountDeleteBtn");
+  if (!statusEl || !cancelBtn) return;
+  if (accountDeletionState && accountDeletionState.status === "scheduled") {
+    const deleteAfterText = formatDeletionDateTime(accountDeletionState.deleteAfter);
+    statusEl.innerHTML = `削除予約中です。<br>削除予定日時：<span class="font-bold">${deleteAfterText}</span><br>期限後にログインすると、予約された削除処理を実行します。`;
+    statusEl.classList.remove("hidden");
+    cancelBtn.classList.remove("hidden");
+  } else {
+    statusEl.innerHTML = "";
+    statusEl.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
+  }
+}
+
+async function deleteCollectionDocs(collectionPathParts) {
+  const snapshot = await getDocs(collection(db, ...collectionPathParts));
+  for (const d of snapshot.docs) {
+    await deleteDoc(d.ref);
+  }
+}
+
+async function deleteMediaForWork(familyId, work) {
+  if (!work?.mediaUrls?.length) return;
+  for (let i = 0; i < work.mediaUrls.length; i++) {
+    const media = work.mediaUrls[i];
+    if (!media?.url || media.url.startsWith("data:") || media.url.startsWith("guest-")) continue;
+    try {
+      await deleteObject(ref(storage, media.url));
+      continue;
+    } catch(e) {
+      console.warn("URL指定でのStorage削除をスキップしました:", e.code || e.message);
+    }
+    try {
+      await deleteObject(ref(storage, `families/${familyId}/artworks/${work.id}/${i}.${media.type === "pdf" ? "pdf" : "jpg"}`));
+    } catch(e) {
+      console.warn("推定パスでのStorage削除をスキップしました:", e.code || e.message);
+    }
+  }
+}
+
+async function deleteFamilyGroupData(familyId) {
+  if (!familyId) return;
+  const familyRef = doc(db, "families", familyId);
+  const familySnap = await getDoc(familyRef);
+  const familyData = familySnap.exists() ? familySnap.data() : {};
+
+  const worksSnapshot = await getDocs(collection(db, "families", familyId, "artworks"));
+  for (const workDoc of worksSnapshot.docs) {
+    await deleteMediaForWork(familyId, workDoc.data());
+    await deleteDoc(workDoc.ref);
+  }
+
+  await deleteCollectionDocs(["families", familyId, "children"]);
+  await deleteCollectionDocs(["families", familyId, "categories"]);
+  try { await deleteCollectionDocs(["families", familyId, "joinRequests"]); } catch(e) { console.warn("joinRequests削除をスキップしました:", e.code || e.message); }
+
+  if (familyData.inviteCode) {
+    try { await deleteDoc(doc(db, "familyInvites", familyData.inviteCode)); } catch(e) { console.warn("招待コード索引の削除をスキップしました:", e.code || e.message); }
+  }
+
+  if (familyData.members) {
+    for (const memberUid of Object.keys(familyData.members)) {
+      try {
+        await setDoc(doc(db, "users", memberUid), {
+          familyId: deleteField(),
+          joinedFamilyIds: arrayRemove(familyId),
+          updatedAt: Date.now()
+        }, { merge: true });
+      } catch(e) {
+        console.warn("メンバーの家族参照解除をスキップしました:", memberUid, e.code || e.message);
+      }
+    }
+  }
+
+  try { await deleteDoc(familyRef); } catch(e) { console.warn("家族グループ本体の削除をスキップしました:", e.code || e.message); }
+}
+
+async function executeAccountDeletion(isScheduledRun = false) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("ログイン状態が確認できません。");
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.exists() ? userSnap.data() : {};
+  const familyId = currentSession?.familyId || accountDeletionState?.familyId || userData.familyId || userData.ownedFamilyId;
+
+  stopRealtimeSync();
+  if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
+  if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
+  if (unsubscribeJoinRequests) { unsubscribeJoinRequests(); unsubscribeJoinRequests = null; }
+  if (unsubscribeUserJoinRequests) { unsubscribeUserJoinRequests(); unsubscribeUserJoinRequests = null; }
+
+  if (familyId) {
+    await deleteFamilyGroupData(familyId);
+  }
+  try { await deleteDoc(userRef); } catch(e) { console.warn("ユーザードキュメント削除をスキップしました:", e.code || e.message); }
+
+  try {
+    await deleteUser(user);
+  } catch(e) {
+    if (e.code === "auth/requires-recent-login") {
+      alert("Firebase Authユーザー削除には再ログインが必要です。\n一度ログアウトして再ログインした直後に、もう一度削除を実行してください。\nFirestore/Storage側の削除は可能な範囲で実行済みです。");
+      await signOut(auth);
+      location.reload();
+      return;
+    }
+    throw e;
+  }
+
+  trackEvent(isScheduledRun ? "account_delete_scheduled_executed" : "account_delete_immediate", { family_id: familyId || "" });
+  alert("アカウントと関連データを削除しました。");
+  location.reload();
+}
+
+async function runScheduledAccountDeletionIfNeeded(user, userData) {
+  accountDeletionState = userData.accountDeletion || null;
+  renderAccountDeletionStatus();
+  if (accountDeletionState && accountDeletionState.status === "scheduled" && accountDeletionState.deleteAfter && Date.now() >= accountDeletionState.deleteAfter) {
+    const statusText = document.getElementById("loadingStatusText");
+    if(statusText) statusText.innerText = "アカウント削除予約の期限を確認しました。削除処理を実行中...";
+    await executeAccountDeletion(true);
+    return true;
+  }
+  return false;
+}
+
+window.deleteAccountImmediately = async function() {
+  if (isGuestMode) { showGuestModeSaveAlert(); return; }
+  const user = auth.currentUser;
+  if (!user) { alert("ログイン状態が確認できません。"); return; }
+  const firstConfirm = confirm("アカウントを今すぐ削除しますか？\n現在利用中の家族グループ、作品、写真・PDF、ユーザー情報を削除します。\nこの操作は取り消せません。");
+  if (!firstConfirm) return;
+  const typed = prompt("確認のため「削除」と入力してください。");
+  if (typed !== "削除") { alert("入力が一致しないため、削除を中止しました。"); return; }
+
+  const btn = document.getElementById("deleteAccountNowBtn");
+  const originalText = btn ? btn.innerText : "";
+  if(btn) { btn.disabled = true; btn.innerText = "削除中..."; }
+  try {
+    await executeAccountDeletion(false);
+  } catch(e) {
+    console.error("Account delete failed:", e);
+    alert("アカウント削除に失敗しました。\n詳細: " + e.message);
+  } finally {
+    if(btn) { btn.disabled = false; btn.innerText = originalText; }
+  }
+};
+
+window.scheduleAccountDeletion = async function() {
+  if (isGuestMode) { showGuestModeSaveAlert(); return; }
+  const user = auth.currentUser;
+  if (!user) { alert("ログイン状態が確認できません。"); return; }
+  if (!confirm("1週間後にアカウント削除を予約しますか？\n予約中でも、期限前であればこの画面からキャンセルできます。")) return;
+
+  const familyId = currentSession?.familyId || pendingOwnFamilyId || "";
+  const deleteAfter = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const deletionPayload = {
+    status: "scheduled",
+    requestedAt: Date.now(),
+    deleteAfter,
+    familyId,
+    email: user.email || ""
+  };
+
+  try {
+    await setDoc(doc(db, "users", user.uid), {
+      accountDeletion: deletionPayload,
+      updatedAt: Date.now()
+    }, { merge: true });
+    if (familyId) {
+      try {
+        await updateDoc(doc(db, "families", familyId), {
+          accountDeletion: { ...deletionPayload, requestedBy: user.uid },
+          updatedAt: Date.now()
+        });
+      } catch(e) {
+        console.warn("家族グループへの削除予約記録をスキップしました:", e.code || e.message);
+      }
+    }
+    accountDeletionState = deletionPayload;
+    renderAccountDeletionStatus();
+    trackEvent("account_delete_scheduled", { family_id: familyId, delete_after: deleteAfter });
+    alert("1週間後の削除を予約しました。\n削除予定日時: " + formatDeletionDateTime(deleteAfter));
+  } catch(e) {
+    alert("削除予約に失敗しました: " + e.message);
+  }
+};
+
+window.cancelAccountDeletionSchedule = async function() {
+  const user = auth.currentUser;
+  if (!user) { alert("ログイン状態が確認できません。"); return; }
+  if (!confirm("アカウント削除予約をキャンセルしますか？")) return;
+  const familyId = currentSession?.familyId || accountDeletionState?.familyId || "";
+  try {
+    await setDoc(doc(db, "users", user.uid), {
+      accountDeletion: deleteField(),
+      updatedAt: Date.now()
+    }, { merge: true });
+    if (familyId) {
+      try { await updateDoc(doc(db, "families", familyId), { accountDeletion: deleteField(), updatedAt: Date.now() }); } catch(e) { console.warn("家族グループの削除予約解除をスキップしました:", e.code || e.message); }
+    }
+    accountDeletionState = null;
+    renderAccountDeletionStatus();
+    trackEvent("account_delete_cancelled", { family_id: familyId });
+    alert("削除予約をキャンセルしました。今後も引き続き利用できます。");
+  } catch(e) {
+    alert("削除予約のキャンセルに失敗しました: " + e.message);
+  }
+};
+
 function stopRealtimeSync() {
   if (unsubscribeChildren) { unsubscribeChildren(); unsubscribeChildren = null; }
   if (unsubscribeWorks) { unsubscribeWorks(); unsubscribeWorks = null; }
@@ -2072,7 +2308,7 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner(); renderAccountDeletionStatus();
 }
 
 document.getElementById("gallerySortSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
