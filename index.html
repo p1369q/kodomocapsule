@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v84]</title>
+<title>コドモカプセル [v85]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +34,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 .drawer.open{opacity:1;pointer-events:auto;}
 .drawer-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:32px 32px 0 0;padding:28px;transform:translateY(60px);transition:.35s;}
 .drawer.open .drawer-panel{transform:translateY(0);}
+#legalDrawer{z-index:1300;}
 
 .age-tab.active { background-color: var(--accent-dark); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(229,91,91,0.2); }
 
@@ -311,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v84</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v85</div>
       </div>
 
       <div>
@@ -449,8 +450,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <p class="text-xs text-slate-400 mt-1">お子さま、カテゴリ、家族共有をここで管理できます。</p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="openLegalModal('terms')" class="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-[11px] font-bold text-slate-600 transition">🔐 安心・規約</button>
-        <button onclick="openLegalModal('terms')" class="sm:hidden w-10 h-10 rounded-full bg-slate-100 text-slate-500 text-sm font-bold shrink-0" title="安心・規約">🔐</button>
+        <button onclick="openLegalModal('terms')" class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-[11px] font-bold text-slate-600 transition shrink-0" title="安心・規約"><span>🔐</span><span class="hidden sm:inline">安心・規約</span></button>
         <button onclick="closeDrawer('child')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
       </div>
     </div>
@@ -767,7 +767,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v84",
+        app_version: "v85",
         is_guest_mode: isGuestMode,
         ...params
       });
