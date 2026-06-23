@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v77]</title>
+<title>コドモカプセル [v79]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,7 +306,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v77</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v79</div>
       </div>
 
       <div>
@@ -733,32 +733,62 @@ function getDownloadExtension(media, sourceUrl) {
   return ".jpg";
 }
 
+function isIosLikeDevice() {
+  const ua = navigator.userAgent || "";
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function dataUrlToBlob(dataUrl) {
+  const parts = String(dataUrl).split(",");
+  const meta = parts[0] || "";
+  const data = parts.slice(1).join(",");
+  const mimeMatch = meta.match(/data:([^;]+)/);
+  const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+  if (meta.includes(";base64")) {
+    const binary = atob(data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+  return new Blob([decodeURIComponent(data)], { type: mime });
+}
+
+async function sourceUrlToBlob(sourceUrl) {
+  if (String(sourceUrl).startsWith("data:")) return dataUrlToBlob(sourceUrl);
+  const response = await fetch(sourceUrl, { mode: "cors" });
+  if (!response.ok) throw new Error(`画像の取得に失敗しました。Status: ${response.status}`);
+  return await response.blob();
+}
+
+function triggerAnchorDownload(blob, fileName) {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = fileName;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+}
+
 async function downloadUrlToDevice(sourceUrl, fileName) {
   if (!sourceUrl) throw new Error("ダウンロード対象のURLがありません。");
 
-  let objectUrl = null;
-
   try {
-    const response = await fetch(sourceUrl, { mode: "cors" });
-    if (!response.ok) throw new Error(`画像の取得に失敗しました。Status: ${response.status}`);
-    const blob = await response.blob();
-    objectUrl = URL.createObjectURL(blob);
+    const blob = await sourceUrlToBlob(sourceUrl);
+    const file = new File([blob], fileName, { type: blob.type || "image/jpeg" });
 
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = fileName;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
-    link.remove();
+    if (isIosLikeDevice() && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+      await navigator.share({ files: [file], title: fileName });
+      return;
+    }
 
-    setTimeout(() => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    }, 1500);
+    triggerAnchorDownload(blob, fileName);
   } catch (e) {
     console.error("Download failed:", e);
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-    alert("自動ダウンロードに失敗しました。\nブラウザの保存制限、または画像URLの取得制限により保存できない可能性があります。");
+    if (e && e.name === "AbortError") return;
+    alert("自動ダウンロードに失敗しました。\n本番ドメインがStorageのCORS許可オリジンに含まれているか確認してください。");
   }
 }
 
@@ -1575,7 +1605,20 @@ onAuthStateChanged(auth, async (user) => {
   const errLog = document.getElementById("gateErrorLog");
 
   if (user) {
+    const wasGuestMode = isGuestMode;
     isGuestMode = false;
+    if (wasGuestMode) {
+      stopRealtimeSync();
+      currentSession = null;
+      localChildren = [];
+      localWorks = [];
+      localCategories = [];
+      base64MediaArray = [];
+      carouselIndices = {};
+      renderAll();
+      switchPage('gallery');
+      if(gateScreen) gateScreen.classList.remove("hidden");
+    }
     hasSelectedFamilyGroup = false;
     pendingOwnFamilyId = null;
     btnText.innerText = "ログアウト";
