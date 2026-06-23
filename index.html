@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v90]</title>
+<title>コドモカプセル [v91]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v90</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v91</div>
       </div>
 
       <div>
@@ -812,7 +812,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v90",
+        app_version: "v91",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2246,11 +2246,22 @@ window.scheduleAccountDeletion = async function() {
   if (!confirm("1週間後にアカウント削除を予約しますか？\n予約中でも、期限前であればこの画面からキャンセルできます。")) return;
 
   const familyId = currentSession?.familyId || pendingOwnFamilyId || "";
-  const deleteAfter = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const requestedAt = Number(new Date().getTime());
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const deleteAfter = requestedAt + sevenDaysMs;
+
+  if (!Number.isSafeInteger(deleteAfter) || deleteAfter < 1000000000000) {
+    alert("削除予約日時の生成に失敗しました。ページを再読み込みしてもう一度お試しください。");
+    console.error("Invalid deleteAfter generated", { requestedAt, deleteAfter });
+    return;
+  }
+
   const deletionPayload = {
     status: "scheduled",
-    requestedAt: Date.now(),
+    requestedAt,
+    requestedAtIso: new Date(requestedAt).toISOString(),
     deleteAfter,
+    deleteAfterIso: new Date(deleteAfter).toISOString(),
     familyId,
     email: user.email || ""
   };
