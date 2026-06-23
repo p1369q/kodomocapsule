@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v85]</title>
+<title>コドモカプセル [v86]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v85</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v86</div>
       </div>
 
       <div>
@@ -450,7 +450,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <p class="text-xs text-slate-400 mt-1">お子さま、カテゴリ、家族共有をここで管理できます。</p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="openLegalModal('terms')" class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-[11px] font-bold text-slate-600 transition shrink-0" title="安心・規約"><span>🔐</span><span class="hidden sm:inline">安心・規約</span></button>
+        <button onclick="openLegalModal('terms')" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition shrink-0 shadow-sm" title="利用規約・プライバシーポリシー・お問い合わせ"><span class="text-[12px]">🔐</span><span>安心・規約</span></button>
         <button onclick="closeDrawer('child')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
       </div>
     </div>
@@ -767,7 +767,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v85",
+        app_version: "v86",
         is_guest_mode: isGuestMode,
         ...params
       });
