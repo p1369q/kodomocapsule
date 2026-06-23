@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v106]</title>
+<title>コドモカプセル [v107]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -333,7 +333,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v106</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v107</div>
       </div>
 
       <div>
@@ -912,7 +912,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v106",
+        app_version: "v107",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3101,8 +3101,7 @@ window.restoreOriginalForCurrentMedia = async function() {
     item.manuallyCropped = false;
     renderMediaPreviews();
     await showCropperImage(originalDataUrl, "free");
-    alert("元画像に戻しました。
-この状態で反映する場合は「このトリミングで保存」ではなく、カプセル画面下部の「この内容でカプセルを保存」を押してください。");
+    alert("元画像に戻しました。\nこの状態で反映する場合は、カプセル画面下部の『この内容でカプセルを保存』を押してください。");
     trackEvent("image_crop_restore_original", { media_index: mediaIndex });
   } catch (err) {
     alert("元画像に戻せませんでした: " + err.message);
