@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v110]</title>
+<title>コドモカプセル [v111]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,39 +149,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 
       <div>
         <div class="relative bg-white/90 backdrop-blur border border-white rounded-[2rem] p-4 sm:p-5 shadow-[0_18px_50px_rgba(71,85,105,.12)]">
-          <div class="absolute -top-3 -right-2 bg-[#253047] text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg rotate-3">思い出が、成長記録になる</div>
-
-          <div class="rounded-3xl bg-gradient-to-br from-rose-50 via-white to-sky-50 border border-rose-100/70 p-3 sm:p-4">
-            <div class="flex items-center justify-between mb-3 gap-3">
-              <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400">ひなたのカプセル</p>
-                <p class="text-sm font-extrabold text-slate-800 mt-0.5 truncate">小さな「できた！」の記録</p>
-              </div>
-              <span class="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-100 px-2 py-1 rounded-full shrink-0">4歳10ヶ月</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 sm:gap-3">
-              <div class="rounded-2xl overflow-hidden bg-white border border-rose-100 shadow-sm">
-                <div class="h-16 sm:h-20 bg-[#ffe4e6] flex items-center justify-center text-3xl">🎨</div>
-                <div class="p-2.5">
-                  <div class="text-[11px] font-extrabold text-slate-800 truncate">はじめての家族の絵</div>
-                  <div class="text-[9px] text-slate-400 mt-0.5">2025.04.05 ・ 作品</div>
-                </div>
-              </div>
-              <div class="rounded-2xl overflow-hidden bg-white border border-amber-100 shadow-sm">
-                <div class="h-16 sm:h-20 bg-[#fef3c7] flex items-center justify-center text-3xl">💯</div>
-                <div class="p-2.5">
-                  <div class="text-[11px] font-extrabold text-slate-800 truncate">ひらがなテスト</div>
-                  <div class="text-[9px] text-slate-400 mt-0.5">2025.06.12 ・ テスト</div>
-                </div>
-              </div>
-            </div>
-            <div class="mt-2 bg-white/80 border border-white rounded-2xl px-3 py-2.5 flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center shrink-0">🕰️</div>
-              <div class="min-w-0">
-                <div class="text-[11px] font-extrabold text-slate-800">作品が増えるほど、成長が見える。</div>
-                <p class="text-[10px] text-slate-500 mt-0.5 truncate">ギャラリーとタイムラインで、いつでも振り返れます。</p>
-              </div>
-            </div>
+          <div class="text-center mb-4">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-rose-50 text-2xl mb-3">🧺</div>
+            <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">START</div>
+            <h2 class="text-xl font-extrabold text-[#253047]">コドモカプセルをはじめる</h2>
+            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">体験・保存・家族参加を、この画面から選べます。</p>
           </div>
 
           <div id="gateLoading" class="text-sm text-slate-400 py-7 flex flex-col items-center justify-center gap-2 w-full">
@@ -190,14 +162,36 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div id="gateErrorLog" class="text-xs text-red-500 max-w-xs break-all hidden font-mono p-2 bg-red-50 border border-red-100 rounded-lg"></div>
           </div>
 
-          <div id="gateLoginArea" class="hidden mt-5 space-y-3">
-            <div class="text-center mb-4">
-              <p class="text-base font-extrabold text-[#253047]">まずは、サンプルで未来のアルバムを体験。</p>
-              <p class="text-[11px] text-slate-500 mt-1.5">登録なしですぐに、ギャラリーや年齢別整理を試せます。</p>
+          <div id="gateLoginArea" class="hidden space-y-3">
+            <button onclick="enterGuestMode()" class="w-full p-4 rounded-2xl bg-[#253047] text-white shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition text-left flex items-center gap-3">
+              <span class="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">🚀</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-extrabold">登録なしで試す</span>
+                <span class="block text-[11px] text-white/75 mt-0.5">サンプルデータで、使い心地をすぐ確認できます。</span>
+              </span>
+            </button>
+            <button onclick="toggleAuth()" class="w-full p-4 rounded-2xl bg-[#ff6b6b] text-white shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition text-left flex items-center gap-3">
+              <span class="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center text-xl shrink-0">🔐</span>
+              <span class="min-w-0">
+                <span class="block text-sm font-extrabold">Googleで保存して始める</span>
+                <span class="block text-[11px] text-white/80 mt-0.5">写真・PDFを保存し、家族共有も使えます。</span>
+              </span>
+            </button>
+            <div class="grid grid-cols-3 gap-2 pt-1">
+              <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
+                <div class="text-lg">📷</div>
+                <div class="text-[10px] font-bold text-slate-600 mt-1">写真/PDF</div>
+              </div>
+              <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
+                <div class="text-lg">🎂</div>
+                <div class="text-[10px] font-bold text-slate-600 mt-1">年齢整理</div>
+              </div>
+              <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
+                <div class="text-lg">👨‍👩‍👧</div>
+                <div class="text-[10px] font-bold text-slate-600 mt-1">家族共有</div>
+              </div>
             </div>
-            <button onclick="enterGuestMode()" class="w-full py-4 rounded-2xl bg-[#253047] text-white font-bold text-sm shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition">🚀 登録なしでゲスト体験</button>
-            <button onclick="toggleAuth()" class="w-full py-4 rounded-2xl bg-[#ff6b6b] text-white font-bold text-sm shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition">Googleアカウントで無料ではじめる</button>
-            <p class="text-[10px] text-slate-400 text-center leading-relaxed pt-1">ゲストデータは保存されません。実際の保存・家族共有にはGoogleログインが必要です。</p>
+            <p class="text-[10px] text-slate-400 text-center leading-relaxed pt-1">ゲストデータは保存されません。実際の保存にはGoogleログインが必要です。</p>
           </div>
 
           <div id="gateSetupArea" class="hidden mt-5 space-y-5 w-full">
@@ -333,7 +327,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v110</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v111</div>
       </div>
 
       <div>
@@ -912,7 +906,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v110",
+        app_version: "v111",
         is_guest_mode: isGuestMode,
         ...params
       });
