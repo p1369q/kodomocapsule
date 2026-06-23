@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v104]</title>
+<title>コドモカプセル [v105]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -333,7 +333,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v104</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v105</div>
       </div>
 
       <div>
@@ -825,7 +825,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div class="cropper-workspace cropper-bg rounded-3xl border border-slate-200 overflow-hidden flex items-center justify-center">
         <img id="cropperImage" src="" alt="crop target" class="max-w-full block">
       </div>
-      <p class="text-[11px] text-slate-400 leading-relaxed">ピンチやドラッグで位置を調整できます。やり直したい場合は「元画像に戻す」を押してください。</p>
+      <p class="text-[11px] text-slate-400 leading-relaxed">ピンチやドラッグで位置を調整できます。「元画像に戻す」は、この編集画面で保持している元画像へ戻します。</p>
       <div class="cropper-actions flex flex-col sm:flex-row gap-2">
         <button type="button" onclick="saveCurrentCrop()" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">このトリミングで保存</button>
         <button type="button" onclick="closeCropperDrawer()" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">キャンセル</button>
@@ -912,7 +912,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v104",
+        app_version: "v105",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2979,6 +2979,41 @@ async function buildMediaItemFromFile(file, useAutoTrim) {
   return { type: "image", dataUrl: processedDataUrl, originalDataUrl, autoTrimApplied: !!useAutoTrim };
 }
 
+async function showCropperImage(sourceDataUrl, aspectMode = currentCropAspectMode || "free") {
+  const cropperImage = document.getElementById("cropperImage");
+  if (!cropperImage) return;
+  if (cropperInstance) {
+    cropperInstance.destroy();
+    cropperInstance = null;
+  }
+  await new Promise((resolve, reject) => {
+    cropperImage.onload = () => resolve();
+    cropperImage.onerror = () => reject(new Error("画像の表示に失敗しました"));
+    cropperImage.src = sourceDataUrl;
+  });
+  cropperInstance = new Cropper(cropperImage, {
+    viewMode: 1,
+    dragMode: "move",
+    autoCropArea: 1,
+    responsive: true,
+    restore: false,
+    background: false,
+    movable: true,
+    zoomable: true,
+    rotatable: false,
+    scalable: false,
+    guides: true
+  });
+  setCropAspectMode(aspectMode);
+}
+
+function ensureOriginalDataUrl(item) {
+  if (!item) return;
+  if (!item.originalDataUrl && typeof item.dataUrl === "string") {
+    item.originalDataUrl = item.dataUrl;
+  }
+}
+
 window.openCropperForMedia = async function(index, event) {
   if (event) event.stopPropagation();
   if (!canAddData()) { alert("この家族グループでは、あなたの権限では画像編集できません。"); return; }
@@ -2986,15 +3021,25 @@ window.openCropperForMedia = async function(index, event) {
   if (!item || item.type !== "image") return;
   try {
     currentCropMediaIndex = index;
-    const sourceDataUrl = await getImageSourceDataUrl(item);
-    const cropperImage = document.getElementById("cropperImage");
-    cropperImage.src = sourceDataUrl;
+    ensureOriginalDataUrl(item);
+
+    // トリミング画面は「現在の見た目」を開く。
+    // 元に戻す時だけ originalDataUrl を使う。
+    let currentDataUrl = item.dataUrl;
+    if (typeof currentDataUrl === "string" && currentDataUrl.startsWith("http")) {
+      const response = await fetch(currentDataUrl, { mode: "cors", credentials: "omit" });
+      if (!response.ok) throw new Error("画像の取得に失敗しました");
+      currentDataUrl = await blobToDataUrl(await response.blob());
+      item.dataUrl = currentDataUrl;
+      if (!item.originalDataUrl || item.originalDataUrl.startsWith("http")) {
+        item.originalDataUrl = currentDataUrl;
+      }
+    }
+
     const drawer = document.getElementById("cropperDrawer");
     drawer.classList.add("open");
-    await new Promise(resolve => setTimeout(resolve, 40));
-    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-    cropperInstance = new Cropper(cropperImage, { viewMode: 1, dragMode: "move", autoCropArea: 1, responsive: true, restore: false, background: false, movable: true, zoomable: true, rotatable: false, scalable: false, guides: true });
-    setCropAspectMode("free");
+    currentCropAspectMode = "free";
+    await showCropperImage(currentDataUrl, "free");
     trackEvent("image_crop_open", { media_index: index });
   } catch (err) {
     alert("トリミング画面を開けませんでした: " + err.message);
@@ -3013,16 +3058,20 @@ window.setCropAspectMode = function(mode) {
 
 window.applyAutoTrimToCurrentMedia = async function() {
   if (currentCropMediaIndex === null) return;
-  const item = base64MediaArray[currentCropMediaIndex];
+  const mediaIndex = currentCropMediaIndex;
+  const item = base64MediaArray[mediaIndex];
   if (!item || item.type !== "image") return;
   try {
-    const sourceDataUrl = await getImageSourceDataUrl(item);
-    item.dataUrl = await prepareImageDataUrl(sourceDataUrl, true);
+    ensureOriginalDataUrl(item);
+    const sourceDataUrl = await getImageSourceDataUrl({ ...item, dataUrl: item.originalDataUrl || item.dataUrl });
+    const trimmedDataUrl = await prepareImageDataUrl(sourceDataUrl, true);
+    item.dataUrl = trimmedDataUrl;
     item.autoTrimApplied = true;
+    item.manuallyCropped = false;
     renderMediaPreviews();
-    closeCropperDrawer();
-    alert("自動トリミングを適用しました。必要ならもう一度 ✂ から微調整できます。");
-    trackEvent("image_auto_trim_apply", { media_index: currentCropMediaIndex });
+    await showCropperImage(trimmedDataUrl, currentCropAspectMode || "free");
+    alert("自動トリミングを適用しました。元に戻す場合は ↩ 元画像に戻す を押してください。");
+    trackEvent("image_auto_trim_apply", { media_index: mediaIndex });
   } catch (err) {
     alert("自動トリミングに失敗しました: " + err.message);
   }
@@ -3030,27 +3079,32 @@ window.applyAutoTrimToCurrentMedia = async function() {
 
 window.restoreOriginalForCurrentMedia = async function() {
   if (currentCropMediaIndex === null) return;
-  const item = base64MediaArray[currentCropMediaIndex];
+  const mediaIndex = currentCropMediaIndex;
+  const item = base64MediaArray[mediaIndex];
   if (!item || item.type !== "image") return;
   try {
-    const sourceDataUrl = await getImageSourceDataUrl(item);
-    item.dataUrl = sourceDataUrl;
+    if (!item.originalDataUrl) {
+      alert("元画像データが残っていないため、この画像は元に戻せません。
+保存済みのトリミング画像を元に戻すには、元の写真をもう一度追加してください。");
+      return;
+    }
+
+    let originalDataUrl = item.originalDataUrl;
+    if (typeof originalDataUrl === "string" && originalDataUrl.startsWith("http")) {
+      const response = await fetch(originalDataUrl, { mode: "cors", credentials: "omit" });
+      if (!response.ok) throw new Error("元画像の取得に失敗しました");
+      originalDataUrl = await blobToDataUrl(await response.blob());
+      item.originalDataUrl = originalDataUrl;
+    }
+
+    item.dataUrl = originalDataUrl;
     item.autoTrimApplied = false;
     item.manuallyCropped = false;
     renderMediaPreviews();
-
-    const cropperImage = document.getElementById("cropperImage");
-    if (cropperImage) cropperImage.src = sourceDataUrl;
-    if (cropperInstance) {
-      cropperInstance.destroy();
-      cropperInstance = null;
-    }
-    await new Promise(resolve => setTimeout(resolve, 40));
-    if (cropperImage) {
-      cropperInstance = new Cropper(cropperImage, { viewMode: 1, dragMode: "move", autoCropArea: 1, responsive: true, restore: false, background: false, movable: true, zoomable: true, rotatable: false, scalable: false, guides: true });
-      setCropAspectMode(currentCropAspectMode || "free");
-    }
-    trackEvent("image_crop_restore_original", { media_index: currentCropMediaIndex });
+    await showCropperImage(originalDataUrl, "free");
+    alert("元画像に戻しました。
+この状態で反映する場合は「このトリミングで保存」ではなく、カプセル画面下部の「この内容でカプセルを保存」を押してください。");
+    trackEvent("image_crop_restore_original", { media_index: mediaIndex });
   } catch (err) {
     alert("元画像に戻せませんでした: " + err.message);
   }
@@ -3058,19 +3112,22 @@ window.restoreOriginalForCurrentMedia = async function() {
 
 window.saveCurrentCrop = function() {
   if (currentCropMediaIndex === null || !cropperInstance) return;
+  const mediaIndex = currentCropMediaIndex;
   const croppedCanvas = cropperInstance.getCroppedCanvas({ imageSmoothingEnabled: true, imageSmoothingQuality: "high", fillColor: "#ffffff" });
   if (!croppedCanvas) { alert("トリミング結果を取得できませんでした。"); return; }
-  const item = base64MediaArray[currentCropMediaIndex];
+  const item = base64MediaArray[mediaIndex];
   try {
+    ensureOriginalDataUrl(item);
     item.dataUrl = resizeCanvasToDataUrl(croppedCanvas);
   } catch (err) {
     alert("トリミング保存に失敗しました。画像を一度追加し直してからお試しください: " + err.message);
     return;
   }
   item.manuallyCropped = true;
+  item.autoTrimApplied = false;
   renderMediaPreviews();
   closeCropperDrawer();
-  trackEvent("image_crop_saved", { media_index: currentCropMediaIndex, aspect_mode: currentCropAspectMode });
+  trackEvent("image_crop_saved", { media_index: mediaIndex, aspect_mode: currentCropAspectMode });
 };
 
 window.closeCropperDrawer = function() {
