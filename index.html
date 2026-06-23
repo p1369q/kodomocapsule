@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v102]</title>
+<title>コドモカプセル [v103]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +27,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .cropper-workspace{height:min(48dvh,460px);min-height:220px;}
 .cropper-actions{position:sticky;bottom:0;background:white;padding-top:8px;}
 @media (max-width:640px){#cropperDrawer{padding:8px;}#cropperDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;} .cropper-workspace{height:42dvh;min-height:210px;} #cropperDrawer .cropper-header{padding:14px 16px;} #cropperDrawer .cropper-title-note{display:none;}}
+#photoPreviewDrawer{align-items:center;padding:12px;}
+#photoPreviewDrawer .drawer-panel{border-radius:28px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;transform:translateY(20px);}
+#photoPreviewDrawer.open .drawer-panel{transform:translateY(0);}
+#photoPreviewDrawer .photo-preview-stage{max-height:46dvh;min-height:180px;flex-shrink:0;}
+#photoPreviewDrawer .photo-preview-stage img{max-height:46dvh;}
+#photoPreviewDrawer .photo-preview-detail{overflow:auto;padding-bottom:8px;}
+#photoPreviewDrawer .photo-preview-actions{position:sticky;bottom:0;background:white;padding-top:8px;}
+@media (max-width:640px){#photoPreviewDrawer{padding:8px;}#photoPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}#photoPreviewDrawer .photo-preview-stage{max-height:42dvh;min-height:160px;}#photoPreviewDrawer .photo-preview-stage img{max-height:42dvh;}}
+
 .page{display:none;}
 .page.active{display:block;}
 .glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.88);}
@@ -324,7 +333,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v102</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v103</div>
       </div>
 
       <div>
@@ -780,13 +789,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
       <button onclick="closePhotoPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
-    <div class="bg-slate-950 flex items-center justify-center max-h-[62vh] overflow-hidden">
-      <img id="photoPreviewImage" src="" alt="" class="max-w-full max-h-[62vh] object-contain" />
+    <div class="photo-preview-stage bg-slate-950 flex items-center justify-center overflow-hidden">
+      <img id="photoPreviewImage" src="" alt="" class="max-w-full object-contain" />
     </div>
-    <div class="p-5 space-y-3">
+    <div class="photo-preview-detail p-5 space-y-3">
       <div class="flex flex-wrap gap-2 text-[11px]" id="photoPreviewBadges"></div>
       <p id="photoPreviewMemo" class="text-sm text-slate-600 leading-relaxed hidden"></p>
-      <div class="flex flex-col sm:flex-row gap-2 pt-2">
+      <div class="photo-preview-actions flex flex-col sm:flex-row gap-2 pt-2">
         <button id="photoPreviewEditBtn" type="button" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">編集する</button>
         <button id="photoPreviewDownloadBtn" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">⬇ 保存</button>
         <button onclick="closePhotoPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
@@ -902,7 +911,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v102",
+        app_version: "v103",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2862,21 +2871,27 @@ function blobToDataUrl(blob) {
 }
 
 async function getImageSourceDataUrl(item) {
-  if (item.originalDataUrl) return item.originalDataUrl;
+  if (typeof item.originalDataUrl === "string" && item.originalDataUrl.startsWith("data:")) return item.originalDataUrl;
   if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("data:")) return item.dataUrl;
-  if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("http")) {
-    const response = await fetch(item.dataUrl);
+
+  const sourceUrl = (typeof item.originalDataUrl === "string" && item.originalDataUrl.startsWith("http"))
+    ? item.originalDataUrl
+    : item.dataUrl;
+
+  if (typeof sourceUrl === "string" && sourceUrl.startsWith("http")) {
+    const response = await fetch(sourceUrl, { mode: "cors", credentials: "omit" });
     if (!response.ok) throw new Error("画像の取得に失敗しました");
     const dataUrl = await blobToDataUrl(await response.blob());
     item.originalDataUrl = dataUrl;
     return dataUrl;
   }
-  return item.dataUrl;
+  return sourceUrl;
 }
 
 function loadImageFromSource(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    if (typeof src === "string" && src.startsWith("http")) img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
     img.src = src;
@@ -3017,7 +3032,12 @@ window.saveCurrentCrop = function() {
   const croppedCanvas = cropperInstance.getCroppedCanvas({ imageSmoothingEnabled: true, imageSmoothingQuality: "high", fillColor: "#ffffff" });
   if (!croppedCanvas) { alert("トリミング結果を取得できませんでした。"); return; }
   const item = base64MediaArray[currentCropMediaIndex];
-  item.dataUrl = resizeCanvasToDataUrl(croppedCanvas);
+  try {
+    item.dataUrl = resizeCanvasToDataUrl(croppedCanvas);
+  } catch (err) {
+    alert("トリミング保存に失敗しました。画像を一度追加し直してからお試しください: " + err.message);
+    return;
+  }
   item.manuallyCropped = true;
   renderMediaPreviews();
   closeCropperDrawer();
@@ -3224,7 +3244,7 @@ window.openEditWork = function(id) {
   document.getElementById("inputMemo").value = w.memo || "";
   
   base64MediaArray = [];
-  if(w.mediaUrls?.length) { w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url, originalDataUrl: m.url }); }); }
+  if(w.mediaUrls?.length) { w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url }); }); }
   renderMediaPreviews(); openDrawer("work");
 };
 
