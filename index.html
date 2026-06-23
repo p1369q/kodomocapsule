@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v81]</title>
+<title>コドモカプセル [v82]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,7 +306,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v81</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v82</div>
       </div>
 
       <div>
@@ -653,7 +653,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v80",
+        app_version: "v82",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1081,6 +1081,8 @@ window.handleFabClick = function() {
     alert("⚠️ 無料プランの上限（10件）に達しています。");
     return;
   }
+  const editingWorkIdEl = document.getElementById("editingWorkId");
+  if(editingWorkIdEl) editingWorkIdEl.value = "";
   openDrawer('work');
 };
 
