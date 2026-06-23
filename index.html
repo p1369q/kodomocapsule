@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v98]</title>
+<title>コドモカプセル [v99]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -232,7 +232,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
               <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。主ユーザーの承認後は、参加済み一覧からコードなしで開けます。</p>
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。親ユーザーの承認後は、参加済み一覧からコードなしで開けます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v98</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v99</div>
       </div>
 
       <div>
@@ -509,7 +509,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         </div>
         <div>
           <div class="font-bold text-indigo-950 mb-0.5">③ 夫婦・家族間でのリアルタイム同期</div>
-          <p>下記に表示される「家族コード」をパートナーが入力すると参加申請が届きます。主ユーザーが承認した後、同じギャラリーを安全に共有・同時編集できます。</p>
+          <p>下記に表示される「家族コード」をパートナーが入力すると参加申請が届きます。親ユーザーが承認した後、同じギャラリーを安全に共有・同時編集できます。</p>
         </div>
         <div class="pt-2 border-t border-indigo-100">
           <div class="font-bold text-amber-700 flex items-center gap-1 mb-1">👑 プレミアム機能と無料プランの違い</div>
@@ -594,7 +594,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
         <button onclick="copyFamilyCode()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-bold shrink-0">コピー</button>
       </div>
-      <p class="text-[10px] text-slate-400 mt-2">パートナーがこのコードで参加申請し、主ユーザーが承認すると、データとプレミアム状態を家族グループ全員で共有できます。</p>
+      <p class="text-[10px] text-slate-400 mt-2">パートナーがこのコードで参加申請し、親ユーザーが承認すると、データとプレミアム状態を家族グループ全員で共有できます。</p>
       <div class="mt-4 pt-4 border-t border-emerald-100">
         <div id="familyJoinRequestArea" class="hidden mb-4">
           <div class="text-xs font-bold text-amber-700 mb-1">🔔 参加申請</div>
@@ -849,7 +849,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v98",
+        app_version: "v99",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1642,7 +1642,7 @@ function renderPendingFamilyRequests() {
     const requestedDate = request.requestedAt ? new Date(request.requestedAt).toLocaleDateString("ja-JP") : "";
     return `<div class="p-3 rounded-xl bg-white border border-amber-100">
       <div class="text-xs font-bold text-slate-700">${request.familyName || "家族グループ"}</div>
-      <div class="text-[10px] text-amber-700 mt-1">主ユーザーの承認待ち${requestedDate ? ` ・ ${requestedDate}申請` : ""}</div>
+      <div class="text-[10px] text-amber-700 mt-1">親ユーザーの承認待ち${requestedDate ? ` ・ ${requestedDate}申請` : ""}</div>
     </div>`;
   }).join("");
 }
@@ -1953,7 +1953,7 @@ async function activateFamilyGroup(familyId, user) {
   if (!isFamilyOwner && !isApprovedMember) {
     hasSelectedFamilyGroup = false;
     currentSession = null;
-    throw new Error("この家族グループは主ユーザーの承認待ちです。");
+    throw new Error("この家族グループは親ユーザーの承認待ちです。");
   }
 
   if (isFamilyOwner && familyData.inviteCode) {
@@ -2233,11 +2233,11 @@ window.joinFamilyGroup = async function() {
     }, { merge: true });
     document.getElementById("joinInviteCodeInput").value = "";
     trackEvent("family_join_request_sent", { family_id: targetDocId });
-    alert("参加申請を送信しました。\n主ユーザーが承認すると、次回からコードなしで利用できます。");
+    alert("参加申請を送信しました。\n親ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
     btn.innerText = "招待コードで参加する"; btn.disabled = false;
     if (e.code === "permission-denied") {
-      alert("参加申請を送信できませんでした。\n\n主ユーザーが一度v72で家族グループを開いていることと、v72のFirestore Rulesが公開済みか確認してください。");
+      alert("参加申請を送信できませんでした。\n\n親ユーザーが一度v72で家族グループを開いていることと、v72のFirestore Rulesが公開済みか確認してください。");
     } else {
       alert("🚨 参加申請エラー: " + e.message);
     }
