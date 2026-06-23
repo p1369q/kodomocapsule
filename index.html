@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v87]</title>
+<title>コドモカプセル [v88]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v87</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v88</div>
       </div>
 
       <div>
@@ -339,6 +339,29 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
       </div>
     </div>
     <button onclick="startLoginFromGuestBanner()" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition whitespace-nowrap">Googleで始める</button>
+  </div>
+  <div id="onboardingGuideBanner" class="hidden mb-5 p-4 sm:p-5 rounded-3xl bg-white border border-sky-100 shadow-sm">
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <div class="text-left">
+        <div class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">🌱 はじめにやること</div>
+        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">まずはこの3ステップで、家族の思い出を残す準備ができます。</p>
+      </div>
+      <button onclick="dismissOnboardingGuide()" class="shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 hover:bg-slate-100 transition">閉じる</button>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-2">
+      <button onclick="startOnboardingStep('child')" class="text-left p-3 rounded-2xl bg-rose-50/70 border border-rose-100 hover:bg-rose-50 transition">
+        <div class="text-xs font-extrabold text-slate-800">1. 子どもを登録</div>
+        <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">名前と誕生日を入れると、当時の年齢を自動表示できます。</p>
+      </button>
+      <button onclick="startOnboardingStep('work')" class="text-left p-3 rounded-2xl bg-amber-50/70 border border-amber-100 hover:bg-amber-50 transition">
+        <div class="text-xs font-extrabold text-slate-800">2. 作品を追加</div>
+        <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">写真やPDFを1つ登録して、ギャラリーを作り始めます。</p>
+      </button>
+      <button onclick="startOnboardingStep('family')" class="text-left p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100 hover:bg-emerald-50 transition">
+        <div class="text-xs font-extrabold text-slate-800">3. 家族に共有</div>
+        <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">家族コードを使って、パートナーと同じ思い出を共有できます。</p>
+      </button>
+    </div>
   </div>
   <div id="premiumBannerArea" class="hidden mb-5 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-900/10 flex justify-between items-center gap-3">
     <div class="flex items-center gap-2">
@@ -777,7 +800,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v87",
+        app_version: "v88",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -878,6 +901,44 @@ window.startLoginFromGuestBanner = function() {
   window.toggleAuth();
 };
 
+function getOnboardingDismissKey() {
+  return currentSession?.familyId ? `kodomocapsule_onboarding_dismissed_${currentSession.familyId}` : "kodomocapsule_onboarding_dismissed";
+}
+
+function updateOnboardingGuideBanner() {
+  const banner = document.getElementById("onboardingGuideBanner");
+  if (!banner) return;
+  const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
+  const isDismissed = localStorage.getItem(getOnboardingDismissKey()) === "1";
+  if (!isGuestMode && currentSession?.familyId && !isDismissed && (localChildren.length === 0 || activeWorksCount === 0)) {
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+  }
+}
+
+window.dismissOnboardingGuide = function() {
+  localStorage.setItem(getOnboardingDismissKey(), "1");
+  updateOnboardingGuideBanner();
+  trackEvent("onboarding_guide_dismiss");
+};
+
+window.startOnboardingStep = function(step) {
+  trackEvent("onboarding_step_click", { step });
+  if (step === "child") {
+    openDrawer("child");
+    switchSettingsTab("children");
+    return;
+  }
+  if (step === "work") {
+    handleFabClick();
+    return;
+  }
+  if (step === "family") {
+    openDrawer("child");
+    setTimeout(() => switchSettingsTab("family"), 0);
+  }
+};
 
 function sanitizeDownloadFileName(value) {
   const base = String(value || "kodomo-capsule")
@@ -2011,7 +2072,7 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner();
 }
 
 document.getElementById("gallerySortSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
