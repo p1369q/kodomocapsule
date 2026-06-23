@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v107]</title>
+<title>コドモカプセル [v108]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -333,7 +333,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v107</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v108</div>
       </div>
 
       <div>
@@ -811,7 +811,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-slate-400 mb-0.5">IMAGE CROP</div>
         <h3 class="text-lg sm:text-xl font-extrabold text-slate-800">画像をトリミング</h3>
-        <p class="cropper-title-note text-[11px] text-slate-400 mt-1">必要な部分だけ切り抜いて保存できます。自由サイズと正方形を選べます。</p>
+        <p class="cropper-title-note text-[11px] text-slate-400 mt-1">必要な部分だけ切り抜いて保存できます。v108以降の画像は元画像も保持します。</p>
       </div>
       <button type="button" onclick="closeCropperDrawer()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -912,7 +912,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v107",
+        app_version: "v108",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2497,12 +2497,14 @@ async function deleteMediaForWork(familyId, work) {
   if (!work?.mediaUrls?.length) return;
   for (let i = 0; i < work.mediaUrls.length; i++) {
     const media = work.mediaUrls[i];
-    if (!media?.url || media.url.startsWith("data:") || media.url.startsWith("guest-")) continue;
-    try {
-      await deleteObject(ref(storage, media.url));
-      continue;
-    } catch(e) {
-      console.warn("URL指定でのStorage削除をスキップしました:", e.code || e.message);
+    const urlsToDelete = [media?.url, media?.originalUrl].filter(Boolean);
+    for (const mediaUrl of urlsToDelete) {
+      if (typeof mediaUrl !== "string" || mediaUrl.startsWith("data:") || mediaUrl.startsWith("guest-")) continue;
+      try {
+        await deleteObject(ref(storage, mediaUrl));
+      } catch(e) {
+        console.warn("URL指定でのStorage削除をスキップしました:", e.code || e.message);
+      }
     }
     try {
       await deleteObject(ref(storage, `families/${familyId}/artworks/${work.id}/${i}.${media.type === "pdf" ? "pdf" : "jpg"}`));
@@ -2973,10 +2975,85 @@ async function prepareImageDataUrl(sourceDataUrl, useAutoTrim = true) {
 async function buildMediaItemFromFile(file, useAutoTrim) {
   const originalDataUrl = await blobToDataUrl(file);
   if (file.type === "application/pdf") {
-    return { type: "pdf", dataUrl: originalDataUrl, originalDataUrl };
+    return { type: "pdf", dataUrl: originalDataUrl };
   }
   const processedDataUrl = await prepareImageDataUrl(originalDataUrl, useAutoTrim);
-  return { type: "image", dataUrl: processedDataUrl, originalDataUrl, autoTrimApplied: !!useAutoTrim };
+  return {
+    type: "image",
+    dataUrl: processedDataUrl,
+    originalDataUrl,
+    hasOriginal: true,
+    autoTrimApplied: !!useAutoTrim
+  };
+}
+
+function mediaItemHasOriginal(item) {
+  return !!(item && item.type === "image" && (item.originalDataUrl || item.originalUrl));
+}
+
+async function getOriginalImageDataUrl(item) {
+  if (!mediaItemHasOriginal(item)) {
+    throw new Error("元画像データが保存されていません");
+  }
+  if (typeof item.originalDataUrl === "string" && item.originalDataUrl.startsWith("data:")) {
+    return item.originalDataUrl;
+  }
+  if (typeof item.originalUrl === "string" && item.originalUrl.startsWith("data:")) {
+    item.originalDataUrl = item.originalUrl;
+    return item.originalDataUrl;
+  }
+  if (typeof item.originalUrl === "string" && item.originalUrl.startsWith("http")) {
+    const response = await fetch(item.originalUrl, { mode: "cors", credentials: "omit" });
+    if (!response.ok) throw new Error("元画像の取得に失敗しました");
+    item.originalDataUrl = await blobToDataUrl(await response.blob());
+    return item.originalDataUrl;
+  }
+  throw new Error("元画像データが保存されていません");
+}
+
+function getCurrentImageDataUrl(item) {
+  if (!item) return null;
+  return item.dataUrl || item.url || null;
+}
+
+function makeStoredMediaItem(type, url, originalUrl = null) {
+  const item = { type, url };
+  if (type === "image" && originalUrl) {
+    item.originalUrl = originalUrl;
+    item.hasOriginal = true;
+  }
+  return item;
+}
+
+async function uploadMediaItemForWork(item, artworkId, index) {
+  const isPdf = item.type === "pdf";
+  if (isPdf) {
+    if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("http")) {
+      return makeStoredMediaItem("pdf", item.dataUrl);
+    }
+    const path = `families/${currentSession.familyId}/artworks/${artworkId}/media_${Date.now()}_${index}.pdf`;
+    const r = ref(storage, path);
+    await uploadString(r, item.dataUrl, "data_url");
+    return makeStoredMediaItem("pdf", await getDownloadURL(r));
+  }
+
+  let originalUrl = item.originalUrl || null;
+  if (typeof item.originalDataUrl === "string" && item.originalDataUrl.startsWith("data:")) {
+    const originalPath = `families/${currentSession.familyId}/artworks/${artworkId}/original_${Date.now()}_${index}.jpg`;
+    const originalRef = ref(storage, originalPath);
+    await uploadString(originalRef, item.originalDataUrl, "data_url");
+    originalUrl = await getDownloadURL(originalRef);
+  }
+
+  if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("http")) {
+    return makeStoredMediaItem("image", item.dataUrl, originalUrl || item.originalUrl || null);
+  }
+
+  const displayPath = `families/${currentSession.familyId}/artworks/${artworkId}/display_${Date.now()}_${index}.jpg`;
+  const displayRef = ref(storage, displayPath);
+  await uploadString(displayRef, item.dataUrl, "data_url");
+  const displayUrl = await getDownloadURL(displayRef);
+  return makeStoredMediaItem("image", displayUrl, originalUrl || displayUrl);
 }
 
 async function showCropperImage(sourceDataUrl, aspectMode = currentCropAspectMode || "free") {
@@ -3008,10 +3085,9 @@ async function showCropperImage(sourceDataUrl, aspectMode = currentCropAspectMod
 }
 
 function ensureOriginalDataUrl(item) {
-  if (!item) return;
-  if (!item.originalDataUrl && typeof item.dataUrl === "string") {
-    item.originalDataUrl = item.dataUrl;
-  }
+  // v108以降は originalDataUrl / originalUrl がある画像だけを「元画像あり」と扱う。
+  // 旧バージョンで保存済みの画像は、現在の表示画像しかないため元画像として扱わない。
+  return item;
 }
 
 window.openCropperForMedia = async function(index, event) {
@@ -3021,26 +3097,20 @@ window.openCropperForMedia = async function(index, event) {
   if (!item || item.type !== "image") return;
   try {
     currentCropMediaIndex = index;
-    ensureOriginalDataUrl(item);
 
-    // トリミング画面は「現在の見た目」を開く。
-    // 元に戻す時だけ originalDataUrl を使う。
-    let currentDataUrl = item.dataUrl;
+    let currentDataUrl = getCurrentImageDataUrl(item);
     if (typeof currentDataUrl === "string" && currentDataUrl.startsWith("http")) {
       const response = await fetch(currentDataUrl, { mode: "cors", credentials: "omit" });
       if (!response.ok) throw new Error("画像の取得に失敗しました");
       currentDataUrl = await blobToDataUrl(await response.blob());
       item.dataUrl = currentDataUrl;
-      if (!item.originalDataUrl || item.originalDataUrl.startsWith("http")) {
-        item.originalDataUrl = currentDataUrl;
-      }
     }
 
     const drawer = document.getElementById("cropperDrawer");
     drawer.classList.add("open");
     currentCropAspectMode = "free";
     await showCropperImage(currentDataUrl, "free");
-    trackEvent("image_crop_open", { media_index: index });
+    trackEvent("image_crop_open", { media_index: index, has_original: mediaItemHasOriginal(item) });
   } catch (err) {
     alert("トリミング画面を開けませんでした: " + err.message);
   }
@@ -3062,8 +3132,9 @@ window.applyAutoTrimToCurrentMedia = async function() {
   const item = base64MediaArray[mediaIndex];
   if (!item || item.type !== "image") return;
   try {
-    ensureOriginalDataUrl(item);
-    const sourceDataUrl = await getImageSourceDataUrl({ ...item, dataUrl: item.originalDataUrl || item.dataUrl });
+    const sourceDataUrl = mediaItemHasOriginal(item)
+      ? await getOriginalImageDataUrl(item)
+      : getCurrentImageDataUrl(item);
     const trimmedDataUrl = await prepareImageDataUrl(sourceDataUrl, true);
     item.dataUrl = trimmedDataUrl;
     item.autoTrimApplied = true;
@@ -3071,7 +3142,7 @@ window.applyAutoTrimToCurrentMedia = async function() {
     renderMediaPreviews();
     await showCropperImage(trimmedDataUrl, currentCropAspectMode || "free");
     alert("自動トリミングを適用しました。元に戻す場合は ↩ 元画像に戻す を押してください。");
-    trackEvent("image_auto_trim_apply", { media_index: mediaIndex });
+    trackEvent("image_auto_trim_apply", { media_index: mediaIndex, has_original: mediaItemHasOriginal(item) });
   } catch (err) {
     alert("自動トリミングに失敗しました: " + err.message);
   }
@@ -3083,26 +3154,23 @@ window.restoreOriginalForCurrentMedia = async function() {
   const item = base64MediaArray[mediaIndex];
   if (!item || item.type !== "image") return;
   try {
-    if (!item.originalDataUrl) {
-      alert("元画像データが残っていないため、この画像は元に戻せません。\n保存済みのトリミング画像を元に戻すには、元の写真をもう一度追加してください。");
+    if (!mediaItemHasOriginal(item)) {
+      alert("この画像は元画像が保存されていないため、元に戻せません。
+
+v108以降で新しく追加・保存した画像は、元画像に戻せます。
+既存の画像は、元の写真をもう一度追加してください。");
       return;
     }
 
-    let originalDataUrl = item.originalDataUrl;
-    if (typeof originalDataUrl === "string" && originalDataUrl.startsWith("http")) {
-      const response = await fetch(originalDataUrl, { mode: "cors", credentials: "omit" });
-      if (!response.ok) throw new Error("元画像の取得に失敗しました");
-      originalDataUrl = await blobToDataUrl(await response.blob());
-      item.originalDataUrl = originalDataUrl;
-    }
-
+    const originalDataUrl = await getOriginalImageDataUrl(item);
     item.dataUrl = originalDataUrl;
     item.autoTrimApplied = false;
     item.manuallyCropped = false;
     renderMediaPreviews();
     await showCropperImage(originalDataUrl, "free");
-    alert("元画像に戻しました。\nこの状態で反映する場合は、カプセル画面下部の『この内容でカプセルを保存』を押してください。");
-    trackEvent("image_crop_restore_original", { media_index: mediaIndex });
+    alert("元画像に戻しました。
+この状態で反映する場合は、カプセル画面下部の『この内容でカプセルを保存』を押してください。");
+    trackEvent("image_crop_restore_original", { media_index: mediaIndex, has_original: true });
   } catch (err) {
     alert("元画像に戻せませんでした: " + err.message);
   }
@@ -3125,7 +3193,7 @@ window.saveCurrentCrop = function() {
   item.autoTrimApplied = false;
   renderMediaPreviews();
   closeCropperDrawer();
-  trackEvent("image_crop_saved", { media_index: mediaIndex, aspect_mode: currentCropAspectMode });
+  trackEvent("image_crop_saved", { media_index: mediaIndex, aspect_mode: currentCropAspectMode, has_original: mediaItemHasOriginal(item) });
 };
 
 window.closeCropperDrawer = function() {
@@ -3172,8 +3240,10 @@ function renderMediaPreviews() {
       previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
     } else {
       const cropBtn = canAddData() ? `<button type="button" onclick="openCropperForMedia(${index}, event)" class="absolute bottom-1.5 right-1.5 rounded-full bg-white/95 text-[10px] font-bold text-slate-600 px-2 py-1 shadow">✂</button>` : ``;
-      const autoBadge = item.autoTrimApplied ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-black/65 text-white text-[9px] font-bold px-2 py-1">自動</div>` : ``;
-      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}${cropBtn}${autoBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      const statusBadge = item.autoTrimApplied
+        ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-black/65 text-white text-[9px] font-bold px-2 py-1">自動</div>`
+        : (mediaItemHasOriginal(item) ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 text-slate-600 text-[9px] font-bold px-2 py-1 shadow">元あり</div>` : ``);
+      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}${cropBtn}${statusBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
     }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
@@ -3209,24 +3279,14 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
     if(editingId) {
       const target = localWorks.find(w => w.id === editingId); let mediaUrls = [];
       for(let i=0; i<base64MediaArray.length; i++) {
-        const currentItem = base64MediaArray[i];
-        if (currentItem.dataUrl.startsWith('http')) { mediaUrls.push({ type: currentItem.type, url: currentItem.dataUrl }); } 
-        else {
-          const isPdf = currentItem.type === "pdf";
-          const path = `families/${currentSession.familyId}/artworks/${target.id}/${Date.now()}_${i}.${isPdf?"pdf":"jpg"}`;
-          const r = ref(storage, path); await uploadString(r, currentItem.dataUrl, "data_url");
-          mediaUrls.push({ type: isPdf ? "pdf" : "image", url: await getDownloadURL(r) });
-        }
+        mediaUrls.push(await uploadMediaItemForWork(base64MediaArray[i], target.id, i));
       }
       await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls });
       trackEvent("work_updated", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category });
     } else {
       const artworkId = crypto.randomUUID(); let mediaUrls = [];
       for(let i=0; i<base64MediaArray.length; i++) {
-        const isPdf = base64MediaArray[i].type === "pdf";
-        const path = `families/${currentSession.familyId}/artworks/${artworkId}/${i}.${isPdf?"pdf":"jpg"}`;
-        const r = ref(storage, path); await uploadString(r, base64MediaArray[i].dataUrl, "data_url");
-        mediaUrls.push({ type: isPdf ? "pdf" : "image", url: await getDownloadURL(r) });
+        mediaUrls.push(await uploadMediaItemForWork(base64MediaArray[i], artworkId, i));
       }
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false });
       trackEvent("work_created", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category });
@@ -3328,7 +3388,16 @@ window.openEditWork = function(id) {
   document.getElementById("inputMemo").value = w.memo || "";
   
   base64MediaArray = [];
-  if(w.mediaUrls?.length) { w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url }); }); }
+  if(w.mediaUrls?.length) {
+    w.mediaUrls.forEach(m => {
+      base64MediaArray.push({
+        type: m.type,
+        dataUrl: m.url,
+        originalUrl: m.originalUrl || null,
+        hasOriginal: !!m.originalUrl
+      });
+    });
+  }
   renderMediaPreviews(); openDrawer("work");
 };
 
@@ -3364,11 +3433,7 @@ window.deleteWorkPermanently = async function(id, title, silent = false) {
   const target = localWorks.find(w => w.id === id); if(!target) return;
   if(isGuestMode) { localWorks = localWorks.filter(w => w.id !== id); renderAll(); if(!silent) { trackEvent("work_permanently_deleted", { work_id: id, is_guest: true }); alert("完全に消去しました。"); } return; }
   try {
-    if(target.mediaUrls?.length) {
-      for(let i=0; i<target.mediaUrls.length; i++) {
-        try { await deleteObject(ref(storage, `families/${currentSession.familyId}/artworks/${target.id}/${i}.${target.mediaUrls[i].type==="pdf"?"pdf":"jpg"}`)); } catch(e){}
-      }
-    }
+    await deleteMediaForWork(currentSession.familyId, target);
     await deleteDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId));
     if(!silent) alert("完全に消去しました。\nこのカプセルは元に戻せません。");
   } catch(err) { if(!silent) alert(err.message); }
