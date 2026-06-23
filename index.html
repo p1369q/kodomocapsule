@@ -3,18 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v99]</title>
+<title>コドモカプセル [v101]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
 <style>
 :root{--bg:#F7F4EE;--card:#FFFFFF;--ink:#1E293B;--muted:#64748B;--accent:#FF6B6B;--accent-dark:#E55B5B;--gold:#D6B25E;--border:#E7E1D7;--danger:#D66A5E;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',sans-serif;}
 button{cursor:pointer;}
 input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:white;outline:none;}
+input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;border-radius:0;background:transparent;outline:none;}
 .hidden{display:none !important;}
+.cropper-bg{background-image:linear-gradient(45deg,#f8fafc 25%,transparent 25%),linear-gradient(-45deg,#f8fafc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f8fafc 75%),linear-gradient(-45deg,transparent 75%,#f8fafc 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0px;}
+.crop-chip{height:34px;padding:0 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:#475569;font-size:12px;font-weight:700;}
+.crop-chip.active{background:#FFF1F2;color:var(--accent-dark);border-color:#fecdd3;}
 .page{display:none;}
 .page.active{display:block;}
 .glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.88);}
@@ -312,7 +317,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v99</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v101</div>
       </div>
 
       <div>
@@ -340,6 +345,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
     </div>
     <button onclick="startLoginFromGuestBanner()" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition whitespace-nowrap">Googleで始める</button>
   </div>
+  <div id="currentPermissionBadge" class="hidden mb-5 inline-flex items-center rounded-full bg-white border border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-500 shadow-sm"></div>
   <div id="onboardingGuideBanner" class="hidden mb-5 p-4 sm:p-5 rounded-3xl bg-white border border-sky-100 shadow-sm">
     <div class="flex items-start justify-between gap-3 mb-3">
       <div class="text-left">
@@ -467,6 +473,11 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <button type="button" onclick="document.getElementById('cameraInput').click()" class="sm:hidden py-3.5 rounded-2xl border border-rose-200 bg-rose-50 text-[#e55b5b] text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm">📸 今すぐ写真を撮る</button>
           <button type="button" onclick="document.getElementById('fileInput').click()" class="w-full py-3.5 rounded-2xl border-2 border-dashed border-slate-300 bg-white text-slate-600 text-xs font-bold flex items-center justify-center gap-1.5">🖼️ 写真・PDFを選ぶ</button>
         </div>
+        <label class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
+          <input id="autoCropToggle" type="checkbox" checked class="accent-[#ff6b6b]">
+          <span><strong class="text-slate-700">自動トリミング</strong>を使う（写真の白い余白をできるだけ自動で整えます）</span>
+        </label>
+        <p class="text-[10px] text-slate-400 leading-relaxed">画像を追加したあと、各画像の <span class="font-bold">✂ トリミング</span> から手動調整もできます。PDFはそのまま保存されます。</p>
         <div id="mediaResultContainer" class="grid grid-cols-3 gap-2 mt-4"></div>
       </div>
       <button type="submit" id="workSubmitBtn" class="w-full py-4 rounded-2xl text-white font-bold text-base bg-[#ff6b6b] hover:bg-[#ff5252] shadow-lg shadow-rose-900/10 transition">この内容でカプセルを保存</button>
@@ -604,7 +615,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <div class="flex items-center justify-between gap-2 mb-2">
           <div>
             <div class="text-xs font-bold text-emerald-800">👥 参加メンバー</div>
-            <p id="familyMemberManageHint" class="text-[10px] text-slate-400 mt-1">メンバー情報を読み込んでいます。</p>
+            <p id="familyMemberManageHint" class="text-[10px] text-slate-400 mt-1">メンバー情報と権限を読み込んでいます。</p>
           </div>
         </div>
         <div id="familyMemberList" class="space-y-2"></div>
@@ -777,6 +788,36 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+
+<div id="cropperDrawer" class="drawer z-[1200]">
+  <div class="drawer-panel max-w-4xl p-0 overflow-hidden bg-white">
+    <div class="flex justify-between items-center px-5 py-4 border-b border-slate-100">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 mb-0.5">IMAGE CROP</div>
+        <h3 class="text-lg sm:text-xl font-extrabold text-slate-800">画像をトリミング</h3>
+        <p class="text-[11px] text-slate-400 mt-1">必要な部分だけ切り抜いて保存できます。自由サイズと正方形を選べます。</p>
+      </div>
+      <button type="button" onclick="closeCropperDrawer()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
+    </div>
+    <div class="p-4 sm:p-5 space-y-4">
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="cropFreeBtn" onclick="setCropAspectMode('free')" class="crop-chip active">自由</button>
+        <button type="button" id="cropSquareBtn" onclick="setCropAspectMode('square')" class="crop-chip">正方形</button>
+        <button type="button" onclick="applyAutoTrimToCurrentMedia()" class="crop-chip">✨ 自動トリミング</button>
+      </div>
+      <div class="cropper-bg rounded-3xl border border-slate-200 overflow-hidden min-h-[280px] sm:min-h-[420px] flex items-center justify-center">
+        <img id="cropperImage" src="" alt="crop target" class="max-w-full block">
+      </div>
+      <p class="text-[11px] text-slate-400">ピンチやドラッグで位置を調整し、保存するとこの画像だけが置き換わります。</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button type="button" onclick="saveCurrentCrop()" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">このトリミングで保存</button>
+        <button type="button" onclick="closeCropperDrawer()" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script type="importmap">
@@ -836,6 +877,11 @@ let isResolvingFamilyChoice = false;
 let savedJoinedFamilies = [];
 let pendingJoinFamilies = [];
 let accountDeletionState = null;
+let cropperInstance = null;
+let currentCropMediaIndex = null;
+let currentCropAspectMode = "free";
+let currentFamilyData = null;
+let currentUserPermission = "delete";
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -849,7 +895,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v99",
+        app_version: "v101",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -857,6 +903,55 @@ function trackEvent(name, params = {}) {
   } catch (e) {
     console.warn("Analytics event skipped:", name, e);
   }
+}
+
+const FAMILY_PERMISSION_LABELS = {
+  view: "閲覧のみ",
+  add: "閲覧・追加のみ",
+  delete: "閲覧・追加・削除"
+};
+
+function normalizeFamilyPermission(value) {
+  if (["view", "add", "delete"].includes(value)) return value;
+  if (value === true) return "delete";
+  return "none";
+}
+
+function getMemberPermission(familyData, uid) {
+  if (!familyData || !uid) return "none";
+  if (familyData.createdBy === uid) return "delete";
+  const explicitPermission = familyData.memberPermissions?.[uid];
+  if (["view", "add", "delete"].includes(explicitPermission)) return explicitPermission;
+  return normalizeFamilyPermission(familyData.members?.[uid]);
+}
+
+function refreshCurrentPermission(familyData, user) {
+  currentFamilyData = familyData || null;
+  currentUserPermission = user ? getMemberPermission(familyData, user.uid) : "none";
+}
+
+function canAddData() {
+  if (isGuestMode) return true;
+  return currentUserPermission === "add" || currentUserPermission === "delete";
+}
+
+function canEditOrDeleteData() {
+  if (isGuestMode) return true;
+  return currentUserPermission === "delete";
+}
+
+function getPermissionDeniedMessage(action) {
+  if (currentUserPermission === "view") return `現在の権限は「閲覧のみ」です。${action}は親ユーザーに権限変更を依頼してください。`;
+  if (currentUserPermission === "add") return `現在の権限は「閲覧・追加のみ」です。${action}は親ユーザーに権限変更を依頼してください。`;
+  return `${action}を行う権限がありません。`;
+}
+
+function updatePermissionNotice() {
+  const badge = document.getElementById("currentPermissionBadge");
+  if (!badge) return;
+  if (isGuestMode || !currentSession) { badge.classList.add("hidden"); return; }
+  badge.classList.remove("hidden");
+  badge.innerText = `あなたの権限：${FAMILY_PERMISSION_LABELS[currentUserPermission] || "未設定"}`;
 }
 
 function createGuestSvgDataUrl(label, subLabel, bgColor, accentColor) {
@@ -868,6 +963,8 @@ window.enterGuestMode = function() {
   trackEvent("guest_start");
   isGuestMode = true;
   currentSession = null;
+  currentFamilyData = null;
+  currentUserPermission = "delete";
   isPremiumUser = false;
   stopRealtimeSync();
 
@@ -928,6 +1025,7 @@ window.enterGuestMode = function() {
   if(btnText) btnText.innerText = "ログイン";
   renderAll();
   updateGuestLoginBanner();
+  updatePermissionNotice();
   switchPage('gallery');
 };
 
@@ -1466,10 +1564,12 @@ function updatePlanUI() {
     if(pBtn) pBtn.classList.remove("hidden");
     if(testPlanToggleArea) testPlanToggleArea.classList.add("hidden");
   }
+  updatePermissionNotice();
   renderGallery();
 }
 
 window.handleFabClick = function() {
+  if(!canAddData()) { alert(getPermissionDeniedMessage("カプセルの追加")); return; }
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && activeWorksCount >= 10) {
     trackEvent("free_limit_add_blocked", { active_works_count: activeWorksCount });
@@ -1770,6 +1870,14 @@ function startJoinRequestSync(familyId, familyData, user) {
       return `<div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
         <div class="text-xs font-bold text-slate-700">${name}</div>
         <div class="text-[10px] text-slate-400 mt-0.5">${request.email || ""}</div>
+        <div class="mt-3">
+          <label class="block text-[10px] font-bold text-slate-500 mb-1">承認後の権限</label>
+          <select id="joinPermission-${request.docId}" class="py-2 px-3 rounded-lg text-[10px] bg-white border border-amber-200">
+            <option value="view">閲覧のみ</option>
+            <option value="add" selected>閲覧・追加のみ</option>
+            <option value="delete">閲覧・追加・削除</option>
+          </select>
+        </div>
         <div class="grid grid-cols-2 gap-2 mt-3">
           <button onclick="approveFamilyJoinRequest('${request.docId}')" class="py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-bold">承認する</button>
           <button onclick="rejectFamilyJoinRequest('${request.docId}')" class="py-2 rounded-lg bg-white border border-rose-200 text-rose-600 text-[10px] font-bold">拒否する</button>
@@ -1797,8 +1905,11 @@ window.approveFamilyJoinRequest = async function(requestDocId) {
   const requestData = requestSnap.data();
 
   try {
+    const permissionSelect = document.getElementById(`joinPermission-${requestDocId}`);
+    const selectedPermission = permissionSelect?.value || "add";
     await updateDoc(familyRef, {
       [`members.${requestData.userId}`]: true,
+      [`memberPermissions.${requestData.userId}`]: selectedPermission,
       [`memberProfiles.${requestData.userId}`]: {
         email: requestData.email || "",
         displayName: requestData.displayName || "",
@@ -1809,7 +1920,8 @@ window.approveFamilyJoinRequest = async function(requestDocId) {
     await updateDoc(requestRef, {
       status: "approved",
       approvedAt: Date.now(),
-      approvedBy: user.uid
+      approvedBy: user.uid,
+      permission: selectedPermission
     });
     alert("参加申請を承認しました。");
   } catch (e) {
@@ -1847,27 +1959,64 @@ function renderFamilyMembers(familyData, user) {
   const memberIds = Object.keys(familyData.members || {});
   const isOwner = familyData.createdBy === user.uid;
   hint.innerText = isOwner
-    ? "グループ作成者は、招待したメンバーの利用を解除できます。"
-    : "メンバーの追加・削除はグループ作成者のみ行えます。";
+    ? "親ユーザーは、招待したメンバーの権限変更・削除ができます。"
+    : `あなたの権限は「${FAMILY_PERMISSION_LABELS[getMemberPermission(familyData, user.uid)] || "未設定"}」です。権限変更は親ユーザーのみ行えます。`;
 
   list.innerHTML = memberIds.map((uid) => {
     const profile = familyData.memberProfiles?.[uid] || {};
     const isCurrentUser = uid === user.uid;
     const isGroupOwner = uid === familyData.createdBy;
     const name = profile.displayName || profile.email || (isCurrentUser ? "あなた" : `メンバー ${uid.slice(0, 6)}`);
-    const role = isGroupOwner ? "管理者" : "メンバー";
+    const permission = getMemberPermission(familyData, uid);
+    const role = isGroupOwner ? "親ユーザー" : "メンバー";
+    const permissionSelect = isOwner && !isGroupOwner
+      ? `<select onchange="updateFamilyMemberPermission('${uid}', this.value)" class="py-2 px-3 rounded-xl text-[10px] bg-white border border-emerald-100">
+          <option value="view" ${permission === "view" ? "selected" : ""}>閲覧のみ</option>
+          <option value="add" ${permission === "add" ? "selected" : ""}>閲覧・追加のみ</option>
+          <option value="delete" ${permission === "delete" ? "selected" : ""}>閲覧・追加・削除</option>
+        </select>`
+      : `<span class="inline-flex px-2 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">${FAMILY_PERMISSION_LABELS[permission] || "未設定"}</span>`;
     const removeButton = isOwner && !isGroupOwner
       ? `<button onclick="removeFamilyMember('${uid}')" class="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-[10px] text-rose-600 font-bold">削除</button>`
       : "";
-    return `<div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-emerald-100">
-      <div class="min-w-0">
-        <div class="text-xs font-bold text-slate-700 truncate">${name}${isCurrentUser ? "（あなた）" : ""}</div>
-        <div class="text-[10px] text-slate-400 mt-0.5">${role}</div>
+    return `<div class="p-3 rounded-xl bg-white border border-emerald-100">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-xs font-bold text-slate-700 truncate">${name}${isCurrentUser ? "（あなた）" : ""}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${role}</div>
+        </div>
+        ${removeButton}
       </div>
-      ${removeButton}
+      <div class="mt-2 flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold text-slate-400">権限</span>
+        ${permissionSelect}
+      </div>
     </div>`;
   }).join("") || "<p class='text-[10px] text-slate-400'>参加メンバーが見つかりません。</p>";
 }
+
+window.updateFamilyMemberPermission = async function(memberUid, permission) {
+  const user = auth.currentUser;
+  if (!user || !currentSession?.familyId || !memberUid) return;
+  if (!["view", "add", "delete"].includes(permission)) return;
+  const familyRef = doc(db, "families", currentSession.familyId);
+  const familySnap = await getDoc(familyRef);
+  if (!familySnap.exists() || familySnap.data().createdBy !== user.uid) {
+    alert("権限を変更できるのは親ユーザーだけです。");
+    return;
+  }
+  if (memberUid === user.uid || familySnap.data().createdBy === memberUid) return;
+  try {
+    await updateDoc(familyRef, {
+      [`members.${memberUid}`]: true,
+      [`memberPermissions.${memberUid}`]: permission,
+      updatedAt: Date.now()
+    });
+    trackEvent("family_member_permission_updated", { permission });
+  } catch (e) {
+    alert("権限の変更に失敗しました: " + e.message);
+  }
+};
 
 window.useSavedFamilyGroup = async function(familyId) {
   const user = auth.currentUser;
@@ -1901,6 +2050,7 @@ window.removeFamilyMember = async function(memberUid) {
     await updateDoc(familyRef, {
       [`members.${memberUid}`]: deleteField(),
       [`memberProfiles.${memberUid}`]: deleteField(),
+      [`memberPermissions.${memberUid}`]: deleteField(),
       updatedAt: Date.now()
     });
     const requestRef = doc(db, "familyJoinRequests", `${currentSession.familyId}_${memberUid}`);
@@ -1948,6 +2098,8 @@ async function activateFamilyGroup(familyId, user) {
   if (!famSnap.exists()) throw new Error("家族グループが見つかりません。");
 
   const familyData = famSnap.data();
+  refreshCurrentPermission(familyData, user);
+  updatePermissionNotice();
   const isFamilyOwner = familyData.createdBy === user.uid;
   const isApprovedMember = familyData.members?.[user.uid] === true;
   if (!isFamilyOwner && !isApprovedMember) {
@@ -1985,7 +2137,9 @@ async function activateFamilyGroup(familyId, user) {
   }
 
   isPremiumUser = famSnap.data().plan === "premium";
+  refreshCurrentPermission(famSnap.data(), user);
   updatePlanUI();
+  updatePermissionNotice();
   renderFamilyMembers(famSnap.data(), user);
   startJoinRequestSync(familyId, famSnap.data(), user);
 
@@ -2005,7 +2159,9 @@ async function activateFamilyGroup(familyId, user) {
       return;
     }
     isPremiumUser = latestFamilyData.plan === "premium";
+    refreshCurrentPermission(latestFamilyData, user);
     updatePlanUI();
+    updatePermissionNotice();
     renderFamilyMembers(latestFamilyData, user);
     startJoinRequestSync(familyId, latestFamilyData, user);
   });
@@ -2172,6 +2328,7 @@ window.createNewFamilyGroup = async function() {
       createdAt: Date.now(),
       createdBy: user.uid,
       members: { [user.uid]: true },
+      memberPermissions: { [user.uid]: "delete" },
       memberProfiles: {
         [user.uid]: {
           email: user.email || "",
@@ -2569,6 +2726,8 @@ window.saveChild = async function(){
   if(!currentSession) return;
   const name = document.getElementById("childName").value.trim();
   const editingId = document.getElementById("editingChildId").value;
+  if(!canAddData() && !editingId) { alert(getPermissionDeniedMessage("子どもの追加")); return; }
+  if(editingId && !canEditOrDeleteData()) { alert(getPermissionDeniedMessage("子ども情報の編集")); return; }
   if(!name){ alert("名前を入力してください"); return; }
   if (!isPremiumUser && !editingId && localChildren.length >= 1) {
     alert("⚠️ 無料プランではお子様は1名様までとなります。"); return;
@@ -2589,6 +2748,7 @@ window.saveChild = async function(){
 };
 
 window.editChild = function(id) {
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("子ども情報の編集")); return; }
   const c = localChildren.find(item => item.id === id); if(!c) return;
   document.getElementById("editingChildId").value = c.id;
   document.getElementById("childName").value = c.name;
@@ -2613,6 +2773,7 @@ window.cancelChildEdit = function() {
 
 window.deleteChild = async function(id, name) {
   if(isGuestMode) { showGuestModeSaveAlert(); return; }
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("子どもの削除")); return; }
   if(!confirm(`「${name}」ちゃんを削除しますか？`)) return;
   const target = localChildren.find(c => c.id === id);
   if(target) await deleteDoc(doc(db, "families", currentSession.familyId, "children", target.docId));
@@ -2623,6 +2784,8 @@ window.saveCategory = async function() {
   if(!currentSession) return;
   const name = document.getElementById("categoryName").value.trim();
   const editingId = document.getElementById("editingCategoryId").value;
+  if(!canAddData() && !editingId) { alert(getPermissionDeniedMessage("カテゴリの追加")); return; }
+  if(editingId && !canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カテゴリの編集")); return; }
   if(!name) { alert("カテゴリ名を入力してください"); return; }
 
   try {
@@ -2639,6 +2802,7 @@ window.saveCategory = async function() {
 };
 
 window.editCategory = function(id) {
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カテゴリの編集")); return; }
   const c = localCategories.find(item => item.id === id); if(!c) return;
   document.getElementById("editingCategoryId").value = c.id;
   document.getElementById("categoryName").value = c.name;
@@ -2654,6 +2818,7 @@ window.cancelCategoryEdit = function() {
 };
 
 window.deleteCategory = async function(id, name) {
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カテゴリの削除")); return; }
   if(!confirm(`カテゴリ「${name}」を削除しますか？\n（※既存のカプセルデータのカテゴリ表示が未分類になります）`)) return;
   const target = localCategories.find(c => c.id === id);
   if(target) await deleteDoc(doc(db, "families", currentSession.familyId, "categories", target.docId));
@@ -2670,11 +2835,194 @@ function populateCategorySelect() {
 function renderCategoryList() {
   let html = "";
   localCategories.forEach(c => {
-    html += `<div class="premium-card p-3 flex justify-between items-center bg-slate-50 border-slate-200 text-xs"><div class="font-semibold text-slate-700">🏷️ ${c.name}</div><div class="flex gap-3"><button onclick="editCategory('${c.id}')" class="text-slate-500 font-medium">✏️ 編集</button><button onclick="deleteCategory('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`;
+    const actionButtons = canEditOrDeleteData()
+      ? `<div class="flex gap-3"><button onclick="editCategory('${c.id}')" class="text-slate-500 font-medium">✏️ 編集</button><button onclick="deleteCategory('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div>`
+      : `<span class="text-[10px] text-slate-400 font-bold">閲覧のみ</span>`;
+    html += `<div class="premium-card p-3 flex justify-between items-center bg-slate-50 border-slate-200 text-xs"><div class="font-semibold text-slate-700">🏷️ ${c.name}</div>${actionButtons}</div>`;
   });
   const listEl = document.getElementById("categoryList");
   if(listEl) listEl.innerHTML = html || "<p class='text-xs text-slate-400 text-center py-2'>カスタムカテゴリはありません</p>";
 }
+
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function getImageSourceDataUrl(item) {
+  if (item.originalDataUrl) return item.originalDataUrl;
+  if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("data:")) return item.dataUrl;
+  if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("http")) {
+    const response = await fetch(item.dataUrl);
+    if (!response.ok) throw new Error("画像の取得に失敗しました");
+    const dataUrl = await blobToDataUrl(await response.blob());
+    item.originalDataUrl = dataUrl;
+    return dataUrl;
+  }
+  return item.dataUrl;
+}
+
+function loadImageFromSource(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
+    img.src = src;
+  });
+}
+
+function resizeCanvasToDataUrl(canvas, maxEdge = 1400, quality = 0.85) {
+  let targetCanvas = canvas;
+  if (canvas.width > maxEdge || canvas.height > maxEdge) {
+    const scale = Math.min(maxEdge / canvas.width, maxEdge / canvas.height);
+    const resized = document.createElement("canvas");
+    resized.width = Math.max(1, Math.round(canvas.width * scale));
+    resized.height = Math.max(1, Math.round(canvas.height * scale));
+    const resizedCtx = resized.getContext("2d");
+    resizedCtx.drawImage(canvas, 0, 0, resized.width, resized.height);
+    targetCanvas = resized;
+  }
+  return targetCanvas.toDataURL("image/jpeg", quality);
+}
+
+function trimWhitespaceCanvas(canvas) {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const width = canvas.width;
+  const height = canvas.height;
+  const imageData = ctx.getImageData(0, 0, width, height).data;
+  let left = width, right = -1, top = height, bottom = -1;
+  const whiteThreshold = 245;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const r = imageData[idx];
+      const g = imageData[idx + 1];
+      const b = imageData[idx + 2];
+      const a = imageData[idx + 3];
+      const isContent = a > 20 && !(r >= whiteThreshold && g >= whiteThreshold && b >= whiteThreshold);
+      if (isContent) {
+        if (x < left) left = x;
+        if (x > right) right = x;
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+      }
+    }
+  }
+
+  if (right === -1 || bottom === -1) return canvas;
+
+  const padding = Math.max(8, Math.round(Math.min(width, height) * 0.02));
+  left = Math.max(0, left - padding);
+  top = Math.max(0, top - padding);
+  right = Math.min(width - 1, right + padding);
+  bottom = Math.min(height - 1, bottom + padding);
+
+  const cropWidth = right - left + 1;
+  const cropHeight = bottom - top + 1;
+  if (cropWidth <= 0 || cropHeight <= 0) return canvas;
+  if (cropWidth >= width * 0.98 && cropHeight >= height * 0.98) return canvas;
+
+  const trimmed = document.createElement("canvas");
+  trimmed.width = cropWidth;
+  trimmed.height = cropHeight;
+  const trimmedCtx = trimmed.getContext("2d");
+  trimmedCtx.drawImage(canvas, left, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+  return trimmed;
+}
+
+async function prepareImageDataUrl(sourceDataUrl, useAutoTrim = true) {
+  const img = await loadImageFromSource(sourceDataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  const targetCanvas = useAutoTrim ? trimWhitespaceCanvas(canvas) : canvas;
+  return resizeCanvasToDataUrl(targetCanvas);
+}
+
+async function buildMediaItemFromFile(file, useAutoTrim) {
+  const originalDataUrl = await blobToDataUrl(file);
+  if (file.type === "application/pdf") {
+    return { type: "pdf", dataUrl: originalDataUrl, originalDataUrl };
+  }
+  const processedDataUrl = await prepareImageDataUrl(originalDataUrl, useAutoTrim);
+  return { type: "image", dataUrl: processedDataUrl, originalDataUrl, autoTrimApplied: !!useAutoTrim };
+}
+
+window.openCropperForMedia = async function(index, event) {
+  if (event) event.stopPropagation();
+  if (!canAddData()) { alert("この家族グループでは、あなたの権限では画像編集できません。"); return; }
+  const item = base64MediaArray[index];
+  if (!item || item.type !== "image") return;
+  try {
+    currentCropMediaIndex = index;
+    const sourceDataUrl = await getImageSourceDataUrl(item);
+    const cropperImage = document.getElementById("cropperImage");
+    cropperImage.src = sourceDataUrl;
+    const drawer = document.getElementById("cropperDrawer");
+    drawer.classList.add("open");
+    await new Promise(resolve => setTimeout(resolve, 40));
+    if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+    cropperInstance = new Cropper(cropperImage, { viewMode: 1, dragMode: "move", autoCropArea: 1, responsive: true, restore: false, background: false, movable: true, zoomable: true, rotatable: false, scalable: false, guides: true });
+    setCropAspectMode("free");
+    trackEvent("image_crop_open", { media_index: index });
+  } catch (err) {
+    alert("トリミング画面を開けませんでした: " + err.message);
+  }
+};
+
+window.setCropAspectMode = function(mode) {
+  currentCropAspectMode = mode;
+  const freeBtn = document.getElementById("cropFreeBtn");
+  const squareBtn = document.getElementById("cropSquareBtn");
+  if (freeBtn) freeBtn.classList.toggle("active", mode === "free");
+  if (squareBtn) squareBtn.classList.toggle("active", mode === "square");
+  if (!cropperInstance) return;
+  cropperInstance.setAspectRatio(mode === "square" ? 1 : NaN);
+};
+
+window.applyAutoTrimToCurrentMedia = async function() {
+  if (currentCropMediaIndex === null) return;
+  const item = base64MediaArray[currentCropMediaIndex];
+  if (!item || item.type !== "image") return;
+  try {
+    const sourceDataUrl = await getImageSourceDataUrl(item);
+    item.dataUrl = await prepareImageDataUrl(sourceDataUrl, true);
+    item.autoTrimApplied = true;
+    renderMediaPreviews();
+    closeCropperDrawer();
+    alert("自動トリミングを適用しました。必要ならもう一度 ✂ から微調整できます。");
+    trackEvent("image_auto_trim_apply", { media_index: currentCropMediaIndex });
+  } catch (err) {
+    alert("自動トリミングに失敗しました: " + err.message);
+  }
+};
+
+window.saveCurrentCrop = function() {
+  if (currentCropMediaIndex === null || !cropperInstance) return;
+  const croppedCanvas = cropperInstance.getCroppedCanvas({ imageSmoothingEnabled: true, imageSmoothingQuality: "high", fillColor: "#ffffff" });
+  if (!croppedCanvas) { alert("トリミング結果を取得できませんでした。"); return; }
+  const item = base64MediaArray[currentCropMediaIndex];
+  item.dataUrl = resizeCanvasToDataUrl(croppedCanvas);
+  item.manuallyCropped = true;
+  renderMediaPreviews();
+  closeCropperDrawer();
+  trackEvent("image_crop_saved", { media_index: currentCropMediaIndex, aspect_mode: currentCropAspectMode });
+};
+
+window.closeCropperDrawer = function() {
+  const drawer = document.getElementById("cropperDrawer");
+  if (drawer) drawer.classList.remove("open");
+  if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+  currentCropMediaIndex = null;
+};
 
 async function processSelectedFiles(files) {
   if(!files.length) return;
@@ -2685,34 +3033,24 @@ async function processSelectedFiles(files) {
     const mm = String(fileDate.getMonth() + 1).padStart(2, '0');
     const dd = String(fileDate.getDate()).padStart(2, '0');
     const inputDateEl = document.getElementById("inputDate");
-    if (inputDateEl) {
-      inputDateEl.value = `${yyyy}-${mm}-${dd}`;
-    }
+    if (inputDateEl) inputDateEl.value = `${yyyy}-${mm}-${dd}`;
   }
 
-  const processPromises = files.map(file => {
-    return new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        if (file.type === 'application/pdf') { resolve({ type: "pdf", dataUrl: evt.target.result }); } 
-        else {
-          const img = new Image();
-          img.onload = function() {
-            const max = 1000; let w = img.width, h = img.height;
-            if (w > h && w > max) { h *= max / w; w = max; } else if (h > max) { w *= max / h; h = max; }
-            const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve({ type: "image", dataUrl: canvas.toDataURL('image/jpeg', 0.75) });
-          };
-          img.src = evt.target.result;
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-  const newResults = await Promise.all(processPromises);
+  const autoTrimEnabled = !!document.getElementById("autoCropToggle")?.checked;
+  const newResults = [];
+  for (const file of files) {
+    try {
+      const item = await buildMediaItemFromFile(file, autoTrimEnabled && file.type !== "application/pdf");
+      newResults.push(item);
+    } catch (err) {
+      alert(`「${file.name}」の取り込みに失敗しました: ${err.message}`);
+    }
+  }
   base64MediaArray = base64MediaArray.concat(newResults);
   renderMediaPreviews();
+  if (newResults.some(item => item.type === "image" && item.autoTrimApplied)) {
+    trackEvent("image_auto_trim_on_add", { image_count: newResults.filter(item => item.type === "image").length });
+  }
 }
 
 function renderMediaPreviews() {
@@ -2722,7 +3060,9 @@ function renderMediaPreviews() {
     if(item.type === "pdf") {
       previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
     } else {
-      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      const cropBtn = canAddData() ? `<button type="button" onclick="openCropperForMedia(${index}, event)" class="absolute bottom-1.5 right-1.5 rounded-full bg-white/95 text-[10px] font-bold text-slate-600 px-2 py-1 shadow">✂</button>` : ``;
+      const autoBadge = item.autoTrimApplied ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-black/65 text-white text-[9px] font-bold px-2 py-1">自動</div>` : ``;
+      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}${cropBtn}${autoBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
     }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
@@ -2740,6 +3080,8 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
   if(isGuestMode) { showGuestModeSaveAlert(); return; }
   if(!currentSession) return;
   const editingId = document.getElementById("editingWorkId").value;
+  if(!canAddData() && !editingId) { alert(getPermissionDeniedMessage("カプセルの追加")); return; }
+  if(editingId && !canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カプセルの編集")); return; }
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && !editingId && activeWorksCount >= 10) {
     alert("⚠️ 無料プラン上限に達しているため新規登録できません。"); return;
@@ -2787,6 +3129,7 @@ window.toggleFavorite = async function(id, event) {
   if (event) event.stopPropagation();
   const target = localWorks.find(w => w.id === id); if(!target) return;
   if(isGuestMode) { target.isFavorite = !target.isFavorite; renderAll(); return; }
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("お気に入り変更")); return; }
   if(!currentSession) return;
   await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isFavorite: !target.isFavorite });
 };
@@ -2862,6 +3205,7 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
 };
 
 window.openEditWork = function(id) {
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カプセルの編集")); return; }
   const w = localWorks.find(item => item.id === id); if(!w || w.isDeleted) return; 
   trackEvent("work_edit_open", { work_id: id });
   document.getElementById("editingWorkId").value = w.id;
@@ -2873,11 +3217,12 @@ window.openEditWork = function(id) {
   document.getElementById("inputMemo").value = w.memo || "";
   
   base64MediaArray = [];
-  if(w.mediaUrls?.length) { w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url }); }); }
+  if(w.mediaUrls?.length) { w.mediaUrls.forEach(m => { base64MediaArray.push({ type: m.type, dataUrl: m.url, originalDataUrl: m.url }); }); }
   renderMediaPreviews(); openDrawer("work");
 };
 
 window.trashWork = async function(id, title) {
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カプセルの削除")); return; }
   if(!confirm(`「${title}」をゴミ箱に移動しますか？
 
 ゴミ箱に移動したカプセルは30日以内であれば元に戻せます。`)) return;
@@ -2890,6 +3235,7 @@ window.trashWork = async function(id, title) {
 };
 
 window.restoreWork = async function(id) {
+  if(!canEditOrDeleteData()) { alert(getPermissionDeniedMessage("カプセルの復元")); return; }
   const target = localWorks.find(w => w.id === id);
   if(isGuestMode) { if(target) { target.isDeleted = false; renderAll(); trackEvent("work_restored", { work_id: id, is_guest: true }); alert("カプセルをゴミ箱から戻しました。"); } return; }
   if(target) {
@@ -2900,6 +3246,7 @@ window.restoreWork = async function(id) {
 };
 
 window.deleteWorkPermanently = async function(id, title, silent = false) {
+  if(!canEditOrDeleteData()) { if(!silent) alert(getPermissionDeniedMessage("カプセルの完全削除")); return; }
   if(!silent && !confirm(`「${title}」を完全に消去しますか？
 
 この操作は取り消せません。写真・PDFも削除されます。`)) return;
@@ -2925,14 +3272,18 @@ async function cleanupOldTrash() {
 
 function renderChildList(){
   let html = "";
-  localChildren.forEach(c => { 
-    html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50"><div class="font-semibold text-slate-700">${c.name}</div><div class="flex gap-3 text-xs"><button onclick="editChild('${c.id}')" class="text-rose-500 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div></div>`; 
+  localChildren.forEach(c => {
+    const actionButtons = canEditOrDeleteData()
+      ? `<div class="flex gap-3 text-xs"><button onclick="editChild('${c.id}')" class="text-rose-500 font-medium">✏️ 編集</button><button onclick="deleteChild('${c.id}', '${c.name}')" class="text-rose-500 font-medium">🗑️ 削除</button></div>`
+      : `<span class="text-[10px] text-slate-400 font-bold">閲覧のみ</span>`;
+    html += `<div class="premium-card p-4 flex justify-between items-center bg-slate-50"><div class="font-semibold text-slate-700">${c.name}</div>${actionButtons}</div>`; 
   });
   const cList = document.getElementById("childList");
   if(cList) cList.innerHTML = html || "<p class='text-xs text-slate-400 text-center py-4'>登録された子どもはいません</p>";
   const limitLabel = document.getElementById("childLimitCountLabel");
   if(limitLabel) { limitLabel.innerText = isPremiumUser ? `(${localChildren.length}人登録中)` : `(${localChildren.length} / 1人)`; }
 }
+
 
 function populateChildSelect(){
   let html = `<option value="">子どもを選択してください</option>`;
@@ -3083,19 +3434,18 @@ function renderGallery(){
         <div class="flex justify-between items-start gap-1 mb-1">
           <div class="font-extrabold text-sm text-slate-800 line-clamp-1">${w.title}</div>
           <div class="flex gap-2 shrink-0 items-center">
-            <button onclick="toggleFavorite('${w.id}', event)" class="text-base transition ${favBtnColor}" title="お気に入り">★</button>
-            <button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100" title="ゴミ箱へ移動">🗑️</button>
+            ${canEditOrDeleteData() ? `<button onclick="toggleFavorite('${w.id}', event)" class="text-base transition ${favBtnColor}" title="お気に入り">★</button><button onclick="trashWork('${w.id}', '${w.title}')" class="text-xs opacity-40 hover:opacity-100" title="ゴミ箱へ移動">🗑️</button>` : ``}
           </div>
         </div>
         <div class="text-[10px] text-slate-400 mt-1">${w.date || "日付なし"}</div>
         <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
         ${w.memo ? `<p class="text-[11px] text-slate-500 mt-2 line-clamp-2 leading-relaxed">${w.memo}</p>` : ''}
-        <div class="flex justify-end mt-3 pt-2 border-t border-slate-100"><button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-500 font-bold hover:text-[#e55b5b]">詳しく見る・編集 →</button></div>
+        <div class="flex justify-end mt-3 pt-2 border-t border-slate-100">${canEditOrDeleteData() ? `<button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-500 font-bold hover:text-[#e55b5b]">詳しく見る・編集 →</button>` : `<span class="text-[11px] text-slate-400 font-bold">閲覧のみ</span>`}</div>
       </div>
     </div>`;
   });
   if(displayWorks.length === 0) {
-    html += `<div class="col-span-full page-intro text-center py-10"><div class="text-4xl mb-3">🌱</div><div class="font-extrabold text-slate-700">条件に合うカプセルがありません</div><p class="text-xs text-slate-400 mt-2">検索条件を変えるか、新しい思い出を追加してみましょう。</p><button onclick="handleFabClick()" class="mt-4 px-5 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold">＋ カプセルを追加</button></div>`;
+    html += `<div class="col-span-full page-intro text-center py-10"><div class="text-4xl mb-3">🌱</div><div class="font-extrabold text-slate-700">条件に合うカプセルがありません</div><p class="text-xs text-slate-400 mt-2">検索条件を変えるか、新しい思い出を追加してみましょう。</p>${canAddData() ? `<button onclick="handleFabClick()" class="mt-4 px-5 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold">＋ カプセルを追加</button>` : ``}</div>`;
   }
   const grid = document.getElementById("galleryGrid");
   if(grid) grid.innerHTML = html;
@@ -3176,10 +3526,12 @@ window.openLegalModal = function(type = 'terms') {
 };
 
 window.openDrawer = function(t){ 
+  if(t === 'work' && !document.getElementById("editingWorkId").value && !canAddData()) { alert(getPermissionDeniedMessage("カプセルの追加")); return; }
   if(t === 'work' && !document.getElementById("editingWorkId").value) {
     document.getElementById("workFormTitle").innerText = "カプセル登録"; document.getElementById("workForm").reset();
     document.getElementById("mediaResultContainer").innerHTML = "";
     document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; base64MediaArray = [];
+    const autoCropToggle = document.getElementById("autoCropToggle"); if(autoCropToggle) autoCropToggle.checked = true;
     if(localCategories.length) {
       document.getElementById("inputCategory").value = localCategories[0].id;
     }
