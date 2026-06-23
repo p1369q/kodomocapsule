@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v96]</title>
+<title>コドモカプセル [v97]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v96</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v97</div>
       </div>
 
       <div>
@@ -371,7 +371,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
         <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品カプセル保存数がすべて無制限になります</div>
       </div>
     </div>
-    <button onclick="openDrawer('child')" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
+    <button onclick="openPremiumPlanFromPremiumBanner(event)" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
   </div>
 
   <section id="galleryPage" class="page active">
@@ -837,7 +837,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v96",
+        app_version: "v97",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1334,6 +1334,15 @@ window.openPremiumPlanFromLimitNotice = function(event) {
   }
 };
 
+window.openPremiumPlanFromPremiumBanner = function(event) {
+  if(event) event.stopPropagation();
+  trackEvent("premium_banner_click", { active_works_count: localWorks.filter(w => !w.isDeleted).length });
+  openDrawer('child');
+  if (typeof switchSettingsTab === "function") {
+    setTimeout(() => switchSettingsTab('plan'), 80);
+  }
+};
+
 window.toggleSearchMenu = function() {
   const menuArea = document.getElementById("searchMenuArea");
   const toggleBtn = document.getElementById("menuToggleBtn");
@@ -1428,7 +1437,10 @@ window.switchSettingsTab = function(tabName) {
     if(tabName === "children") tab.classList.add("text-rose-700");
     if(tabName === "categories") tab.classList.add("text-sky-700");
     if(tabName === "family") tab.classList.add("text-emerald-700");
-    if(tabName === "plan") tab.classList.add("text-amber-700");
+    if(tabName === "plan") {
+      tab.classList.add("text-amber-700");
+      trackEvent("plan_tab_open");
+    }
   }
 };
 
@@ -2083,6 +2095,7 @@ window.joinFamilyGroup = async function() {
 window.copyFamilyCode = function() {
   const codeInput = document.getElementById("displayFamilyIdCode");
   codeInput.select(); navigator.clipboard.writeText(codeInput.value);
+  trackEvent("family_invite_copy");
   alert("コードをコピーしました！");
 };
 
@@ -2410,8 +2423,10 @@ window.saveChild = async function(){
     if(editingId) {
       const target = localChildren.find(c => c.id === editingId);
       if(target) await updateDoc(doc(db, "families", currentSession.familyId, "children", target.docId), { name, birthday });
+      trackEvent("child_updated");
     } else {
       await addDoc(collection(db, "families", currentSession.familyId, "children"), { id: crypto.randomUUID(), name, birthday, createdAt: Date.now() });
+      trackEvent("child_created");
     }
     cancelChildEdit();
   } catch(e) { alert("失敗しました: " + e.message); }
@@ -2458,8 +2473,10 @@ window.saveCategory = async function() {
     if(editingId) {
       const target = localCategories.find(c => c.id === editingId);
       if(target) await updateDoc(doc(db, "families", currentSession.familyId, "categories", target.docId), { name });
+      trackEvent("category_updated");
     } else {
       await addDoc(collection(db, "families", currentSession.familyId, "categories"), { id: crypto.randomUUID(), name, createdAt: Date.now() });
+      trackEvent("category_created");
     }
     cancelCategoryEdit();
   } catch(e) { alert("カテゴリの保存に失敗しました: " + e.message); }
@@ -2593,6 +2610,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         }
       }
       await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls });
+      trackEvent("work_updated", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category });
     } else {
       const artworkId = crypto.randomUUID(); let mediaUrls = [];
       for(let i=0; i<base64MediaArray.length; i++) {
@@ -2689,6 +2707,7 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
 
 window.openEditWork = function(id) {
   const w = localWorks.find(item => item.id === id); if(!w || w.isDeleted) return; 
+  trackEvent("work_edit_open", { work_id: id });
   document.getElementById("editingWorkId").value = w.id;
   document.getElementById("workFormTitle").innerText = "データの編集";
   document.getElementById("inputTitle").value = w.title;
@@ -2716,9 +2735,10 @@ window.trashWork = async function(id, title) {
 
 window.restoreWork = async function(id) {
   const target = localWorks.find(w => w.id === id);
-  if(isGuestMode) { if(target) { target.isDeleted = false; renderAll(); alert("カプセルをゴミ箱から戻しました。"); } return; }
+  if(isGuestMode) { if(target) { target.isDeleted = false; renderAll(); trackEvent("work_restored", { work_id: id, is_guest: true }); alert("カプセルをゴミ箱から戻しました。"); } return; }
   if(target) {
     await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { isDeleted: false });
+    trackEvent("work_restored", { work_id: id });
     alert("カプセルをゴミ箱から戻しました。");
   }
 };
@@ -2728,7 +2748,7 @@ window.deleteWorkPermanently = async function(id, title, silent = false) {
 
 この操作は取り消せません。写真・PDFも削除されます。`)) return;
   const target = localWorks.find(w => w.id === id); if(!target) return;
-  if(isGuestMode) { localWorks = localWorks.filter(w => w.id !== id); renderAll(); if(!silent) alert("完全に消去しました。"); return; }
+  if(isGuestMode) { localWorks = localWorks.filter(w => w.id !== id); renderAll(); if(!silent) { trackEvent("work_permanently_deleted", { work_id: id, is_guest: true }); alert("完全に消去しました。"); } return; }
   try {
     if(target.mediaUrls?.length) {
       for(let i=0; i<target.mediaUrls.length; i++) {
@@ -3008,7 +3028,7 @@ window.openDrawer = function(t){
       document.getElementById("inputCategory").value = localCategories[0].id;
     }
   }
-  if(t === 'child') { cancelChildEdit(); cancelCategoryEdit(); switchSettingsTab('children'); }
+  if(t === 'child') { trackEvent("settings_open"); cancelChildEdit(); cancelCategoryEdit(); switchSettingsTab('children'); }
   const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
 };
 
@@ -3020,9 +3040,9 @@ window.closeDrawer = function(t){
 window.switchPage = function(p){
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  if(p === 'gallery'){ document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
-  else if (p === 'records') { document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderPhotoWall(); } 
-  else if (p === 'trash') { document.getElementById('trashPage').classList.add('active'); renderTrash(); }
+  if(p === 'gallery'){ trackEvent("gallery_view"); document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
+  else if (p === 'records') { trackEvent("photo_wall_view"); document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderPhotoWall(); } 
+  else if (p === 'trash') { trackEvent("trash_view"); document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
