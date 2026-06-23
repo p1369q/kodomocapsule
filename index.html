@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v91]</title>
+<title>コドモカプセル [v92]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v91</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v92</div>
       </div>
 
       <div>
@@ -812,7 +812,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v91",
+        app_version: "v92",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2081,10 +2081,12 @@ function startRealtimeSync() {
 }
 
 
-function formatDeletionDateTime(ms) {
-  if (!ms) return "";
+function formatDeletionDateTime(value) {
+  if (!value) return "";
   try {
-    return new Date(ms).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const date = typeof value === "string" ? new Date(value) : new Date(Number(value));
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
   } catch(e) {
     return "";
   }
@@ -2095,7 +2097,7 @@ function renderAccountDeletionStatus() {
   const cancelBtn = document.getElementById("cancelAccountDeleteBtn");
   if (!statusEl || !cancelBtn) return;
   if (accountDeletionState && accountDeletionState.status === "scheduled") {
-    const deleteAfterText = formatDeletionDateTime(accountDeletionState.deleteAfter);
+    const deleteAfterText = formatDeletionDateTime(accountDeletionState.deleteAfterIso || accountDeletionState.deleteAfter);
     statusEl.innerHTML = `削除予約中です。<br>削除予定日時：<span class="font-bold">${deleteAfterText}</span><br>期限後にサーバー側の自動削除処理で削除されます。`;
     statusEl.classList.remove("hidden");
     cancelBtn.classList.remove("hidden");
@@ -2205,10 +2207,24 @@ async function executeAccountDeletion(isScheduledRun = false) {
   location.reload();
 }
 
+function getAccountDeletionDueTimeMs(deletion) {
+  if (!deletion) return null;
+  if (deletion.deleteAfterIso) {
+    const isoMs = new Date(deletion.deleteAfterIso).getTime();
+    if (!isNaN(isoMs)) return isoMs;
+  }
+  if (deletion.deleteAfter !== undefined && deletion.deleteAfter !== null) {
+    const numeric = Number(deletion.deleteAfter);
+    if (Number.isFinite(numeric)) return numeric;
+  }
+  return null;
+}
+
 async function runScheduledAccountDeletionIfNeeded(user, userData) {
   accountDeletionState = userData.accountDeletion || null;
   renderAccountDeletionStatus();
-  if (accountDeletionState && accountDeletionState.status === "scheduled" && accountDeletionState.deleteAfter && Date.now() >= accountDeletionState.deleteAfter) {
+  const dueTimeMs = getAccountDeletionDueTimeMs(accountDeletionState);
+  if (accountDeletionState && accountDeletionState.status === "scheduled" && dueTimeMs !== null && Date.now() >= dueTimeMs) {
     const statusText = document.getElementById("loadingStatusText");
     if(statusText) statusText.innerText = "アカウント削除予約の期限を確認しました。削除処理を実行中...";
     await executeAccountDeletion(true);
@@ -2284,7 +2300,7 @@ window.scheduleAccountDeletion = async function() {
     accountDeletionState = deletionPayload;
     renderAccountDeletionStatus();
     trackEvent("account_delete_scheduled", { family_id: familyId, delete_after: deleteAfter });
-    alert("1週間後の削除を予約しました。\n削除予定日時: " + formatDeletionDateTime(deleteAfter));
+    alert("1週間後の削除を予約しました。\n削除予定日時: " + formatDeletionDateTime(deletionPayload.deleteAfterIso));
   } catch(e) {
     alert("削除予約に失敗しました: " + e.message);
   }
