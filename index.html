@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v79]</title>
+<title>コドモカプセル [v80]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,7 +306,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v79</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v80</div>
       </div>
 
       <div>
@@ -585,7 +585,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </div>
 
 <script type="importmap">
-  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" } }
+  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js", "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js" } }
 </script>
 
 <script type="module">
@@ -593,6 +593,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteField } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
 
 const prodConfig = {
   apiKey: "AIzaSyAIIyoP8WvaDtHcsySKVj3UW1tXwWahBqk",
@@ -606,6 +607,12 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+let analytics = null;
+isSupported().then((supported) => {
+  if (supported) analytics = getAnalytics(app);
+}).catch((e) => {
+  console.warn("Analytics initialization skipped:", e);
+});
 
 let currentSession = null; 
 let localChildren = [];
@@ -639,12 +646,27 @@ function showGateError(msg) {
   }
 }
 
+function trackEvent(name, params = {}) {
+  try {
+    if (analytics) {
+      logEvent(analytics, name, {
+        app_version: "v80",
+        is_guest_mode: isGuestMode,
+        ...params
+      });
+    }
+  } catch (e) {
+    console.warn("Analytics event skipped:", name, e);
+  }
+}
+
 function createGuestSvgDataUrl(label, subLabel, bgColor, accentColor) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700"><rect width="1000" height="700" rx="48" fill="${bgColor}"/><circle cx="820" cy="140" r="88" fill="${accentColor}" opacity="0.22"/><circle cx="170" cy="560" r="120" fill="${accentColor}" opacity="0.16"/><rect x="120" y="145" width="760" height="410" rx="40" fill="#ffffff" opacity="0.72"/><text x="500" y="330" font-size="68" font-family="sans-serif" text-anchor="middle">${label}</text><text x="500" y="415" font-size="34" font-family="sans-serif" text-anchor="middle" fill="#64748B">${subLabel}</text></svg>`;
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
 window.enterGuestMode = function() {
+  trackEvent("guest_start");
   isGuestMode = true;
   currentSession = null;
   isPremiumUser = false;
@@ -811,6 +833,7 @@ window.downloadWorkMedia = async function(workId, mediaIndex, event) {
   const titlePart = sanitizeDownloadFileName(target.title || "photo");
   const fileName = sanitizeDownloadFileName(`${datePart}_${titlePart}_${mediaIndex + 1}`) + ext;
   await downloadUrlToDevice(sourceUrl, fileName);
+  trackEvent("photo_download", { work_id: workId, media_index: mediaIndex });
 };
 
 function getFilteredPhotoWallItems() {
@@ -910,6 +933,7 @@ window.downloadDisplayedPhotos = async function(event) {
   }
 
   try {
+    trackEvent("bulk_photo_download", { photo_count: photoItems.length });
     for (let i = 0; i < photoItems.length; i++) {
       const item = photoItems[i];
       const ext = getDownloadExtension(item.media, item.src);
@@ -927,6 +951,7 @@ window.downloadDisplayedPhotos = async function(event) {
 
 window.redirectToStripeCheckout = async function() {
   if (isGuestMode) { showGuestModeSaveAlert(); return; }
+  trackEvent("stripe_checkout_click", { family_id: currentSession?.familyId || "" });
   const currentUser = auth.currentUser;
   if (!currentUser) {
     alert("ログイン状態が確認できません。もう一度ログインを行ってください。");
@@ -1105,6 +1130,7 @@ window.toggleAuth = async function() {
       location.reload();
     }
   } else { 
+    trackEvent("login_click", { from_guest_mode: isGuestMode });
     try { await signInWithPopup(auth, provider); } catch (err) { alert("ログイン失敗: " + err.message); } 
   }
 };
@@ -1743,6 +1769,7 @@ window.createNewFamilyGroup = async function() {
     }
     pendingOwnFamilyId = docFamilyId;
     await activateFamilyGroup(docFamilyId, user);
+    trackEvent("family_created", { family_id: docFamilyId });
     alert("🎉 家族グループを新規に作成しました！");
   } catch (e) {
     hasSelectedFamilyGroup = false;
@@ -1781,6 +1808,7 @@ window.joinFamilyGroup = async function() {
       updatedAt: Date.now()
     }, { merge: true });
     document.getElementById("joinInviteCodeInput").value = "";
+    trackEvent("family_join_request_sent", { family_id: targetDocId });
     alert("参加申請を送信しました。\n主ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
     btn.innerText = "招待コードで参加する"; btn.disabled = false;
@@ -2070,6 +2098,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
         mediaUrls.push({ type: isPdf ? "pdf" : "image", url: await getDownloadURL(r) });
       }
       await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false });
+      trackEvent("work_created", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category });
     }
     closeDrawer("work");
   } catch(err) { alert("保存エラー: " + err.message); } finally { document.getElementById("workSubmitBtn").innerText = "この内容でカプセルを保存"; document.getElementById("workSubmitBtn").disabled = false; }
