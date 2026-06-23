@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v97]</title>
+<title>コドモカプセル [v98]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v97</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v98</div>
       </div>
 
       <div>
@@ -565,6 +565,16 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           🛠️ フリープランに戻す
         </button>
       </div>
+      <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/80 rounded-2xl p-4">
+        <div class="text-xs font-bold text-slate-700 flex items-center gap-1">📤 データバックアップ</div>
+        <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">保存しているカプセル情報を端末に保存できます。無料プランではCSV一覧、プレミアムではCSVと写真・PDFをまとめたZIPバックアップを利用できます。</p>
+        <div class="grid sm:grid-cols-2 gap-2 mt-3">
+          <button onclick="exportCapsulesCsv()" class="py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-sm hover:bg-slate-50 transition">CSV一覧を出力</button>
+          <button onclick="exportPremiumBackupZip()" class="py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition">プレミアムZIPバックアップ</button>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※CSVには写真・PDF本体は含まれません。ZIPバックアップはプレミアムプラン限定です。</p>
+      </div>
+
       <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/70 rounded-2xl p-4">
         <div class="text-xs font-bold text-rose-700 flex items-center gap-1">⚠️ アカウント削除</div>
         <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">動作確認用の削除機能です。削除すると、現在利用中の家族グループ、子ども、カテゴリ、作品、写真・PDF、ユーザー情報を削除します。</p>
@@ -767,6 +777,8 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
 <script type="importmap">
   { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js", "firebase/storage": "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js", "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js", "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js" } }
 </script>
@@ -837,7 +849,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v97",
+        app_version: "v98",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1034,6 +1046,150 @@ function triggerAnchorDownload(blob, fileName) {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
 }
+
+function escapeCsvValue(value) {
+  const text = String(value ?? "").replace(/\r?\n/g, " ");
+  if (/[",\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
+}
+
+function buildCapsulesCsv() {
+  const headers = ["タイトル", "子ども", "カテゴリ", "作品日付", "当時の年齢", "メモ", "写真数", "PDF数", "お気に入り", "登録日時"];
+  const activeWorks = localWorks
+    .filter(w => !w.isDeleted)
+    .slice()
+    .sort((a, b) => String(b.date || "0000-00-00").localeCompare(String(a.date || "0000-00-00")) || (Number(b.createdAt || 0) - Number(a.createdAt || 0)));
+
+  const rows = activeWorks.map(w => {
+    const child = localChildren.find(c => c.id === w.childId);
+    const category = localCategories.find(c => c.id === w.category);
+    const totalMonths = child ? calculateAgeInMonths(child.birthday, w.date) : null;
+    const mediaList = Array.isArray(w.mediaUrls) ? w.mediaUrls : [];
+    const imageCount = mediaList.filter(m => m?.type !== "pdf").length;
+    const pdfCount = mediaList.filter(m => m?.type === "pdf").length;
+    const createdAtText = w.createdAt ? new Date(Number(w.createdAt)).toLocaleString("ja-JP") : "";
+    return [
+      w.title || "",
+      child?.name || "",
+      category?.name || "未分類",
+      w.date || "",
+      formatAgeString(totalMonths),
+      w.memo || "",
+      imageCount,
+      pdfCount,
+      w.isFavorite ? "はい" : "いいえ",
+      createdAtText
+    ];
+  });
+
+  return "\ufeff" + [headers, ...rows].map(row => row.map(escapeCsvValue).join(",")).join("\r\n");
+}
+
+function getExportDateStamp() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+window.exportCapsulesCsv = function() {
+  if (isGuestMode) {
+    alert("ゲスト体験中はサンプルデータのため、エクスポートは利用できません。\nGoogleログイン後にご自身のデータでご利用ください。");
+    return;
+  }
+  const csv = buildCapsulesCsv();
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  triggerAnchorDownload(blob, `kodomocapsule_export_${getExportDateStamp()}.csv`);
+  trackEvent("export_csv", { work_count: localWorks.filter(w => !w.isDeleted).length });
+};
+
+function getExportMediaFileName(work, media, mediaIndex) {
+  const child = localChildren.find(c => c.id === work.childId);
+  const datePart = sanitizeDownloadFileName(work.date || "date-none");
+  const childPart = sanitizeDownloadFileName(child?.name || "child-none");
+  const titlePart = sanitizeDownloadFileName(work.title || "capsule");
+  const sourceUrl = media?.url || media?.dataUrl || media;
+  const ext = getDownloadExtension(media, sourceUrl);
+  return `${datePart}_${childPart}_${titlePart}_${mediaIndex + 1}${ext}`;
+}
+
+window.exportPremiumBackupZip = async function() {
+  if (isGuestMode) {
+    alert("ゲスト体験中はサンプルデータのため、ZIPバックアップは利用できません。\nGoogleログイン後にご自身のデータでご利用ください。");
+    return;
+  }
+  if (!isPremiumUser) {
+    alert("写真・PDFを含むZIPバックアップはプレミアムプラン限定です。\n無料プランではCSV一覧エクスポートをご利用いただけます。");
+    openDrawer('child');
+    if (typeof switchSettingsTab === "function") switchSettingsTab('plan');
+    trackEvent("export_zip_premium_required");
+    return;
+  }
+  if (!window.JSZip) {
+    alert("ZIP作成ライブラリの読み込みに失敗しました。ページを再読み込みしてもう一度お試しください。");
+    return;
+  }
+
+  const activeWorks = localWorks.filter(w => !w.isDeleted);
+  if (!activeWorks.length) {
+    alert("バックアップ対象のカプセルがありません。");
+    return;
+  }
+
+  const ok = confirm("カプセル一覧CSVと写真・PDFをZIPファイルにまとめて保存します。\nデータ量が多い場合、作成に時間がかかることがあります。\n\n実行しますか？");
+  if (!ok) return;
+
+  const zipBtnText = "ZIP作成中...";
+  try {
+    const zip = new JSZip();
+    zip.file(`kodomocapsule_export_${getExportDateStamp()}.csv`, buildCapsulesCsv());
+    const mediaFolder = zip.folder("media");
+    let mediaCount = 0;
+    let failedCount = 0;
+
+    for (const work of activeWorks) {
+      const mediaList = Array.isArray(work.mediaUrls) ? work.mediaUrls : [];
+      for (let i = 0; i < mediaList.length; i++) {
+        const media = mediaList[i];
+        const sourceUrl = media?.url || media?.dataUrl || media;
+        if (!sourceUrl) continue;
+        try {
+          const blob = await sourceUrlToBlob(sourceUrl);
+          const fileName = getExportMediaFileName(work, media, i);
+          mediaFolder.file(fileName, blob);
+          mediaCount++;
+        } catch(e) {
+          console.warn("Media backup skipped:", work.id, i, e);
+          failedCount++;
+        }
+      }
+    }
+
+    const readme = [
+      "コドモカプセル バックアップ",
+      `作成日: ${new Date().toLocaleString("ja-JP")}`,
+      `カプセル数: ${activeWorks.length}`,
+      `保存できた写真・PDF数: ${mediaCount}`,
+      `取得できなかった写真・PDF数: ${failedCount}`,
+      "",
+      "capsule一覧はCSVで確認できます。写真・PDFは media フォルダ内に保存されています。"
+    ].join("\r\n");
+    zip.file("README.txt", readme);
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    triggerAnchorDownload(blob, `kodomocapsule_backup_${getExportDateStamp()}.zip`);
+    trackEvent("export_zip", { work_count: activeWorks.length, media_count: mediaCount, failed_count: failedCount });
+    if (failedCount > 0) {
+      alert(`ZIPバックアップを作成しました。\n一部の写真・PDF（${failedCount}件）は取得できませんでした。CORS設定やURLの有効期限をご確認ください。`);
+    } else {
+      alert("ZIPバックアップを作成しました。");
+    }
+  } catch(e) {
+    console.error("ZIP export failed:", e);
+    alert("ZIPバックアップの作成に失敗しました。\nデータ量が多い場合は、写真一覧の一括ダウンロードもお試しください。\n詳細: " + e.message);
+  }
+};
 
 async function downloadUrlToDevice(sourceUrl, fileName) {
   if (!sourceUrl) throw new Error("ダウンロード対象のURLがありません。");
