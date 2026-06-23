@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v111]</title>
+<title>コドモカプセル [v112]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,6 +80,24 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .app-icon:hover {
   transform: rotate(15deg) scale(1.05);
 }
+
+.auth-hero-title{font-size:clamp(2.15rem,9.6vw,3.45rem);line-height:1.12;}
+.auth-hero-nowrap{white-space:nowrap;}
+#authGatescreen.setup-mode #authHeroCopy{display:none;}
+#authGatescreen.setup-mode #authGateLayout{display:flex;justify-content:center;align-items:center;}
+#authGatescreen.setup-mode #authGatePanelWrap{width:min(640px,100%);}
+.app-logo-title{font-size:clamp(.86rem,3.8vw,1.25rem);max-width:42vw;}
+@media (max-width:420px){
+  .app-toolbar-button{height:36px;min-width:36px;padding:0 8px;border-radius:12px;font-size:10px;}
+  .app-logo-title{font-size:14px;max-width:110px;}
+  .app-header-icon{width:26px;height:26px;}
+}
+@media (max-width:360px){
+  .app-toolbar-button{height:34px;min-width:34px;padding:0 7px;}
+  .app-logo-title{font-size:13px;max-width:96px;}
+  .app-header-icon{width:24px;height:24px;}
+}
+
 @media (min-width:768px){
   .bottom-nav{left:50%;right:auto;bottom:18px;width:440px;transform:translateX(-50%);border:1px solid var(--border);border-radius:26px;height:76px;}
   .drawer{align-items:center;padding:28px;}
@@ -97,8 +115,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   </div>
 
   <div class="relative min-h-full max-w-6xl mx-auto px-5 py-7 sm:px-8 sm:py-10 lg:py-14 flex items-center">
-    <div class="w-full grid lg:grid-cols-[1.08fr_.92fr] gap-8 lg:gap-14 items-center">
-      <div class="text-left">
+    <div id="authGateLayout" class="w-full grid lg:grid-cols-[1.08fr_.92fr] gap-8 lg:gap-14 items-center">
+      <div id="authHeroCopy" class="text-left">
         <div class="inline-flex items-center gap-2 bg-white/80 border border-white px-3 py-2 rounded-full shadow-sm mb-6">
           <svg class="app-icon w-9 h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
@@ -113,9 +131,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
 
         <p class="text-sm font-bold text-[#e55b5b] mb-3">捨てられない。でも、しまう場所もない。</p>
-        <h1 class="text-[2.55rem] sm:text-5xl lg:text-[3.45rem] leading-[1.16] font-extrabold tracking-tight text-[#253047]">
-          子どもの「今」を、<br>
-          <span class="text-[#ff6b6b]">未来の宝もの</span>に。
+        <h1 class="auth-hero-title font-extrabold tracking-tight text-[#253047]">
+          <span class="auth-hero-nowrap">子どもの「今」を、</span><br>
+          <span class="auth-hero-nowrap"><span class="text-[#ff6b6b]">未来の宝もの</span>に。</span>
         </h1>
         <p class="mt-5 text-sm sm:text-base text-slate-600 leading-8 max-w-xl">
           増え続ける作品、プリント、テスト、ふとした思い出。写真やPDFでひとつの場所に残して、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>できる、家族のためのデジタルタイムカプセルです。
@@ -147,13 +165,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
       </div>
 
-      <div>
+      <div id="authGatePanelWrap">
         <div class="relative bg-white/90 backdrop-blur border border-white rounded-[2rem] p-4 sm:p-5 shadow-[0_18px_50px_rgba(71,85,105,.12)]">
           <div class="text-center mb-4">
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-rose-50 text-2xl mb-3">🧺</div>
             <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">START</div>
-            <h2 class="text-xl font-extrabold text-[#253047]">コドモカプセルをはじめる</h2>
-            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">体験・保存・家族参加を、この画面から選べます。</p>
+            <h2 class="text-xl font-extrabold text-[#253047]">はじめ方を選んでください</h2>
+            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">まずは体験するか、Googleログインで保存を開始できます。</p>
           </div>
 
           <div id="gateLoading" class="text-sm text-slate-400 py-7 flex flex-col items-center justify-center gap-2 w-full">
@@ -270,7 +288,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-1 sm:gap-2 shrink min-w-0">
         <button onclick="goToTopPage()" class="flex items-center gap-1 sm:gap-2 select-none tracking-tight active:scale-95 transition-transform min-w-0" title="トップ画面に戻る">
-          <svg class="app-icon w-7 h-7 sm:w-9 sm:h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <svg class="app-icon app-header-icon w-7 h-7 sm:w-9 sm:h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="50" cy="88" rx="25" ry="5" fill="#dcdde1" />
             <path d="M 20 50 A 30 30 0 0 0 80 50 Z" fill="#ff6b6b" />
             <path d="M 25 53 A 25 25 0 0 0 75 53 Z" fill="#ff5252" opacity="0.5" />
@@ -281,7 +299,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <path d="M 30 26 A 22 22 0 0 1 48 16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8" />
           </svg>
           <span class="text-left min-w-0">
-            <span class="block text-base sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
+            <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
         </button>
@@ -327,7 +345,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v111</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v112</div>
       </div>
 
       <div>
@@ -906,7 +924,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v111",
+        app_version: "v112",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2210,6 +2228,13 @@ window.useOwnFamilyGroup = async function() {
   }
 };
 
+function updateAuthGateLayoutMode() {
+  const gateScreen = document.getElementById("authGatescreen");
+  const gateSetupArea = document.getElementById("gateSetupArea");
+  if (!gateScreen || !gateSetupArea) return;
+  gateScreen.classList.toggle("setup-mode", !gateSetupArea.classList.contains("hidden"));
+}
+
 onAuthStateChanged(auth, async (user) => {
   const btnText = document.getElementById("authBtnText");
   const gateScreen = document.getElementById("authGatescreen");
@@ -2239,6 +2264,7 @@ onAuthStateChanged(auth, async (user) => {
     gateLoginArea.classList.add("hidden");
     gateLoading.classList.remove("hidden");
     gateSetupArea.classList.add("hidden");
+    updateAuthGateLayoutMode();
     if(errLog) errLog.classList.add("hidden");
 
     await checkUrlSessionParameters(user);
@@ -2262,10 +2288,12 @@ onAuthStateChanged(auth, async (user) => {
         }
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
+        updateAuthGateLayoutMode();
       } catch (innerErr) {
         showGateError(innerErr.message);
         gateLoading.classList.add("hidden");
         gateSetupArea.classList.remove("hidden");
+        updateAuthGateLayoutMode();
       } finally {
         isResolvingFamilyChoice = false;
       }
@@ -2276,6 +2304,7 @@ onAuthStateChanged(auth, async (user) => {
       gateLoading.classList.remove("hidden");
       gateLoginArea.classList.add("hidden");
       gateSetupArea.classList.add("hidden");
+      updateAuthGateLayoutMode();
     });
 
   } else {
@@ -2300,6 +2329,7 @@ onAuthStateChanged(auth, async (user) => {
     localChildren = []; localWorks = []; localCategories = [];
     gateLoading.classList.add("hidden");
     gateSetupArea.classList.add("hidden");
+    updateAuthGateLayoutMode();
     gateLoginArea.classList.remove("hidden");
     gateScreen.classList.remove("hidden");
     renderAll();
