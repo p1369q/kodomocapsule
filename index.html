@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v86]</title>
+<title>コドモカプセル [v87]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v86</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v87</div>
       </div>
 
       <div>
@@ -330,6 +330,16 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
 </div>
 
 <main class="max-w-7xl mx-auto px-3 sm:px-5 pt-4 sm:pt-6 pb-32">
+  <div id="guestLoginBanner" class="hidden mb-5 p-4 rounded-3xl bg-white border border-rose-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="flex items-start gap-3 text-left">
+      <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">🚀</div>
+      <div>
+        <div class="text-sm font-extrabold text-slate-800">これはサンプル体験です</div>
+        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Googleログインすると、ご自身の家族データを実際に保存・共有できます。</p>
+      </div>
+    </div>
+    <button onclick="startLoginFromGuestBanner()" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition whitespace-nowrap">Googleで始める</button>
+  </div>
   <div id="premiumBannerArea" class="hidden mb-5 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-900/10 flex justify-between items-center gap-3">
     <div class="flex items-center gap-2">
       <span class="text-xl">👑</span>
@@ -767,7 +777,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v86",
+        app_version: "v87",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -845,12 +855,28 @@ window.enterGuestMode = function() {
   const btnText = document.getElementById("authBtnText");
   if(btnText) btnText.innerText = "ログイン";
   renderAll();
+  updateGuestLoginBanner();
   switchPage('gallery');
 };
 
 function showGuestModeSaveAlert() {
   alert("体験版です。\nGoogleログインすると実際に保存・家族共有できます。");
 }
+
+function updateGuestLoginBanner() {
+  const banner = document.getElementById("guestLoginBanner");
+  if (!banner) return;
+  if (isGuestMode) {
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+  }
+}
+
+window.startLoginFromGuestBanner = function() {
+  trackEvent("guest_to_login_click");
+  window.toggleAuth();
+};
 
 
 function sanitizeDownloadFileName(value) {
@@ -1985,7 +2011,7 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner();
 }
 
 document.getElementById("gallerySortSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
