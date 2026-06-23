@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v89]</title>
+<title>コドモカプセル [v90]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v89</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v90</div>
       </div>
 
       <div>
@@ -574,7 +574,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
           <button id="scheduleAccountDeleteBtn" onclick="scheduleAccountDeletion()" class="py-3 rounded-xl bg-white border border-rose-200 text-rose-600 text-xs font-bold shadow-sm transition">1週間後に削除予約</button>
         </div>
         <button id="cancelAccountDeleteBtn" onclick="cancelAccountDeletionSchedule()" class="hidden w-full mt-2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition">削除予約をキャンセル</button>
-        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※1週間後削除は、次回ログイン時またはアプリ起動時に期限を確認して削除を実行します。完全な自動削除にはサーバー処理が必要です。</p>
+        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※1週間後削除は、サーバー側の自動削除処理で期限後に実行されます。アプリ起動時の確認処理も予備として残しています。</p>
       </div>
     </div>
 
@@ -812,7 +812,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v89",
+        app_version: "v90",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2096,7 +2096,7 @@ function renderAccountDeletionStatus() {
   if (!statusEl || !cancelBtn) return;
   if (accountDeletionState && accountDeletionState.status === "scheduled") {
     const deleteAfterText = formatDeletionDateTime(accountDeletionState.deleteAfter);
-    statusEl.innerHTML = `削除予約中です。<br>削除予定日時：<span class="font-bold">${deleteAfterText}</span><br>期限後にログインすると、予約された削除処理を実行します。`;
+    statusEl.innerHTML = `削除予約中です。<br>削除予定日時：<span class="font-bold">${deleteAfterText}</span><br>期限後にサーバー側の自動削除処理で削除されます。`;
     statusEl.classList.remove("hidden");
     cancelBtn.classList.remove("hidden");
   } else {
