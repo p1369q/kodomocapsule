@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v101]</title>
+<title>コドモカプセル [v102]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +20,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .cropper-bg{background-image:linear-gradient(45deg,#f8fafc 25%,transparent 25%),linear-gradient(-45deg,#f8fafc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f8fafc 75%),linear-gradient(-45deg,transparent 75%,#f8fafc 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0px;}
 .crop-chip{height:34px;padding:0 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:#475569;font-size:12px;font-weight:700;}
 .crop-chip.active{background:#FFF1F2;color:var(--accent-dark);border-color:#fecdd3;}
+#cropperDrawer{align-items:center;padding:12px;}
+#cropperDrawer .drawer-panel{border-radius:28px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;transform:translateY(20px);}
+#cropperDrawer.open .drawer-panel{transform:translateY(0);}
+.cropper-body{flex:1;min-height:0;overflow:auto;}
+.cropper-workspace{height:min(48dvh,460px);min-height:220px;}
+.cropper-actions{position:sticky;bottom:0;background:white;padding-top:8px;}
+@media (max-width:640px){#cropperDrawer{padding:8px;}#cropperDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;} .cropper-workspace{height:42dvh;min-height:210px;} #cropperDrawer .cropper-header{padding:14px 16px;} #cropperDrawer .cropper-title-note{display:none;}}
 .page{display:none;}
 .page.active{display:block;}
 .glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.88);}
@@ -317,7 +324,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v101</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v102</div>
       </div>
 
       <div>
@@ -791,25 +798,25 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 
 <div id="cropperDrawer" class="drawer z-[1200]">
   <div class="drawer-panel max-w-4xl p-0 overflow-hidden bg-white">
-    <div class="flex justify-between items-center px-5 py-4 border-b border-slate-100">
+    <div class="cropper-header flex justify-between items-center px-5 py-4 border-b border-slate-100 shrink-0">
       <div>
         <div class="text-[10px] font-bold tracking-widest text-slate-400 mb-0.5">IMAGE CROP</div>
         <h3 class="text-lg sm:text-xl font-extrabold text-slate-800">画像をトリミング</h3>
-        <p class="text-[11px] text-slate-400 mt-1">必要な部分だけ切り抜いて保存できます。自由サイズと正方形を選べます。</p>
+        <p class="cropper-title-note text-[11px] text-slate-400 mt-1">必要な部分だけ切り抜いて保存できます。自由サイズと正方形を選べます。</p>
       </div>
       <button type="button" onclick="closeCropperDrawer()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
-    <div class="p-4 sm:p-5 space-y-4">
+    <div class="cropper-body p-4 sm:p-5 space-y-3">
       <div class="flex flex-wrap gap-2">
         <button type="button" id="cropFreeBtn" onclick="setCropAspectMode('free')" class="crop-chip active">自由</button>
         <button type="button" id="cropSquareBtn" onclick="setCropAspectMode('square')" class="crop-chip">正方形</button>
         <button type="button" onclick="applyAutoTrimToCurrentMedia()" class="crop-chip">✨ 自動トリミング</button>
       </div>
-      <div class="cropper-bg rounded-3xl border border-slate-200 overflow-hidden min-h-[280px] sm:min-h-[420px] flex items-center justify-center">
+      <div class="cropper-workspace cropper-bg rounded-3xl border border-slate-200 overflow-hidden flex items-center justify-center">
         <img id="cropperImage" src="" alt="crop target" class="max-w-full block">
       </div>
-      <p class="text-[11px] text-slate-400">ピンチやドラッグで位置を調整し、保存するとこの画像だけが置き換わります。</p>
-      <div class="flex flex-col sm:flex-row gap-2">
+      <p class="text-[11px] text-slate-400 leading-relaxed">ピンチやドラッグで位置を調整し、保存するとこの画像だけが置き換わります。</p>
+      <div class="cropper-actions flex flex-col sm:flex-row gap-2">
         <button type="button" onclick="saveCurrentCrop()" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">このトリミングで保存</button>
         <button type="button" onclick="closeCropperDrawer()" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">キャンセル</button>
       </div>
@@ -895,7 +902,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v101",
+        app_version: "v102",
         is_guest_mode: isGuestMode,
         ...params
       });
