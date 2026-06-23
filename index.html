@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v103]</title>
+<title>コドモカプセル [v104]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -333,7 +333,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v103</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v104</div>
       </div>
 
       <div>
@@ -820,11 +820,12 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <button type="button" id="cropFreeBtn" onclick="setCropAspectMode('free')" class="crop-chip active">自由</button>
         <button type="button" id="cropSquareBtn" onclick="setCropAspectMode('square')" class="crop-chip">正方形</button>
         <button type="button" onclick="applyAutoTrimToCurrentMedia()" class="crop-chip">✨ 自動トリミング</button>
+        <button type="button" onclick="restoreOriginalForCurrentMedia()" class="crop-chip">↩ 元画像に戻す</button>
       </div>
       <div class="cropper-workspace cropper-bg rounded-3xl border border-slate-200 overflow-hidden flex items-center justify-center">
         <img id="cropperImage" src="" alt="crop target" class="max-w-full block">
       </div>
-      <p class="text-[11px] text-slate-400 leading-relaxed">ピンチやドラッグで位置を調整し、保存するとこの画像だけが置き換わります。</p>
+      <p class="text-[11px] text-slate-400 leading-relaxed">ピンチやドラッグで位置を調整できます。やり直したい場合は「元画像に戻す」を押してください。</p>
       <div class="cropper-actions flex flex-col sm:flex-row gap-2">
         <button type="button" onclick="saveCurrentCrop()" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">このトリミングで保存</button>
         <button type="button" onclick="closeCropperDrawer()" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">キャンセル</button>
@@ -911,7 +912,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v103",
+        app_version: "v104",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3024,6 +3025,34 @@ window.applyAutoTrimToCurrentMedia = async function() {
     trackEvent("image_auto_trim_apply", { media_index: currentCropMediaIndex });
   } catch (err) {
     alert("自動トリミングに失敗しました: " + err.message);
+  }
+};
+
+window.restoreOriginalForCurrentMedia = async function() {
+  if (currentCropMediaIndex === null) return;
+  const item = base64MediaArray[currentCropMediaIndex];
+  if (!item || item.type !== "image") return;
+  try {
+    const sourceDataUrl = await getImageSourceDataUrl(item);
+    item.dataUrl = sourceDataUrl;
+    item.autoTrimApplied = false;
+    item.manuallyCropped = false;
+    renderMediaPreviews();
+
+    const cropperImage = document.getElementById("cropperImage");
+    if (cropperImage) cropperImage.src = sourceDataUrl;
+    if (cropperInstance) {
+      cropperInstance.destroy();
+      cropperInstance = null;
+    }
+    await new Promise(resolve => setTimeout(resolve, 40));
+    if (cropperImage) {
+      cropperInstance = new Cropper(cropperImage, { viewMode: 1, dragMode: "move", autoCropArea: 1, responsive: true, restore: false, background: false, movable: true, zoomable: true, rotatable: false, scalable: false, guides: true });
+      setCropAspectMode(currentCropAspectMode || "free");
+    }
+    trackEvent("image_crop_restore_original", { media_index: currentCropMediaIndex });
+  } catch (err) {
+    alert("元画像に戻せませんでした: " + err.message);
   }
 };
 
