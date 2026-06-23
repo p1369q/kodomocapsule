@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v95]</title>
+<title>コドモカプセル [v94]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -312,7 +312,7 @@ input,select,textarea{width:100%;border:1px solid var(--border);border-radius:16
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v95</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v94</div>
       </div>
 
       <div>
@@ -837,7 +837,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v95",
+        app_version: "v94",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1316,24 +1316,12 @@ function updatePlanUI() {
 window.handleFabClick = function() {
   const activeWorksCount = localWorks.filter(w => !w.isDeleted).length;
   if (!isPremiumUser && activeWorksCount >= 10) {
-    trackEvent("free_limit_add_blocked", { active_works_count: activeWorksCount });
-    alert("⚠️ 無料プランの保存上限（10件）に達しています。
-
-新しいカプセルを追加するには、不要なカプセルをゴミ箱へ移動するか、プレミアムプランをご検討ください。");
+    alert("⚠️ 無料プランの上限（10件）に達しています。");
     return;
   }
   const editingWorkIdEl = document.getElementById("editingWorkId");
   if(editingWorkIdEl) editingWorkIdEl.value = "";
   openDrawer('work');
-};
-
-window.openPremiumPlanFromLimitNotice = function(event) {
-  if(event) event.stopPropagation();
-  trackEvent("free_limit_premium_notice_click", { active_works_count: localWorks.filter(w => !w.isDeleted).length });
-  openDrawer('child');
-  if (typeof switchSettingsTab === "function") {
-    setTimeout(() => switchSettingsTab('plan'), 80);
-  }
 };
 
 window.toggleSearchMenu = function() {
@@ -2800,26 +2788,7 @@ function renderGallery(){
   if (isGuestMode) {
     html += `<div class="col-span-full p-3 sm:p-4 bg-rose-50 rounded-2xl border border-rose-100 text-xs text-rose-700 font-bold text-center">🚀 ゲスト体験中：お気に入りや絞り込みを自由に試せます。実際の保存・家族共有はGoogleログイン後に利用できます。</div>`;
   } else if (!isPremiumUser) {
-    const remainingFreeSlots = Math.max(0, 10 - totalActiveCount);
-    let freePlanNoticeHtml = `<div class="col-span-full flex items-center justify-between gap-3 p-3 sm:px-4 bg-white rounded-2xl border border-[#E7E1D7] text-xs text-slate-500"><span>無料プランの保存状況</span><span class="font-extrabold text-slate-800">${totalActiveCount} / 10 カプセル</span></div>`;
-    if (totalActiveCount >= 8 && totalActiveCount < 10) {
-      freePlanNoticeHtml += `<div class="col-span-full p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-        <div>
-          <div class="text-xs font-extrabold text-amber-800">👑 無料プランの上限まであと${remainingFreeSlots}件です</div>
-          <p class="text-[11px] text-amber-700 mt-1 leading-relaxed">プレミアムにすると、お子さまの作品カプセルを件数を気にせず保存できます。</p>
-        </div>
-        <button onclick="openPremiumPlanFromLimitNotice(event)" class="px-4 py-2.5 rounded-xl bg-amber-600 text-white text-xs font-bold shadow-sm hover:bg-amber-700 transition whitespace-nowrap">詳しく見る</button>
-      </div>`;
-    } else if (totalActiveCount >= 10) {
-      freePlanNoticeHtml += `<div class="col-span-full p-4 rounded-2xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-        <div>
-          <div class="text-xs font-extrabold text-rose-700">⚠️ 無料プランの保存上限に達しています</div>
-          <p class="text-[11px] text-rose-600 mt-1 leading-relaxed">新しいカプセルを追加するには、不要なカプセルを削除するか、プレミアムをご検討ください。</p>
-        </div>
-        <button onclick="openPremiumPlanFromLimitNotice(event)" class="px-4 py-2.5 rounded-xl bg-rose-500 text-white text-xs font-bold shadow-sm hover:bg-rose-600 transition whitespace-nowrap">プレミアムを見る</button>
-      </div>`;
-    }
-    html += freePlanNoticeHtml;
+    html += `<div class="col-span-full flex items-center justify-between gap-3 p-3 sm:px-4 bg-white rounded-2xl border border-[#E7E1D7] text-xs text-slate-500"><span>無料プランの保存状況</span><span class="font-extrabold text-slate-800">${totalActiveCount} / 10 カプセル</span></div>`;
   }
 
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
