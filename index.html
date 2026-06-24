@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v142]</title>
+<title>コドモカプセル [v143]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v142</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v143</div>
       </div>
 
       <div>
@@ -1139,7 +1139,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteField } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, deleteUser } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, deleteUser, reauthenticateWithPopup } from "firebase/auth";
 import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
 
 const prodConfig = {
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v142",
+        app_version: "v143",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2162,6 +2162,24 @@ async function cleanupAccountFamilyMemberships(user, userData) {
   }
 }
 
+async function ensureRecentLoginForAccountDeletion(user) {
+  if (!user) throw new Error("ログイン状態が確認できません。");
+  try {
+    const authProvider = new GoogleAuthProvider();
+    authProvider.setCustomParameters({ prompt: "select_account" });
+    await reauthenticateWithPopup(user, authProvider);
+    return true;
+  } catch (e) {
+    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") {
+      throw new Error("Google確認がキャンセルされました。アカウント削除を中止しました。");
+    }
+    if (e.code === "auth/popup-blocked") {
+      throw new Error("Google確認画面がブラウザにブロックされました。ポップアップを許可してからもう一度お試しください。");
+    }
+    throw e;
+  }
+}
+
 async function resolvePendingJoinRequests(user, userData) {
   const pendingIds = Array.isArray(userData.pendingFamilyIds) ? userData.pendingFamilyIds : [];
   const pending = [];
@@ -3089,6 +3107,11 @@ async function executeAccountDeletion(isScheduledRun = false) {
   const user = auth.currentUser;
   if (!user) throw new Error("ログイン状態が確認できません。");
   const userRef = doc(db, "users", user.uid);
+
+  if (!isScheduledRun) {
+    await ensureRecentLoginForAccountDeletion(user);
+  }
+
   const userSnap = await getDoc(userRef);
   const userData = userSnap.exists() ? userSnap.data() : {};
   const familyId = currentSession?.familyId || accountDeletionState?.familyId || userData.familyId || userData.ownedFamilyId || "";
@@ -3106,9 +3129,7 @@ async function executeAccountDeletion(isScheduledRun = false) {
     await deleteUser(user);
   } catch(e) {
     if (e.code === "auth/requires-recent-login") {
-      alert("Firebase Authユーザー削除には再ログインが必要です。\n一度ログアウトして再ログインした直後に、もう一度削除を実行してください。\nFirestore/Storage側の削除は可能な範囲で実行済みです。");
-      await signOut(auth);
-      location.reload();
+      alert("Google確認が必要です。\nもう一度「今すぐ削除」を押すと、アプリ内でGoogle確認を行ってから削除します。\nFirestore/Storage側の削除は可能な範囲で実行済みです。");
       return;
     }
     throw e;
@@ -3149,14 +3170,14 @@ window.deleteAccountImmediately = async function() {
   if (isGuestMode) { showGuestModeSaveAlert(); return; }
   const user = auth.currentUser;
   if (!user) { alert("ログイン状態が確認できません。"); return; }
-  const firstConfirm = confirm("アカウントを今すぐ削除しますか？\n親ユーザーの場合は家族グループ全体を削除します。\n招待メンバーの場合は家族グループから自分を削除し、ユーザー情報を削除します。\nこの操作は取り消せません。");
+  const firstConfirm = confirm("アカウントを今すぐ削除しますか？\n親ユーザーの場合は家族グループ全体を削除します。\n招待メンバーの場合は家族グループから自分を削除し、ユーザー情報を削除します。\nこの操作は取り消せません。\n続けるとGoogle確認画面が開く場合があります。");
   if (!firstConfirm) return;
   const typed = prompt("確認のため「削除」と入力してください。");
   if (typed !== "削除") { alert("入力が一致しないため、削除を中止しました。"); return; }
 
   const btn = document.getElementById("deleteAccountNowBtn");
   const originalText = btn ? btn.innerText : "";
-  if(btn) { btn.disabled = true; btn.innerText = "削除中..."; }
+  if(btn) { btn.disabled = true; btn.innerText = "Google確認中..."; }
   try {
     await executeAccountDeletion(false);
   } catch(e) {
