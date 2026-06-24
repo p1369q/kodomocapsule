@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v137]</title>
+<title>コドモカプセル [v138]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v137</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v138</div>
       </div>
 
       <div>
@@ -1206,7 +1206,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v137",
+        app_version: "v138",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2411,7 +2411,12 @@ function renderFamilyMembers(familyData, user) {
     const profile = familyData.memberProfiles?.[uid] || {};
     const isCurrentUser = uid === user.uid;
     const isGroupOwner = uid === familyData.createdBy;
-    const name = profile.displayName || profile.email || (isCurrentUser ? "あなた" : `メンバー ${uid.slice(0, 6)}`);
+    const displayName = profile.displayName || (isCurrentUser ? "あなた" : `メンバー ${uid.slice(0, 6)}`);
+    const email = profile.email || "";
+    const name = displayName;
+    const emailLine = email
+      ? `<div class="text-[10px] text-slate-500 mt-0.5 break-all">${email}</div>`
+      : `<div class="text-[10px] text-slate-400 mt-0.5">メールアドレス未取得</div>`;
     const permission = getMemberPermission(familyData, uid);
     const role = isGroupOwner ? "親ユーザー" : "メンバー";
     const permissionSelect = isOwner && !isGroupOwner
@@ -2428,6 +2433,7 @@ function renderFamilyMembers(familyData, user) {
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <div class="text-xs font-bold text-slate-700 truncate">${name}${isCurrentUser ? "（あなた）" : ""}</div>
+          ${emailLine}
           <div class="text-[10px] text-slate-400 mt-0.5">${role}</div>
         </div>
         ${removeButton}
