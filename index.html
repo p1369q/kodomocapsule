@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v133]</title>
+<title>コドモカプセル [v134]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -519,7 +519,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v133</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v134</div>
       </div>
 
       <div>
@@ -1032,6 +1032,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
         <button id="minecraftPreviewRetryBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">再変換</button>
+        <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">PNG保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
     </div>
@@ -1147,7 +1148,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v133",
+        app_version: "v134",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3683,6 +3684,7 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 
 let currentMinecraftPreviewTarget = null;
 let currentMinecraftPreviewMode = "auto";
+let currentMinecraftSpriteCanvas = null;
 
 function setMinecraftPreviewMode(mode, shouldRedraw = true) {
   currentMinecraftPreviewMode = mode || "auto";
@@ -3916,6 +3918,7 @@ function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
 }
 
 function renderMinecraftPreviewCanvases(spriteCanvas) {
+  currentMinecraftSpriteCanvas = spriteCanvas || null;
   const spritePreviewCanvas = document.getElementById("minecraftSpriteCanvas");
   const framePreviewCanvas = document.getElementById("minecraftPixelCanvas");
   if (spritePreviewCanvas) {
@@ -4062,6 +4065,46 @@ function drawMinecraftPixelPreview(sourceUrl) {
 }
 
 
+
+function sanitizeMinecraftDownloadName(name) {
+  return String(name || "kodomo_frame_art")
+    .replace(/[\\/:*?"<>|#%&{}$!'@+`=]/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 48) || "kodomo_frame_art";
+}
+
+window.downloadMinecraftSpritePng = function(event) {
+  if (event) event.stopPropagation();
+  const statusEl = document.getElementById("minecraftPreviewStatus");
+  if (!currentMinecraftSpriteCanvas) {
+    alert("先に額縁アートを変換してください。");
+    return;
+  }
+  try {
+    const work = currentMinecraftPreviewTarget
+      ? localWorks.find(w => w.id === currentMinecraftPreviewTarget.workId)
+      : null;
+    const fileName = sanitizeMinecraftDownloadName(work?.title || "kodomo_frame_art") + "_64x64.png";
+    const link = document.createElement("a");
+    link.download = fileName;
+    link.href = currentMinecraftSpriteCanvas.toDataURL("image/png");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    if (statusEl) statusEl.textContent = "64×64の額縁向けPNGを保存しました。次の段階で、この画像をmcaddon出力に利用します。";
+    trackEvent("minecraft_frame_png_download", {
+      work_id: currentMinecraftPreviewTarget?.workId || "",
+      media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
+      size: 64
+    });
+  } catch (err) {
+    alert("PNG保存に失敗しました。\nこの画像はブラウザの制限により保存できない可能性があります。");
+    trackEvent("minecraft_frame_png_download_error", { message: err.message || "unknown" });
+  }
+};
+
+
 window.closeMinecraftPixelPreview = function() {
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (drawer) drawer.classList.remove("open");
@@ -4089,6 +4132,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   }
 
   currentMinecraftPreviewTarget = { workId, mediaIndex, sourceUrl };
+  currentMinecraftSpriteCanvas = null;
   const titleEl = document.getElementById("minecraftPreviewTitle");
   const retryBtn = document.getElementById("minecraftPreviewRetryBtn");
   const autoBtn = document.getElementById("minecraftModeAutoBtn");
