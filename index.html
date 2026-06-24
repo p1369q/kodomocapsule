@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v153]</title>
+<title>コドモカプセル [v154]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -640,7 +640,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v153</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v154</div>
       </div>
 
       <div>
@@ -923,6 +923,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     </div>
 
     <div id="settingsFamily" class="settings-tab-panel hidden mb-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+      <div class="mb-4 p-3 rounded-2xl bg-white border border-emerald-100">
+        <div class="text-xs font-extrabold text-emerald-800">🔁 カプセル切り替え</div>
+        <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">マイカプセルと家族カプセルを切り替えられます。ログアウトはしません。</p>
+        <button type="button" onclick="openCapsuleSwitcher()" class="w-full mt-2 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">カプセルを切り替える</button>
+      </div>
       <label class="block text-xs font-bold text-emerald-800 mb-1">🤝 パートナー共有用 家族コード</label>
       <div class="flex gap-2 items-center mt-1">
         <input type="text" id="displayFamilyIdCode" readonly class="bg-white py-1.5 px-2.5 text-xs text-slate-700 font-mono rounded-xl border flex-1" value="取得中...">
@@ -1251,6 +1256,7 @@ let currentCropMediaIndex = null;
 let currentCropAspectMode = "free";
 let currentFamilyData = null;
 let currentUserPermission = "delete";
+let isCapsuleSwitcherOpen = false;
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -1264,7 +1270,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v153",
+        app_version: "v154",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2143,6 +2149,77 @@ function joinedFamilyStorageKey(uid) {
   return `kc_joined_family_ids_${uid}`;
 }
 
+function lastCapsuleStorageKey(uid) {
+  return `kc_last_capsule_id_${uid}`;
+}
+
+function lastPageStorageKey(uid) {
+  return `kc_last_page_${uid}`;
+}
+
+function getLastCapsuleId(uid) {
+  if (!uid) return "";
+  try { return localStorage.getItem(lastCapsuleStorageKey(uid)) || ""; } catch(e) { return ""; }
+}
+
+function rememberLastCapsuleId(uid, familyId) {
+  if (!uid || !familyId) return;
+  try { localStorage.setItem(lastCapsuleStorageKey(uid), familyId); } catch(e) { console.warn("Last capsule local cache skipped:", e); }
+}
+
+function forgetLastCapsuleId(uid) {
+  if (!uid) return;
+  try { localStorage.removeItem(lastCapsuleStorageKey(uid)); } catch(e) {}
+}
+
+function getLastPage(uid) {
+  if (!uid) return "gallery";
+  try {
+    const page = localStorage.getItem(lastPageStorageKey(uid)) || "gallery";
+    return ["gallery", "records", "trash"].includes(page) ? page : "gallery";
+  } catch(e) {
+    return "gallery";
+  }
+}
+
+function rememberLastPage(uid, page) {
+  if (!uid || !["gallery", "records", "trash"].includes(page)) return;
+  try { localStorage.setItem(lastPageStorageKey(uid), page); } catch(e) { console.warn("Last page local cache skipped:", e); }
+}
+
+function restoreLastPageForCurrentUser() {
+  const user = auth.currentUser;
+  const page = getLastPage(user?.uid || "");
+  setTimeout(() => {
+    try { window.switchPage(page); } catch(e) { window.switchPage("gallery"); }
+  }, 0);
+}
+
+async function tryOpenLastCapsule(user, userData, ownedFamilyId, joinedFamilies) {
+  if (!user || hasSelectedFamilyGroup || isCapsuleSwitcherOpen) return false;
+
+  const lastId = getLastCapsuleId(user.uid) || userData?.lastCapsuleId || "";
+  if (!lastId) return false;
+
+  const isOwned = ownedFamilyId && lastId === ownedFamilyId;
+  const isJoined = Array.isArray(joinedFamilies) && joinedFamilies.some(family => family.id === lastId);
+  if (!isOwned && !isJoined) {
+    forgetLastCapsuleId(user.uid);
+    return false;
+  }
+
+  try {
+    await activateFamilyGroup(lastId, user);
+    return true;
+  } catch(e) {
+    console.warn("前回のカプセル自動復元をスキップしました:", e.code || e.message);
+    forgetLastCapsuleId(user.uid);
+    hasSelectedFamilyGroup = false;
+    currentSession = null;
+    return false;
+  }
+}
+
 function getStoredJoinedFamilyIds(uid) {
   if (!uid) return [];
   try {
@@ -2770,8 +2847,19 @@ async function activateFamilyGroup(familyId, user) {
   });
 
   await verifyAndSetupDefaultCategories(familyId);
+  rememberLastCapsuleId(user.uid, familyId);
+  try {
+    await setDoc(doc(db, "users", user.uid), {
+      lastCapsuleId: familyId,
+      updatedAt: Date.now()
+    }, { merge: true });
+  } catch(e) {
+    console.warn("Last capsule profile sync skipped:", e.code || e.message);
+  }
   document.getElementById("authGatescreen").classList.add("hidden");
+  isCapsuleSwitcherOpen = false;
   startRealtimeSync();
+  restoreLastPageForCurrentUser();
 }
 
 window.useOwnFamilyGroup = async function() {
@@ -2858,6 +2946,9 @@ onAuthStateChanged(auth, async (user) => {
         pendingOwnFamilyId = await resolveOwnedFamilyId(user, userData);
         await resolvePendingJoinRequests(user, userData);
         const joinedFamilies = await resolveJoinedFamilyGroups(user, userData, pendingOwnFamilyId);
+        if (await tryOpenLastCapsule(user, userData, pendingOwnFamilyId, joinedFamilies)) {
+          return;
+        }
         const directFamily = getDirectFamilyCapsuleToOpen(user, userData, joinedFamilies, pendingOwnFamilyId);
         if (!hasSelectedFamilyGroup && directFamily) {
           await activateFamilyGroup(directFamily.id, user);
@@ -2896,6 +2987,7 @@ onAuthStateChanged(auth, async (user) => {
     hasSelectedFamilyGroup = false;
     legacyUserPlan = "free";
     isResolvingFamilyChoice = false;
+    isCapsuleSwitcherOpen = false;
     savedJoinedFamilies = [];
     pendingJoinFamilies = [];
     approvedJoinFamilyIdsFromRequests = [];
@@ -5247,6 +5339,39 @@ window.openLegalModal = function(type = 'terms') {
   trackEvent("legal_modal_open", { legal_type: type });
 };
 
+window.openCapsuleSwitcher = function() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  isCapsuleSwitcherOpen = true;
+  hasSelectedFamilyGroup = false;
+  currentSession = null;
+  currentFamilyData = null;
+  currentUserPermission = "none";
+  isPremiumUser = false;
+  stopRealtimeSync();
+  if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
+  if (unsubscribeJoinRequests) { unsubscribeJoinRequests(); unsubscribeJoinRequests = null; }
+
+  closeDrawer();
+  updatePermissionNotice();
+  updatePlanUI();
+  updateFamilyChoiceUI();
+  renderSavedFamilyGroups();
+  renderPendingFamilyRequests();
+
+  const gateScreen = document.getElementById("authGatescreen");
+  const gateLoading = document.getElementById("gateLoading");
+  const gateLoginArea = document.getElementById("gateLoginArea");
+  const gateSetupArea = document.getElementById("gateSetupArea");
+  if (gateScreen) gateScreen.classList.remove("hidden");
+  if (gateLoading) gateLoading.classList.add("hidden");
+  if (gateLoginArea) gateLoginArea.classList.add("hidden");
+  if (gateSetupArea) gateSetupArea.classList.remove("hidden");
+  updateAuthGateLayoutMode();
+  trackEvent("capsule_switcher_open");
+};
+
 window.openDrawer = function(t){ 
   if(t === 'work' && !document.getElementById("editingWorkId").value && !canAddData()) { alert(getPermissionDeniedMessage("カプセルの追加")); return; }
   if(t === 'work' && !document.getElementById("editingWorkId").value) {
@@ -5268,6 +5393,7 @@ window.closeDrawer = function(t){
 };
 
 window.switchPage = function(p){
+  if (auth.currentUser && currentSession?.familyId) rememberLastPage(auth.currentUser.uid, p);
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   if(p === 'gallery'){ trackEvent("gallery_view"); document.getElementById('galleryPage').classList.add('active'); document.getElementById('nav-gallery').classList.add('active'); renderGallery(); } 
