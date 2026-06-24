@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v147]</title>
+<title>コドモカプセル [v148]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -453,20 +453,20 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div id="gateSetupArea" class="hidden mt-5 space-y-5 w-full">
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-emerald-50 text-xl mb-2">👋</div>
-              <h3 class="text-base font-extrabold text-slate-800">利用する家族グループを選択</h3>
-              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">招待コードで参加する時に、このアカウント用の家族グループも自動で準備します。</p>
+              <h3 class="text-base font-extrabold text-slate-800">利用するカプセルを選択</h3>
+              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">自分で管理するか、家族から招待されたカプセルに参加できます。</p>
             </div>
 
             <div class="p-4 rounded-2xl border-2 border-rose-100 bg-rose-50/50 text-left">
               <div class="flex items-start gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">🏠</div>
                 <div class="flex-1">
-                  <div class="text-sm font-extrabold text-slate-800">自分の家族グループで利用</div>
+                  <div class="text-sm font-extrabold text-slate-800">マイカプセル</div>
                   <p id="ownFamilyStatusText" class="text-[10px] text-slate-500 mt-1 leading-relaxed">アカウントに登録された家族グループを確認しています。</p>
                 </div>
               </div>
-              <button id="btnUseOwnFamily" onclick="useOwnFamilyGroup()" class="w-full mt-3 py-3.5 rounded-xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">自分の家族グループを使う</button>
-              <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="hidden w-full mt-3 py-3.5 rounded-xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">新しい家族グループを作成する</button>
+              <button id="btnUseOwnFamily" onclick="useOwnFamilyGroup()" class="w-full mt-3 py-3.5 rounded-xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">マイカプセルを開く</button>
+              <button id="btnCreateFamily" onclick="createNewFamilyGroup()" class="hidden w-full mt-3 py-3.5 rounded-xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">マイカプセルを作成する</button>
             </div>
 
             <div class="relative flex py-1 items-center text-slate-300 w-full">
@@ -479,8 +479,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div class="flex items-start gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">✉️</div>
                 <div>
-                  <div class="text-sm font-extrabold text-slate-800">招待された家族グループで利用</div>
-                  <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">家族から共有された招待コード（UUID形式）を入力します。</p>
+                  <div class="text-sm font-extrabold text-slate-800">家族カプセル</div>
+                  <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">家族から招待された共有スペースです。招待コードで参加できます。</p>
                 </div>
               </div>
               <input type="text" id="joinInviteCodeInput" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" class="mt-3 py-3 px-3 text-xs rounded-xl bg-white border border-sky-100 font-mono">
@@ -491,7 +491,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div class="flex items-start gap-3 mb-3">
                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">🔖</div>
                 <div>
-                  <div class="text-sm font-extrabold text-slate-800">参加済みの家族グループ</div>
+                  <div class="text-sm font-extrabold text-slate-800">参加済みの家族カプセル</div>
                   <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">自分の家族グループを作っていない場合でも、次回からコード入力なしで開けます。</p>
                 </div>
               </div>
@@ -499,11 +499,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </div>
 
             <div id="pendingFamilyRequestsArea" class="hidden p-4 rounded-2xl border border-amber-200 bg-amber-50 text-left">
-              <div class="text-xs font-bold text-amber-800">⏳ 承認待ちの参加申請</div>
+              <div class="text-xs font-bold text-amber-800">⏳ 家族カプセルへの参加申請</div>
               <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。参加申請時に自分用の家族グループも自動で準備します。</p>
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。承認後は家族カプセルをコードなしで開けます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v147</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v148</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v147",
+        app_version: "v148",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1973,20 +1973,20 @@ function updateFamilyChoiceUI() {
   if (!statusText || !useOwnBtn || !createBtn) return;
 
   if (pendingOwnFamilyId) {
-    statusText.innerText = "このアカウントに登録済みの家族グループを利用します。";
+    statusText.innerText = "自分で管理する保存スペースです。作品を保存したり、家族を招待できます。";
     useOwnBtn.classList.remove("hidden");
     createBtn.classList.add("hidden");
-    createBtn.innerText = "新しい家族グループを作成する";
+    createBtn.innerText = "マイカプセルを作成する";
   } else if (savedJoinedFamilies.length) {
-    statusText.innerText = "このアカウント用の家族グループは準備済みです。招待された家族グループも利用できます。";
+    statusText.innerText = "マイカプセルは準備済みです。家族カプセルにも参加できます。";
     useOwnBtn.classList.add("hidden");
     createBtn.classList.remove("hidden");
-    createBtn.innerText = "自分用の家族グループも作成する";
+    createBtn.innerText = "マイカプセルを作成する";
   } else {
-    statusText.innerText = "自分で家族グループを作るか、家族から届いた招待コードで参加できます。";
+    statusText.innerText = "マイカプセルを作るか、家族から届いた招待コードで家族カプセルに参加できます。";
     useOwnBtn.classList.add("hidden");
     createBtn.classList.remove("hidden");
-    createBtn.innerText = "新しい家族グループを作成する";
+    createBtn.innerText = "マイカプセルを作成する";
   }
 }
 
@@ -2604,7 +2604,7 @@ async function activateFamilyGroup(familyId, user) {
   currentSession = { familyId, userId: user.uid };
 
   let famSnap = await getDoc(doc(db, "families", familyId));
-  if (!famSnap.exists()) throw new Error("家族グループが見つかりません。");
+  if (!famSnap.exists()) throw new Error("カプセルが見つかりません。");
 
   const familyData = famSnap.data();
   refreshCurrentPermission(familyData, user);
@@ -2614,7 +2614,7 @@ async function activateFamilyGroup(familyId, user) {
   if (!isFamilyOwner && !isApprovedMember) {
     hasSelectedFamilyGroup = false;
     currentSession = null;
-    throw new Error("この家族グループは親ユーザーの承認待ちです。");
+    throw new Error("この家族カプセルは親ユーザーの承認待ちです。");
   }
 
   if (isApprovedMember) {
@@ -2860,7 +2860,7 @@ async function ensureOwnFamilyGroupForInviteRequest(user) {
   const docFamilyId = crypto.randomUUID();
   const inviteCodeUuid = crypto.randomUUID();
 
-  // 「自分の家族グループで利用」と同じく、まず users 側へ ownedFamilyId を作る
+  // 「マイカプセル」と同じく、まず users 側へ ownedFamilyId を作る
   await setDoc(userRef, {
     familyId: userData.familyId || docFamilyId,
     ownedFamilyId: docFamilyId,
@@ -2905,7 +2905,7 @@ async function ensureOwnFamilyGroupForInviteRequest(user) {
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
   if (!user) return;
-  if (!confirm("新しい家族グループを生成しますか？")) return;
+  if (!confirm("マイカプセルを作成しますか？")) return;
 
   const btn = document.getElementById("btnCreateFamily");
   btn.innerText = "作成中..."; btn.disabled = true;
@@ -2947,10 +2947,10 @@ window.createNewFamilyGroup = async function() {
     pendingOwnFamilyId = docFamilyId;
     await activateFamilyGroup(docFamilyId, user);
     trackEvent("family_created", { family_id: docFamilyId });
-    alert("🎉 家族グループを新規に作成しました！");
+    alert("🎉 マイカプセルを作成しました！");
   } catch (e) {
     hasSelectedFamilyGroup = false;
-    btn.innerText = "新しい家族グループを作成する"; btn.disabled = false;
+    btn.innerText = "マイカプセルを作成する"; btn.disabled = false;
     alert("🚨 作成エラー: " + e.message);
   }
 };
@@ -2968,7 +2968,7 @@ window.joinFamilyGroup = async function() {
   try {
     const inviteSnap = await getDoc(doc(db, "familyInvites", inviteCode));
     if (!inviteSnap.exists() || inviteSnap.data().active !== true) {
-      alert("⚠️ 有効な家族招待コードが見つかりません。");
+      alert("⚠️ 有効な招待コードが見つかりません。");
       return;
     }
 
@@ -2978,7 +2978,7 @@ window.joinFamilyGroup = async function() {
     try {
       await ensureOwnFamilyGroupForInviteRequest(user);
     } catch (autoFamilyError) {
-      alert("参加申請の前に、自分用の家族グループを作成できませんでした。\n「自分の家族グループで利用」を押した時と同じ処理を実行しましたが失敗しました。\n詳細: " + (autoFamilyError.code || autoFamilyError.message));
+      alert("参加申請の前に、マイカプセルを作成できませんでした。\n「マイカプセル」を押した時と同じ処理を実行しましたが失敗しました。\n詳細: " + (autoFamilyError.code || autoFamilyError.message));
       return;
     }
 
@@ -3013,7 +3013,7 @@ window.joinFamilyGroup = async function() {
     }
 
     if (existingRequest?.status === "pending") {
-      alert("この家族グループへの参加申請はすでに送信済みです。\n親ユーザーの承認をお待ちください。");
+      alert("この家族カプセルへの参加申請はすでに送信済みです。\n親ユーザーの承認をお待ちください。");
       return;
     }
 
