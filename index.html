@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v145]</title>
+<title>コドモカプセル [v147]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -454,7 +454,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-emerald-50 text-xl mb-2">👋</div>
               <h3 class="text-base font-extrabold text-slate-800">利用する家族グループを選択</h3>
-              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">ログイン後に利用準備を行います。招待コードだけで家族グループに参加できます。</p>
+              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">招待コードで参加する時に、このアカウント用の家族グループも自動で準備します。</p>
             </div>
 
             <div class="p-4 rounded-2xl border-2 border-rose-100 bg-rose-50/50 text-left">
@@ -503,7 +503,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。承認後は参加済み一覧からコードなしで開けます。</p>
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。参加申請時に自分用の家族グループも自動で準備します。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v145</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v147</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v145",
+        app_version: "v147",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2764,7 +2764,6 @@ onAuthStateChanged(auth, async (user) => {
 
     await checkUrlSessionParameters(user);
     await ensureUserProfileForInviteOnlyUse(user);
-    await ensureOwnFamilyGroupForInviteRequest(user);
     startUserJoinRequestSync(user);
 
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
@@ -2846,81 +2845,62 @@ async function verifyAndSetupDefaultCategories(familyId) {
 }
 
 async function ensureOwnFamilyGroupForInviteRequest(user) {
-  if (!user) return null;
+  if (!user) throw new Error("ログイン状態が確認できません。");
 
-  try {
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.exists() ? userSnap.data() : {};
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.exists() ? userSnap.data() : {};
 
-    if (userData.ownedFamilyId) {
-      pendingOwnFamilyId = userData.ownedFamilyId;
-      return userData.ownedFamilyId;
-    }
+  if (userData.ownedFamilyId) {
+    pendingOwnFamilyId = userData.ownedFamilyId;
+    updateFamilyChoiceUI();
+    return userData.ownedFamilyId;
+  }
 
-    const ownedQuery = query(collection(db, "families"), where("createdBy", "==", user.uid));
-    const ownedSnapshot = await getDocs(ownedQuery);
-    if (!ownedSnapshot.empty) {
-      const ownedFamilyId = ownedSnapshot.docs[0].id;
-      await setDoc(userRef, {
-        ownedFamilyId,
-        familyId: userData.familyId || ownedFamilyId,
+  const docFamilyId = crypto.randomUUID();
+  const inviteCodeUuid = crypto.randomUUID();
+
+  // 「自分の家族グループで利用」と同じく、まず users 側へ ownedFamilyId を作る
+  await setDoc(userRef, {
+    familyId: userData.familyId || docFamilyId,
+    ownedFamilyId: docFamilyId,
+    email: user.email || "",
+    displayName: user.displayName || "",
+    updatedAt: Date.now()
+  }, { merge: true });
+
+  await setDoc(doc(db, "families", docFamilyId), {
+    inviteCode: inviteCodeUuid,
+    createdAt: Date.now(),
+    createdBy: user.uid,
+    members: { [user.uid]: true },
+    memberPermissions: { [user.uid]: "delete" },
+    memberProfiles: {
+      [user.uid]: {
         email: user.email || "",
         displayName: user.displayName || "",
-        updatedAt: Date.now()
-      }, { merge: true });
-      pendingOwnFamilyId = ownedFamilyId;
-      return ownedFamilyId;
-    }
+        lastSeenAt: Date.now()
+      }
+    },
+    plan: legacyUserPlan === "premium" ? "premium" : "free"
+  });
 
-    const docFamilyId = crypto.randomUUID();
-    const inviteCodeUuid = crypto.randomUUID();
-
-    await setDoc(userRef, {
-      familyId: userData.familyId || docFamilyId,
-      ownedFamilyId: docFamilyId,
-      email: user.email || "",
-      displayName: user.displayName || "",
-      updatedAt: Date.now()
-    }, { merge: true });
-
-    await setDoc(doc(db, "families", docFamilyId), {
-      inviteCode: inviteCodeUuid,
-      createdAt: Date.now(),
+  try {
+    await setDoc(doc(db, "familyInvites", inviteCodeUuid), {
+      familyId: docFamilyId,
       createdBy: user.uid,
-      members: { [user.uid]: true },
-      memberPermissions: { [user.uid]: "delete" },
-      memberProfiles: {
-        [user.uid]: {
-          email: user.email || "",
-          displayName: user.displayName || "",
-          lastSeenAt: Date.now()
-        }
-      },
-      plan: legacyUserPlan === "premium" ? "premium" : "free"
+      active: true,
+      createdAt: Date.now()
     });
-
-    try {
-      await setDoc(doc(db, "familyInvites", inviteCodeUuid), {
-        familyId: docFamilyId,
-        createdBy: user.uid,
-        active: true,
-        createdAt: Date.now()
-      });
-    } catch (inviteError) {
-      console.warn("招待コード索引の自動作成をスキップしました:", inviteError.code || inviteError.message);
-    }
-
-    pendingOwnFamilyId = docFamilyId;
-    updateFamilyChoiceUI();
-    trackEvent("family_auto_created_for_login", { family_id: docFamilyId });
-    return docFamilyId;
-  } catch (e) {
-    console.warn("招待申請前の自分用家族グループ自動作成をスキップしました:", e.code || e.message);
-    return null;
+  } catch (inviteError) {
+    console.warn("招待コード索引の自動作成をスキップしました:", inviteError.code || inviteError.message);
   }
-}
 
+  pendingOwnFamilyId = docFamilyId;
+  updateFamilyChoiceUI();
+  trackEvent("family_auto_created_from_join_button", { family_id: docFamilyId });
+  return docFamilyId;
+}
 
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
@@ -2993,7 +2973,15 @@ window.joinFamilyGroup = async function() {
     }
 
     const targetDocId = inviteSnap.data().familyId;
-    await ensureOwnFamilyGroupForInviteRequest(user);
+
+    btn.innerText = "家族グループ準備中...";
+    try {
+      await ensureOwnFamilyGroupForInviteRequest(user);
+    } catch (autoFamilyError) {
+      alert("参加申請の前に、自分用の家族グループを作成できませんでした。\n「自分の家族グループで利用」を押した時と同じ処理を実行しましたが失敗しました。\n詳細: " + (autoFamilyError.code || autoFamilyError.message));
+      return;
+    }
+
     const requestDocId = `${targetDocId}_${user.uid}`;
     const requestRef = doc(db, "familyJoinRequests", requestDocId);
 
