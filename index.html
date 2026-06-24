@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v136]</title>
+<title>コドモカプセル [v137]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v136</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v137</div>
       </div>
 
       <div>
@@ -1206,7 +1206,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v136",
+        app_version: "v137",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2081,6 +2081,76 @@ function rememberJoinedFamilyId(uid, familyId) {
     localStorage.setItem(joinedFamilyStorageKey(uid), JSON.stringify(Array.from(ids)));
   } catch (e) {
     console.warn("Joined family local cache skipped:", e);
+  }
+}
+
+function forgetJoinedFamilyId(uid, familyId) {
+  if (!uid || !familyId) return;
+  try {
+    const ids = getStoredJoinedFamilyIds(uid).filter(id => id !== familyId);
+    if (ids.length) localStorage.setItem(joinedFamilyStorageKey(uid), JSON.stringify(ids));
+    else localStorage.removeItem(joinedFamilyStorageKey(uid));
+  } catch (e) {
+    console.warn("Joined family local cache cleanup skipped:", e);
+  }
+}
+
+function collectAccountFamilyIds(userData) {
+  const ids = new Set();
+  if (currentSession?.familyId) ids.add(currentSession.familyId);
+  if (accountDeletionState?.familyId) ids.add(accountDeletionState.familyId);
+  if (userData?.familyId) ids.add(userData.familyId);
+  if (userData?.ownedFamilyId) ids.add(userData.ownedFamilyId);
+  if (Array.isArray(userData?.joinedFamilyIds)) {
+    userData.joinedFamilyIds.forEach(id => { if (id) ids.add(id); });
+  }
+  if (Array.isArray(userData?.pendingFamilyIds)) {
+    userData.pendingFamilyIds.forEach(id => { if (id) ids.add(id); });
+  }
+  return Array.from(ids).filter(Boolean);
+}
+
+async function removeAccountFromFamilyGroup(user, familyId) {
+  if (!user || !familyId) return;
+  const familyRef = doc(db, "families", familyId);
+  const familySnap = await getDoc(familyRef);
+  if (!familySnap.exists()) return;
+  const familyData = familySnap.data();
+
+  if (familyData.createdBy === user.uid) {
+    await deleteFamilyGroupData(familyId);
+    return;
+  }
+
+  try {
+    await updateDoc(familyRef, {
+      [`members.${user.uid}`]: deleteField(),
+      [`memberPermissions.${user.uid}`]: deleteField(),
+      [`memberProfiles.${user.uid}`]: deleteField(),
+      updatedAt: Date.now()
+    });
+  } catch (e) {
+    console.warn("家族グループからのメンバー解除をスキップしました:", familyId, e.code || e.message);
+  }
+
+  const requestRef = doc(db, "familyJoinRequests", `${familyId}_${user.uid}`);
+  try {
+    await deleteDoc(requestRef);
+  } catch (e) {
+    console.warn("参加申請ドキュメント削除をスキップしました:", familyId, e.code || e.message);
+  }
+
+  forgetJoinedFamilyId(user.uid, familyId);
+}
+
+async function cleanupAccountFamilyMemberships(user, userData) {
+  const familyIds = collectAccountFamilyIds(userData);
+  for (const familyId of familyIds) {
+    try {
+      await removeAccountFromFamilyGroup(user, familyId);
+    } catch (e) {
+      console.warn("家族グループからのアカウント削除連動処理をスキップしました:", familyId, e.code || e.message);
+    }
   }
 }
 
@@ -2988,7 +3058,7 @@ async function executeAccountDeletion(isScheduledRun = false) {
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
   const userData = userSnap.exists() ? userSnap.data() : {};
-  const familyId = currentSession?.familyId || accountDeletionState?.familyId || userData.familyId || userData.ownedFamilyId;
+  const familyId = currentSession?.familyId || accountDeletionState?.familyId || userData.familyId || userData.ownedFamilyId || "";
 
   stopRealtimeSync();
   if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
@@ -2996,9 +3066,7 @@ async function executeAccountDeletion(isScheduledRun = false) {
   if (unsubscribeJoinRequests) { unsubscribeJoinRequests(); unsubscribeJoinRequests = null; }
   if (unsubscribeUserJoinRequests) { unsubscribeUserJoinRequests(); unsubscribeUserJoinRequests = null; }
 
-  if (familyId) {
-    await deleteFamilyGroupData(familyId);
-  }
+  await cleanupAccountFamilyMemberships(user, userData);
   try { await deleteDoc(userRef); } catch(e) { console.warn("ユーザードキュメント削除をスキップしました:", e.code || e.message); }
 
   try {
@@ -3048,7 +3116,7 @@ window.deleteAccountImmediately = async function() {
   if (isGuestMode) { showGuestModeSaveAlert(); return; }
   const user = auth.currentUser;
   if (!user) { alert("ログイン状態が確認できません。"); return; }
-  const firstConfirm = confirm("アカウントを今すぐ削除しますか？\n現在利用中の家族グループ、作品、写真・PDF、ユーザー情報を削除します。\nこの操作は取り消せません。");
+  const firstConfirm = confirm("アカウントを今すぐ削除しますか？\n親ユーザーの場合は家族グループ全体を削除します。\n招待メンバーの場合は家族グループから自分を削除し、ユーザー情報を削除します。\nこの操作は取り消せません。");
   if (!firstConfirm) return;
   const typed = prompt("確認のため「削除」と入力してください。");
   if (typed !== "削除") { alert("入力が一致しないため、削除を中止しました。"); return; }
