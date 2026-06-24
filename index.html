@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v118]</title>
+<title>コドモカプセル [v119]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,7 +354,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v118</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v119</div>
       </div>
 
       <div>
@@ -981,7 +981,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v118",
+        app_version: "v119",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3463,7 +3463,7 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB)
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = 58;
+  const innerSize = 60;
   const scale = Math.min(innerSize / srcW, innerSize / srcH);
   const drawW = srcW * scale;
   const drawH = srcH * scale;
@@ -3478,7 +3478,7 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB)
   const data = imageData.data;
   const binary = new Uint8ClampedArray(spriteSize * spriteSize);
   const bgBrightness = (bgR + bgG + bgB) / 3;
-  const threshold = Math.min(232, Math.max(176, bgBrightness - 16));
+  const threshold = Math.min(236, Math.max(176, bgBrightness - 12));
   for (let y = 0; y < spriteSize; y++) {
     for (let x = 0; x < spriteSize; x++) {
       const idx = (y * spriteSize + x) * 4;
@@ -3550,7 +3550,7 @@ function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = 56;
+  const innerSize = 58;
   const scale = Math.min(innerSize / srcW, innerSize / srcH);
   const drawW = srcW * scale;
   const drawH = srcH * scale;
@@ -3676,7 +3676,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
   img.crossOrigin = "anonymous";
   img.onload = function() {
     try {
-      const analysisSize = 192;
+      const analysisSize = 224;
       const analysisCanvas = document.createElement("canvas");
       analysisCanvas.width = analysisSize;
       analysisCanvas.height = analysisSize;
@@ -3722,7 +3722,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
           const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
           const brightness = (r + g + b) / 3;
           const isForeground = selectedMode === "line"
-            ? (a > 18 && (brightness < 224 || distance > 36))
+            ? (a > 18 && (brightness < 228 || distance > 32))
             : (a > 18 && (distance > 50 || brightness < 234));
           if (isForeground) {
             if (xx < minX) minX = xx;
@@ -3740,7 +3740,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
       }
       const cropW = Math.max(1, maxX - minX + 1);
       const cropH = Math.max(1, maxY - minY + 1);
-      const paddingRatio = selectedMode === "line" ? 0.05 : 0.1;
+      const paddingRatio = selectedMode === "line" ? 0.04 : 0.08;
       const padding = Math.max(4, Math.round(Math.max(cropW, cropH) * paddingRatio));
       const srcX = Math.max(0, minX - padding);
       const srcY = Math.max(0, minY - padding);
