@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v124]</title>
+<title>コドモカプセル [v125]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,7 +354,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v124</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v125</div>
       </div>
 
       <div>
@@ -981,7 +981,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v124",
+        app_version: "v125",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2462,77 +2462,16 @@ window.joinFamilyGroup = async function() {
   if(!user) return; if(!inviteCode) { alert("招待コードを入力してください"); return; }
 
   const btn = document.getElementById("btnJoinFamily");
-  btn.innerText = "確認中..."; btn.disabled = true;
+  btn.innerText = "申請中..."; btn.disabled = true;
 
   try {
     const inviteSnap = await getDoc(doc(db, "familyInvites", inviteCode));
     if (!inviteSnap.exists() || inviteSnap.data().active !== true) {
       alert("⚠️ 有効な家族招待コードが見つかりません。");
-      return;
+      btn.innerText = "招待コードで参加する"; btn.disabled = false; return;
     }
     const targetDocId = inviteSnap.data().familyId;
-    if (!targetDocId) {
-      alert("⚠️ 招待コードの情報が不完全です。親ユーザーに招待コードの再発行を依頼してください。");
-      return;
-    }
-
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.exists() ? userSnap.data() : {};
-    const joinedFamilyIds = Array.isArray(userData.joinedFamilyIds) ? userData.joinedFamilyIds : [];
-    if (userData.familyId === targetDocId || joinedFamilyIds.includes(targetDocId)) {
-      await setDoc(userRef, {
-        familyId: targetDocId,
-        joinedFamilyIds: arrayUnion(targetDocId),
-        pendingFamilyIds: arrayRemove(targetDocId),
-        email: user.email || "",
-        updatedAt: Date.now()
-      }, { merge: true });
-      document.getElementById("joinInviteCodeInput").value = "";
-      trackEvent("family_join_saved_code_login", { family_id: targetDocId });
-      await activateFamilyGroup(targetDocId, user);
-      return;
-    }
-
     const requestRef = doc(db, "familyJoinRequests", `${targetDocId}_${user.uid}`);
-    let existingRequest = null;
-    try {
-      const requestSnap = await getDoc(requestRef);
-      existingRequest = requestSnap.exists() ? requestSnap.data() : null;
-    } catch (readRequestError) {
-      if (readRequestError.code !== "permission-denied") throw readRequestError;
-      console.warn("参加申請の既存状態確認をスキップしました:", readRequestError.code);
-    }
-
-    if (existingRequest?.status === "approved") {
-      await setDoc(userRef, {
-        familyId: targetDocId,
-        joinedFamilyIds: arrayUnion(targetDocId),
-        pendingFamilyIds: arrayRemove(targetDocId),
-        email: user.email || "",
-        updatedAt: Date.now()
-      }, { merge: true });
-      document.getElementById("joinInviteCodeInput").value = "";
-      trackEvent("family_join_approved_code_login", { family_id: targetDocId });
-      await activateFamilyGroup(targetDocId, user);
-      return;
-    }
-
-    if (existingRequest?.status === "pending") {
-      await setDoc(userRef, {
-        pendingFamilyIds: arrayUnion(targetDocId),
-        email: user.email || "",
-        updatedAt: Date.now()
-      }, { merge: true });
-      alert("この家族グループにはすでに参加申請済みです。\n親ユーザーの承認後に、参加済み一覧または同じ招待コードから利用できます。");
-      return;
-    }
-
-    if (existingRequest?.status === "rejected" || existingRequest?.status === "revoked") {
-      await deleteDoc(requestRef);
-    }
-
-    btn.innerText = "申請中...";
     await setDoc(requestRef, {
       familyId: targetDocId,
       userId: user.uid,
@@ -2542,7 +2481,7 @@ window.joinFamilyGroup = async function() {
       status: "pending",
       requestedAt: Date.now()
     });
-    await setDoc(userRef, {
+    await setDoc(doc(db, "users", user.uid), {
       pendingFamilyIds: arrayUnion(targetDocId),
       email: user.email || "",
       updatedAt: Date.now()
@@ -2551,10 +2490,11 @@ window.joinFamilyGroup = async function() {
     trackEvent("family_join_request_sent", { family_id: targetDocId });
     alert("参加申請を送信しました。\n親ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
+    btn.innerText = "招待コードで参加する"; btn.disabled = false;
     if (e.code === "permission-denied") {
-      alert("参加処理に失敗しました。\n\ncode: " + (e.code || "unknown") + "\nmessage: " + (e.message || "権限エラー") + "\n\n招待コードの読み取り、参加申請の作成、本人ユーザー情報の更新権限を確認してください。");
+      alert("参加申請を送信できませんでした。\n\n親ユーザーが一度v72で家族グループを開いていることと、v72のFirestore Rulesが公開済みか確認してください。");
     } else {
-      alert("🚨 参加処理エラー: " + e.message);
+      alert("🚨 参加申請エラー: " + e.message);
     }
     return;
   } finally {
