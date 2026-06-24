@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v126]</title>
+<title>コドモカプセル [v127]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,7 +354,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v126</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v127</div>
       </div>
 
       <div>
@@ -981,7 +981,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v126",
+        app_version: "v127",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1897,6 +1897,19 @@ async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
   const candidateIds = new Set(Array.isArray(userData.joinedFamilyIds) ? userData.joinedFamilyIds : []);
   if (userData.familyId && userData.familyId !== ownedFamilyId) candidateIds.add(userData.familyId);
 
+  try {
+    const approvedRequestQuery = query(collection(db, "familyJoinRequests"), where("userId", "==", user.uid));
+    const approvedRequestSnapshot = await getDocs(approvedRequestQuery);
+    approvedRequestSnapshot.forEach(requestDoc => {
+      const requestData = requestDoc.data();
+      if (requestData.status === "approved" && requestData.familyId && requestData.familyId !== ownedFamilyId) {
+        candidateIds.add(requestData.familyId);
+      }
+    });
+  } catch (e) {
+    console.warn("Approved family request lookup skipped:", e);
+  }
+
   const resolved = [];
   for (const familyId of candidateIds) {
     try {
@@ -1912,15 +1925,22 @@ async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
 
   savedJoinedFamilies = resolved;
   renderSavedFamilyGroups();
-  if (userData.familyId && userData.familyId !== ownedFamilyId && resolved.some(f => f.id === userData.familyId)) {
-    const alreadySaved = Array.isArray(userData.joinedFamilyIds) && userData.joinedFamilyIds.includes(userData.familyId);
+
+  for (const family of resolved) {
+    const alreadySaved = Array.isArray(userData.joinedFamilyIds) && userData.joinedFamilyIds.includes(family.id);
     if (!alreadySaved) {
-      await setDoc(doc(db, "users", user.uid), {
-        joinedFamilyIds: arrayUnion(userData.familyId),
-        updatedAt: Date.now()
-      }, { merge: true });
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          joinedFamilyIds: arrayUnion(family.id),
+          pendingFamilyIds: arrayRemove(family.id),
+          updatedAt: Date.now()
+        }, { merge: true });
+      } catch (e) {
+        console.warn("Joined family cache update skipped:", e);
+      }
     }
   }
+
   return resolved;
 }
 
