@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v112]</title>
+<title>コドモカプセル [v113]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,6 +35,12 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 #photoPreviewDrawer .photo-preview-detail{overflow:auto;padding-bottom:8px;}
 #photoPreviewDrawer .photo-preview-actions{position:sticky;bottom:0;background:white;padding-top:8px;}
 @media (max-width:640px){#photoPreviewDrawer{padding:8px;}#photoPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}#photoPreviewDrawer .photo-preview-stage{max-height:42dvh;min-height:160px;}#photoPreviewDrawer .photo-preview-stage img{max-height:42dvh;}}
+#minecraftPreviewDrawer{align-items:center;padding:12px;}
+#minecraftPreviewDrawer .drawer-panel{border-radius:28px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;transform:translateY(20px);}
+#minecraftPreviewDrawer.open .drawer-panel{transform:translateY(0);}
+#minecraftPixelCanvas{image-rendering:pixelated;image-rendering:crisp-edges;}
+.minecraft-preview-stage{min-height:260px;}
+@media (max-width:640px){#minecraftPreviewDrawer{padding:8px;}#minecraftPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}.minecraft-preview-stage{min-height:220px;}}
 
 .page{display:none;}
 .page.active{display:block;}
@@ -345,7 +351,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v112</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v113</div>
       </div>
 
       <div>
@@ -810,7 +816,39 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div class="photo-preview-actions flex flex-col sm:flex-row gap-2 pt-2">
         <button id="photoPreviewEditBtn" type="button" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">編集する</button>
         <button id="photoPreviewDownloadBtn" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">⬇ 保存</button>
+        <button id="photoPreviewMinecraftBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">🎮 マイクラ風</button>
         <button onclick="closePhotoPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="minecraftPreviewDrawer" class="drawer z-[950]">
+  <div class="drawer-panel max-w-3xl p-0 overflow-hidden bg-white">
+    <div class="flex justify-between items-center px-5 py-4 border-b border-slate-100 shrink-0">
+      <div>
+        <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
+        <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ風プレビュー</h3>
+        <p class="text-[11px] text-slate-400 mt-1">この段階では保存やアドオン出力は行わず、写真を32×32のドット絵で確認します。</p>
+      </div>
+      <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
+    </div>
+    <div class="minecraft-preview-stage bg-slate-100 flex items-center justify-center p-5">
+      <div class="w-full max-w-sm aspect-square rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+        <canvas id="minecraftPixelCanvas" width="320" height="320" class="w-full h-full"></canvas>
+      </div>
+    </div>
+    <div class="p-5 space-y-3 overflow-auto">
+      <div id="minecraftPreviewStatus" class="text-xs text-slate-500 leading-relaxed">画像を変換しています...</div>
+      <div class="grid sm:grid-cols-3 gap-2 text-[11px] text-slate-500">
+        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3"><strong class="block text-emerald-700 mb-1">32×32変換</strong>小さい画面でも重くなりにくいサイズです。</div>
+        <div class="rounded-2xl bg-sky-50 border border-sky-100 p-3"><strong class="block text-sky-700 mb-1">端末内処理</strong>このプレビューでは新しい保存データを作りません。</div>
+        <div class="rounded-2xl bg-amber-50 border border-amber-100 p-3"><strong class="block text-amber-700 mb-1">次の段階</strong>確認後にmcaddon出力へ進めます。</div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 pt-2">
+        <button id="minecraftPreviewRetryBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">再変換</button>
+        <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
     </div>
   </div>
@@ -924,7 +962,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v112",
+        app_version: "v113",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3333,6 +3371,98 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 };
 
 
+let currentMinecraftPreviewTarget = null;
+
+function drawMinecraftPixelPreview(sourceUrl) {
+  const canvas = document.getElementById("minecraftPixelCanvas");
+  const statusEl = document.getElementById("minecraftPreviewStatus");
+  if (!canvas || !sourceUrl) return;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (statusEl) statusEl.textContent = "画像を変換しています...";
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = function() {
+    try {
+      const pixelSize = 32;
+      const smallCanvas = document.createElement("canvas");
+      smallCanvas.width = pixelSize;
+      smallCanvas.height = pixelSize;
+      const smallCtx = smallCanvas.getContext("2d", { willReadFrequently: true });
+      smallCtx.fillStyle = "#ffffff";
+      smallCtx.fillRect(0, 0, pixelSize, pixelSize);
+
+      const scale = Math.max(pixelSize / img.width, pixelSize / img.height);
+      const drawWidth = img.width * scale;
+      const drawHeight = img.height * scale;
+      const offsetX = (pixelSize - drawWidth) / 2;
+      const offsetY = (pixelSize - drawHeight) / 2;
+      smallCtx.imageSmoothingEnabled = true;
+      smallCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+      const imageData = smallCtx.getImageData(0, 0, pixelSize, pixelSize);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.round(data[i] / 32) * 32;
+        data[i + 1] = Math.round(data[i + 1] / 32) * 32;
+        data[i + 2] = Math.round(data[i + 2] / 32) * 32;
+        data[i + 3] = 255;
+      }
+      smallCtx.putImageData(imageData, 0, 0);
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(smallCanvas, 0, 0, canvas.width, canvas.height);
+
+      if (statusEl) statusEl.textContent = "32×32のマイクラ風ドット絵に変換しました。次の段階で、プレミアム向けのmcaddon出力に進めます。";
+      trackEvent("minecraft_pixel_preview_success", { size: pixelSize });
+    } catch (err) {
+      if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
+      trackEvent("minecraft_pixel_preview_error", { message: err.message || "unknown" });
+    }
+  };
+  img.onerror = function() {
+    if (statusEl) statusEl.textContent = "画像を読み込めませんでした。別の画像でお試しください。";
+    trackEvent("minecraft_pixel_preview_error", { message: "image_load_failed" });
+  };
+  img.src = sourceUrl;
+}
+
+window.closeMinecraftPixelPreview = function() {
+  const drawer = document.getElementById("minecraftPreviewDrawer");
+  if (drawer) drawer.classList.remove("open");
+};
+
+window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
+  if (event) event.stopPropagation();
+  const work = localWorks.find(w => w.id === workId);
+  if (!work || work.isDeleted || !work.mediaUrls?.length) return;
+  const media = work.mediaUrls[mediaIndex];
+  const sourceUrl = media?.url || media?.dataUrl || media;
+  const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
+  if (!sourceUrl || isPdf) {
+    alert("PDFはマイクラ風プレビューの対象外です。画像を選択してください。");
+    return;
+  }
+
+  currentMinecraftPreviewTarget = { workId, mediaIndex, sourceUrl };
+  const titleEl = document.getElementById("minecraftPreviewTitle");
+  const retryBtn = document.getElementById("minecraftPreviewRetryBtn");
+  const drawer = document.getElementById("minecraftPreviewDrawer");
+  if (titleEl) titleEl.textContent = "🎮 " + (work.title || "マイクラ風プレビュー");
+  if (retryBtn) {
+    retryBtn.onclick = function() {
+      if (currentMinecraftPreviewTarget?.sourceUrl) drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
+    };
+  }
+  if (drawer) drawer.classList.add("open");
+  drawMinecraftPixelPreview(sourceUrl);
+  trackEvent("minecraft_pixel_preview_open", { work_id: workId, media_index: mediaIndex });
+};
+
+
 window.closePhotoPreview = function() {
   const drawer = document.getElementById("photoPreviewDrawer");
   if(drawer) drawer.classList.remove("open");
@@ -3358,6 +3488,7 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
   const memoEl = document.getElementById("photoPreviewMemo");
   const editBtn = document.getElementById("photoPreviewEditBtn");
   const downloadBtn = document.getElementById("photoPreviewDownloadBtn");
+  const minecraftBtn = document.getElementById("photoPreviewMinecraftBtn");
   const drawer = document.getElementById("photoPreviewDrawer");
 
   if(titleEl) titleEl.textContent = work.title || "写真プレビュー";
@@ -3389,6 +3520,11 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
   if(downloadBtn) {
     downloadBtn.onclick = function(e) {
       downloadWorkMedia(workId, mediaIndex, e);
+    };
+  }
+  if(minecraftBtn) {
+    minecraftBtn.onclick = function(e) {
+      openMinecraftPixelPreview(workId, mediaIndex, e);
     };
   }
   if(drawer) drawer.classList.add("open");
