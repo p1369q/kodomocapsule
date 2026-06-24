@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v158]</title>
+<title>コドモカプセル [v159]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -457,7 +457,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="auth-hero-nowrap"><span class="text-[#ff6b6b]">未来の宝もの</span>に。</span>
         </h1>
         <p class="mt-5 text-sm sm:text-base text-slate-600 leading-8 max-w-xl">
-          増え続ける作品、プリント、テスト、ふとした思い出。写真やPDFでひとつの場所に残して、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>。さらに作品を<strong class="text-slate-800">Minecraft統合版用のmcaddonファイル</strong>として出力できます。<strong class="text-slate-800">iPad / iPhone / Windowsでの利用を想定</strong>した、家族のためのデジタルタイムカプセルです。
+          増え続ける作品、プリント、テスト、ふとした思い出。写真やPDFでひとつの場所に残して、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>。さらに作品を<strong class="text-slate-800">Minecraft統合版用のmcaddonファイル</strong>として出力できる、家族のためのデジタルタイムカプセルです。
         </p>
 
         <div class="mt-6 grid sm:grid-cols-4 gap-3 max-w-3xl">
@@ -479,7 +479,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
             <svg class="icon-inline-svg icon-24 mb-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg>
             <div class="text-xs font-extrabold text-slate-800">マイクラで飾りたい人に</div>
-            <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">作品をmcaddonファイルにして、Minecraftの家に飾れます。iPad / iPhone / Windows向けです。</p>
+            <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">作品をmcaddonファイルにして、Minecraftの家に飾れます。</p>
           </div>
         </div>
 
@@ -669,7 +669,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v158</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v159</div>
       </div>
 
       <div>
@@ -877,7 +877,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div>
           <div class="font-bold text-indigo-950 mb-0.5">④ Minecraftで作品を飾る</div>
           <p>作品の写真プレビューから「マイクラ用にする」を押すと、ドット絵風に変換できます。「マイクラ用ファイル保存」から <span class="font-mono font-bold">.mcaddon</span> ファイルを保存し、Minecraft統合版にインポートできます。</p>
-          <p class="mt-2 text-[11px] text-slate-500 leading-relaxed">※ iPad / iPhone / Windows版のMinecraft統合版での利用を想定しています。Android端末では、端末・Minecraftのバージョン・ファイル管理アプリの仕様により、インポートできない場合があります。</p>
+          <p class="mt-2 text-[11px] text-slate-500 leading-relaxed">※ Minecraft用ファイルは、iPad / iPhone / Windows版のMinecraft統合版での利用を想定しています。Android端末では、端末・Minecraftのバージョン・ファイル管理アプリの仕様により、インポートできない場合があります。</p>
           <ol class="list-decimal pl-5 mt-2 space-y-1 text-[11px] text-slate-600">
             <li>保存した <span class="font-mono">.mcaddon</span> ファイルを開き、Minecraftにインポートします。</li>
             <li>使いたいワールドの設定を開きます。</li>
@@ -1332,7 +1332,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v158",
+        app_version: "v159",
         is_guest_mode: isGuestMode,
         ...params
       });
