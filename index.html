@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v129]</title>
+<title>コドモカプセル [v130]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,11 +39,14 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 #minecraftPreviewDrawer .drawer-panel{border-radius:28px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;transform:translateY(20px);}
 #minecraftPreviewDrawer.open .drawer-panel{transform:translateY(0);}
 #minecraftPixelCanvas,#minecraftSpriteCanvas{image-rendering:pixelated;image-rendering:crisp-edges;}
-.minecraft-preview-stage{min-height:260px;}
+.minecraft-preview-stage{min-height:260px;flex-shrink:0;}
 .minecraft-preview-card{border-radius:24px;background:#fff;border:1px solid #e2e8f0;box-shadow:0 4px 16px rgba(15,23,42,.05);padding:12px;display:flex;flex-direction:column;gap:10px;}
+.minecraft-preview-info-grid{display:grid;grid-template-columns:1fr;gap:8px;font-size:11px;color:#64748b;}
+.minecraft-preview-info-card{border-radius:16px;padding:10px 12px;line-height:1.7;word-break:normal;overflow-wrap:anywhere;}
+.minecraft-preview-info-card strong{display:block;margin-bottom:3px;font-size:12px;line-height:1.4;}
 .minecraft-mode-chip{height:34px;padding:0 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:#475569;font-size:12px;font-weight:700;}
 .minecraft-mode-chip.active{background:#ECFDF5;color:#047857;border-color:#A7F3D0;}
-@media (max-width:640px){#minecraftPreviewDrawer{padding:8px;}#minecraftPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}.minecraft-preview-stage{min-height:220px;}.minecraft-preview-card{padding:10px;}}
+@media (max-width:640px){#minecraftPreviewDrawer{padding:8px;}#minecraftPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}.minecraft-preview-stage{min-height:220px;padding:12px;}.minecraft-preview-card{padding:10px;}.minecraft-preview-info-grid{gap:8px;}.minecraft-preview-info-card{padding:9px 11px;font-size:10.5px;line-height:1.65;}}
 
 .page{display:none;}
 .page.active{display:block;}
@@ -354,7 +357,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v129</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v130</div>
       </div>
 
       <div>
@@ -860,10 +863,10 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <button id="minecraftModeLineBtn" type="button" class="minecraft-mode-chip">線画作品</button>
       </div>
       <div id="minecraftPreviewStatus" class="text-xs text-slate-500 leading-relaxed">画像を変換しています...</div>
-      <div class="grid sm:grid-cols-3 gap-2 text-[11px] text-slate-500">
-        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3"><strong class="block text-emerald-700 mb-1">64×64ドット絵</strong>アイテムより大きめの解像度にして、元の絵の再現性を高めます。</div>
-        <div class="rounded-2xl bg-sky-50 border border-sky-100 p-3"><strong class="block text-sky-700 mb-1">線画/カラー切替</strong>作品の種類に合わせて変換方法を切り替え、輪郭や色を残しやすくします。</div>
-        <div class="rounded-2xl bg-amber-50 border border-amber-100 p-3"><strong class="block text-amber-700 mb-1">額縁向け最適化</strong>余白を削って主役を大きめに配置し、マイクラの額縁で見やすい構図に整えます。</div>
+      <div class="minecraft-preview-info-grid">
+        <div class="minecraft-preview-info-card bg-emerald-50 border border-emerald-100"><strong class="text-emerald-700">64×64ドット絵</strong>大きめの解像度で、元の絵を残しやすくします。</div>
+        <div class="minecraft-preview-info-card bg-sky-50 border border-sky-100"><strong class="text-sky-700">線画/カラー切替</strong>作品に合わせて、輪郭や色を残しやすくします。</div>
+        <div class="minecraft-preview-info-card bg-amber-50 border border-amber-100"><strong class="text-amber-700">額縁向け最適化</strong>余白を削り、額縁で見やすい構図に整えます。</div>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
         <button id="minecraftPreviewRetryBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">再変換</button>
@@ -982,7 +985,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v129",
+        app_version: "v130",
         is_guest_mode: isGuestMode,
         ...params
       });
