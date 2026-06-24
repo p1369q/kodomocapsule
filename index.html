@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v141]</title>
+<title>コドモカプセル [v142]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -454,7 +454,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-emerald-50 text-xl mb-2">👋</div>
               <h3 class="text-base font-extrabold text-slate-800">利用する家族グループを選択</h3>
-              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">自分のグループを使うか、家族から届いた招待コードで参加してください。</p>
+              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">自分のグループを作らなくても、招待コードだけで家族グループに参加できます。</p>
             </div>
 
             <div class="p-4 rounded-2xl border-2 border-rose-100 bg-rose-50/50 text-left">
@@ -492,7 +492,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
                 <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">🔖</div>
                 <div>
                   <div class="text-sm font-extrabold text-slate-800">参加済みの家族グループ</div>
-                  <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">一度参加したグループは、次回からコード入力なしで開けます。</p>
+                  <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">自分の家族グループを作っていない場合でも、次回からコード入力なしで開けます。</p>
                 </div>
               </div>
               <div id="savedFamilyGroupsList" class="space-y-2"></div>
@@ -503,7 +503,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。親ユーザーの承認後は、参加済み一覧からコードなしで開けます。</p>
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。自分の家族グループを作らなくても、承認後は参加済み一覧からコードなしで開けます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v141</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v142</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v141",
+        app_version: "v142",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1976,10 +1976,17 @@ function updateFamilyChoiceUI() {
     statusText.innerText = "このアカウントに登録済みの家族グループを利用します。";
     useOwnBtn.classList.remove("hidden");
     createBtn.classList.add("hidden");
-  } else {
-    statusText.innerText = "このアカウントには家族グループがまだありません。新しく作成して利用できます。";
+    createBtn.innerText = "新しい家族グループを作成する";
+  } else if (savedJoinedFamilies.length) {
+    statusText.innerText = "招待された家族グループだけでも利用できます。自分の家族グループ作成は任意です。";
     useOwnBtn.classList.add("hidden");
     createBtn.classList.remove("hidden");
+    createBtn.innerText = "自分用の家族グループも作成する";
+  } else {
+    statusText.innerText = "自分で家族グループを作るか、家族から届いた招待コードで参加できます。";
+    useOwnBtn.classList.add("hidden");
+    createBtn.classList.remove("hidden");
+    createBtn.innerText = "新しい家族グループを作成する";
   }
 }
 
@@ -2213,8 +2220,11 @@ function startUserJoinRequestSync(user) {
         await setDoc(doc(db, "users", user.uid), {
           joinedFamilyIds: arrayUnion(requestData.familyId),
           pendingFamilyIds: arrayRemove(requestData.familyId),
+          email: user.email || "",
+          displayName: user.displayName || "",
           updatedAt: Date.now()
         }, { merge: true });
+        rememberJoinedFamilyId(user.uid, requestData.familyId);
       } else if (requestData.status === "rejected" || requestData.status === "revoked") {
         await setDoc(doc(db, "users", user.uid), {
           pendingFamilyIds: arrayRemove(requestData.familyId),
@@ -2523,6 +2533,20 @@ window.removeFamilyMember = async function(memberUid) {
   }
 };
 
+async function ensureUserProfileForInviteOnlyUse(user) {
+  if (!user) return;
+  try {
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email || "",
+      displayName: user.displayName || "",
+      lastLoginAt: Date.now(),
+      updatedAt: Date.now()
+    }, { merge: true });
+  } catch (e) {
+    console.warn("招待利用向けユーザープロフィール初期化をスキップしました:", e.code || e.message);
+  }
+}
+
 async function resolveOwnedFamilyId(user, userData) {
   if (userData.ownedFamilyId) return userData.ownedFamilyId;
 
@@ -2709,6 +2733,7 @@ onAuthStateChanged(auth, async (user) => {
     if(errLog) errLog.classList.add("hidden");
 
     await checkUrlSessionParameters(user);
+    await ensureUserProfileForInviteOnlyUse(user);
     startUserJoinRequestSync(user);
 
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
@@ -2912,6 +2937,7 @@ window.joinFamilyGroup = async function() {
     await setDoc(doc(db, "users", user.uid), {
       pendingFamilyIds: arrayUnion(targetDocId),
       email: user.email || "",
+      displayName: user.displayName || "",
       updatedAt: Date.now()
     }, { merge: true });
     document.getElementById("joinInviteCodeInput").value = "";
