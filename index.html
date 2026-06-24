@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v127]</title>
+<title>コドモカプセル [v128]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,7 +354,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v127</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v128</div>
       </div>
 
       <div>
@@ -962,6 +962,7 @@ let legacyUserPlan = "free";
 let isResolvingFamilyChoice = false;
 let savedJoinedFamilies = [];
 let pendingJoinFamilies = [];
+let approvedJoinFamilyIdsFromRequests = [];
 let accountDeletionState = null;
 let cropperInstance = null;
 let currentCropMediaIndex = null;
@@ -981,7 +982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v127",
+        app_version: "v128",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1836,6 +1837,7 @@ function renderPendingFamilyRequests() {
 async function resolvePendingJoinRequests(user, userData) {
   const pendingIds = Array.isArray(userData.pendingFamilyIds) ? userData.pendingFamilyIds : [];
   const pending = [];
+  const approvedIds = [];
 
   for (const familyId of pendingIds) {
     try {
@@ -1845,18 +1847,27 @@ async function resolvePendingJoinRequests(user, userData) {
       const requestData = requestSnap.data();
 
       if (requestData.status === "approved") {
-        await setDoc(doc(db, "users", user.uid), {
-          joinedFamilyIds: arrayUnion(familyId),
-          pendingFamilyIds: arrayRemove(familyId),
-          updatedAt: Date.now()
-        }, { merge: true });
+        approvedIds.push(familyId);
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            joinedFamilyIds: arrayUnion(familyId),
+            pendingFamilyIds: arrayRemove(familyId),
+            updatedAt: Date.now()
+          }, { merge: true });
+        } catch (syncError) {
+          console.warn("Approved family sync skipped:", syncError);
+        }
         continue;
       }
       if (requestData.status === "rejected" || requestData.status === "revoked") {
-        await setDoc(doc(db, "users", user.uid), {
-          pendingFamilyIds: arrayRemove(familyId),
-          updatedAt: Date.now()
-        }, { merge: true });
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            pendingFamilyIds: arrayRemove(familyId),
+            updatedAt: Date.now()
+          }, { merge: true });
+        } catch (syncError) {
+          console.warn("Rejected family sync skipped:", syncError);
+        }
         continue;
       }
       pending.push({ familyId, ...requestData });
@@ -1865,9 +1876,11 @@ async function resolvePendingJoinRequests(user, userData) {
     }
   }
 
+  approvedJoinFamilyIdsFromRequests = approvedIds;
   pendingJoinFamilies = pending;
   renderPendingFamilyRequests();
 }
+
 
 function startUserJoinRequestSync(user) {
   if (unsubscribeUserJoinRequests) { unsubscribeUserJoinRequests(); unsubscribeUserJoinRequests = null; }
@@ -1896,6 +1909,10 @@ function startUserJoinRequestSync(user) {
 async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
   const candidateIds = new Set(Array.isArray(userData.joinedFamilyIds) ? userData.joinedFamilyIds : []);
   if (userData.familyId && userData.familyId !== ownedFamilyId) candidateIds.add(userData.familyId);
+  if (Array.isArray(userData.pendingFamilyIds)) {
+    userData.pendingFamilyIds.forEach(familyId => { if (familyId && familyId !== ownedFamilyId) candidateIds.add(familyId); });
+  }
+  approvedJoinFamilyIdsFromRequests.forEach(familyId => { if (familyId && familyId !== ownedFamilyId) candidateIds.add(familyId); });
 
   try {
     const approvedRequestQuery = query(collection(db, "familyJoinRequests"), where("userId", "==", user.uid));
@@ -2394,6 +2411,7 @@ onAuthStateChanged(auth, async (user) => {
     isResolvingFamilyChoice = false;
     savedJoinedFamilies = [];
     pendingJoinFamilies = [];
+    approvedJoinFamilyIdsFromRequests = [];
     accountDeletionState = null;
     renderAccountDeletionStatus();
     renderSavedFamilyGroups();
