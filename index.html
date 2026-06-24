@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v152]</title>
+<title>コドモカプセル [v153]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -560,7 +560,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。承認後は家族カプセルをコードなしで開けます。</p>
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">読み取り専用アカウントでは、承認済みの家族カプセルを次回から自動で開けます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -640,7 +640,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v152</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v153</div>
       </div>
 
       <div>
@@ -1264,7 +1264,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v152",
+        app_version: "v153",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2102,6 +2102,22 @@ function renderSavedFamilyGroups() {
   }).join("");
 }
 
+function getDirectFamilyCapsuleToOpen(user, userData, joinedFamilies, ownedFamilyId) {
+  if (!user || !Array.isArray(joinedFamilies) || !joinedFamilies.length) return null;
+
+  const matchedByFamilyId = userData?.familyId
+    ? joinedFamilies.find(family => family.id === userData.familyId)
+    : null;
+  if (matchedByFamilyId && userData?.preferredCapsuleType === "family") return matchedByFamilyId;
+
+  const readOnlyFamilies = joinedFamilies.filter(family => getMemberPermission(family, user.uid) === "view");
+  if (readOnlyFamilies.length === 1) return readOnlyFamilies[0];
+
+  if (!ownedFamilyId && joinedFamilies.length === 1) return joinedFamilies[0];
+
+  return null;
+}
+
 function renderPendingFamilyRequests() {
   const area = document.getElementById("pendingFamilyRequestsArea");
   const list = document.getElementById("pendingFamilyRequestsList");
@@ -2265,8 +2281,10 @@ async function resolvePendingJoinRequests(user, userData) {
         approvedIds.push(familyId);
         try {
           await setDoc(doc(db, "users", user.uid), {
+            familyId,
             joinedFamilyIds: arrayUnion(familyId),
             pendingFamilyIds: arrayRemove(familyId),
+            preferredCapsuleType: "family",
             updatedAt: Date.now()
           }, { merge: true });
         } catch (syncError) {
@@ -2305,8 +2323,10 @@ function startUserJoinRequestSync(user) {
       const requestData = requestDoc.data();
       if (requestData.status === "approved") {
         await setDoc(doc(db, "users", user.uid), {
+          familyId: requestData.familyId,
           joinedFamilyIds: arrayUnion(requestData.familyId),
           pendingFamilyIds: arrayRemove(requestData.familyId),
+          preferredCapsuleType: "family",
           email: user.email || "",
           displayName: user.displayName || "",
           updatedAt: Date.now()
@@ -2577,6 +2597,7 @@ window.useSavedFamilyGroup = async function(familyId) {
       familyId,
       joinedFamilyIds: arrayUnion(familyId),
       pendingFamilyIds: arrayRemove(familyId),
+      preferredCapsuleType: "family",
       updatedAt: Date.now()
     }, { merge: true });
     await activateFamilyGroup(familyId, user);
@@ -2681,6 +2702,7 @@ async function activateFamilyGroup(familyId, user) {
         familyId,
         joinedFamilyIds: arrayUnion(familyId),
         pendingFamilyIds: arrayRemove(familyId),
+        preferredCapsuleType: "family",
         email: user.email || "",
         updatedAt: Date.now()
       }, { merge: true });
@@ -2768,6 +2790,7 @@ window.useOwnFamilyGroup = async function() {
     hasSelectedFamilyGroup = true;
     await setDoc(doc(db, "users", user.uid), {
       familyId: pendingOwnFamilyId,
+      preferredCapsuleType: "my",
       updatedAt: Date.now()
     }, { merge: true });
     await activateFamilyGroup(pendingOwnFamilyId, user);
@@ -2834,7 +2857,12 @@ onAuthStateChanged(auth, async (user) => {
         legacyUserPlan = userData.plan || "free";
         pendingOwnFamilyId = await resolveOwnedFamilyId(user, userData);
         await resolvePendingJoinRequests(user, userData);
-        await resolveJoinedFamilyGroups(user, userData, pendingOwnFamilyId);
+        const joinedFamilies = await resolveJoinedFamilyGroups(user, userData, pendingOwnFamilyId);
+        const directFamily = getDirectFamilyCapsuleToOpen(user, userData, joinedFamilies, pendingOwnFamilyId);
+        if (!hasSelectedFamilyGroup && directFamily) {
+          await activateFamilyGroup(directFamily.id, user);
+          return;
+        }
         updateFamilyChoiceUI();
         if (hasSelectedFamilyGroup) {
           return;
@@ -2973,6 +3001,7 @@ window.createNewFamilyGroup = async function() {
     await setDoc(doc(db, "users", user.uid), {
       familyId: docFamilyId,
       ownedFamilyId: docFamilyId,
+      preferredCapsuleType: "my",
       email: user.email || "",
       updatedAt: Date.now()
     }, { merge: true });
@@ -3031,14 +3060,6 @@ window.joinFamilyGroup = async function() {
 
     const targetDocId = inviteSnap.data().familyId;
 
-    btn.innerText = "家族グループ準備中...";
-    try {
-      await ensureOwnFamilyGroupForInviteRequest(user);
-    } catch (autoFamilyError) {
-      alert("参加申請の前に、マイカプセルを作成できませんでした。\n「マイカプセル」を押した時と同じ処理を実行しましたが失敗しました。\n詳細: " + (autoFamilyError.code || autoFamilyError.message));
-      return;
-    }
-
     const requestDocId = `${targetDocId}_${user.uid}`;
     const requestRef = doc(db, "familyJoinRequests", requestDocId);
 
@@ -3059,6 +3080,7 @@ window.joinFamilyGroup = async function() {
         familyId: targetDocId,
         joinedFamilyIds: arrayUnion(targetDocId),
         pendingFamilyIds: arrayRemove(targetDocId),
+        preferredCapsuleType: "family",
         email: user.email || "",
         updatedAt: Date.now()
       }, { merge: true });
