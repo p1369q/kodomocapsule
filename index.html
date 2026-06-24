@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v128]</title>
+<title>コドモカプセル [v129]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,7 +354,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v128</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v129</div>
       </div>
 
       <div>
@@ -982,7 +982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v128",
+        app_version: "v129",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1834,6 +1834,32 @@ function renderPendingFamilyRequests() {
   }).join("");
 }
 
+function joinedFamilyStorageKey(uid) {
+  return `kc_joined_family_ids_${uid}`;
+}
+
+function getStoredJoinedFamilyIds(uid) {
+  if (!uid) return [];
+  try {
+    const raw = localStorage.getItem(joinedFamilyStorageKey(uid));
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function rememberJoinedFamilyId(uid, familyId) {
+  if (!uid || !familyId) return;
+  try {
+    const ids = new Set(getStoredJoinedFamilyIds(uid));
+    ids.add(familyId);
+    localStorage.setItem(joinedFamilyStorageKey(uid), JSON.stringify(Array.from(ids)));
+  } catch (e) {
+    console.warn("Joined family local cache skipped:", e);
+  }
+}
+
 async function resolvePendingJoinRequests(user, userData) {
   const pendingIds = Array.isArray(userData.pendingFamilyIds) ? userData.pendingFamilyIds : [];
   const pending = [];
@@ -1908,6 +1934,7 @@ function startUserJoinRequestSync(user) {
 
 async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
   const candidateIds = new Set(Array.isArray(userData.joinedFamilyIds) ? userData.joinedFamilyIds : []);
+  getStoredJoinedFamilyIds(user.uid).forEach(familyId => { if (familyId && familyId !== ownedFamilyId) candidateIds.add(familyId); });
   if (userData.familyId && userData.familyId !== ownedFamilyId) candidateIds.add(userData.familyId);
   if (Array.isArray(userData.pendingFamilyIds)) {
     userData.pendingFamilyIds.forEach(familyId => { if (familyId && familyId !== ownedFamilyId) candidateIds.add(familyId); });
@@ -1934,6 +1961,7 @@ async function resolveJoinedFamilyGroups(user, userData, ownedFamilyId) {
       if (!familySnap.exists()) continue;
       const familyData = familySnap.data();
       if (!familyData.members?.[user.uid] || familyData.createdBy === user.uid) continue;
+      rememberJoinedFamilyId(user.uid, familyId);
       resolved.push({ id: familyId, ...familyData });
     } catch (e) {
       console.warn("Joined family lookup skipped:", e);
@@ -2146,8 +2174,11 @@ window.useSavedFamilyGroup = async function(familyId) {
   if (!user || !familyId) return;
   try {
     hasSelectedFamilyGroup = true;
+    rememberJoinedFamilyId(user.uid, familyId);
     await setDoc(doc(db, "users", user.uid), {
       familyId,
+      joinedFamilyIds: arrayUnion(familyId),
+      pendingFamilyIds: arrayRemove(familyId),
       updatedAt: Date.now()
     }, { merge: true });
     await activateFamilyGroup(familyId, user);
@@ -2229,6 +2260,21 @@ async function activateFamilyGroup(familyId, user) {
     hasSelectedFamilyGroup = false;
     currentSession = null;
     throw new Error("この家族グループは親ユーザーの承認待ちです。");
+  }
+
+  if (isApprovedMember) {
+    rememberJoinedFamilyId(user.uid, familyId);
+    try {
+      await setDoc(doc(db, "users", user.uid), {
+        familyId,
+        joinedFamilyIds: arrayUnion(familyId),
+        pendingFamilyIds: arrayRemove(familyId),
+        email: user.email || "",
+        updatedAt: Date.now()
+      }, { merge: true });
+    } catch (syncError) {
+      console.warn("Joined family profile sync skipped:", syncError);
+    }
   }
 
   if (isFamilyOwner && familyData.inviteCode) {
@@ -2536,6 +2582,7 @@ window.joinFamilyGroup = async function() {
         email: user.email || "",
         updatedAt: Date.now()
       }, { merge: true });
+      rememberJoinedFamilyId(user.uid, targetDocId);
       document.getElementById("joinInviteCodeInput").value = "";
       trackEvent("family_join_approved_open", { family_id: targetDocId });
       await activateFamilyGroup(targetDocId, user);
