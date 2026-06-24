@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v144]</title>
+<title>コドモカプセル [v145]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -454,7 +454,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div class="text-center">
               <div class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-emerald-50 text-xl mb-2">👋</div>
               <h3 class="text-base font-extrabold text-slate-800">利用する家族グループを選択</h3>
-              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">自分のグループを作らなくても、招待コードだけで家族グループに参加できます。</p>
+              <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">ログイン後に利用準備を行います。招待コードだけで家族グループに参加できます。</p>
             </div>
 
             <div class="p-4 rounded-2xl border-2 border-rose-100 bg-rose-50/50 text-left">
@@ -503,7 +503,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div id="pendingFamilyRequestsList" class="space-y-2 mt-2"></div>
             </div>
 
-            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。自分の家族グループを作らなくても、承認後は参加済み一覧からコードなしで開けます。</p>
+            <p class="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 leading-relaxed">招待コードは最初の申請時だけ必要です。承認後は参加済み一覧からコードなしで開けます。</p>
             <div class="pt-3 border-t text-left w-full">
               <button onclick="toggleAuth()" class="text-xs text-rose-500 font-medium">別のユーザーでログアウト</button>
             </div>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v144</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v145</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v144",
+        app_version: "v145",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1978,7 +1978,7 @@ function updateFamilyChoiceUI() {
     createBtn.classList.add("hidden");
     createBtn.innerText = "新しい家族グループを作成する";
   } else if (savedJoinedFamilies.length) {
-    statusText.innerText = "招待された家族グループだけでも利用できます。自分の家族グループ作成は任意です。";
+    statusText.innerText = "このアカウント用の家族グループは準備済みです。招待された家族グループも利用できます。";
     useOwnBtn.classList.add("hidden");
     createBtn.classList.remove("hidden");
     createBtn.innerText = "自分用の家族グループも作成する";
@@ -2764,6 +2764,7 @@ onAuthStateChanged(auth, async (user) => {
 
     await checkUrlSessionParameters(user);
     await ensureUserProfileForInviteOnlyUse(user);
+    await ensureOwnFamilyGroupForInviteRequest(user);
     startUserJoinRequestSync(user);
 
     if (unsubscribeUserPlan) { unsubscribeUserPlan(); unsubscribeUserPlan = null; }
@@ -2912,7 +2913,7 @@ async function ensureOwnFamilyGroupForInviteRequest(user) {
 
     pendingOwnFamilyId = docFamilyId;
     updateFamilyChoiceUI();
-    trackEvent("family_auto_created_for_invite_request", { family_id: docFamilyId });
+    trackEvent("family_auto_created_for_login", { family_id: docFamilyId });
     return docFamilyId;
   } catch (e) {
     console.warn("招待申請前の自分用家族グループ自動作成をスキップしました:", e.code || e.message);
@@ -3050,7 +3051,7 @@ window.joinFamilyGroup = async function() {
     }, { merge: true });
     document.getElementById("joinInviteCodeInput").value = "";
     trackEvent("family_join_request_sent", { family_id: targetDocId });
-    alert("参加申請を送信しました。\nこのアカウント用の家族グループも準備しました。\n親ユーザーが承認すると、次回からコードなしで利用できます。");
+    alert("参加申請を送信しました。\n親ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
     if (e.code === "permission-denied") {
       alert("参加処理に失敗しました。\n\ncode: " + (e.code || "unknown") + "\nmessage: " + (e.message || "") + "\n\n承認済みの場合は、親ユーザー側でメンバー一覧に表示されているか確認してください。");
