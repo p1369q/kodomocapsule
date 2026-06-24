@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v134]</title>
+<title>コドモカプセル [v135]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,6 +277,24 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   }
 }
 
+
+/* v135: Minecraft preview UI cleanup */
+#minecraftPreviewDrawer .minecraft-mode-chip{
+  min-width:88px;
+  justify-content:center;
+}
+@media (max-width:640px){
+  #minecraftPreviewDrawer .minecraft-preview-body{
+    padding-bottom:20px;
+  }
+  #minecraftPreviewDrawer .minecraft-mode-chip{
+    flex:1 1 auto;
+    min-width:96px;
+    height:38px;
+    font-size:11px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -519,7 +537,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v134</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v135</div>
       </div>
 
       <div>
@@ -1020,18 +1038,12 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
       <div class="flex flex-wrap gap-2">
-        <button id="minecraftModeAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
-        <button id="minecraftModeColorBtn" type="button" class="minecraft-mode-chip">カラー作品</button>
-        <button id="minecraftModeLineBtn" type="button" class="minecraft-mode-chip">線画作品</button>
+        <button id="minecraftModeAutoBtn" type="button" class="minecraft-mode-chip active">おすすめ</button>
+        <button id="minecraftModeColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
+        <button id="minecraftModeLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
       </div>
-      <div id="minecraftPreviewStatus" class="text-xs text-slate-500 leading-relaxed">画像を変換しています...</div>
-      <div class="minecraft-preview-info-grid">
-        <div class="minecraft-preview-info-card bg-emerald-50 border border-emerald-100"><strong class="text-emerald-700">64×64ドット絵</strong>大きめの解像度で、元の絵を残しやすくします。</div>
-        <div class="minecraft-preview-info-card bg-sky-50 border border-sky-100"><strong class="text-sky-700">線画/カラー切替</strong>作品に合わせて、輪郭や色を残しやすくします。</div>
-        <div class="minecraft-preview-info-card bg-amber-50 border border-amber-100"><strong class="text-amber-700">額縁向け最適化</strong>余白を削り、額縁で見やすい構図に整えます。</div>
-      </div>
+      <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
-        <button id="minecraftPreviewRetryBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">再変換</button>
         <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">PNG保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
@@ -1148,7 +1160,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v134",
+        app_version: "v135",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3964,7 +3976,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
 function drawMinecraftPixelPreview(sourceUrl) {
   const statusEl = document.getElementById("minecraftPreviewStatus");
   if (!sourceUrl) return;
-  if (statusEl) statusEl.textContent = "作品をMinecraftで額縁に飾りやすいドット絵へ変換しています...";
+  if (statusEl) statusEl.textContent = "";
 
   const img = new Image();
   img.crossOrigin = "anonymous";
@@ -4046,11 +4058,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
         : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB);
       renderMinecraftPreviewCanvases(spriteCanvas);
 
-      if (statusEl) {
-        statusEl.textContent = selectedMode === "line"
-          ? "線画モードで、背景を抑えつつ鉛筆線を強調した64×64の額縁向けドット絵に変換しました。元の絵の形が分かりやすい方向へ寄せています。"
-          : "カラー作品モードで、色数を抑えながら形を残しやすい64×64の額縁向けドット絵に変換しました。元の絵の再現性を優先しています。";
-      }
+      if (statusEl) statusEl.textContent = "";
       trackEvent("minecraft_pixel_preview_success", { size: 64, style: selectedMode === "line" ? "frame_lineart" : "frame_color", mode_requested: currentMinecraftPreviewMode });
     } catch (err) {
       if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
@@ -4074,9 +4082,8 @@ function sanitizeMinecraftDownloadName(name) {
     .slice(0, 48) || "kodomo_frame_art";
 }
 
-window.downloadMinecraftSpritePng = function(event) {
+window.downloadMinecraftSpritePng = async function(event) {
   if (event) event.stopPropagation();
-  const statusEl = document.getElementById("minecraftPreviewStatus");
   if (!currentMinecraftSpriteCanvas) {
     alert("先に額縁アートを変換してください。");
     return;
@@ -4086,20 +4093,47 @@ window.downloadMinecraftSpritePng = function(event) {
       ? localWorks.find(w => w.id === currentMinecraftPreviewTarget.workId)
       : null;
     const fileName = sanitizeMinecraftDownloadName(work?.title || "kodomo_frame_art") + "_64x64.png";
+
+    const blob = await new Promise((resolve, reject) => {
+      currentMinecraftSpriteCanvas.toBlob(blobResult => {
+        if (blobResult) resolve(blobResult);
+        else reject(new Error("canvas_to_blob_failed"));
+      }, "image/png");
+    });
+
+    const file = new File([blob], fileName, { type: "image/png" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+      await navigator.share({
+        files: [file],
+        title: "コドモカプセル 額縁アート",
+        text: "Minecraft用の額縁アートPNGです。"
+      });
+      trackEvent("minecraft_frame_png_share", {
+        work_id: currentMinecraftPreviewTarget?.workId || "",
+        media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
+        size: 64
+      });
+      return;
+    }
+
     const link = document.createElement("a");
     link.download = fileName;
-    link.href = currentMinecraftSpriteCanvas.toDataURL("image/png");
+    link.href = URL.createObjectURL(blob);
     document.body.appendChild(link);
     link.click();
-    link.remove();
-    if (statusEl) statusEl.textContent = "64×64の額縁向けPNGを保存しました。次の段階で、この画像をmcaddon出力に利用します。";
+    setTimeout(() => {
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }, 1000);
+
     trackEvent("minecraft_frame_png_download", {
       work_id: currentMinecraftPreviewTarget?.workId || "",
       media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
       size: 64
     });
   } catch (err) {
-    alert("PNG保存に失敗しました。\nこの画像はブラウザの制限により保存できない可能性があります。");
+    alert("PNG保存に失敗しました。\nスマホでは共有メニューから「画像を保存」を選べる場合があります。");
     trackEvent("minecraft_frame_png_download_error", { message: err.message || "unknown" });
   }
 };
@@ -4134,17 +4168,11 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   currentMinecraftPreviewTarget = { workId, mediaIndex, sourceUrl };
   currentMinecraftSpriteCanvas = null;
   const titleEl = document.getElementById("minecraftPreviewTitle");
-  const retryBtn = document.getElementById("minecraftPreviewRetryBtn");
   const autoBtn = document.getElementById("minecraftModeAutoBtn");
   const colorBtn = document.getElementById("minecraftModeColorBtn");
   const lineBtn = document.getElementById("minecraftModeLineBtn");
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (titleEl) titleEl.textContent = "🎮 " + (work.title || "Minecraft額縁アート化プレビュー");
-  if (retryBtn) {
-    retryBtn.onclick = function() {
-      if (currentMinecraftPreviewTarget?.sourceUrl) drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
-    };
-  }
   if (autoBtn) autoBtn.onclick = function() { setMinecraftPreviewMode("auto"); };
   if (colorBtn) colorBtn.onclick = function() { setMinecraftPreviewMode("color"); };
   if (lineBtn) lineBtn.onclick = function() { setMinecraftPreviewMode("line"); };
