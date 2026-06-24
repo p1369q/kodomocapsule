@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v148]</title>
+<title>コドモカプセル [v149]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v148</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v149</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v148",
+        app_version: "v149",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4521,15 +4521,22 @@ function buildMinecraftReadme(displayName) {
 
 async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
   const file = new File([blob], fileName, { type: "application/octet-stream" });
+
   if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-    await navigator.share({
-      files: [file],
-      title: "コドモカプセル Minecraftアドオン",
-      text: "Minecraft統合版用の額縁アートアドオンです。"
-    });
-    trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
-    return;
+    try {
+      await navigator.share({
+        files: [file],
+        title: "コドモカプセル Minecraftアドオン",
+        text: "Minecraft統合版用の額縁アートアドオンです。"
+      });
+      trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
+      return;
+    } catch (shareError) {
+      console.warn("Minecraft addon share skipped. Falling back to download:", shareError.name || shareError.code || shareError.message);
+      trackEvent("minecraft_frame_addon_share_fallback", { message: shareError.message || shareError.name || "unknown" });
+    }
   }
+
   const link = document.createElement("a");
   link.download = fileName;
   link.href = URL.createObjectURL(blob);
@@ -4619,7 +4626,7 @@ window.downloadMinecraftAddon = async function(event) {
     await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "");
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
-    alert("Minecraftアドオンの作成に失敗しました。\n詳細: " + (err.message || "unknown"));
+    alert("Minecraftアドオンの作成に失敗しました。\n共有メニューが開けない場合は通常ダウンロードに切り替えます。\n詳細: " + (err.message || "unknown"));
     trackEvent("minecraft_frame_addon_error", { message: err.message || "unknown" });
   } finally {
     if (btn) {
