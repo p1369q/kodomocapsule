@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v131]</title>
+<title>コドモカプセル [v132]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,6 +126,99 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   .drawer{align-items:center;padding:28px;}
   .drawer-panel{border-radius:32px;max-height:90vh;}
 }
+
+/* v132: Minecraft preview mobile scroll fix */
+#minecraftPreviewDrawer .drawer-panel{
+  display:flex;
+  flex-direction:column;
+}
+#minecraftPreviewDrawer .minecraft-preview-stage{
+  flex-shrink:0;
+}
+#minecraftPreviewDrawer .minecraft-preview-body{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+@media (max-width:640px){
+  #minecraftPreviewDrawer{
+    align-items:center;
+    padding:8px;
+  }
+  #minecraftPreviewDrawer .drawer-panel{
+    width:100%;
+    height:calc(100dvh - 16px);
+    max-height:calc(100dvh - 16px);
+    overflow:hidden;
+    border-radius:24px;
+  }
+  #minecraftPreviewDrawer .drawer-panel > .flex.justify-between{
+    flex-shrink:0;
+    padding:14px 16px;
+  }
+  #minecraftPreviewDrawer .drawer-panel > .flex.justify-between p{
+    font-size:10px;
+    line-height:1.55;
+    margin-top:4px;
+  }
+  #minecraftPreviewDrawer .drawer-panel > .flex.justify-between h3{
+    font-size:18px;
+    line-height:1.25;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-stage{
+    max-height:46dvh;
+    min-height:0;
+    overflow-y:auto;
+    padding:10px 12px;
+    -webkit-overflow-scrolling:touch;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-stage .minecraft-preview-grid,
+  #minecraftPreviewDrawer .minecraft-preview-stage .w-full.grid,
+  #minecraftPreviewDrawer .minecraft-preview-stage .w-full{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-card{
+    border-radius:18px;
+    padding:9px;
+    gap:6px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
+    max-height:31dvh;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-body{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding:12px 14px 18px;
+    -webkit-overflow-scrolling:touch;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-info-grid{
+    gap:8px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-info-card{
+    padding:9px 11px;
+    font-size:10.5px;
+    line-height:1.65;
+  }
+}
+@supports not (height: 100dvh){
+  @media (max-width:640px){
+    #minecraftPreviewDrawer .drawer-panel{
+      height:calc(100vh - 16px);
+      max-height:calc(100vh - 16px);
+    }
+    #minecraftPreviewDrawer .minecraft-preview-stage{
+      max-height:46vh;
+    }
+    #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
+      max-height:31vh;
+    }
+  }
+}
+
 </style>
 </head>
 <body>
@@ -368,7 +461,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v131</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v132</div>
       </div>
 
       <div>
@@ -996,7 +1089,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v131",
+        app_version: "v132",
         is_guest_mode: isGuestMode,
         ...params
       });
