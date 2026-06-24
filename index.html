@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v143]</title>
+<title>コドモカプセル [v144]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v143</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v144</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v143",
+        app_version: "v144",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2138,7 +2138,7 @@ async function removeAccountFromFamilyGroup(user, familyId) {
       updatedAt: Date.now()
     });
   } catch (e) {
-    console.warn("家族グループからのメンバー解除をスキップしました:", familyId, e.code || e.message);
+    console.warn("家族グループからのメンバー解除をスキップしました。Firestore Rulesで本人の自己削除が許可されていない可能性があります:", familyId, e.code || e.message);
   }
 
   const requestRef = doc(db, "familyJoinRequests", `${familyId}_${user.uid}`);
@@ -2152,8 +2152,20 @@ async function removeAccountFromFamilyGroup(user, familyId) {
 }
 
 async function cleanupAccountFamilyMemberships(user, userData) {
-  const familyIds = collectAccountFamilyIds(userData);
-  for (const familyId of familyIds) {
+  const familyIds = new Set(collectAccountFamilyIds(userData));
+
+  try {
+    const requestQuery = query(collection(db, "familyJoinRequests"), where("userId", "==", user.uid));
+    const requestSnapshot = await getDocs(requestQuery);
+    requestSnapshot.forEach(requestDoc => {
+      const requestData = requestDoc.data();
+      if (requestData.familyId) familyIds.add(requestData.familyId);
+    });
+  } catch (e) {
+    console.warn("削除対象ユーザーの参加申請検索をスキップしました:", e.code || e.message);
+  }
+
+  for (const familyId of Array.from(familyIds).filter(Boolean)) {
     try {
       await removeAccountFromFamilyGroup(user, familyId);
     } catch (e) {
@@ -2832,6 +2844,83 @@ async function verifyAndSetupDefaultCategories(familyId) {
   }
 }
 
+async function ensureOwnFamilyGroupForInviteRequest(user) {
+  if (!user) return null;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    if (userData.ownedFamilyId) {
+      pendingOwnFamilyId = userData.ownedFamilyId;
+      return userData.ownedFamilyId;
+    }
+
+    const ownedQuery = query(collection(db, "families"), where("createdBy", "==", user.uid));
+    const ownedSnapshot = await getDocs(ownedQuery);
+    if (!ownedSnapshot.empty) {
+      const ownedFamilyId = ownedSnapshot.docs[0].id;
+      await setDoc(userRef, {
+        ownedFamilyId,
+        familyId: userData.familyId || ownedFamilyId,
+        email: user.email || "",
+        displayName: user.displayName || "",
+        updatedAt: Date.now()
+      }, { merge: true });
+      pendingOwnFamilyId = ownedFamilyId;
+      return ownedFamilyId;
+    }
+
+    const docFamilyId = crypto.randomUUID();
+    const inviteCodeUuid = crypto.randomUUID();
+
+    await setDoc(userRef, {
+      familyId: userData.familyId || docFamilyId,
+      ownedFamilyId: docFamilyId,
+      email: user.email || "",
+      displayName: user.displayName || "",
+      updatedAt: Date.now()
+    }, { merge: true });
+
+    await setDoc(doc(db, "families", docFamilyId), {
+      inviteCode: inviteCodeUuid,
+      createdAt: Date.now(),
+      createdBy: user.uid,
+      members: { [user.uid]: true },
+      memberPermissions: { [user.uid]: "delete" },
+      memberProfiles: {
+        [user.uid]: {
+          email: user.email || "",
+          displayName: user.displayName || "",
+          lastSeenAt: Date.now()
+        }
+      },
+      plan: legacyUserPlan === "premium" ? "premium" : "free"
+    });
+
+    try {
+      await setDoc(doc(db, "familyInvites", inviteCodeUuid), {
+        familyId: docFamilyId,
+        createdBy: user.uid,
+        active: true,
+        createdAt: Date.now()
+      });
+    } catch (inviteError) {
+      console.warn("招待コード索引の自動作成をスキップしました:", inviteError.code || inviteError.message);
+    }
+
+    pendingOwnFamilyId = docFamilyId;
+    updateFamilyChoiceUI();
+    trackEvent("family_auto_created_for_invite_request", { family_id: docFamilyId });
+    return docFamilyId;
+  } catch (e) {
+    console.warn("招待申請前の自分用家族グループ自動作成をスキップしました:", e.code || e.message);
+    return null;
+  }
+}
+
+
 window.createNewFamilyGroup = async function() {
   const user = auth.currentUser;
   if (!user) return;
@@ -2903,6 +2992,7 @@ window.joinFamilyGroup = async function() {
     }
 
     const targetDocId = inviteSnap.data().familyId;
+    await ensureOwnFamilyGroupForInviteRequest(user);
     const requestDocId = `${targetDocId}_${user.uid}`;
     const requestRef = doc(db, "familyJoinRequests", requestDocId);
 
@@ -2960,7 +3050,7 @@ window.joinFamilyGroup = async function() {
     }, { merge: true });
     document.getElementById("joinInviteCodeInput").value = "";
     trackEvent("family_join_request_sent", { family_id: targetDocId });
-    alert("参加申請を送信しました。\n親ユーザーが承認すると、次回からコードなしで利用できます。");
+    alert("参加申請を送信しました。\nこのアカウント用の家族グループも準備しました。\n親ユーザーが承認すると、次回からコードなしで利用できます。");
   } catch(e) {
     if (e.code === "permission-denied") {
       alert("参加処理に失敗しました。\n\ncode: " + (e.code || "unknown") + "\nmessage: " + (e.message || "") + "\n\n承認済みの場合は、親ユーザー側でメンバー一覧に表示されているか確認してください。");
