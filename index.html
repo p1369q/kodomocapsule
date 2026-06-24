@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v130]</title>
+<title>コドモカプセル [v131]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,6 +47,17 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .minecraft-mode-chip{height:34px;padding:0 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:#475569;font-size:12px;font-weight:700;}
 .minecraft-mode-chip.active{background:#ECFDF5;color:#047857;border-color:#A7F3D0;}
 @media (max-width:640px){#minecraftPreviewDrawer{padding:8px;}#minecraftPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}.minecraft-preview-stage{min-height:220px;padding:12px;}.minecraft-preview-card{padding:10px;}.minecraft-preview-info-grid{gap:8px;}.minecraft-preview-info-card{padding:9px 11px;font-size:10.5px;line-height:1.65;}}
+
+#minecraftPreviewDrawer .minecraft-preview-body{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;}
+#minecraftPreviewDrawer .minecraft-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;}
+@media (max-width:640px){
+  #minecraftPreviewDrawer .drawer-panel{height:calc(100dvh - 16px);overflow:hidden;}
+  #minecraftPreviewDrawer .minecraft-preview-stage{min-height:0;padding:10px;overflow:visible;}
+  #minecraftPreviewDrawer .minecraft-preview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  #minecraftPreviewDrawer .minecraft-preview-card{border-radius:16px;padding:8px;gap:6px;}
+  #minecraftPreviewDrawer .minecraft-preview-card .preview-label{font-size:10px;line-height:1.2;}
+  #minecraftPreviewDrawer .minecraft-preview-body{padding:12px;}
+}
 
 .page{display:none;}
 .page.active{display:block;}
@@ -357,7 +368,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v130</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v131</div>
       </div>
 
       <div>
@@ -841,22 +852,22 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
     <div class="minecraft-preview-stage bg-slate-100 flex items-center justify-center p-5">
-      <div class="w-full grid sm:grid-cols-2 gap-4">
+      <div class="minecraft-preview-grid">
         <div class="minecraft-preview-card">
-          <div class="text-[11px] font-bold text-slate-500">変換後スプライト</div>
+          <div class="preview-label text-[11px] font-bold text-slate-500">変換後スプライト</div>
           <div class="w-full aspect-square rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden">
             <canvas id="minecraftSpriteCanvas" width="320" height="320" class="w-full h-full"></canvas>
           </div>
         </div>
         <div class="minecraft-preview-card">
-          <div class="text-[11px] font-bold text-slate-500">額縁プレビュー</div>
+          <div class="preview-label text-[11px] font-bold text-slate-500">額縁プレビュー</div>
           <div class="w-full aspect-square rounded-2xl bg-white border border-slate-200 overflow-hidden">
             <canvas id="minecraftPixelCanvas" width="320" height="320" class="w-full h-full"></canvas>
           </div>
         </div>
       </div>
     </div>
-    <div class="p-5 space-y-3 overflow-auto">
+    <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
       <div class="flex flex-wrap gap-2">
         <button id="minecraftModeAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
         <button id="minecraftModeColorBtn" type="button" class="minecraft-mode-chip">カラー作品</button>
@@ -985,7 +996,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v130",
+        app_version: "v131",
         is_guest_mode: isGuestMode,
         ...params
       });
