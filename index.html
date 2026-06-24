@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v149]</title>
+<title>コドモカプセル [v150]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v149</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v150</div>
       </div>
 
       <div>
@@ -1090,7 +1090,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
-        <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">アドオン保存</button>
+        <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">壁掛けアート保存</button>
         <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">PNG保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v149",
+        app_version: "v150",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4368,7 +4368,7 @@ window.downloadMinecraftSpritePng = async function(event) {
     if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
       await navigator.share({
         files: [file],
-        title: "コドモカプセル 額縁アート",
+        title: "コドモカプセル 壁掛けアート",
         text: "Minecraft用の額縁アートPNGです。"
       });
       trackEvent("minecraft_frame_png_share", {
@@ -4465,7 +4465,76 @@ function buildMinecraftBlocksJson(blockId, textureKey) {
   };
 }
 
-function buildMinecraftBlockDefinition(blockId, displayName, textureKey) {
+function buildMinecraftWallArtTextureBlob(spriteCanvas) {
+  return new Promise((resolve, reject) => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+
+      // 木製フレーム風の正面テクスチャを作る
+      ctx.fillStyle = "#4b2f1b";
+      ctx.fillRect(0, 0, 64, 64);
+      ctx.fillStyle = "#7a5630";
+      ctx.fillRect(3, 3, 58, 58);
+      ctx.fillStyle = "#c0945a";
+      ctx.fillRect(7, 7, 50, 50);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(10, 10, 44, 44);
+      ctx.drawImage(spriteCanvas, 10, 10, 44, 44);
+
+      // 端の黒線で、Minecraft内でも絵として見えやすくする
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, 62, 62);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(9, 9, 46, 46);
+
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error("wall_art_texture_blob_failed"));
+      }, "image/png");
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+function buildMinecraftWallArtGeometry(geometryId) {
+  return {
+    format_version: "1.12.0",
+    "minecraft:geometry": [
+      {
+        description: {
+          identifier: geometryId,
+          texture_width: 64,
+          texture_height: 64,
+          visible_bounds_width: 2,
+          visible_bounds_height: 2,
+          visible_bounds_offset: [0, 0.5, 0]
+        },
+        bones: [
+          {
+            name: "wall_art_panel",
+            pivot: [0, 8, 8],
+            cubes: [
+              {
+                // 1ブロック幅・1ブロック高さ・かなり薄い壁掛けパネル
+                origin: [-8, 0, 6],
+                size: [16, 16, 2],
+                uv: [0, 0]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryId) {
   return {
     format_version: "1.20.50",
     "minecraft:block": {
@@ -4473,20 +4542,29 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey) {
         identifier: blockId,
         menu_category: {
           category: "construction",
-          group: "itemGroup.name.concrete"
+          group: "itemGroup.name.decorations"
         }
       },
       components: {
         "minecraft:display_name": displayName,
         "minecraft:destructible_by_mining": {
-          seconds_to_destroy: 0.8
+          seconds_to_destroy: 0.4
         },
         "minecraft:destructible_by_explosion": {
-          explosion_resistance: 3
+          explosion_resistance: 1
         },
         "minecraft:friction": 0.6,
         "minecraft:light_dampening": 0,
         "minecraft:map_color": "#f8fafc",
+        "minecraft:geometry": geometryId,
+        "minecraft:collision_box": {
+          origin: [-8, 0, 6],
+          size: [16, 16, 2]
+        },
+        "minecraft:selection_box": {
+          origin: [-8, 0, 6],
+          size: [16, 16, 2]
+        },
         "minecraft:material_instances": {
           "*": {
             texture: textureKey,
@@ -4504,17 +4582,18 @@ function buildMinecraftLang(blockId, displayName) {
 
 function buildMinecraftReadme(displayName) {
   return [
-    "コドモカプセル Minecraft額縁アート",
+    "コドモカプセル Minecraft壁掛けアート",
     "",
     `作品名: ${displayName}`,
     "",
     "使い方:",
     "1. 生成された .mcaddon をMinecraft統合版で開きます。",
     "2. ワールド設定でリソースパックとビヘイビアーパックを有効にします。",
-    "3. クリエイティブの建築カテゴリからブロックを探して設置します。",
+    "3. クリエイティブの装飾カテゴリから壁掛けアートを探して設置します。",
+    "4. 子どもが作った家の壁に貼るように飾ってください。",
     "",
     "補足:",
-    "このv139は、1作品を1つのカスタムブロックとして出力する試作版です。",
+    "この版は、立方体ブロックではなく薄型の壁掛けパネルとして出力する試作版です。",
     "Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。"
   ].join("\n");
 }
@@ -4527,7 +4606,7 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
       await navigator.share({
         files: [file],
         title: "コドモカプセル Minecraftアドオン",
-        text: "Minecraft統合版用の額縁アートアドオンです。"
+        text: "Minecraft統合版用の壁掛けアートアドオンです。"
       });
       trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
       return;
@@ -4574,8 +4653,10 @@ window.downloadMinecraftAddon = async function(event) {
     const blockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "frame_art";
     const blockId = `kodomo:${blockSlug}`;
     const textureKey = `kodomo_${blockSlug}`;
-    const displayName = String(title || "コドモ額縁アート").slice(0, 40);
+    const geometryId = `geometry.kodomo_${blockSlug}_wall_art`;
+    const displayName = String(title || "コドモ壁掛けアート").slice(0, 40);
     const spriteBlob = await getMinecraftSpriteBlob();
+    const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
 
     const rpHeaderUuid = crypto.randomUUID();
     const rpModuleUuid = crypto.randomUUID();
@@ -4587,31 +4668,32 @@ window.downloadMinecraftAddon = async function(event) {
     const bp = zip.folder("KodomoFrameArt_BP");
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル 額縁アート RP - ${displayName}`,
+      `コドモカプセル 壁掛けアート RP - ${displayName}`,
       "コドモカプセルで作成したMinecraft額縁アートのリソースパックです。",
       rpHeaderUuid,
       rpModuleUuid,
       "resources"
     ), null, 2));
-    rp.file("textures/blocks/" + textureKey + ".png", spriteBlob);
+    rp.file("textures/blocks/" + textureKey + ".png", wallArtTextureBlob);
     rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
     rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
+    rp.file("models/blocks/" + blockSlug + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId), null, 2));
     rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
     rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
-    rp.file("pack_icon.png", spriteBlob);
+    rp.file("pack_icon.png", wallArtTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル 額縁アート BP - ${displayName}`,
+      `コドモカプセル 壁掛けアート BP - ${displayName}`,
       "コドモカプセルで作成したMinecraft額縁アートのビヘイビアーパックです。",
       bpHeaderUuid,
       bpModuleUuid,
       "data",
       [{ uuid: rpHeaderUuid, version: [1, 0, 0] }]
     ), null, 2));
-    bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey), null, 2));
+    bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryId), null, 2));
     bp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
-    bp.file("pack_icon.png", spriteBlob);
+    bp.file("pack_icon.png", wallArtTextureBlob);
 
     zip.file("README.txt", buildMinecraftReadme(displayName));
 
