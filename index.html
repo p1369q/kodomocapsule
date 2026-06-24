@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v114]</title>
+<title>コドモカプセル [v115]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -351,7 +351,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v114</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v115</div>
       </div>
 
       <div>
@@ -816,7 +816,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div class="photo-preview-actions flex flex-col sm:flex-row gap-2 pt-2">
         <button id="photoPreviewEditBtn" type="button" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">編集する</button>
         <button id="photoPreviewDownloadBtn" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">⬇ 保存</button>
-        <button id="photoPreviewMinecraftBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">🎮 マイクラ風</button>
+        <button id="photoPreviewMinecraftBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">🎮 アイテム用</button>
         <button onclick="closePhotoPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
     </div>
@@ -829,8 +829,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="flex justify-between items-center px-5 py-4 border-b border-slate-100 shrink-0">
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
-        <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ風プレビュー</h3>
-        <p class="text-[11px] text-slate-400 mt-1">この段階では保存やアドオン出力は行わず、作品をイラスト風のドット絵で確認します。</p>
+        <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">Minecraftアイテム化プレビュー</h3>
+        <p class="text-[11px] text-slate-400 mt-1">この段階では保存やアドオン出力は行わず、作品をMinecraftのアイテム画像向けに整えた見た目で確認します。</p>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -842,9 +842,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="p-5 space-y-3 overflow-auto">
       <div id="minecraftPreviewStatus" class="text-xs text-slate-500 leading-relaxed">画像を変換しています...</div>
       <div class="grid sm:grid-cols-3 gap-2 text-[11px] text-slate-500">
-        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3"><strong class="block text-emerald-700 mb-1">48×48変換</strong>作品らしさを残しながら、ドット絵風に整えます。</div>
-        <div class="rounded-2xl bg-sky-50 border border-sky-100 p-3"><strong class="block text-sky-700 mb-1">端末内処理</strong>このプレビューでは新しい保存データを作りません。</div>
-        <div class="rounded-2xl bg-amber-50 border border-amber-100 p-3"><strong class="block text-amber-700 mb-1">次の段階</strong>確認後にmcaddon出力へ進めます。</div>
+        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3"><strong class="block text-emerald-700 mb-1">32×32アイコン</strong>Minecraftのアイテム画像として使いやすい正方形バランスに整えます。</div>
+        <div class="rounded-2xl bg-sky-50 border border-sky-100 p-3"><strong class="block text-sky-700 mb-1">作品を見やすく強調</strong>余白を抑え、輪郭と色味を少し強めてアイテム向けに寄せます。</div>
+        <div class="rounded-2xl bg-amber-50 border border-amber-100 p-3"><strong class="block text-amber-700 mb-1">次の段階</strong>確認後にPNG保存やmcaddon出力へ安全に進めます。</div>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
         <button id="minecraftPreviewRetryBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">再変換</button>
@@ -962,7 +962,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v114",
+        app_version: "v115",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3379,80 +3379,182 @@ function drawMinecraftPixelPreview(sourceUrl) {
   if (!canvas || !sourceUrl) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (statusEl) statusEl.textContent = "作品をイラスト風ドット絵に変換しています...";
+  if (statusEl) statusEl.textContent = "作品をMinecraftのアイテム画像向けに変換しています...";
 
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = function() {
     try {
-      const pixelSize = 48;
-      const smallCanvas = document.createElement("canvas");
-      smallCanvas.width = pixelSize;
-      smallCanvas.height = pixelSize;
-      const smallCtx = smallCanvas.getContext("2d", { willReadFrequently: true });
-      smallCtx.fillStyle = "#ffffff";
-      smallCtx.fillRect(0, 0, pixelSize, pixelSize);
+      const analysisSize = 96;
+      const pixelSize = 32;
+      const analysisCanvas = document.createElement("canvas");
+      analysisCanvas.width = analysisSize;
+      analysisCanvas.height = analysisSize;
+      const analysisCtx = analysisCanvas.getContext("2d", { willReadFrequently: true });
+      analysisCtx.fillStyle = "#ffffff";
+      analysisCtx.fillRect(0, 0, analysisSize, analysisSize);
+      analysisCtx.imageSmoothingEnabled = true;
+      analysisCtx.imageSmoothingQuality = "high";
+      const fitScale = Math.min(analysisSize / img.width, analysisSize / img.height);
+      const fitW = img.width * fitScale;
+      const fitH = img.height * fitScale;
+      const fitX = (analysisSize - fitW) / 2;
+      const fitY = (analysisSize - fitH) / 2;
+      analysisCtx.drawImage(img, fitX, fitY, fitW, fitH);
 
-      const scale = Math.min(pixelSize / img.width, pixelSize / img.height);
-      const drawWidth = img.width * scale;
-      const drawHeight = img.height * scale;
-      const offsetX = (pixelSize - drawWidth) / 2;
-      const offsetY = (pixelSize - drawHeight) / 2;
-      smallCtx.imageSmoothingEnabled = true;
-      smallCtx.imageSmoothingQuality = "high";
-      smallCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      const analysisData = analysisCtx.getImageData(0, 0, analysisSize, analysisSize);
+      const pixels = analysisData.data;
+      const samplePoints = [
+        [2, 2], [analysisSize - 3, 2], [2, analysisSize - 3], [analysisSize - 3, analysisSize - 3],
+        [Math.floor(analysisSize / 2), 2], [2, Math.floor(analysisSize / 2)],
+        [analysisSize - 3, Math.floor(analysisSize / 2)], [Math.floor(analysisSize / 2), analysisSize - 3]
+      ];
+      let bgR = 0, bgG = 0, bgB = 0;
+      samplePoints.forEach(([sx, sy]) => {
+        const idx = (sy * analysisSize + sx) * 4;
+        bgR += pixels[idx];
+        bgG += pixels[idx + 1];
+        bgB += pixels[idx + 2];
+      });
+      bgR /= samplePoints.length;
+      bgG /= samplePoints.length;
+      bgB /= samplePoints.length;
 
-      const imageData = smallCtx.getImageData(0, 0, pixelSize, pixelSize);
-      const data = imageData.data;
-      const original = new Uint8ClampedArray(data);
-      for (let i = 0; i < data.length; i += 4) {
-        const r0 = data[i];
-        const g0 = data[i + 1];
-        const b0 = data[i + 2];
-        const a0 = data[i + 3];
-        if (a0 < 16) {
-          data[i] = 255;
-          data[i + 1] = 255;
-          data[i + 2] = 255;
-          data[i + 3] = 255;
-          continue;
-        }
-        const gray = 0.299 * r0 + 0.587 * g0 + 0.114 * b0;
-        let r = gray + (r0 - gray) * 1.35;
-        let g = gray + (g0 - gray) * 1.35;
-        let b = gray + (b0 - gray) * 1.35;
-        r = (r - 128) * 1.08 + 128;
-        g = (g - 128) * 1.08 + 128;
-        b = (b - 128) * 1.08 + 128;
-        data[i] = Math.max(0, Math.min(255, Math.round(r / 24) * 24));
-        data[i + 1] = Math.max(0, Math.min(255, Math.round(g / 24) * 24));
-        data[i + 2] = Math.max(0, Math.min(255, Math.round(b / 24) * 24));
-        data[i + 3] = 255;
-      }
-      for (let y = 1; y < pixelSize - 1; y++) {
-        for (let x = 1; x < pixelSize - 1; x++) {
-          const idx = (y * pixelSize + x) * 4;
-          const left = (y * pixelSize + x - 1) * 4;
-          const right = (y * pixelSize + x + 1) * 4;
-          const up = ((y - 1) * pixelSize + x) * 4;
-          const down = ((y + 1) * pixelSize + x) * 4;
-          const diff = Math.abs(original[left] - original[right]) + Math.abs(original[left + 1] - original[right + 1]) + Math.abs(original[left + 2] - original[right + 2]) + Math.abs(original[up] - original[down]) + Math.abs(original[up + 1] - original[down + 1]) + Math.abs(original[up + 2] - original[down + 2]);
-          if (diff > 170) {
-            data[idx] = Math.round(data[idx] * 0.72);
-            data[idx + 1] = Math.round(data[idx + 1] * 0.72);
-            data[idx + 2] = Math.round(data[idx + 2] * 0.72);
+      let minX = analysisSize, minY = analysisSize, maxX = -1, maxY = -1;
+      for (let y = 0; y < analysisSize; y++) {
+        for (let x = 0; x < analysisSize; x++) {
+          const idx = (y * analysisSize + x) * 4;
+          const r = pixels[idx];
+          const g = pixels[idx + 1];
+          const b = pixels[idx + 2];
+          const a = pixels[idx + 3];
+          const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+          const brightness = (r + g + b) / 3;
+          if (a > 20 && (distance > 70 || brightness < 235)) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
           }
         }
       }
-      smallCtx.putImageData(imageData, 0, 0);
+      if (maxX < 0 || maxY < 0) {
+        minX = 0; minY = 0; maxX = analysisSize - 1; maxY = analysisSize - 1;
+      }
+
+      const cropW = Math.max(1, maxX - minX + 1);
+      const cropH = Math.max(1, maxY - minY + 1);
+      const padding = Math.max(4, Math.round(Math.max(cropW, cropH) * 0.18));
+      const srcX = Math.max(0, minX - padding);
+      const srcY = Math.max(0, minY - padding);
+      const srcW = Math.min(analysisSize - srcX, cropW + padding * 2);
+      const srcH = Math.min(analysisSize - srcY, cropH + padding * 2);
+
+      const iconCanvas = document.createElement("canvas");
+      iconCanvas.width = pixelSize;
+      iconCanvas.height = pixelSize;
+      const iconCtx = iconCanvas.getContext("2d", { willReadFrequently: true });
+      iconCtx.clearRect(0, 0, pixelSize, pixelSize);
+      const innerSize = 24;
+      const scale = Math.min(innerSize / srcW, innerSize / srcH);
+      const drawW = srcW * scale;
+      const drawH = srcH * scale;
+      const drawX = (pixelSize - drawW) / 2;
+      const drawY = (pixelSize - drawH) / 2;
+      iconCtx.imageSmoothingEnabled = true;
+      iconCtx.imageSmoothingQuality = "high";
+      iconCtx.drawImage(analysisCanvas, srcX, srcY, srcW, srcH, drawX, drawY, drawW, drawH);
+
+      let iconData = iconCtx.getImageData(0, 0, pixelSize, pixelSize);
+      let data = iconData.data;
+      const alphaSource = new Uint8ClampedArray(data);
+      for (let i = 0; i < data.length; i += 4) {
+        const alpha = data[i + 3];
+        if (alpha < 18) {
+          data[i] = 0;
+          data[i + 1] = 0;
+          data[i + 2] = 0;
+          data[i + 3] = 0;
+          continue;
+        }
+        const r0 = data[i];
+        const g0 = data[i + 1];
+        const b0 = data[i + 2];
+        const gray = 0.299 * r0 + 0.587 * g0 + 0.114 * b0;
+        let r = gray + (r0 - gray) * 1.28;
+        let g = gray + (g0 - gray) * 1.22;
+        let b = gray + (b0 - gray) * 1.18;
+        r = (r - 128) * 1.1 + 128;
+        g = (g - 128) * 1.08 + 128;
+        b = (b - 128) * 1.06 + 128;
+        data[i] = Math.max(0, Math.min(255, Math.round(r / 32) * 32));
+        data[i + 1] = Math.max(0, Math.min(255, Math.round(g / 32) * 32));
+        data[i + 2] = Math.max(0, Math.min(255, Math.round(b / 32) * 32));
+        data[i + 3] = 255;
+      }
+
+      for (let y = 1; y < pixelSize - 1; y++) {
+        for (let x = 1; x < pixelSize - 1; x++) {
+          const idx = (y * pixelSize + x) * 4;
+          if (alphaSource[idx + 3] > 18) continue;
+          const neighbors = [
+            ((y - 1) * pixelSize + x) * 4,
+            ((y + 1) * pixelSize + x) * 4,
+            (y * pixelSize + x - 1) * 4,
+            (y * pixelSize + x + 1) * 4
+          ];
+          const hasOpaqueNeighbor = neighbors.some(n => alphaSource[n + 3] > 18);
+          if (hasOpaqueNeighbor) {
+            data[idx] = 38;
+            data[idx + 1] = 46;
+            data[idx + 2] = 56;
+            data[idx + 3] = 255;
+          }
+        }
+      }
+
+      for (let y = 0; y < pixelSize; y++) {
+        for (let x = 0; x < pixelSize; x++) {
+          const idx = (y * pixelSize + x) * 4;
+          if (data[idx + 3] === 0) continue;
+          const shade = ((x + y) % 3 === 0) ? 0.94 : 1;
+          data[idx] = Math.max(0, Math.min(255, Math.round(data[idx] * shade)));
+          data[idx + 1] = Math.max(0, Math.min(255, Math.round(data[idx + 1] * shade)));
+          data[idx + 2] = Math.max(0, Math.min(255, Math.round(data[idx + 2] * shade)));
+        }
+      }
+      iconCtx.putImageData(iconData, 0, 0);
 
       ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(smallCanvas, 0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const tileSize = 28;
+      for (let y = 0; y < canvas.height; y += tileSize) {
+        for (let x = 0; x < canvas.width; x += tileSize) {
+          ctx.fillStyle = ((x / tileSize + y / tileSize) % 2 === 0) ? "#f8fafc" : "#eef2f7";
+          ctx.fillRect(x, y, tileSize, tileSize);
+        }
+      }
+      const slotSize = Math.round(canvas.width * 0.72);
+      const slotX = (canvas.width - slotSize) / 2;
+      const slotY = (canvas.height - slotSize) / 2;
+      ctx.fillStyle = "#d9dee7";
+      ctx.fillRect(slotX, slotY, slotSize, slotSize);
+      ctx.fillStyle = "#f8fbff";
+      ctx.fillRect(slotX + 10, slotY + 10, slotSize - 20, slotSize - 20);
+      ctx.fillStyle = "rgba(15, 23, 42, 0.12)";
+      ctx.fillRect(slotX + 18, slotY + 18, slotSize - 36, slotSize - 36);
+      ctx.fillStyle = "#edf2f7";
+      ctx.fillRect(slotX + 14, slotY + 14, slotSize - 28, slotSize - 28);
+      const iconDisplaySize = Math.round(slotSize * 0.7);
+      const iconX = Math.round((canvas.width - iconDisplaySize) / 2);
+      const iconY = Math.round((canvas.height - iconDisplaySize) / 2);
+      ctx.drawImage(iconCanvas, iconX + 6, iconY + 8, iconDisplaySize, iconDisplaySize);
+      ctx.fillStyle = "rgba(15, 23, 42, 0.08)";
+      ctx.fillRect(iconX + 10, iconY + iconDisplaySize - 4, iconDisplaySize - 20, 6);
+      ctx.drawImage(iconCanvas, iconX, iconY, iconDisplaySize, iconDisplaySize);
 
-      if (statusEl) statusEl.textContent = "作品らしさを残した48×48のイラスト風ドット絵に変換しました。次の段階で、プレミアム向けのmcaddon出力に進めます。";
-      trackEvent("minecraft_pixel_preview_success", { size: pixelSize, style: "illustration" });
+      if (statusEl) statusEl.textContent = "作品を32×32のMinecraftアイテム画像向けに変換しました。余白を抑え、輪郭を強めたのでアイテム化の完成イメージを確認できます。";
+      trackEvent("minecraft_pixel_preview_success", { size: pixelSize, style: "item_icon" });
     } catch (err) {
       if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
       trackEvent("minecraft_pixel_preview_error", { message: err.message || "unknown" });
@@ -3480,14 +3582,14 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const work = localWorks.find(w => w.id === workId);
   if (!work || work.isDeleted || !work.mediaUrls?.length) return;
   if (!isMinecraftPreviewEligibleWork(work)) {
-    alert("マイクラ風プレビューは、カテゴリが「作品」のカプセルで利用できます。");
+    alert("Minecraftアイテム用変換は、カテゴリが「作品」のカプセルで利用できます。");
     return;
   }
   const media = work.mediaUrls[mediaIndex];
   const sourceUrl = media?.url || media?.dataUrl || media;
   const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
   if (!sourceUrl || isPdf) {
-    alert("PDFはマイクラ風プレビューの対象外です。画像を選択してください。");
+    alert("PDFはMinecraftアイテム用変換の対象外です。画像を選択してください。");
     return;
   }
 
@@ -3495,7 +3597,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const titleEl = document.getElementById("minecraftPreviewTitle");
   const retryBtn = document.getElementById("minecraftPreviewRetryBtn");
   const drawer = document.getElementById("minecraftPreviewDrawer");
-  if (titleEl) titleEl.textContent = "🎮 " + (work.title || "マイクラ風プレビュー");
+  if (titleEl) titleEl.textContent = "🎮 " + (work.title || "Minecraftアイテム化プレビュー");
   if (retryBtn) {
     retryBtn.onclick = function() {
       if (currentMinecraftPreviewTarget?.sourceUrl) drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
