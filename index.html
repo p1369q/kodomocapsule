@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v113]</title>
+<title>コドモカプセル [v114]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -351,7 +351,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v113</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v114</div>
       </div>
 
       <div>
@@ -830,7 +830,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ風プレビュー</h3>
-        <p class="text-[11px] text-slate-400 mt-1">この段階では保存やアドオン出力は行わず、写真を32×32のドット絵で確認します。</p>
+        <p class="text-[11px] text-slate-400 mt-1">この段階では保存やアドオン出力は行わず、作品をイラスト風のドット絵で確認します。</p>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -842,7 +842,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="p-5 space-y-3 overflow-auto">
       <div id="minecraftPreviewStatus" class="text-xs text-slate-500 leading-relaxed">画像を変換しています...</div>
       <div class="grid sm:grid-cols-3 gap-2 text-[11px] text-slate-500">
-        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3"><strong class="block text-emerald-700 mb-1">32×32変換</strong>小さい画面でも重くなりにくいサイズです。</div>
+        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3"><strong class="block text-emerald-700 mb-1">48×48変換</strong>作品らしさを残しながら、ドット絵風に整えます。</div>
         <div class="rounded-2xl bg-sky-50 border border-sky-100 p-3"><strong class="block text-sky-700 mb-1">端末内処理</strong>このプレビューでは新しい保存データを作りません。</div>
         <div class="rounded-2xl bg-amber-50 border border-amber-100 p-3"><strong class="block text-amber-700 mb-1">次の段階</strong>確認後にmcaddon出力へ進めます。</div>
       </div>
@@ -962,7 +962,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v113",
+        app_version: "v114",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3379,13 +3379,13 @@ function drawMinecraftPixelPreview(sourceUrl) {
   if (!canvas || !sourceUrl) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (statusEl) statusEl.textContent = "画像を変換しています...";
+  if (statusEl) statusEl.textContent = "作品をイラスト風ドット絵に変換しています...";
 
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = function() {
     try {
-      const pixelSize = 32;
+      const pixelSize = 48;
       const smallCanvas = document.createElement("canvas");
       smallCanvas.width = pixelSize;
       smallCanvas.height = pixelSize;
@@ -3393,21 +3393,56 @@ function drawMinecraftPixelPreview(sourceUrl) {
       smallCtx.fillStyle = "#ffffff";
       smallCtx.fillRect(0, 0, pixelSize, pixelSize);
 
-      const scale = Math.max(pixelSize / img.width, pixelSize / img.height);
+      const scale = Math.min(pixelSize / img.width, pixelSize / img.height);
       const drawWidth = img.width * scale;
       const drawHeight = img.height * scale;
       const offsetX = (pixelSize - drawWidth) / 2;
       const offsetY = (pixelSize - drawHeight) / 2;
       smallCtx.imageSmoothingEnabled = true;
+      smallCtx.imageSmoothingQuality = "high";
       smallCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
       const imageData = smallCtx.getImageData(0, 0, pixelSize, pixelSize);
       const data = imageData.data;
+      const original = new Uint8ClampedArray(data);
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.round(data[i] / 32) * 32;
-        data[i + 1] = Math.round(data[i + 1] / 32) * 32;
-        data[i + 2] = Math.round(data[i + 2] / 32) * 32;
+        const r0 = data[i];
+        const g0 = data[i + 1];
+        const b0 = data[i + 2];
+        const a0 = data[i + 3];
+        if (a0 < 16) {
+          data[i] = 255;
+          data[i + 1] = 255;
+          data[i + 2] = 255;
+          data[i + 3] = 255;
+          continue;
+        }
+        const gray = 0.299 * r0 + 0.587 * g0 + 0.114 * b0;
+        let r = gray + (r0 - gray) * 1.35;
+        let g = gray + (g0 - gray) * 1.35;
+        let b = gray + (b0 - gray) * 1.35;
+        r = (r - 128) * 1.08 + 128;
+        g = (g - 128) * 1.08 + 128;
+        b = (b - 128) * 1.08 + 128;
+        data[i] = Math.max(0, Math.min(255, Math.round(r / 24) * 24));
+        data[i + 1] = Math.max(0, Math.min(255, Math.round(g / 24) * 24));
+        data[i + 2] = Math.max(0, Math.min(255, Math.round(b / 24) * 24));
         data[i + 3] = 255;
+      }
+      for (let y = 1; y < pixelSize - 1; y++) {
+        for (let x = 1; x < pixelSize - 1; x++) {
+          const idx = (y * pixelSize + x) * 4;
+          const left = (y * pixelSize + x - 1) * 4;
+          const right = (y * pixelSize + x + 1) * 4;
+          const up = ((y - 1) * pixelSize + x) * 4;
+          const down = ((y + 1) * pixelSize + x) * 4;
+          const diff = Math.abs(original[left] - original[right]) + Math.abs(original[left + 1] - original[right + 1]) + Math.abs(original[left + 2] - original[right + 2]) + Math.abs(original[up] - original[down]) + Math.abs(original[up + 1] - original[down + 1]) + Math.abs(original[up + 2] - original[down + 2]);
+          if (diff > 170) {
+            data[idx] = Math.round(data[idx] * 0.72);
+            data[idx + 1] = Math.round(data[idx + 1] * 0.72);
+            data[idx + 2] = Math.round(data[idx + 2] * 0.72);
+          }
+        }
       }
       smallCtx.putImageData(imageData, 0, 0);
 
@@ -3416,8 +3451,8 @@ function drawMinecraftPixelPreview(sourceUrl) {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(smallCanvas, 0, 0, canvas.width, canvas.height);
 
-      if (statusEl) statusEl.textContent = "32×32のマイクラ風ドット絵に変換しました。次の段階で、プレミアム向けのmcaddon出力に進めます。";
-      trackEvent("minecraft_pixel_preview_success", { size: pixelSize });
+      if (statusEl) statusEl.textContent = "作品らしさを残した48×48のイラスト風ドット絵に変換しました。次の段階で、プレミアム向けのmcaddon出力に進めます。";
+      trackEvent("minecraft_pixel_preview_success", { size: pixelSize, style: "illustration" });
     } catch (err) {
       if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
       trackEvent("minecraft_pixel_preview_error", { message: err.message || "unknown" });
@@ -3435,10 +3470,19 @@ window.closeMinecraftPixelPreview = function() {
   if (drawer) drawer.classList.remove("open");
 };
 
+function isMinecraftPreviewEligibleWork(work) {
+  const category = localCategories.find(c => c.id === work?.category);
+  return category?.name === "作品" || work?.category === "作品";
+}
+
 window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (event) event.stopPropagation();
   const work = localWorks.find(w => w.id === workId);
   if (!work || work.isDeleted || !work.mediaUrls?.length) return;
+  if (!isMinecraftPreviewEligibleWork(work)) {
+    alert("マイクラ風プレビューは、カテゴリが「作品」のカプセルで利用できます。");
+    return;
+  }
   const media = work.mediaUrls[mediaIndex];
   const sourceUrl = media?.url || media?.dataUrl || media;
   const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
@@ -3523,9 +3567,11 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
     };
   }
   if(minecraftBtn) {
-    minecraftBtn.onclick = function(e) {
+    const canShowMinecraftBtn = isMinecraftPreviewEligibleWork(work);
+    minecraftBtn.classList.toggle("hidden", !canShowMinecraftBtn);
+    minecraftBtn.onclick = canShowMinecraftBtn ? function(e) {
       openMinecraftPixelPreview(workId, mediaIndex, e);
-    };
+    } : null;
   }
   if(drawer) drawer.classList.add("open");
   trackEvent("photo_preview_open", { work_id: workId, media_index: mediaIndex });
