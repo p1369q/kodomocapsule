@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v135]</title>
+<title>コドモカプセル [v136]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -295,6 +295,52 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   }
 }
 
+
+/* v136: Minecraft preview bottom whitespace balance */
+@media (max-width:640px){
+  #minecraftPreviewDrawer .drawer-panel{
+    height:auto;
+    min-height:0;
+    max-height:calc(100dvh - 16px);
+    overflow:hidden;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-stage{
+    max-height:50dvh;
+    flex:0 0 auto;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-body{
+    flex:0 1 auto;
+    max-height:38dvh;
+    overflow-y:auto;
+    padding-top:10px;
+    padding-bottom:12px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-body .flex.flex-col{
+    margin-top:0;
+  }
+}
+@media (max-width:390px){
+  #minecraftPreviewDrawer .minecraft-preview-stage{
+    max-height:47dvh;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-body{
+    max-height:40dvh;
+  }
+}
+@supports not (height: 100dvh){
+  @media (max-width:640px){
+    #minecraftPreviewDrawer .drawer-panel{
+      max-height:calc(100vh - 16px);
+    }
+    #minecraftPreviewDrawer .minecraft-preview-stage{
+      max-height:50vh;
+    }
+    #minecraftPreviewDrawer .minecraft-preview-body{
+      max-height:38vh;
+    }
+  }
+}
+
 </style>
 </head>
 <body>
@@ -537,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v135</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v136</div>
       </div>
 
       <div>
@@ -1160,7 +1206,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v135",
+        app_version: "v136",
         is_guest_mode: isGuestMode,
         ...params
       });
