@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v139]</title>
+<title>コドモカプセル [v141]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v139</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v141</div>
       </div>
 
       <div>
@@ -1207,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v139",
+        app_version: "v141",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4203,6 +4203,21 @@ function sanitizeMinecraftDownloadName(name) {
     .slice(0, 48) || "kodomo_frame_art";
 }
 
+function buildUniqueMinecraftAddonFileName(work, blockSlug) {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  const timestamp = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+    "_",
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds())
+  ].join("");
+  return `kodomo_${timestamp}.mcaddon`;
+}
+
 window.downloadMinecraftSpritePng = async function(event) {
   if (event) event.stopPropagation();
   if (!currentMinecraftSpriteCanvas) {
@@ -4474,7 +4489,8 @@ window.downloadMinecraftAddon = async function(event) {
       compressionOptions: { level: 6 }
     });
 
-    await shareOrDownloadMinecraftAddon(addonBlob, `${blockSlug}.mcaddon`, work?.id || "");
+    const addonFileName = buildUniqueMinecraftAddonFileName(work, blockSlug);
+    await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "");
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
     alert("Minecraftアドオンの作成に失敗しました。\n詳細: " + (err.message || "unknown"));
