@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v138]</title>
+<title>コドモカプセル [v139]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -583,7 +583,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v138</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v139</div>
       </div>
 
       <div>
@@ -1090,6 +1090,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
+        <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">アドオン保存</button>
         <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">PNG保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
@@ -1206,7 +1207,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v138",
+        app_version: "v139",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4257,6 +4258,235 @@ window.downloadMinecraftSpritePng = async function(event) {
     trackEvent("minecraft_frame_png_download_error", { message: err.message || "unknown" });
   }
 };
+
+function getMinecraftSpriteBlob() {
+  return new Promise((resolve, reject) => {
+    if (!currentMinecraftSpriteCanvas) {
+      reject(new Error("no_sprite_canvas"));
+      return;
+    }
+    currentMinecraftSpriteCanvas.toBlob(blobResult => {
+      if (blobResult) resolve(blobResult);
+      else reject(new Error("canvas_to_blob_failed"));
+    }, "image/png");
+  });
+}
+
+function getMinecraftAddonTargetWork() {
+  return currentMinecraftPreviewTarget
+    ? localWorks.find(w => w.id === currentMinecraftPreviewTarget.workId)
+    : null;
+}
+
+function buildMinecraftPackManifest(name, description, uuid1, uuid2, moduleType = "resources", dependencies = []) {
+  const manifest = {
+    format_version: 2,
+    header: {
+      name,
+      description,
+      uuid: uuid1,
+      version: [1, 0, 0],
+      min_engine_version: [1, 20, 50]
+    },
+    modules: [
+      {
+        type: moduleType,
+        uuid: uuid2,
+        version: [1, 0, 0]
+      }
+    ]
+  };
+  if (dependencies.length) manifest.dependencies = dependencies;
+  return manifest;
+}
+
+function buildMinecraftTerrainTexture(textureKey) {
+  return {
+    resource_pack_name: "kodomo_capsule_frame_art",
+    texture_name: "atlas.terrain",
+    padding: 8,
+    num_mip_levels: 4,
+    texture_data: {
+      [textureKey]: {
+        textures: `textures/blocks/${textureKey}`
+      }
+    }
+  };
+}
+
+function buildMinecraftBlocksJson(blockId, textureKey) {
+  return {
+    format_version: [1, 1, 0],
+    [blockId]: {
+      textures: textureKey,
+      sound: "wood"
+    }
+  };
+}
+
+function buildMinecraftBlockDefinition(blockId, displayName, textureKey) {
+  return {
+    format_version: "1.20.50",
+    "minecraft:block": {
+      description: {
+        identifier: blockId,
+        menu_category: {
+          category: "construction",
+          group: "itemGroup.name.concrete"
+        }
+      },
+      components: {
+        "minecraft:display_name": displayName,
+        "minecraft:destructible_by_mining": {
+          seconds_to_destroy: 0.8
+        },
+        "minecraft:destructible_by_explosion": {
+          explosion_resistance: 3
+        },
+        "minecraft:friction": 0.6,
+        "minecraft:light_dampening": 0,
+        "minecraft:map_color": "#f8fafc",
+        "minecraft:material_instances": {
+          "*": {
+            texture: textureKey,
+            render_method: "opaque"
+          }
+        }
+      }
+    }
+  };
+}
+
+function buildMinecraftLang(blockId, displayName) {
+  return `tile.${blockId}.name=${displayName}\n`;
+}
+
+function buildMinecraftReadme(displayName) {
+  return [
+    "コドモカプセル Minecraft額縁アート",
+    "",
+    `作品名: ${displayName}`,
+    "",
+    "使い方:",
+    "1. 生成された .mcaddon をMinecraft統合版で開きます。",
+    "2. ワールド設定でリソースパックとビヘイビアーパックを有効にします。",
+    "3. クリエイティブの建築カテゴリからブロックを探して設置します。",
+    "",
+    "補足:",
+    "このv139は、1作品を1つのカスタムブロックとして出力する試作版です。",
+    "Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。"
+  ].join("\n");
+}
+
+async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
+  const file = new File([blob], fileName, { type: "application/octet-stream" });
+  if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+    await navigator.share({
+      files: [file],
+      title: "コドモカプセル Minecraftアドオン",
+      text: "Minecraft統合版用の額縁アートアドオンです。"
+    });
+    trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
+    return;
+  }
+  const link = document.createElement("a");
+  link.download = fileName;
+  link.href = URL.createObjectURL(blob);
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(link.href);
+    link.remove();
+  }, 1000);
+  trackEvent("minecraft_frame_addon_download", { work_id: workId || "" });
+}
+
+window.downloadMinecraftAddon = async function(event) {
+  if (event) event.stopPropagation();
+  if (!currentMinecraftSpriteCanvas) {
+    alert("先に額縁アートを変換してください。");
+    return;
+  }
+  if (!window.JSZip) {
+    alert("アドオン作成ライブラリの読み込みに失敗しました。\nページを再読み込みしてもう一度お試しください。");
+    return;
+  }
+
+  const btn = document.getElementById("minecraftPreviewAddonBtn");
+  const originalText = btn ? btn.innerText : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "作成中...";
+  }
+
+  try {
+    const work = getMinecraftAddonTargetWork();
+    const title = work?.title || "kodomo_frame_art";
+    const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
+    const blockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "frame_art";
+    const blockId = `kodomo:${blockSlug}`;
+    const textureKey = `kodomo_${blockSlug}`;
+    const displayName = String(title || "コドモ額縁アート").slice(0, 40);
+    const spriteBlob = await getMinecraftSpriteBlob();
+
+    const rpHeaderUuid = crypto.randomUUID();
+    const rpModuleUuid = crypto.randomUUID();
+    const bpHeaderUuid = crypto.randomUUID();
+    const bpModuleUuid = crypto.randomUUID();
+
+    const zip = new JSZip();
+    const rp = zip.folder("KodomoFrameArt_RP");
+    const bp = zip.folder("KodomoFrameArt_BP");
+
+    rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
+      `コドモカプセル 額縁アート RP - ${displayName}`,
+      "コドモカプセルで作成したMinecraft額縁アートのリソースパックです。",
+      rpHeaderUuid,
+      rpModuleUuid,
+      "resources"
+    ), null, 2));
+    rp.file("textures/blocks/" + textureKey + ".png", spriteBlob);
+    rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
+    rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
+    rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
+    rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
+    rp.file("pack_icon.png", spriteBlob);
+
+    bp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
+      `コドモカプセル 額縁アート BP - ${displayName}`,
+      "コドモカプセルで作成したMinecraft額縁アートのビヘイビアーパックです。",
+      bpHeaderUuid,
+      bpModuleUuid,
+      "data",
+      [{ uuid: rpHeaderUuid, version: [1, 0, 0] }]
+    ), null, 2));
+    bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey), null, 2));
+    bp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
+    bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
+    bp.file("pack_icon.png", spriteBlob);
+
+    zip.file("README.txt", buildMinecraftReadme(displayName));
+
+    const addonBlob = await zip.generateAsync({
+      type: "blob",
+      mimeType: "application/octet-stream",
+      compression: "DEFLATE",
+      compressionOptions: { level: 6 }
+    });
+
+    await shareOrDownloadMinecraftAddon(addonBlob, `${blockSlug}.mcaddon`, work?.id || "");
+  } catch (err) {
+    console.error("Minecraft addon export failed:", err);
+    alert("Minecraftアドオンの作成に失敗しました。\n詳細: " + (err.message || "unknown"));
+    trackEvent("minecraft_frame_addon_error", { message: err.message || "unknown" });
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  }
+};
+
 
 
 window.closeMinecraftPixelPreview = function() {
