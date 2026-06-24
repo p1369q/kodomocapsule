@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v132]</title>
+<title>コドモカプセル [v133]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -215,6 +215,64 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     }
     #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
       max-height:31vh;
+    }
+  }
+}
+
+
+/* v133: Minecraft preview image clipping fix */
+@media (max-width:640px){
+  #minecraftPreviewDrawer .drawer-panel > .flex.justify-between{
+    min-height:auto;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-stage{
+    display:block;
+    max-height:42dvh;
+    padding:8px 12px 10px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-stage .minecraft-preview-grid,
+  #minecraftPreviewDrawer .minecraft-preview-stage .w-full.grid,
+  #minecraftPreviewDrawer .minecraft-preview-stage .w-full{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-card{
+    min-height:0;
+    overflow:visible;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
+    aspect-ratio:auto;
+    height:30dvh;
+    min-height:190px;
+    max-height:240px;
+  }
+  #minecraftPreviewDrawer .minecraft-preview-card canvas{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+  }
+}
+@media (max-width:390px){
+  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
+    height:27dvh;
+    min-height:170px;
+    max-height:215px;
+  }
+}
+@supports not (height: 100dvh){
+  @media (max-width:640px){
+    #minecraftPreviewDrawer .minecraft-preview-stage{
+      max-height:42vh;
+    }
+    #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
+      height:30vh;
+    }
+  }
+  @media (max-width:390px){
+    #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{
+      height:27vh;
     }
   }
 }
@@ -461,7 +519,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v132</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v133</div>
       </div>
 
       <div>
@@ -1089,7 +1147,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v132",
+        app_version: "v133",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3864,7 +3922,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     const ctx = spritePreviewCanvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     drawMinecraftChecker(ctx, spritePreviewCanvas.width, spritePreviewCanvas.height, 24, "#f8fafc", "#eef2f7");
-    const displaySize = Math.round(spritePreviewCanvas.width * 0.84);
+    const displaySize = Math.round(spritePreviewCanvas.width * 0.74);
     const displayX = Math.round((spritePreviewCanvas.width - displaySize) / 2);
     const displayY = Math.round((spritePreviewCanvas.height - displaySize) / 2);
     ctx.drawImage(spriteCanvas, displayX, displayY, displaySize, displaySize);
@@ -3880,7 +3938,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
         ctx.fillRect(x, y, wallTile, wallTile);
       }
     }
-    const frameSize = Math.round(framePreviewCanvas.width * 0.72);
+    const frameSize = Math.round(framePreviewCanvas.width * 0.66);
     const fx = Math.round((framePreviewCanvas.width - frameSize) / 2);
     const fy = Math.round((framePreviewCanvas.height - frameSize) / 2);
     ctx.fillStyle = "#6b4d2d";
@@ -3891,7 +3949,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     ctx.fillRect(fx + 18, fy + 18, frameSize - 36, frameSize - 36);
     ctx.fillStyle = "#111827";
     ctx.fillRect(fx + Math.round(frameSize / 2) - 3, fy - 8, 6, 10);
-    const artSize = Math.round(frameSize * 0.62);
+    const artSize = Math.round(frameSize * 0.58);
     const ax = Math.round((framePreviewCanvas.width - artSize) / 2);
     const ay = Math.round((framePreviewCanvas.height - artSize) / 2);
     ctx.fillStyle = "#f8fafc";
