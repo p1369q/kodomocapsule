@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v154]</title>
+<title>コドモカプセル [v156]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -431,10 +431,10 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="auth-hero-nowrap"><span class="text-[#ff6b6b]">未来の宝もの</span>に。</span>
         </h1>
         <p class="mt-5 text-sm sm:text-base text-slate-600 leading-8 max-w-xl">
-          増え続ける作品、プリント、テスト、ふとした思い出。写真やPDFでひとつの場所に残して、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>できる、家族のためのデジタルタイムカプセルです。
+          増え続ける作品、プリント、テスト、ふとした思い出。写真やPDFでひとつの場所に残して、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>。さらに作品を<strong class="text-slate-800">Minecraft統合版用のmcaddonファイル</strong>として出力できる、家族のためのデジタルタイムカプセルです。
         </p>
 
-        <div class="mt-6 grid sm:grid-cols-3 gap-3 max-w-2xl">
+        <div class="mt-6 grid sm:grid-cols-4 gap-3 max-w-3xl">
           <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
             <div class="text-xl mb-2">🧺</div>
             <div class="text-xs font-extrabold text-slate-800">紙ものが増える家に</div>
@@ -450,12 +450,18 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div class="text-xs font-extrabold text-slate-800">家族で残したい人に</div>
             <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">離れていても同じ思い出をリアルタイムで共有できます。</p>
           </div>
+          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
+            <div class="text-xl mb-2">🎮</div>
+            <div class="text-xs font-extrabold text-slate-800">マイクラで飾りたい人に</div>
+            <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">作品をmcaddonファイルにして、Minecraftの家に飾れます。</p>
+          </div>
         </div>
 
         <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-slate-500">
           <span>✓ 写真・PDF・複数枚対応</span>
           <span>✓ 年齢別ギャラリー</span>
           <span>✓ 家族で共有</span>
+          <span>✓ マイクラ用ファイル出力</span>
           <span>✓ 無料でスタート</span>
         </div>
       </div>
@@ -490,7 +496,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
                 <span class="block text-[11px] text-white/80 mt-0.5">写真・PDFを保存し、家族共有も使えます。</span>
               </span>
             </button>
-            <div class="grid grid-cols-3 gap-2 pt-1">
+            <div class="grid grid-cols-4 gap-2 pt-1">
               <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
                 <div class="text-lg">📷</div>
                 <div class="text-[10px] font-bold text-slate-600 mt-1">写真/PDF</div>
@@ -502,6 +508,10 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
                 <div class="text-lg">👨‍👩‍👧</div>
                 <div class="text-[10px] font-bold text-slate-600 mt-1">家族共有</div>
+              </div>
+              <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
+                <div class="text-lg">🎮</div>
+                <div class="text-[10px] font-bold text-slate-600 mt-1">マイクラ</div>
               </div>
             </div>
             <p class="text-[10px] text-slate-400 text-center leading-relaxed pt-1">ゲストデータは保存されません。実際の保存にはGoogleログインが必要です。</p>
@@ -640,7 +650,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </select>
           </div>
         </div>
-        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v154</div>
+        <div id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200 ml-1">v156</div>
       </div>
 
       <div>
@@ -844,6 +854,17 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div>
           <div class="font-bold text-indigo-950 mb-0.5">③ 夫婦・家族間でのリアルタイム同期</div>
           <p>下記に表示される「家族コード」をパートナーが入力すると参加申請が届きます。親ユーザーが承認した後、同じギャラリーを安全に共有・同時編集できます。</p>
+        </div>
+        <div>
+          <div class="font-bold text-indigo-950 mb-0.5">④ Minecraftで作品を飾る</div>
+          <p>作品の写真プレビューから「マイクラ用にする」を押すと、ドット絵風に変換できます。「マイクラ用ファイル保存」から <span class="font-mono font-bold">.mcaddon</span> ファイルを保存し、Minecraft統合版にインポートできます。</p>
+          <ol class="list-decimal pl-5 mt-2 space-y-1 text-[11px] text-slate-600">
+            <li>保存した <span class="font-mono">.mcaddon</span> ファイルを開き、Minecraftにインポートします。</li>
+            <li>使いたいワールドの設定を開きます。</li>
+            <li>「リソースパック」と「ビヘイビアーパック」の両方で、追加されたコドモカプセルのパックを選びます。</li>
+            <li>それぞれ「有効化」または「認証する」から追加します。</li>
+            <li>ワールド内のクリエイティブからMinecraft用アートを探して、家の壁に飾ります。</li>
+          </ol>
         </div>
         <div class="pt-2 border-t border-indigo-100">
           <div class="font-bold text-amber-700 flex items-center gap-1 mb-1">👑 プレミアム機能と無料プランの違い</div>
@@ -1055,7 +1076,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
       <div>
         <div class="font-bold text-slate-800 mb-1">4. アクセス解析</div>
-        <p>本サービスでは、利用状況の把握と改善のためにGoogle Analytics for Firebaseを利用します。取得される情報は、画面閲覧、ボタン操作、ゲスト体験、写真ダウンロードなどの利用状況分析に使われます。</p>
+        <p>本サービスでは、利用状況の把握と改善のためにGoogle Analytics for Firebaseを利用します。取得される情報は、画面閲覧、ボタン操作、ゲスト体験、写真ダウンロード、Minecraft用ファイル出力などの利用状況分析に使われます。</p>
       </div>
       <div>
         <div class="font-bold text-slate-800 mb-1">5. 第三者提供</div>
@@ -1110,7 +1131,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div class="photo-preview-actions flex flex-col sm:flex-row gap-2 pt-2">
         <button id="photoPreviewEditBtn" type="button" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">編集する</button>
         <button id="photoPreviewDownloadBtn" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">⬇ 保存</button>
-        <button id="photoPreviewMinecraftBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">🎮 額縁に飾る</button>
+        <button id="photoPreviewMinecraftBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">🎮 マイクラ用にする</button>
         <button onclick="closePhotoPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
     </div>
@@ -1123,7 +1144,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="flex justify-between items-center px-5 py-4 border-b border-slate-100 shrink-0">
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
-        <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">Minecraft額縁アート化プレビュー</h3>
+        <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
         <p class="text-[11px] text-slate-400 mt-1">この段階では保存やアドオン出力は行わず、作品をMinecraftで額縁に飾りやすいドット絵として確認します。</p>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
@@ -1131,13 +1152,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="minecraft-preview-stage bg-slate-100 flex items-center justify-center p-5">
       <div class="minecraft-preview-grid">
         <div class="minecraft-preview-card">
-          <div class="preview-label text-[11px] font-bold text-slate-500">変換後スプライト</div>
+          <div class="preview-label text-[11px] font-bold text-slate-500">変換後の絵</div>
           <div class="w-full aspect-square rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden">
             <canvas id="minecraftSpriteCanvas" width="320" height="320" class="w-full h-full"></canvas>
           </div>
         </div>
         <div class="minecraft-preview-card">
-          <div class="preview-label text-[11px] font-bold text-slate-500">額縁プレビュー</div>
+          <div class="preview-label text-[11px] font-bold text-slate-500">マイクラでの見え方</div>
           <div class="w-full aspect-square rounded-2xl bg-white border border-slate-200 overflow-hidden">
             <canvas id="minecraftPixelCanvas" width="320" height="320" class="w-full h-full"></canvas>
           </div>
@@ -1152,8 +1173,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
-        <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">壁掛けアート保存</button>
-        <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">PNG保存</button>
+        <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition">マイクラ用ファイル保存</button>
+        <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
     </div>
@@ -1270,7 +1291,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v154",
+        app_version: "v156",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4518,7 +4539,7 @@ function buildUniqueMinecraftAddonFileName(work, blockSlug) {
 window.downloadMinecraftSpritePng = async function(event) {
   if (event) event.stopPropagation();
   if (!currentMinecraftSpriteCanvas) {
-    alert("先に額縁アートを変換してください。");
+    alert("先にマイクラ用アートを作成してください。");
     return;
   }
   try {
@@ -4539,8 +4560,8 @@ window.downloadMinecraftSpritePng = async function(event) {
     if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
       await navigator.share({
         files: [file],
-        title: "コドモカプセル 壁掛けアート",
-        text: "Minecraft用の額縁アートPNGです。"
+        title: "コドモカプセル Minecraft用アート",
+        text: "Minecraft用に変換した画像です。"
       });
       trackEvent("minecraft_frame_png_share", {
         work_id: currentMinecraftPreviewTarget?.workId || "",
@@ -4566,7 +4587,7 @@ window.downloadMinecraftSpritePng = async function(event) {
       size: 64
     });
   } catch (err) {
-    alert("PNG保存に失敗しました。\nスマホでは共有メニューから「画像を保存」を選べる場合があります。");
+    alert("画像だけ保存に失敗しました。\nスマホでは共有メニューから「画像を保存」を選べる場合があります。");
     trackEvent("minecraft_frame_png_download_error", { message: err.message || "unknown" });
   }
 };
@@ -4693,7 +4714,7 @@ function buildMinecraftWallArtGeometry(geometryId) {
             pivot: [0, 8, 8],
             cubes: [
               {
-                // 1ブロック幅・1ブロック高さ・かなり薄い壁掛けパネル
+                // 1ブロック幅・1ブロック高さ・かなり薄いアートパネル
                 origin: [-8, 0, 6],
                 size: [16, 16, 2],
                 uv: {
@@ -4761,20 +4782,30 @@ function buildMinecraftLang(blockId, displayName) {
 
 function buildMinecraftReadme(displayName) {
   return [
-    "コドモカプセル Minecraft壁掛けアート",
+    "コドモカプセル Minecraft用アート",
     "",
     `作品名: ${displayName}`,
     "",
+    "このファイルについて:",
+    "コドモカプセルで保存した作品を、Minecraft統合版の家の壁などに飾るための .mcaddon ファイルです。",
+    "",
     "使い方:",
-    "1. 生成された .mcaddon をMinecraft統合版で開きます。",
-    "2. ワールド設定でリソースパックとビヘイビアーパックを有効にします。",
-    "3. クリエイティブの装飾カテゴリから壁掛けアートを探して設置します。",
-    "4. 子どもが作った家の壁に貼るように飾ってください。",
+    "1. 生成された .mcaddon ファイルをMinecraft統合版で開き、インポートします。",
+    "2. Minecraftで使いたいワールドの設定を開きます。",
+    "3. 「リソースパック」のメニューで、追加されたコドモカプセルのパックを選びます。",
+    "4. 「有効化」または「認証する」から追加します。",
+    "5. 同じように「ビヘイビアーパック」のメニューでも、追加されたコドモカプセルのパックを選びます。",
+    "6. こちらも「有効化」または「認証する」から追加します。",
+    "7. ワールドを開き、クリエイティブの装飾カテゴリなどからMinecraft用アートを探して設置します。",
+    "8. 子どもが作った家の壁に飾ってください。",
+    "",
+    "注意:",
+    "リソースパックだけ、またはビヘイビアーパックだけでは正しく使えない場合があります。必ず両方を有効にしてください。",
+    "Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。",
     "",
     "補足:",
-    "この版は、立方体ブロックではなく薄型の壁掛けパネルとして出力する試作版です。正面に作品と額縁が表示されるように調整しています。",
-    "Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。"
-  ].join("\n");
+    "この版は、子どもが作ったMinecraftの家に飾りやすいよう、薄型のアートパネルとして出力する試作版です。正面に作品が表示されるように調整しています。"
+  ].join("\\n");
 }
 
 async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
@@ -4785,7 +4816,7 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
       await navigator.share({
         files: [file],
         title: "コドモカプセル Minecraftアドオン",
-        text: "Minecraft統合版用の壁掛けアートアドオンです。"
+        text: "Minecraft統合版で家の壁に飾るためのアドオンです。"
       });
       trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
       return;
@@ -4810,11 +4841,11 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
 window.downloadMinecraftAddon = async function(event) {
   if (event) event.stopPropagation();
   if (!currentMinecraftSpriteCanvas) {
-    alert("先に額縁アートを変換してください。");
+    alert("先にマイクラ用アートを作成してください。");
     return;
   }
   if (!window.JSZip) {
-    alert("アドオン作成ライブラリの読み込みに失敗しました。\nページを再読み込みしてもう一度お試しください。");
+    alert("Minecraft用ファイル作成ライブラリの読み込みに失敗しました。\nページを再読み込みしてもう一度お試しください。");
     return;
   }
 
@@ -4833,7 +4864,7 @@ window.downloadMinecraftAddon = async function(event) {
     const blockId = `kodomo:${blockSlug}`;
     const textureKey = `kodomo_${blockSlug}`;
     const geometryId = `geometry.kodomo_${blockSlug}_wall_art`;
-    const displayName = String(title || "コドモ壁掛けアート").slice(0, 40);
+    const displayName = String(title || "コドモMinecraftアート").slice(0, 40);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
 
@@ -4847,8 +4878,8 @@ window.downloadMinecraftAddon = async function(event) {
     const bp = zip.folder("KodomoFrameArt_BP");
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル 壁掛けアート RP - ${displayName}`,
-      "コドモカプセルで作成したMinecraft額縁アートのリソースパックです。",
+      `コドモカプセル Minecraft用アート RP - ${displayName}`,
+      "コドモカプセルで作成したMinecraft用アートのリソースパックです。",
       rpHeaderUuid,
       rpModuleUuid,
       "resources"
@@ -4862,8 +4893,8 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("pack_icon.png", wallArtTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル 壁掛けアート BP - ${displayName}`,
-      "コドモカプセルで作成したMinecraft額縁アートのビヘイビアーパックです。",
+      `コドモカプセル Minecraft用アート BP - ${displayName}`,
+      "コドモカプセルで作成したMinecraft用アートのビヘイビアーパックです。",
       bpHeaderUuid,
       bpModuleUuid,
       "data",
@@ -4887,7 +4918,7 @@ window.downloadMinecraftAddon = async function(event) {
     await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "");
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
-    alert("Minecraftアドオンの作成に失敗しました。\n共有メニューが開けない場合は通常ダウンロードに切り替えます。\n詳細: " + (err.message || "unknown"));
+    alert("Minecraft用ファイルの作成に失敗しました。\n共有メニューが開けない場合は通常ダウンロードに切り替えます。\n詳細: " + (err.message || "unknown"));
     trackEvent("minecraft_frame_addon_error", { message: err.message || "unknown" });
   } finally {
     if (btn) {
@@ -4914,14 +4945,14 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const work = localWorks.find(w => w.id === workId);
   if (!work || work.isDeleted || !work.mediaUrls?.length) return;
   if (!isMinecraftPreviewEligibleWork(work)) {
-    alert("Minecraft額縁アート化は、カテゴリが「作品」のカプセルで利用できます。");
+    alert("マイクラ用アート変換は、カテゴリが「作品」のカプセルで利用できます。");
     return;
   }
   const media = work.mediaUrls[mediaIndex];
   const sourceUrl = media?.url || media?.dataUrl || media;
   const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
   if (!sourceUrl || isPdf) {
-    alert("PDFはMinecraft額縁アート化の対象外です。画像を選択してください。");
+    alert("PDFはマイクラ用アート変換の対象外です。画像を選択してください。");
     return;
   }
 
@@ -4932,7 +4963,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const colorBtn = document.getElementById("minecraftModeColorBtn");
   const lineBtn = document.getElementById("minecraftModeLineBtn");
   const drawer = document.getElementById("minecraftPreviewDrawer");
-  if (titleEl) titleEl.textContent = "🎮 " + (work.title || "Minecraft額縁アート化プレビュー");
+  if (titleEl) titleEl.textContent = "🎮 " + (work.title || "マイクラ用アートプレビュー");
   if (autoBtn) autoBtn.onclick = function() { setMinecraftPreviewMode("auto"); };
   if (colorBtn) colorBtn.onclick = function() { setMinecraftPreviewMode("color"); };
   if (lineBtn) lineBtn.onclick = function() { setMinecraftPreviewMode("line"); };
