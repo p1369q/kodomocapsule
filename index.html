@@ -13,6 +13,12 @@
 <meta property="og:url" content="https://kodomocapsule.com/">
 <meta property="og:site_name" content="コドモカプセル">
 <meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://kodomocapsule.com/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="コドモカプセル｜子どもの作品を未来の宝ものに">
+<meta name="twitter:image" content="https://kodomocapsule.com/ogp.png">
+<meta name="twitter:image:alt" content="コドモカプセル｜子どもの作品を未来の宝ものに">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="コドモカプセル｜子どもの作品を未来の宝ものに">
@@ -611,6 +617,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
                 <span>✓ データ削除に対応</span>
               </div>
             </div>
+            <button type="button" onclick="shareKodomoCapsule(event)" class="w-full py-3 rounded-2xl bg-white border border-rose-100 text-rose-600 text-xs font-extrabold shadow-sm hover:bg-rose-50 transition flex items-center justify-center gap-2">
+              <span>📣</span><span>このアプリを家族や友達に教える</span>
+            </button>
             <p class="text-[10px] text-slate-400 text-center leading-relaxed pt-1">ゲストデータは保存されません。実際の保存にはGoogleログインが必要です。</p>
           </div>
 
@@ -696,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v171</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v172</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -925,6 +934,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <p class="text-xs text-slate-400 mt-1">お子さま、カテゴリ、家族共有をここで管理できます。</p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
+        <button onclick="shareKodomoCapsule(event)" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-rose-100 hover:bg-rose-50 text-[11px] font-bold text-rose-500 hover:text-rose-600 transition shrink-0 shadow-sm" title="このアプリを家族や友達に教える"><span class="text-[12px]">📣</span><span>共有</span></button>
         <button onclick="openLegalModal('terms')" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition shrink-0 shadow-sm" title="利用規約・プライバシーポリシー・お問い合わせ"><span class="text-[12px]">🔐</span><span>安心・規約</span></button>
         <button onclick="closeDrawer('child')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
       </div>
@@ -1376,6 +1386,45 @@ function installEmbeddedAppIcons() {
 
 installEmbeddedAppIcons();
 
+
+function getKodomoCapsuleShareText() {
+  return {
+    title: "コドモカプセル",
+    text: "子どもの作品やプリントを写真で残せる「コドモカプセル」。年齢ごとに整理できて、家族共有もできます。",
+    url: "https://kodomocapsule.com/"
+  };
+}
+
+window.shareKodomoCapsule = async function(event) {
+  if (event) event.stopPropagation();
+  const shareData = getKodomoCapsuleShareText();
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      trackEvent("app_share", { method: "web_share" });
+      return;
+    }
+    const fallbackText = `${shareData.text}\n${shareData.url}`;
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(fallbackText);
+      alert("紹介文とURLをコピーしました。\nLINEやメッセージに貼り付けて共有できます。");
+      trackEvent("app_share", { method: "clipboard" });
+      return;
+    }
+    prompt("このURLをコピーして共有してください。", shareData.url);
+    trackEvent("app_share", { method: "prompt" });
+  } catch (err) {
+    if (err && err.name === "AbortError") {
+      trackEvent("app_share_cancel");
+      return;
+    }
+    console.warn("Share failed:", err);
+    alert("共有メニューを開けませんでした。\nURLをコピーして共有してください。\nhttps://kodomocapsule.com/");
+    trackEvent("app_share_error", { message: err?.message || "unknown" });
+  }
+};
+
+
 let currentSession = null; 
 let localChildren = [];
 let localWorks = [];
@@ -1420,7 +1469,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v171",
+        app_version: "v172",
         is_guest_mode: isGuestMode,
         ...params
       });
