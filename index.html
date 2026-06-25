@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v178</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v180</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1302,7 +1302,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <button id="minecraftPencilModeNaturalBtn" type="button" class="minecraft-mode-chip">原画そのまま</button>
             <button id="minecraftPencilModeSimplifiedBtn" type="button" class="minecraft-mode-chip">マイクラ向け簡略化</button>
           </div>
-          <p id="minecraftPencilModeDescription" class="text-[11px] text-slate-500 leading-relaxed">白黒の鉛筆画向け。紙の影やムラを抑え、薄い線を見やすく整えます。</p>
+          <p id="minecraftPencilModeDescription" class="text-[11px] text-slate-500 leading-relaxed">白黒の鉛筆画向け。紙の雰囲気を残しながら、細い線を高精細に整えます。</p>
         </div>
         <div class="space-y-2">
           <div class="text-[11px] font-bold text-slate-500">補助オプション</div>
@@ -1529,7 +1529,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v178",
+        app_version: "v180",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4425,12 +4425,13 @@ let currentMinecraftPencilOptions = {
 };
 let currentMinecraftLastAutoDetectedArtworkMode = "color";
 let currentMinecraftSpriteCanvas = null;
+const MINECRAFT_SPRITE_SIZE = 128; // v180: 鉛筆画の細い線を潰さないため、内部ドット絵を128pxで生成する
 
 function getMinecraftPencilModeMeta(mode = "crisp") {
   const map = {
     crisp: {
       label: "線くっきり",
-      description: "白黒の鉛筆画向け。紙の影やムラを抑え、薄い線を見やすく整えます。"
+      description: "白黒の鉛筆画向け。紙の雰囲気を残しながら、細い線を高精細に整えます。"
     },
     natural: {
       label: "原画そのまま",
@@ -4725,94 +4726,111 @@ function getPercentileValue(values, percentile = 0.5) {
 }
 
 function getMinecraftLineProcessingConfig(mode = "crisp", options = currentMinecraftPencilOptions) {
-  // v178: 鉛筆画は「画像全体の暗さ」ではなく「局所的な線の濃さ」で判定する。
-  // 撮影時に紙全体が暗い写真でも、紙面を黒い長方形にしないための紙面保持型パラメータ。
+  // v180: 64pxの粗い線画化では細いスポークや鉛筆線が潰れやすいため、
+  // 128px前提で「線だけを拾う」より「紙面の濃淡＋線」を自然に残す方向へ調整する。
   const base = {
-    whitePercentile: 0.92,
-    blackPercentile: 0.08,
-    localRadius: 5,
-    lineThreshold: 13,
-    softThreshold: 6,
-    edgeWeight: 0.75,
-    darknessWeight: 1.45,
-    paperTone: 236,
-    paperVariation: 5,
-    lineDarkMin: 48,
-    lineDarkMax: 172,
+    whitePercentile: 0.93,
+    blackPercentile: 0.05,
+    localRadius: 7,
+    lineThreshold: 15,
+    softThreshold: 5,
+    edgeWeight: 0.54,
+    darknessWeight: 1.18,
+    globalWeight: 0.16,
+    paperTone: 242,
+    paperVariation: 8,
+    lineDarkMin: 34,
+    lineDarkMax: 178,
     bridgePasses: 1,
-    cleanPasses: 1,
+    cleanPasses: 0,
     dilationPasses: 0,
-    connectThreshold: 3,
-    removeThreshold: 1,
+    connectThreshold: 4,
+    removeThreshold: 0,
     keepSoftShade: true,
-    softShadeStrength: 0.45
+    softShadeStrength: 0.72,
+    detailBoost: 0.22,
+    paperDitherStep: 4,
+    lineDitherStep: 6
   };
   const presets = {
     crisp: {
-      localRadius: 5,
-      lineThreshold: 12,
+      localRadius: 7,
+      lineThreshold: 14,
       softThreshold: 5,
-      edgeWeight: 0.82,
-      darknessWeight: 1.58,
-      paperTone: 238,
-      paperVariation: 4,
-      lineDarkMin: 44,
-      lineDarkMax: 166,
-      bridgePasses: 1,
-      cleanPasses: 1,
-      dilationPasses: 0,
-      connectThreshold: 3,
-      removeThreshold: 1,
-      keepSoftShade: true,
-      softShadeStrength: 0.42
-    },
-    natural: {
-      localRadius: 6,
-      lineThreshold: 9,
-      softThreshold: 4,
-      edgeWeight: 0.58,
-      darknessWeight: 1.18,
-      paperTone: 234,
+      edgeWeight: 0.62,
+      darknessWeight: 1.28,
+      globalWeight: 0.12,
+      paperTone: 244,
       paperVariation: 7,
-      lineDarkMin: 62,
-      lineDarkMax: 184,
-      bridgePasses: 0,
+      lineDarkMin: 30,
+      lineDarkMax: 170,
+      bridgePasses: 1,
       cleanPasses: 0,
       dilationPasses: 0,
       connectThreshold: 4,
       removeThreshold: 0,
       keepSoftShade: true,
-      softShadeStrength: 0.62
+      softShadeStrength: 0.66,
+      detailBoost: 0.28,
+      paperDitherStep: 4,
+      lineDitherStep: 6
+    },
+    natural: {
+      localRadius: 8,
+      lineThreshold: 10,
+      softThreshold: 4,
+      edgeWeight: 0.42,
+      darknessWeight: 0.96,
+      globalWeight: 0.10,
+      paperTone: 238,
+      paperVariation: 11,
+      lineDarkMin: 54,
+      lineDarkMax: 190,
+      bridgePasses: 0,
+      cleanPasses: 0,
+      dilationPasses: 0,
+      connectThreshold: 5,
+      removeThreshold: 0,
+      keepSoftShade: true,
+      softShadeStrength: 0.9,
+      detailBoost: 0.18,
+      paperDitherStep: 3,
+      lineDitherStep: 5
     },
     simplified: {
-      localRadius: 5,
-      lineThreshold: 16,
+      localRadius: 7,
+      lineThreshold: 19,
       softThreshold: 8,
-      edgeWeight: 0.9,
-      darknessWeight: 1.7,
-      paperTone: 240,
-      paperVariation: 3,
-      lineDarkMin: 36,
-      lineDarkMax: 154,
+      edgeWeight: 0.78,
+      darknessWeight: 1.45,
+      globalWeight: 0.16,
+      paperTone: 246,
+      paperVariation: 5,
+      lineDarkMin: 26,
+      lineDarkMax: 158,
       bridgePasses: 1,
-      cleanPasses: 2,
+      cleanPasses: 1,
       dilationPasses: 1,
       connectThreshold: 3,
-      removeThreshold: 2,
+      removeThreshold: 1,
       keepSoftShade: false,
-      softShadeStrength: 0.3
+      softShadeStrength: 0.42,
+      detailBoost: 0.2,
+      paperDitherStep: 6,
+      lineDitherStep: 8
     }
   };
   const config = Object.assign({}, base, presets[mode] || presets.crisp);
   if (options?.enhanceFaintLines) {
     config.lineThreshold -= 2;
     config.softThreshold -= 1;
-    config.darknessWeight += 0.18;
+    config.darknessWeight += 0.14;
+    config.detailBoost += 0.06;
   }
   if (!options?.removePaperShadows) {
-    config.paperVariation += 5;
+    config.paperVariation += 6;
     config.paperTone -= 4;
-    config.lineThreshold += 1;
+    config.globalWeight += 0.04;
   }
   if (options?.thickenLines) {
     config.dilationPasses += 1;
@@ -4890,14 +4908,14 @@ function detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) {
 }
 
 function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
-  const spriteSize = 64;
+  const spriteSize = MINECRAFT_SPRITE_SIZE;
   const styleConfig = getMinecraftStyleConfig(style, "line");
   const lineConfig = getMinecraftLineProcessingConfig(currentMinecraftPencilMode, currentMinecraftPencilOptions);
   const spriteCanvas = document.createElement("canvas");
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = styleConfig.innerSizeLine;
+  const innerSize = Math.round(spriteSize * 0.94);
   const scale = Math.min(innerSize / srcW, innerSize / srcH);
   const drawW = srcW * scale;
   const drawH = srcH * scale;
@@ -4928,8 +4946,9 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
     samples.push(value);
   }
 
-  const localBg = boxBlurFloat32(gray, spriteSize, spriteSize, lineConfig.localRadius);
-  const smoothGray = boxBlurFloat32(gray, spriteSize, spriteSize, 1);
+  const adaptiveRadius = Math.max(4, Math.round(lineConfig.localRadius * spriteSize / 64));
+  const localBg = boxBlurFloat32(gray, spriteSize, spriteSize, adaptiveRadius);
+  const smoothGray = boxBlurFloat32(gray, spriteSize, spriteSize, Math.max(1, Math.round(spriteSize / 128)));
   const whitePoint = Math.max((bgR + bgG + bgB) / 3, getPercentileValue(samples, lineConfig.whitePercentile));
   const globalBg = Math.max(180, whitePoint);
   const lineScore = new Float32Array(totalPixels);
@@ -4944,8 +4963,9 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
       const edge = gx + gy;
       // 紙全体が暗く撮れていても、局所背景との差だけを見るので黒い長方形になりにくい。
       const localDarkness = Math.max(0, localBg[p] - gray[p]);
-      const globalDarkness = Math.max(0, globalBg - gray[p]) * 0.08;
-      const score = localDarkness * lineConfig.darknessWeight + edge * lineConfig.edgeWeight + globalDarkness;
+      const globalDarkness = Math.max(0, globalBg - gray[p]) * lineConfig.globalWeight;
+      const fineDetail = Math.max(0, localBg[p] - smoothGray[p]) * lineConfig.detailBoost;
+      const score = localDarkness * lineConfig.darknessWeight + edge * lineConfig.edgeWeight + globalDarkness + fineDetail;
       lineScore[p] = score;
       binary[p] = score >= lineConfig.lineThreshold ? 1 : 0;
       softMask[p] = score >= lineConfig.softThreshold ? 1 : 0;
@@ -4998,19 +5018,19 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
     const idx = p * 4;
     const x = p % spriteSize;
     const y = Math.floor(p / spriteSize);
-    const paperNoise = ((x * 13 + y * 17) % 11) - 5;
-    const localPaperDelta = Math.max(-lineConfig.paperVariation, Math.min(lineConfig.paperVariation, (localBg[p] - globalBg) * 0.06));
-    let paperBase = lineConfig.paperTone + localPaperDelta + paperNoise * 0.45;
+    const paperNoise = ((x * 13 + y * 17 + (x * y) % 7) % 13) - 6;
+    const localPaperDelta = Math.max(-lineConfig.paperVariation, Math.min(lineConfig.paperVariation, (localBg[p] - globalBg) * 0.045));
+    let paperBase = lineConfig.paperTone + localPaperDelta + paperNoise * 0.32;
     if (!currentMinecraftPencilOptions.removePaperShadows) {
       paperBase += Math.max(-8, Math.min(8, (gray[p] - globalBg) * 0.04));
     }
-    paperBase = quantizeGrayForPixelArt(paperBase, currentMinecraftPencilMode === "natural" ? 6 : 8);
+    paperBase = quantizeGrayForPixelArt(paperBase, lineConfig.paperDitherStep);
 
     if (binary[p]) {
       const normalizedScore = Math.min(1, Math.max(0, (lineScore[p] - lineConfig.lineThreshold) / 36));
       const lineValue = lineConfig.lineDarkMax - normalizedScore * (lineConfig.lineDarkMax - lineConfig.lineDarkMin);
       const shade = ((x + y) % 5 === 0) ? 3 : 0;
-      const v = quantizeGrayForPixelArt(lineValue + shade, currentMinecraftPencilMode === "natural" ? 8 : 10);
+      const v = quantizeGrayForPixelArt(lineValue + shade, lineConfig.lineDitherStep);
       data[idx] = v;
       data[idx + 1] = v;
       data[idx + 2] = clampMinecraftColor(v + 2);
@@ -5021,7 +5041,7 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
     if (lineConfig.keepSoftShade && softMask[p]) {
       const softStrength = Math.min(1, Math.max(0, (lineScore[p] - lineConfig.softThreshold) / Math.max(1, lineConfig.lineThreshold - lineConfig.softThreshold)));
       const soft = paperBase - softStrength * 36 * lineConfig.softShadeStrength;
-      const v = quantizeGrayForPixelArt(soft, currentMinecraftPencilMode === "natural" ? 6 : 8);
+      const v = quantizeGrayForPixelArt(soft, lineConfig.paperDitherStep);
       data[idx] = v;
       data[idx + 1] = v;
       data[idx + 2] = clampMinecraftColor(v + 2);
@@ -5043,11 +5063,11 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
         const p = y * spriteSize + x;
         if (binary[p]) continue;
         const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize];
-        if (neighbors.some(n => binary[n])) {
+        if (neighbors.some(n => binary[n]) && lineScore[p] >= lineConfig.softThreshold) {
           const idx = p * 4;
-          blended[idx] = Math.max(184, data[idx] - 8);
-          blended[idx + 1] = Math.max(184, data[idx + 1] - 8);
-          blended[idx + 2] = Math.max(184, data[idx + 2] - 8);
+          blended[idx] = Math.max(196, data[idx] - 5);
+          blended[idx + 1] = Math.max(196, data[idx + 1] - 5);
+          blended[idx + 2] = Math.max(196, data[idx + 2] - 5);
         }
       }
     }
@@ -5059,13 +5079,13 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
 }
 
 function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
-  const spriteSize = 64;
+  const spriteSize = MINECRAFT_SPRITE_SIZE;
   const config = getMinecraftStyleConfig(style, "color");
   const spriteCanvas = document.createElement("canvas");
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = config.innerSizeColor;
+  const innerSize = Math.round(spriteSize * 0.92);
   const aspectRatio = srcW / Math.max(1, srcH);
   const useCoverFit = aspectRatio > 1.35 || aspectRatio < 0.74;
   const scale = useCoverFit
@@ -5144,7 +5164,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     const ctx = spritePreviewCanvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     drawMinecraftChecker(ctx, spritePreviewCanvas.width, spritePreviewCanvas.height, 24, "#f8fafc", "#eef2f7");
-    const displaySize = Math.round(spritePreviewCanvas.width * 0.74);
+    const displaySize = Math.round(spritePreviewCanvas.width * 0.86);
     const displayX = Math.round((spritePreviewCanvas.width - displaySize) / 2);
     const displayY = Math.round((spritePreviewCanvas.height - displaySize) / 2);
     ctx.drawImage(spriteCanvas, displayX, displayY, displaySize, displaySize);
@@ -5171,7 +5191,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     ctx.fillRect(fx + 18, fy + 18, frameSize - 36, frameSize - 36);
     ctx.fillStyle = "#111827";
     ctx.fillRect(fx + Math.round(frameSize / 2) - 3, fy - 8, 6, 10);
-    const artSize = Math.round(frameSize * 0.6);
+    const artSize = Math.round(frameSize * 0.68);
     const ax = Math.round((framePreviewCanvas.width - artSize) / 2);
     const ay = Math.round((framePreviewCanvas.height - artSize) / 2);
     ctx.drawImage(spriteCanvas, ax, ay, artSize, artSize);
@@ -5187,7 +5207,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
   img.crossOrigin = "anonymous";
   img.onload = function() {
     try {
-      const analysisSize = 224;
+      const analysisSize = 448;
       const analysisCanvas = document.createElement("canvas");
       analysisCanvas.width = analysisSize;
       analysisCanvas.height = analysisSize;
@@ -5258,22 +5278,16 @@ function drawMinecraftPixelPreview(sourceUrl) {
       const cropW = Math.max(1, maxX - minX + 1);
       const cropH = Math.max(1, maxY - minY + 1);
       const styleConfig = getMinecraftStyleConfig(selectedStyle, detectedArtworkMode);
-      const paddingRatio = detectedArtworkMode === "line" ? styleConfig.lineCropPadding : styleConfig.cropPadding;
-      const padding = Math.max(4, Math.round(Math.max(cropW, cropH) * paddingRatio));
+      const paddingRatio = detectedArtworkMode === "line"
+        ? (currentMinecraftPencilMode === "simplified" ? 0.12 : 0.18)
+        : styleConfig.cropPadding;
+      const padding = Math.max(detectedArtworkMode === "line" ? 12 : 4, Math.round(Math.max(cropW, cropH) * paddingRatio));
       let srcX = Math.max(0, minX - padding);
       let srcY = Math.max(0, minY - padding);
       let srcW = Math.min(analysisSize - srcX, cropW + padding * 2);
       let srcH = Math.min(analysisSize - srcY, cropH + padding * 2);
 
-      if (detectedArtworkMode === "line" && currentMinecraftPencilMode !== "simplified") {
-        // v177: 鉛筆画は「作品だけ切り抜く」のではなく、紙面ごと残す。
-        // 変な白抜き・透明抜きに見える原因を避け、元のスケッチの雰囲気を保つ。
-        const imagePad = Math.max(2, Math.round(Math.min(w, h) * 0.015));
-        srcX = Math.max(0, Math.round(x) - imagePad);
-        srcY = Math.max(0, Math.round(y) - imagePad);
-        srcW = Math.min(analysisSize - srcX, Math.round(w) + imagePad * 2);
-        srcH = Math.min(analysisSize - srcY, Math.round(h) + imagePad * 2);
-      }
+      // v180: 線画も作品領域に寄せて高精細化する。ただし背景は透明化せず、紙色として自然に残す。
 
       const spriteCanvas = detectedArtworkMode === "line"
         ? buildLineArtSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle)
@@ -5294,7 +5308,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
         setMinecraftPreviewStatus("");
       }
       trackEvent("minecraft_pixel_preview_success", {
-        size: 64,
+        size: MINECRAFT_SPRITE_SIZE,
         style: detectedArtworkMode === "line" ? "frame_lineart" : "frame_color",
         finish_style: selectedStyle,
         mode_requested: currentMinecraftPreviewMode,
@@ -5375,7 +5389,7 @@ window.downloadMinecraftSpritePng = async function(event) {
     const work = currentMinecraftPreviewTarget
       ? localWorks.find(w => w.id === currentMinecraftPreviewTarget.workId)
       : null;
-    const fileName = sanitizeMinecraftDownloadName(work?.title || "kodomo_frame_art") + "_64x64.png";
+    const fileName = sanitizeMinecraftDownloadName(work?.title || "kodomo_frame_art") + "_128x128.png";
 
     const blob = await new Promise((resolve, reject) => {
       currentMinecraftSpriteCanvas.toBlob(blobResult => {
@@ -5395,7 +5409,7 @@ window.downloadMinecraftSpritePng = async function(event) {
       trackEvent("minecraft_frame_png_share", {
         work_id: currentMinecraftPreviewTarget?.workId || "",
         media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
-        size: 64
+        size: MINECRAFT_SPRITE_SIZE
       });
       return;
     }
@@ -5413,7 +5427,7 @@ window.downloadMinecraftSpritePng = async function(event) {
     trackEvent("minecraft_frame_png_download", {
       work_id: currentMinecraftPreviewTarget?.workId || "",
       media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
-      size: 64
+      size: MINECRAFT_SPRITE_SIZE
     });
   } catch (err) {
     alert("画像だけ保存に失敗しました。\nスマホでは共有メニューから「画像を保存」を選べる場合があります。");
@@ -5490,19 +5504,20 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
   return new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = 64;
-      canvas.height = 64;
+      const textureSize = MINECRAFT_SPRITE_SIZE;
+      canvas.width = textureSize;
+      canvas.height = textureSize;
       const ctx = canvas.getContext("2d");
       ctx.imageSmoothingEnabled = false;
 
-      // 木製フレーム風の正面テクスチャを作る（黒縁は使わず、作品を少し大きめに見せる）
+      // v180: 128pxテクスチャで、細い鉛筆線をmcaddon側にも残しやすくする。
       ctx.fillStyle = "#6b4d2d";
-      ctx.fillRect(0, 0, 64, 64);
+      ctx.fillRect(0, 0, textureSize, textureSize);
       ctx.fillStyle = "#8a6438";
-      ctx.fillRect(4, 4, 56, 56);
+      ctx.fillRect(8, 8, textureSize - 16, textureSize - 16);
       ctx.fillStyle = "#b98a54";
-      ctx.fillRect(8, 8, 48, 48);
-      ctx.drawImage(spriteCanvas, 10, 10, 44, 44);
+      ctx.fillRect(16, 16, textureSize - 32, textureSize - 32);
+      ctx.drawImage(spriteCanvas, 20, 20, textureSize - 40, textureSize - 40);
 
       canvas.toBlob(blob => {
         if (blob) resolve(blob);
@@ -5515,15 +5530,15 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
 }
 
 function buildMinecraftWallArtGeometry(geometryId) {
-  const fullFaceUv = { uv: [0, 0], uv_size: [64, 64] };
+  const fullFaceUv = { uv: [0, 0], uv_size: [128, 128] };
   return {
     format_version: "1.12.0",
     "minecraft:geometry": [
       {
         description: {
           identifier: geometryId,
-          texture_width: 64,
-          texture_height: 64,
+          texture_width: 128,
+          texture_height: 128,
           visible_bounds_width: 2,
           visible_bounds_height: 2,
           visible_bounds_offset: [0, 0.5, 0]
@@ -5742,7 +5757,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    zip.file("README.txt", buildMinecraftReadme(displayName));
+    // v179以降: .mcaddon内には案内用README.txtを含めない。Minecraftへの入れ方はアプリ画面と保存後の案内で表示する。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
