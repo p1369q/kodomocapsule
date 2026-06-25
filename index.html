@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v184</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v185</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1564,7 +1564,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v184",
+        app_version: "v185",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5757,6 +5757,33 @@ function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraf
 }
 
 function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryId) {
+  const baseComponents = {
+    "minecraft:display_name": displayName,
+    "minecraft:destructible_by_mining": {
+      seconds_to_destroy: 0.4
+    },
+    "minecraft:destructible_by_explosion": {
+      explosion_resistance: 1
+    },
+    "minecraft:friction": 0.6,
+    "minecraft:light_dampening": 0,
+    "minecraft:map_color": "#f8fafc",
+    "minecraft:geometry": geometryId,
+    "minecraft:collision_box": {
+      origin: [-8, 0, 6],
+      size: [16, 16, 2]
+    },
+    "minecraft:selection_box": {
+      origin: [-8, 0, 6],
+      size: [16, 16, 2]
+    },
+    "minecraft:material_instances": {
+      "*": {
+        texture: textureKey,
+        render_method: "opaque"
+      }
+    }
+  };
   return {
     format_version: "1.20.50",
     "minecraft:block": {
@@ -5765,35 +5792,41 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
         menu_category: {
           category: "construction",
           group: "itemGroup.name.decorations"
-        }
-      },
-      components: {
-        "minecraft:display_name": displayName,
-        "minecraft:destructible_by_mining": {
-          seconds_to_destroy: 0.4
         },
-        "minecraft:destructible_by_explosion": {
-          explosion_resistance: 1
-        },
-        "minecraft:friction": 0.6,
-        "minecraft:light_dampening": 0,
-        "minecraft:map_color": "#f8fafc",
-        "minecraft:geometry": geometryId,
-        "minecraft:collision_box": {
-          origin: [-8, 0, 6],
-          size: [16, 16, 2]
-        },
-        "minecraft:selection_box": {
-          origin: [-8, 0, 6],
-          size: [16, 16, 2]
-        },
-        "minecraft:material_instances": {
-          "*": {
-            texture: textureKey,
-            render_method: "opaque"
+        traits: {
+          "minecraft:placement_direction": {
+            enabled_states: ["minecraft:cardinal_direction"],
+            y_rotation_offset: 180
           }
         }
-      }
+      },
+      components: baseComponents,
+      permutations: [
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'north'",
+          components: {
+            "minecraft:transformation": { rotation: [0, 180, 0] }
+          }
+        },
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'south'",
+          components: {
+            "minecraft:transformation": { rotation: [0, 0, 0] }
+          }
+        },
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'west'",
+          components: {
+            "minecraft:transformation": { rotation: [0, 90, 0] }
+          }
+        },
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'east'",
+          components: {
+            "minecraft:transformation": { rotation: [0, 270, 0] }
+          }
+        }
+      ]
     }
   };
 }
@@ -5909,7 +5942,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v184: ブロック表示名に必要なtexts/*.langは維持し、案内用のREADME.txtだけ含めない。
+    // v185: ブロック表示名に必要なtexts/*.langは維持し、案内用のREADME.txtだけ含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
