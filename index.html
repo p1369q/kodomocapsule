@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v162]</title>
+<title>コドモカプセル [v163]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -625,7 +625,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v162</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v163</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1334,7 +1334,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v162",
+        app_version: "v163",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4486,8 +4486,6 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     const artSize = Math.round(frameSize * 0.6);
     const ax = Math.round((framePreviewCanvas.width - artSize) / 2);
     const ay = Math.round((framePreviewCanvas.height - artSize) / 2);
-    ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(ax, ay, artSize, artSize);
     ctx.drawImage(spriteCanvas, ax, ay, artSize, artSize);
   }
 }
@@ -4753,8 +4751,6 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
       ctx.fillRect(4, 4, 56, 56);
       ctx.fillStyle = "#b98a54";
       ctx.fillRect(8, 8, 48, 48);
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillRect(10, 10, 44, 44);
       ctx.drawImage(spriteCanvas, 10, 10, 44, 44);
 
       canvas.toBlob(blob => {
