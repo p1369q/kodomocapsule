@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v166]</title>
+<title>コドモカプセル [v167]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -625,7 +625,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v166</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v167</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -654,20 +654,25 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <input type="text" id="gallerySearchInput" placeholder="タイトルやメモを入力" class="w-full py-2.5 pl-9 pr-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
       <div class="flex gap-2 items-center w-full justify-between">
-        <div class="flex gap-2 flex-1">
-          <div class="w-1/2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+          <div>
             <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">表示する子ども</label>
             <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="all">すべての子ども</option>
               <option value="favorite">⭐ お気に入り</option>
             </select>
           </div>
-          <div class="w-1/2">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">カテゴリ</label>
+            <select id="galleryCategoryFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+              <option value="all">すべてのカテゴリ</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">並び順</label>
             <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="dateDesc">作品の日付が新しい順</option>
               <option value="dateAsc">作品の日付が古い順</option>
-              <option value="categoryAsc">カテゴリ順</option>
               <option value="createdDesc">登録が新しい順</option>
               <option value="createdAsc">登録が古い順</option>
             </select>
@@ -1345,7 +1350,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v166",
+        app_version: "v167",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1808,19 +1813,33 @@ function compareWorksByCategory(a, b) {
   return (validDateB - validDateA) || (createdB - createdA);
 }
 
+function isUncategorizedWork(work) {
+  if (!work?.category) return true;
+  return !localCategories.some(c => c.id === work.category);
+}
+
+function applyGalleryCategoryFilter(displayWorks, categoryFilterValue) {
+  if (!categoryFilterValue || categoryFilterValue === "all") return displayWorks;
+  if (categoryFilterValue === "__uncategorized") return displayWorks.filter(w => isUncategorizedWork(w));
+  return displayWorks.filter(w => w.category === categoryFilterValue);
+}
+
 function getFilteredPhotoWallItems() {
   const sortSelect = document.getElementById("gallerySortSelect");
   const filterSelect = document.getElementById("galleryChildFilterSelect");
+  const categoryFilterSelect = document.getElementById("galleryCategoryFilterSelect");
   const searchInput = document.getElementById("gallerySearchInput");
-  if(!sortSelect || !filterSelect || !searchInput) return [];
+  if(!sortSelect || !filterSelect || !categoryFilterSelect || !searchInput) return [];
 
   const sortValue = sortSelect.value;
   const filterValue = filterSelect.value;
+  const categoryFilterValue = categoryFilterSelect.value;
   const searchQuery = searchInput.value.toLowerCase().trim();
   let displayWorks = localWorks.filter(w => !w.isDeleted);
 
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
   else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
+  displayWorks = applyGalleryCategoryFilter(displayWorks, categoryFilterValue);
 
   if (currentAgeStageFilter !== "all") {
     displayWorks = displayWorks.filter(w => {
@@ -1859,7 +1878,6 @@ function getFilteredPhotoWallItems() {
       if (validDateB === null) return -1;
       return (validDateA - validDateB) || (createdA - createdB);
     }
-    if (sortValue === "categoryAsc") return compareWorksByCategory(a, b);
     if (sortValue === "createdDesc") return createdB - createdA;
     if (sortValue === "createdAsc") return createdA - createdB;
     return 0;
@@ -3621,11 +3639,12 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner(); renderAccountDeletionStatus();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateGalleryCategoryFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner(); renderAccountDeletionStatus();
 }
 
 document.getElementById("gallerySortSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
 document.getElementById("galleryChildFilterSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
+document.getElementById("galleryCategoryFilterSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
 document.getElementById("gallerySearchInput").addEventListener("input", () => { renderGallery(); renderPhotoWall(); });
 
 window.setAgeStageFilter = function(stage) {
@@ -3639,6 +3658,7 @@ window.setAgeStageFilter = function(stage) {
 window.goToTopPage = function() {
   document.getElementById("gallerySearchInput").value = "";
   document.getElementById("galleryChildFilterSelect").value = "all";
+  document.getElementById("galleryCategoryFilterSelect").value = "all";
   document.getElementById("gallerySortSelect").value = "dateDesc";
   currentAgeStageFilter = "all";
   document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
@@ -5290,6 +5310,16 @@ function populateGalleryChildFilter(){
   filterSelect.innerHTML = html; if([...filterSelect.options].some(o => o.value === val)) filterSelect.value = val;
 }
 
+function populateGalleryCategoryFilter(){
+  const categoryFilterSelect = document.getElementById("galleryCategoryFilterSelect"); if(!categoryFilterSelect) return;
+  const val = categoryFilterSelect.value;
+  let html = `<option value="all">すべてのカテゴリ</option>`;
+  localCategories.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
+  html += `<option value="__uncategorized">未分類</option>`;
+  categoryFilterSelect.innerHTML = html;
+  categoryFilterSelect.value = [...categoryFilterSelect.options].some(o => o.value === val) ? val : "all";
+}
+
 function getCategoryBadgeHtml(catId) {
   const c = localCategories.find(item => item.id === catId);
   const catName = c ? c.name : "未分類";
@@ -5302,9 +5332,9 @@ function getCategoryBadgeHtml(catId) {
 
 function renderGallery(){
   let html = "";
-  const sortSelect = document.getElementById("gallerySortSelect"); const filterSelect = document.getElementById("galleryChildFilterSelect"); const searchInput = document.getElementById("gallerySearchInput");
-  if(!sortSelect || !filterSelect || !searchInput) return;
-  const sortValue = sortSelect.value; const filterValue = filterSelect.value; const searchQuery = searchInput.value.toLowerCase().trim();
+  const sortSelect = document.getElementById("gallerySortSelect"); const filterSelect = document.getElementById("galleryChildFilterSelect"); const categoryFilterSelect = document.getElementById("galleryCategoryFilterSelect"); const searchInput = document.getElementById("gallerySearchInput");
+  if(!sortSelect || !filterSelect || !categoryFilterSelect || !searchInput) return;
+  const sortValue = sortSelect.value; const filterValue = filterSelect.value; const categoryFilterValue = categoryFilterSelect.value; const searchQuery = searchInput.value.toLowerCase().trim();
   let displayWorks = localWorks.filter(w => !w.isDeleted);
   const totalActiveCount = displayWorks.length;
 
@@ -5335,6 +5365,7 @@ function renderGallery(){
 
   if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
   else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
+  displayWorks = applyGalleryCategoryFilter(displayWorks, categoryFilterValue);
 
   if (currentAgeStageFilter !== "all") {
     displayWorks = displayWorks.filter(w => {
@@ -5373,7 +5404,6 @@ function renderGallery(){
       if (validDateB === null) return -1;
       return (validDateA - validDateB) || (createdA - createdB);
     }
-    if (sortValue === "categoryAsc") return compareWorksByCategory(a, b);
     if (sortValue === "createdDesc") return createdB - createdA;
     if (sortValue === "createdAsc") return createdA - createdB;
     return 0;
