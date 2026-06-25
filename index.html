@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v187</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v188</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -838,7 +838,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-purple-500 mb-1">PHOTO WALL</div>
         <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">写真一覧</h2>
-        <p class="text-xs text-slate-500 mt-1.5">登録した写真だけを、アルバムのようにずらっと表示します。</p>
+        <p class="text-xs text-slate-500 mt-1.5">写真付きカプセルを、1作品1枚ずつアルバムのように表示します。</p>
       </div>
       <button onclick="downloadDisplayedPhotos(event)" id="photoWallBulkDownloadBtn" class="hidden sm:flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition">
         <span>⬇</span> 表示中の写真をまとめてDL
@@ -913,6 +913,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </label>
           </div>
           <p class="field-help">まずは記録用の分類です。Minecraftへの立体展示は次の段階で少しずつ追加します。</p>
+          <div id="solidArtworkPhotoGuide" class="hidden mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-[11px] text-emerald-800 leading-relaxed">
+            <div class="font-extrabold mb-1">🧊 立体作品の撮影ガイド</div>
+            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。将来Minecraftの展示台にする場合も、この写真が使いやすくなります。</p>
+            <p class="mt-1 text-emerald-700">写真一覧では、同じ作品の写真が何枚あっても1作品につき1枚だけ表示します。</p>
+          </div>
         </div>
         <div><label class="block text-sm font-semibold mb-2">メモ <span class="text-xs font-normal text-slate-400">（任意）</span></label><textarea id="inputMemo" rows="3" placeholder="そのときの様子や、子どもの言葉を残せます"></textarea></div>
       </div>
@@ -1578,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v187",
+        app_version: "v188",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2114,20 +2119,28 @@ function getFilteredPhotoWallItems() {
   const photoItems = [];
   displayWorks.forEach(w => {
     if(w.mediaUrls?.length) {
+      const imageItems = [];
       w.mediaUrls.forEach((m, index) => {
         const src = m.url || m.dataUrl || m;
         const isPdf = m.type === "pdf" || (typeof src === 'string' && src.includes('pdf'));
         if(!isPdf && src) {
-          photoItems.push({
-            workId: w.id,
-            title: w.title || "写真",
-            date: w.date || "date-none",
-            src,
-            media: m,
-            index
-          });
+          imageItems.push({ media: m, src, index });
         }
       });
+      if(imageItems.length) {
+        const preferredIndex = carouselIndices[w.id] || 0;
+        const selected = imageItems.find(item => item.index === preferredIndex) || imageItems[0];
+        photoItems.push({
+          workId: w.id,
+          title: w.title || "写真",
+          date: w.date || "date-none",
+          src: selected.src,
+          media: selected.media,
+          index: selected.index,
+          photoCount: imageItems.length,
+          artworkShape: w.artworkShape || "flat"
+        });
+      }
     }
   });
   return photoItems;
@@ -2141,7 +2154,7 @@ window.downloadDisplayedPhotos = async function(event) {
     return;
   }
 
-  if (!confirm(`現在表示中の写真 ${photoItems.length} 枚をまとめてダウンロードしますか？
+  if (!confirm(`現在表示中の代表写真 ${photoItems.length} 枚をまとめてダウンロードしますか？
 ※ブラウザや端末によっては、複数ファイルの保存許可が表示されることがあります。`)) return;
 
   const btn = document.getElementById("photoWallBulkDownloadBtn");
@@ -2156,7 +2169,7 @@ window.downloadDisplayedPhotos = async function(event) {
     for (let i = 0; i < photoItems.length; i++) {
       const item = photoItems[i];
       const ext = getDownloadExtension(item.media, item.src);
-      const fileName = sanitizeDownloadFileName(`${String(i + 1).padStart(2, "0")}_${item.date}_${item.title}_${item.index + 1}`) + ext;
+      const fileName = sanitizeDownloadFileName(`${String(i + 1).padStart(2, "0")}_${item.date}_${item.title}_代表写真`) + ext;
       await downloadUrlToDevice(item.src, fileName);
       await new Promise(resolve => setTimeout(resolve, 300));
     }
@@ -6203,6 +6216,7 @@ window.openEditWork = function(id) {
   document.getElementById("inputWorkChild").value = w.childId || "";
   document.getElementById("inputDate").value = w.date || "";
   document.getElementById("inputMemo").value = w.memo || "";
+  bindArtworkShapeGuideEvents();
   setArtworkShapeValue(w.artworkShape || "flat");
   
   base64MediaArray = [];
@@ -6319,10 +6333,24 @@ function getArtworkShapeValue() {
   return checked?.value === "solid" ? "solid" : "flat";
 }
 
+function updateArtworkShapeGuide() {
+  const guide = document.getElementById("solidArtworkPhotoGuide");
+  if (!guide) return;
+  guide.classList.toggle("hidden", getArtworkShapeValue() !== "solid");
+}
+
 function setArtworkShapeValue(value = "flat") {
   const normalized = value === "solid" ? "solid" : "flat";
   const target = document.querySelector(`input[name="inputArtworkShape"][value="${normalized}"]`);
   if (target) target.checked = true;
+  updateArtworkShapeGuide();
+}
+
+function bindArtworkShapeGuideEvents() {
+  document.querySelectorAll('input[name="inputArtworkShape"]').forEach(input => {
+    input.onchange = updateArtworkShapeGuide;
+  });
+  updateArtworkShapeGuide();
 }
 
 function getArtworkShapeBadgeHtml(shape) {
@@ -6490,10 +6518,18 @@ function renderPhotoWall(){
 
   let html = "";
   photoItems.forEach(item => {
+    const countBadge = item.photoCount > 1
+      ? `<div class="absolute top-2 left-2 rounded-full bg-black/55 text-white text-[10px] font-bold px-2 py-1 backdrop-blur-sm">📷 ${item.photoCount}枚</div>`
+      : "";
+    const shapeBadge = item.artworkShape === "solid"
+      ? `<div class="absolute bottom-2 left-2 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold px-2 py-1 backdrop-blur-sm">🧊 立体</div>`
+      : "";
     html += `<div class="break-inside-avoid mb-3 sm:mb-4 relative rounded-3xl overflow-hidden bg-white border border-[#E7E1D7] shadow-sm hover:shadow-md transition">
       <button onclick="openPhotoPreview('${item.workId}', ${item.index}, event)" class="w-full block text-left">
         <img src="${item.src}" alt="${item.title}" class="w-full h-auto object-cover block"/>
       </button>
+      ${countBadge}
+      ${shapeBadge}
       <button onclick="downloadWorkMedia('${item.workId}', ${item.index}, event)" class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 text-slate-700 text-sm font-bold shadow backdrop-blur hover:bg-white" title="写真をダウンロード">⬇</button>
     </div>`;
   });
@@ -6587,6 +6623,7 @@ window.openDrawer = function(t){
   if(t === 'work' && !document.getElementById("editingWorkId").value && !canAddData()) { alert(getPermissionDeniedMessage("カプセルの追加")); return; }
   if(t === 'work' && !document.getElementById("editingWorkId").value) {
     document.getElementById("workFormTitle").innerText = "カプセル登録"; document.getElementById("workForm").reset();
+    bindArtworkShapeGuideEvents();
     document.getElementById("mediaResultContainer").innerHTML = "";
     const initialSearchMenuArea = document.getElementById("searchMenuArea");
 if (initialSearchMenuArea) initialSearchMenuArea.classList.add("collapsed");
