@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v172</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v173</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1469,7 +1469,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v172",
+        app_version: "v173",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4810,9 +4810,31 @@ function sanitizeMinecraftDownloadName(name) {
     .slice(0, 48) || "kodomo_frame_art";
 }
 
+function buildMinecraftAddonUniqueSlug(baseSlug, work) {
+  const base = String(baseSlug || "frame_art")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 24) || "frame_art";
+  const workPart = String(work?.id || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .slice(-8);
+  const randomPart = (crypto?.randomUUID?.().replace(/-/g, "") || Math.random().toString(36).slice(2))
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 8);
+  const timePart = Date.now().toString(36).slice(-6);
+  return `${base}_${workPart || timePart}_${randomPart}`
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 48) || `frame_art_${timePart}`;
+}
+
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
   const now = new Date();
-  const pad = (value) => String(value).padStart(2, "0");
+  const pad = (value, length = 2) => String(value).padStart(length, "0");
   const timestamp = [
     now.getFullYear(),
     pad(now.getMonth() + 1),
@@ -4820,9 +4842,12 @@ function buildUniqueMinecraftAddonFileName(work, blockSlug) {
     "_",
     pad(now.getHours()),
     pad(now.getMinutes()),
-    pad(now.getSeconds())
+    pad(now.getSeconds()),
+    "_",
+    pad(now.getMilliseconds(), 3)
   ].join("");
-  return `kodomo_${timestamp}.mcaddon`;
+  const slug = String(blockSlug || "art").replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").slice(0, 28) || "art";
+  return `kodomo_${timestamp}_${slug}.mcaddon`;
 }
 
 window.downloadMinecraftSpritePng = async function(event) {
@@ -5081,6 +5106,8 @@ function buildMinecraftReadme(displayName) {
     "",
     "注意:",
     "リソースパックだけ、またはビヘイビアーパックだけでは正しく使えない場合があります。必ず両方を有効にしてください。",
+    "複数の作品を追加する場合は、各作品ごとに生成されたRP/BPを両方とも有効化してください。",
+    "同じ作品名でも別のブロックとして使えるよう、内部IDは毎回重ならない名前で生成しています。",
     "Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。",
     "",
     "補足:",
@@ -5140,11 +5167,13 @@ window.downloadMinecraftAddon = async function(event) {
     const work = getMinecraftAddonTargetWork();
     const title = work?.title || "kodomo_frame_art";
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
-    const blockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "frame_art";
+    const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
+    const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
     const blockId = `kodomo:${blockSlug}`;
     const textureKey = `kodomo_${blockSlug}`;
     const geometryId = `geometry.kodomo_${blockSlug}_wall_art`;
-    const displayName = String(title || "コドモMinecraftアート").slice(0, 40);
+    const displayName = String(title || "コドモMinecraftアート").slice(0, 34);
+    const shortId = blockSlug.slice(-8);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
 
@@ -5154,11 +5183,11 @@ window.downloadMinecraftAddon = async function(event) {
     const bpModuleUuid = crypto.randomUUID();
 
     const zip = new JSZip();
-    const rp = zip.folder("KodomoFrameArt_RP");
-    const bp = zip.folder("KodomoFrameArt_BP");
+    const rp = zip.folder(`KodomoFrameArt_${shortId}_RP`);
+    const bp = zip.folder(`KodomoFrameArt_${shortId}_BP`);
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル Minecraft用アート RP - ${displayName}`,
+      `コドモカプセル Minecraft用アート RP - ${displayName} #${shortId}`,
       "コドモカプセルで作成したMinecraft用アートのリソースパックです。",
       rpHeaderUuid,
       rpModuleUuid,
@@ -5173,7 +5202,7 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("pack_icon.png", wallArtTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル Minecraft用アート BP - ${displayName}`,
+      `コドモカプセル Minecraft用アート BP - ${displayName} #${shortId}`,
       "コドモカプセルで作成したMinecraft用アートのビヘイビアーパックです。",
       bpHeaderUuid,
       bpModuleUuid,
