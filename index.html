@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v174</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v175</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1295,6 +1295,34 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
       </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
+      <details class="rounded-2xl bg-emerald-50/80 border border-emerald-100 p-3 text-left">
+        <summary class="cursor-pointer select-none text-xs font-extrabold text-emerald-800 flex items-center gap-1.5">
+          <span>🧭</span><span>マイクラに入れる手順を見る</span>
+        </summary>
+        <div class="mt-3 space-y-3 text-[11px] text-slate-600 leading-relaxed">
+          <div class="rounded-xl bg-white/80 border border-emerald-100 p-3">
+            <div class="font-extrabold text-slate-800 mb-1">まずやること</div>
+            <ol class="list-decimal pl-4 space-y-1">
+              <li>下の「マイクラ用ファイル保存」を押します。</li>
+              <li>共有画面が出たら「Minecraft」を選びます。出ない場合は一度ファイルに保存して、保存した .mcaddon を開きます。</li>
+              <li>Minecraftが開いたら、画面上に「インポート開始」「インポート完了」の表示が出るまで待ちます。</li>
+            </ol>
+          </div>
+          <div class="rounded-xl bg-white/80 border border-emerald-100 p-3">
+            <div class="font-extrabold text-slate-800 mb-1">ワールドで有効にする</div>
+            <ol class="list-decimal pl-4 space-y-1">
+              <li>Minecraftで使いたいワールドの「編集」または「設定」を開きます。</li>
+              <li>「リソースパック」→「マイパック」から、コドモカプセルの作品を選んで「有効化」します。</li>
+              <li>同じように「ビヘイビアーパック」→「マイパック」でも、同じ作品を「有効化」します。</li>
+              <li>ワールドを開き、クリエイティブの装飾カテゴリなどから作品を探して設置します。</li>
+            </ol>
+          </div>
+          <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 text-amber-800">
+            <div class="font-extrabold mb-1">うまく出ないとき</div>
+            <p>リソースパックだけ、またはビヘイビアーパックだけだと表示されないことがあります。複数作品を入れた場合も、作品ごとに両方を有効化してください。</p>
+          </div>
+        </div>
+      </details>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
         <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span>マイクラ用ファイル保存</span></span></button>
         <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
@@ -1473,7 +1501,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v174",
+        app_version: "v175",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5220,26 +5248,39 @@ function buildMinecraftReadme(displayName) {
     "",
     "このファイルについて:",
     "コドモカプセルで保存した作品を、Minecraft統合版の家の壁などに飾るための .mcaddon ファイルです。",
+    "この .mcaddon には、リソースパックとビヘイビアーパックの両方が入っています。",
     "",
-    "使い方:",
-    "1. 生成された .mcaddon ファイルをMinecraft統合版で開き、インポートします。",
-    "2. Minecraftで使いたいワールドの設定を開きます。",
-    "3. 「リソースパック」のメニューで、追加されたコドモカプセルのパックを選びます。",
-    "4. 「有効化」または「認証する」から追加します。",
-    "5. 同じように「ビヘイビアーパック」のメニューでも、追加されたコドモカプセルのパックを選びます。",
-    "6. こちらも「有効化」または「認証する」から追加します。",
-    "7. ワールドを開き、クリエイティブの装飾カテゴリなどからMinecraft用アートを探して設置します。",
-    "8. 子どもが作った家の壁に飾ってください。",
+    "はじめての人向けの流れ:",
+    "1. 生成された .mcaddon ファイルをMinecraft統合版で開きます。",
+    "   iPhone / iPadでは共有画面からMinecraftを選ぶか、ファイルアプリに保存してから .mcaddon を開きます。",
+    "2. Minecraftが開いたら、画面上に「インポート開始」「インポート完了」のような表示が出るまで待ちます。",
+    "3. Minecraftで使いたいワールドの「編集」または「設定」を開きます。",
+    "4. 「リソースパック」を開きます。",
+    "5. 「マイパック」から、コドモカプセルの作品パックを選び、「有効化」します。",
+    "6. 次に「ビヘイビアーパック」を開きます。",
+    "7. 同じ作品名のコドモカプセルのパックを選び、「有効化」します。",
+    "8. ワールドを開きます。",
+    "9. クリエイティブの装飾カテゴリなどから作品を探して設置します。",
     "",
-    "注意:",
-    "リソースパックだけ、またはビヘイビアーパックだけでは正しく使えない場合があります。必ず両方を有効にしてください。",
-    "複数の作品を追加する場合は、各作品ごとに生成されたRP/BPを両方とも有効化してください。",
-    "同じ作品名でも別のブロックとして使えるよう、内部IDは毎回重ならない名前で生成しています。",
-    "Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。",
+    "複数作品を使う場合:",
+    "作品ごとに .mcaddon をインポートしてください。",
+    "その後、ワールド設定で各作品のリソースパックとビヘイビアーパックを両方とも有効化してください。",
+    "",
+    "うまく表示されないとき:",
+    "・リソースパックだけ有効になっていないか確認してください。",
+    "・ビヘイビアーパックだけ有効になっていないか確認してください。",
+    "・同じ作品名が複数ある場合でも、内部IDは重ならないように作成しています。",
+    "・Minecraftのバージョンや端末によって、実験的機能の有効化が必要になる場合があります。",
+    "・一度ワールドを閉じて、もう一度開くと表示される場合があります。",
     "",
     "補足:",
     "この版は、子どもが作ったMinecraftの家に飾りやすいよう、薄型のアートパネルとして出力する試作版です。正面に作品が表示されるように調整しています。"
   ].join("\\n");
+}
+
+function showMinecraftInstallGuideAfterExport(displayName) {
+  const name = displayName ? `「${displayName}」` : "この作品";
+  alert(`${name}のマイクラ用ファイルを作成しました。\n\n次の流れで進めてください。\n\n1. 共有画面でMinecraftを選ぶ、または保存した .mcaddon を開く\n2. Minecraftで「インポート完了」が出るまで待つ\n3. 使いたいワールドの設定を開く\n4. リソースパックでコドモカプセルの作品を有効化\n5. ビヘイビアーパックでも同じ作品を有効化\n6. ワールドを開いて、クリエイティブの装飾カテゴリなどから作品を探す\n\n※表示されない場合は、リソースパックとビヘイビアーパックの両方が有効になっているか確認してください。`);
 }
 
 async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
@@ -5352,6 +5393,7 @@ window.downloadMinecraftAddon = async function(event) {
 
     const addonFileName = buildUniqueMinecraftAddonFileName(work, blockSlug);
     await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "");
+    showMinecraftInstallGuideAfterExport(displayName);
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
     alert("Minecraft用ファイルの作成に失敗しました。\n共有メニューが開けない場合は通常ダウンロードに切り替えます。\n詳細: " + (err.message || "unknown"));
@@ -5894,7 +5936,7 @@ window.switchPage = function(p){
   else if (p === 'records') { trackEvent("photo_wall_view"); document.getElementById('recordsPage').classList.add('active'); document.getElementById('nav-records').classList.add('active'); renderPhotoWall(); } 
   else if (p === 'trash') { trackEvent("trash_view"); document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
-
+　め
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
 </script>
 </body>
