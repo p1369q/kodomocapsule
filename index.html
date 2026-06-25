@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v186</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v187</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -825,7 +825,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">FAMILY CAPSULES</div>
         <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">思い出ギャラリー</h2>
-        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">作品・プリント・テストを、成長した年齢と一緒に残していきましょう。</p>
+        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">作品・プリント・テストに加えて、工作や粘土などの立体作品も、成長した年齢と一緒に残していきましょう。</p>
       </div>
       <button onclick="handleFabClick()" class="hidden sm:flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition">
         <span class="text-lg leading-none">＋</span> 新しいカプセル
@@ -900,12 +900,26 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <label class="block text-sm font-semibold mb-2">カテゴリ <span class="text-rose-500">*</span></label>
           <select id="inputCategory" required></select>
         </div>
+        <div>
+          <label class="block text-sm font-semibold mb-2">作品の形</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 cursor-pointer">
+              <input type="radio" name="inputArtworkShape" value="flat" class="mt-0.5 accent-[#ff6b6b]" checked>
+              <span><span class="block font-bold text-slate-700">平面作品</span><span class="block text-slate-500 mt-0.5">絵・プリント・テストなど</span></span>
+            </label>
+            <label class="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 cursor-pointer">
+              <input type="radio" name="inputArtworkShape" value="solid" class="mt-0.5 accent-[#ff6b6b]">
+              <span><span class="block font-bold text-slate-700">立体作品</span><span class="block text-slate-500 mt-0.5">工作・粘土・折り紙など</span></span>
+            </label>
+          </div>
+          <p class="field-help">まずは記録用の分類です。Minecraftへの立体展示は次の段階で少しずつ追加します。</p>
+        </div>
         <div><label class="block text-sm font-semibold mb-2">メモ <span class="text-xs font-normal text-slate-400">（任意）</span></label><textarea id="inputMemo" rows="3" placeholder="そのときの様子や、子どもの言葉を残せます"></textarea></div>
       </div>
       
       <div id="fileInputContainer" class="form-section space-y-3">
         <div class="flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-[10px] font-bold">2</span><span class="text-sm font-extrabold text-slate-700">写真・PDFを追加</span></div>
-        <p class="text-[11px] text-slate-400 leading-relaxed">作品の表裏や複数ページも、まとめてひとつのカプセルにできます。</p>
+        <p class="text-[11px] text-slate-400 leading-relaxed">作品の表裏や複数ページ、立体作品の正面・横・上からの写真も、まとめてひとつのカプセルにできます。</p>
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         
@@ -1564,7 +1578,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v186",
+        app_version: "v187",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4409,6 +4423,7 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
   const childId = document.getElementById("inputWorkChild").value;
   const date = document.getElementById("inputDate").value;
   const memo = document.getElementById("inputMemo").value.trim();
+  const artworkShape = getArtworkShapeValue();
   document.getElementById("workSubmitBtn").innerText = "送信中..."; document.getElementById("workSubmitBtn").disabled = true;
 
   try {
@@ -4417,15 +4432,15 @@ document.getElementById("workForm").addEventListener("submit", async function(e)
       for(let i=0; i<base64MediaArray.length; i++) {
         mediaUrls.push(await uploadMediaItemForWork(base64MediaArray[i], target.id, i));
       }
-      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, mediaUrls });
-      trackEvent("work_updated", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category });
+      await updateDoc(doc(db, "families", currentSession.familyId, "artworks", target.docId), { title, category, childId, date, memo, artworkShape, mediaUrls });
+      trackEvent("work_updated", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category, artwork_shape: artworkShape });
     } else {
       const artworkId = crypto.randomUUID(); let mediaUrls = [];
       for(let i=0; i<base64MediaArray.length; i++) {
         mediaUrls.push(await uploadMediaItemForWork(base64MediaArray[i], artworkId, i));
       }
-      await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: artworkId, title, category, childId, date, memo, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false });
-      trackEvent("work_created", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category });
+      await addDoc(collection(db, "families", currentSession.familyId, "artworks"), { id: artworkId, title, category, childId, date, memo, artworkShape, mediaUrls, createdAt: Date.now(), isDeleted: false, isFavorite: false });
+      trackEvent("work_created", { media_count: mediaUrls.length, has_media: mediaUrls.length > 0, category, artwork_shape: artworkShape });
     }
     closeDrawer("work");
     alert(editingId ? "更新しました。\nギャラリーに反映されました。" : "保存しました。\nギャラリーに新しいカプセルを追加しました。");
@@ -6188,6 +6203,7 @@ window.openEditWork = function(id) {
   document.getElementById("inputWorkChild").value = w.childId || "";
   document.getElementById("inputDate").value = w.date || "";
   document.getElementById("inputMemo").value = w.memo || "";
+  setArtworkShapeValue(w.artworkShape || "flat");
   
   base64MediaArray = [];
   if(w.mediaUrls?.length) {
@@ -6297,6 +6313,25 @@ function getCategoryBadgeHtml(catId) {
   return `<span class="text-[10px] bg-slate-50 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full">${catName}</span>`;
 }
 
+
+function getArtworkShapeValue() {
+  const checked = document.querySelector('input[name="inputArtworkShape"]:checked');
+  return checked?.value === "solid" ? "solid" : "flat";
+}
+
+function setArtworkShapeValue(value = "flat") {
+  const normalized = value === "solid" ? "solid" : "flat";
+  const target = document.querySelector(`input[name="inputArtworkShape"][value="${normalized}"]`);
+  if (target) target.checked = true;
+}
+
+function getArtworkShapeBadgeHtml(shape) {
+  if (shape === "solid") {
+    return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-medium">🧊 立体作品</span>`;
+  }
+  return `<span class="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded-full font-medium">🖼️ 平面作品</span>`;
+}
+
 function renderGallery(){
   let html = "";
   const sortSelect = document.getElementById("gallerySortSelect"); const filterSelect = document.getElementById("galleryChildFilterSelect"); const categoryFilterSelect = document.getElementById("galleryCategoryFilterSelect"); const searchInput = document.getElementById("gallerySearchInput");
@@ -6387,6 +6422,7 @@ function renderGallery(){
       } 
     }
     let categoryTag = getCategoryBadgeHtml(w.category);
+    let shapeTag = getArtworkShapeBadgeHtml(w.artworkShape || "flat");
     let mediaPreview = ''; let mediaDownloadButton = ''; const mediaCount = w.mediaUrls?.length || 0;
     if (mediaCount > 0) {
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
@@ -6427,7 +6463,7 @@ function renderGallery(){
           </div>
         </div>
         <div class="text-[10px] text-slate-400 mt-1">${w.date || "日付なし"}</div>
-        <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}</div>
+        <div class="flex flex-wrap gap-1 items-center mt-2">${childTag}${ageTag}${categoryTag}${shapeTag}</div>
         ${w.memo ? `<p class="text-[11px] text-slate-500 mt-2 line-clamp-2 leading-relaxed">${w.memo}</p>` : ''}
         <div class="flex justify-end mt-3 pt-2 border-t border-slate-100">${canEditOrDeleteData() ? `<button onclick="openEditWork('${w.id}')" class="text-[11px] text-slate-500 font-bold hover:text-[#e55b5b]">詳しく見る・編集 →</button>` : `<span class="text-[11px] text-slate-400 font-bold">閲覧のみ</span>`}</div>
       </div>
@@ -6556,6 +6592,7 @@ window.openDrawer = function(t){
 if (initialSearchMenuArea) initialSearchMenuArea.classList.add("collapsed");
 
 document.getElementById("inputDate").value = new Date().toISOString().split("T")[0]; base64MediaArray = [];
+    setArtworkShapeValue("flat");
     const autoCropToggle = document.getElementById("autoCropToggle"); if(autoCropToggle) autoCropToggle.checked = true;
     if(localCategories.length) {
       document.getElementById("inputCategory").value = localCategories[0].id;
