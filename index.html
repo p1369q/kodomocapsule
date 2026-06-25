@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v177</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v178</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1529,7 +1529,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v177",
+        app_version: "v178",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4725,87 +4725,142 @@ function getPercentileValue(values, percentile = 0.5) {
 }
 
 function getMinecraftLineProcessingConfig(mode = "crisp", options = currentMinecraftPencilOptions) {
+  // v178: 鉛筆画は「画像全体の暗さ」ではなく「局所的な線の濃さ」で判定する。
+  // 撮影時に紙全体が暗い写真でも、紙面を黒い長方形にしないための紙面保持型パラメータ。
   const base = {
-    whitePercentile: 0.93,
+    whitePercentile: 0.92,
     blackPercentile: 0.08,
-    backgroundMix: 0.78,
-    darknessWeight: 0.78,
-    contrastWeight: 1.15,
-    distanceWeight: 0.12,
-    strengthThreshold: 42,
-    brightnessThreshold: 200,
-    retainThreshold: 28,
-    connectThreshold: 2,
-    removeThreshold: 1,
-    bridgePasses: 2,
+    localRadius: 5,
+    lineThreshold: 13,
+    softThreshold: 6,
+    edgeWeight: 0.75,
+    darknessWeight: 1.45,
+    paperTone: 236,
+    paperVariation: 5,
+    lineDarkMin: 48,
+    lineDarkMax: 172,
+    bridgePasses: 1,
     cleanPasses: 1,
     dilationPasses: 0,
-    preserveSoftShade: false,
-    softAlpha: 80,
-    simplifyDetail: 0
+    connectThreshold: 3,
+    removeThreshold: 1,
+    keepSoftShade: true,
+    softShadeStrength: 0.45
   };
   const presets = {
     crisp: {
-      backgroundMix: 0.9,
-      darknessWeight: 0.82,
-      contrastWeight: 1.28,
-      strengthThreshold: 40,
-      brightnessThreshold: 208,
-      retainThreshold: 26,
-      connectThreshold: 2,
-      bridgePasses: 2,
+      localRadius: 5,
+      lineThreshold: 12,
+      softThreshold: 5,
+      edgeWeight: 0.82,
+      darknessWeight: 1.58,
+      paperTone: 238,
+      paperVariation: 4,
+      lineDarkMin: 44,
+      lineDarkMax: 166,
+      bridgePasses: 1,
       cleanPasses: 1,
-      dilationPasses: 0
+      dilationPasses: 0,
+      connectThreshold: 3,
+      removeThreshold: 1,
+      keepSoftShade: true,
+      softShadeStrength: 0.42
     },
     natural: {
-      whitePercentile: 0.9,
-      blackPercentile: 0.05,
-      backgroundMix: 0.48,
-      darknessWeight: 0.68,
-      contrastWeight: 0.95,
-      distanceWeight: 0.08,
-      strengthThreshold: 34,
-      brightnessThreshold: 214,
-      retainThreshold: 20,
-      connectThreshold: 3,
-      bridgePasses: 1,
+      localRadius: 6,
+      lineThreshold: 9,
+      softThreshold: 4,
+      edgeWeight: 0.58,
+      darknessWeight: 1.18,
+      paperTone: 234,
+      paperVariation: 7,
+      lineDarkMin: 62,
+      lineDarkMax: 184,
+      bridgePasses: 0,
       cleanPasses: 0,
-      preserveSoftShade: true,
-      softAlpha: 110
+      dilationPasses: 0,
+      connectThreshold: 4,
+      removeThreshold: 0,
+      keepSoftShade: true,
+      softShadeStrength: 0.62
     },
     simplified: {
-      whitePercentile: 0.95,
-      blackPercentile: 0.1,
-      backgroundMix: 0.95,
-      darknessWeight: 0.86,
-      contrastWeight: 1.34,
-      distanceWeight: 0.14,
-      strengthThreshold: 46,
-      brightnessThreshold: 204,
-      retainThreshold: 34,
-      connectThreshold: 2,
-      removeThreshold: 2,
-      bridgePasses: 2,
+      localRadius: 5,
+      lineThreshold: 16,
+      softThreshold: 8,
+      edgeWeight: 0.9,
+      darknessWeight: 1.7,
+      paperTone: 240,
+      paperVariation: 3,
+      lineDarkMin: 36,
+      lineDarkMax: 154,
+      bridgePasses: 1,
       cleanPasses: 2,
       dilationPasses: 1,
-      simplifyDetail: 1
+      connectThreshold: 3,
+      removeThreshold: 2,
+      keepSoftShade: false,
+      softShadeStrength: 0.3
     }
   };
   const config = Object.assign({}, base, presets[mode] || presets.crisp);
   if (options?.enhanceFaintLines) {
-    config.strengthThreshold -= 4;
-    config.brightnessThreshold += 8;
-    config.retainThreshold -= 4;
+    config.lineThreshold -= 2;
+    config.softThreshold -= 1;
+    config.darknessWeight += 0.18;
   }
   if (!options?.removePaperShadows) {
-    config.backgroundMix *= 0.55;
-    config.brightnessThreshold -= 6;
+    config.paperVariation += 5;
+    config.paperTone -= 4;
+    config.lineThreshold += 1;
   }
   if (options?.thickenLines) {
     config.dilationPasses += 1;
     config.bridgePasses += 1;
   }
   return config;
+}
+
+function boxBlurFloat32(values, width, height, radius = 4) {
+  const horizontal = new Float32Array(values.length);
+  const output = new Float32Array(values.length);
+  const size = radius * 2 + 1;
+  for (let y = 0; y < height; y++) {
+    let sum = 0;
+    for (let x = -radius; x <= radius; x++) {
+      const sx = Math.max(0, Math.min(width - 1, x));
+      sum += values[y * width + sx];
+    }
+    for (let x = 0; x < width; x++) {
+      horizontal[y * width + x] = sum / size;
+      const removeX = Math.max(0, x - radius);
+      const addX = Math.min(width - 1, x + radius + 1);
+      sum += values[y * width + addX] - values[y * width + removeX];
+    }
+  }
+  for (let x = 0; x < width; x++) {
+    let sum = 0;
+    for (let y = -radius; y <= radius; y++) {
+      const sy = Math.max(0, Math.min(height - 1, y));
+      sum += horizontal[sy * width + x];
+    }
+    for (let y = 0; y < height; y++) {
+      output[y * width + x] = sum / size;
+      const removeY = Math.max(0, y - radius);
+      const addY = Math.min(height - 1, y + radius + 1);
+      sum += horizontal[addY * width + x] - horizontal[removeY * width + x];
+    }
+  }
+  return output;
+}
+
+function countLineNeighbors(mask, size, p) {
+  return (mask[p - 1] ? 1 : 0) + (mask[p + 1] ? 1 : 0) + (mask[p - size] ? 1 : 0) + (mask[p + size] ? 1 : 0) +
+    (mask[p - size - 1] ? 1 : 0) + (mask[p - size + 1] ? 1 : 0) + (mask[p + size - 1] ? 1 : 0) + (mask[p + size + 1] ? 1 : 0);
+}
+
+function quantizeGrayForPixelArt(value, step = 10) {
+  return clampMinecraftColor(Math.round(value / step) * step);
 }
 
 function detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) {
@@ -4849,21 +4904,17 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
   const drawX = (spriteSize - drawW) / 2;
   const drawY = (spriteSize - drawH) / 2;
 
-  // v177: えんぴつ線画では透明抜きにせず、紙の面を残したままドット化する。
-  // 透明背景にすると、プレビューや額縁内で不自然な白抜き・切り抜きに見えるため。
-  spriteCtx.fillStyle = "#f7f4ee";
+  // v178: 紙面込みで変換する。背景を透明化・白抜きせず、紙は常に薄い紙色として残す。
+  spriteCtx.fillStyle = "#f3f0e8";
   spriteCtx.fillRect(0, 0, spriteSize, spriteSize);
-  spriteCtx.imageSmoothingEnabled = styleConfig.smoothing;
-  spriteCtx.imageSmoothingQuality = styleConfig.smoothingQuality;
+  spriteCtx.imageSmoothingEnabled = true;
+  spriteCtx.imageSmoothingQuality = "high";
   spriteCtx.drawImage(sourceCanvas, srcX, srcY, srcW, srcH, drawX, drawY, drawW, drawH);
 
   const imageData = spriteCtx.getImageData(0, 0, spriteSize, spriteSize);
   const data = imageData.data;
   const totalPixels = spriteSize * spriteSize;
   const gray = new Float32Array(totalPixels);
-  const normalized = new Float32Array(totalPixels);
-  const strength = new Float32Array(totalPixels);
-  const binary = new Uint8ClampedArray(totalPixels);
   const samples = [];
 
   for (let p = 0; p < totalPixels; p++) {
@@ -4872,78 +4923,64 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
     const g = data[idx + 1];
     const b = data[idx + 2];
     const a = data[idx + 3];
-    const value = a > 16 ? (0.299 * r + 0.587 * g + 0.114 * b) : 244;
+    const value = a > 16 ? (0.299 * r + 0.587 * g + 0.114 * b) : lineConfig.paperTone;
     gray[p] = value;
     samples.push(value);
   }
 
-  const bgBrightness = (bgR + bgG + bgB) / 3;
-  const whitePoint = Math.max(bgBrightness, getPercentileValue(samples, lineConfig.whitePercentile));
-  const blackPoint = Math.min(whitePoint - 12, getPercentileValue(samples, lineConfig.blackPercentile));
-  const denom = Math.max(18, whitePoint - blackPoint);
-
-  for (let p = 0; p < totalPixels; p++) {
-    const idx = p * 4;
-    const raw = gray[p];
-    const lifted = clampMinecraftColor(((raw - blackPoint) / denom) * 255);
-    // 背景を完全な白に飛ばさず、紙の薄い濃淡として残す。
-    const paperPreserve = currentMinecraftPencilMode === "natural" ? 0.45 : 0.28;
-    normalized[p] = raw * paperPreserve + lifted * (1 - paperPreserve);
-    if (!currentMinecraftPencilOptions.removePaperShadows) {
-      normalized[p] = raw * 0.72 + normalized[p] * 0.28;
-    }
-    const r = data[idx];
-    const g = data[idx + 1];
-    const b = data[idx + 2];
-    const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-    const darkness = 255 - normalized[p];
-    strength[p] = darkness * lineConfig.darknessWeight + distance * lineConfig.distanceWeight;
-  }
+  const localBg = boxBlurFloat32(gray, spriteSize, spriteSize, lineConfig.localRadius);
+  const smoothGray = boxBlurFloat32(gray, spriteSize, spriteSize, 1);
+  const whitePoint = Math.max((bgR + bgG + bgB) / 3, getPercentileValue(samples, lineConfig.whitePercentile));
+  const globalBg = Math.max(180, whitePoint);
+  const lineScore = new Float32Array(totalPixels);
+  const binary = new Uint8ClampedArray(totalPixels);
+  const softMask = new Uint8ClampedArray(totalPixels);
 
   for (let y = 1; y < spriteSize - 1; y++) {
     for (let x = 1; x < spriteSize - 1; x++) {
       const p = y * spriteSize + x;
-      const neighborAvg = (
-        normalized[p - 1] + normalized[p + 1] + normalized[p - spriteSize] + normalized[p + spriteSize] +
-        normalized[p - spriteSize - 1] + normalized[p - spriteSize + 1] + normalized[p + spriteSize - 1] + normalized[p + spriteSize + 1]
-      ) / 8;
-      const localContrast = Math.max(0, neighborAvg - normalized[p]);
-      strength[p] += localContrast * lineConfig.contrastWeight;
-      if (currentMinecraftPencilOptions.enhanceFaintLines && normalized[p] < 232) {
-        strength[p] += Math.max(0, (230 - normalized[p]) * 0.16);
-      }
-      const isLine = normalized[p] < lineConfig.brightnessThreshold || strength[p] > lineConfig.strengthThreshold;
-      binary[p] = isLine ? 1 : 0;
+      const gx = Math.abs(smoothGray[p + 1] - smoothGray[p - 1]);
+      const gy = Math.abs(smoothGray[p + spriteSize] - smoothGray[p - spriteSize]);
+      const edge = gx + gy;
+      // 紙全体が暗く撮れていても、局所背景との差だけを見るので黒い長方形になりにくい。
+      const localDarkness = Math.max(0, localBg[p] - gray[p]);
+      const globalDarkness = Math.max(0, globalBg - gray[p]) * 0.08;
+      const score = localDarkness * lineConfig.darknessWeight + edge * lineConfig.edgeWeight + globalDarkness;
+      lineScore[p] = score;
+      binary[p] = score >= lineConfig.lineThreshold ? 1 : 0;
+      softMask[p] = score >= lineConfig.softThreshold ? 1 : 0;
     }
   }
 
+  // 線が途中で切れすぎないように、近接する線を軽く接続する。
   for (let pass = 0; pass < lineConfig.bridgePasses; pass++) {
     const next = new Uint8ClampedArray(binary);
     for (let y = 1; y < spriteSize - 1; y++) {
       for (let x = 1; x < spriteSize - 1; x++) {
         const p = y * spriteSize + x;
-        const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize, p - spriteSize - 1, p - spriteSize + 1, p + spriteSize - 1, p + spriteSize + 1];
-        const count = neighbors.reduce((sum, n) => sum + (binary[n] ? 1 : 0), 0);
-        if (!binary[p] && count >= lineConfig.connectThreshold && strength[p] > lineConfig.retainThreshold) next[p] = 1;
+        if (binary[p]) continue;
+        const n = countLineNeighbors(binary, spriteSize, p);
+        if (n >= lineConfig.connectThreshold && lineScore[p] >= lineConfig.softThreshold) next[p] = 1;
       }
     }
     binary.set(next);
   }
 
+  // 孤立ノイズだけを落とす。スポークのような細線は残したいので強く消しすぎない。
   for (let pass = 0; pass < lineConfig.cleanPasses; pass++) {
     const next = new Uint8ClampedArray(binary);
     for (let y = 1; y < spriteSize - 1; y++) {
       for (let x = 1; x < spriteSize - 1; x++) {
         const p = y * spriteSize + x;
         if (!binary[p]) continue;
-        const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize, p - spriteSize - 1, p - spriteSize + 1, p + spriteSize - 1, p + spriteSize + 1];
-        const count = neighbors.reduce((sum, n) => sum + (binary[n] ? 1 : 0), 0);
-        if (count <= lineConfig.removeThreshold && strength[p] < lineConfig.retainThreshold + 10) next[p] = 0;
+        const n = countLineNeighbors(binary, spriteSize, p);
+        if (n <= lineConfig.removeThreshold && lineScore[p] < lineConfig.lineThreshold + 6) next[p] = 0;
       }
     }
     binary.set(next);
   }
 
+  // オプションON時のみ軽く線を太くする。標準では細線を潰さない。
   for (let pass = 0; pass < lineConfig.dilationPasses; pass++) {
     const next = new Uint8ClampedArray(binary);
     for (let y = 1; y < spriteSize - 1; y++) {
@@ -4951,7 +4988,7 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
         const p = y * spriteSize + x;
         if (binary[p]) continue;
         const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize];
-        if (neighbors.some(n => binary[n])) next[p] = 1;
+        if (neighbors.some(n => binary[n]) && lineScore[p] >= lineConfig.softThreshold) next[p] = 1;
       }
     }
     binary.set(next);
@@ -4961,56 +4998,61 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
     const idx = p * 4;
     const x = p % spriteSize;
     const y = Math.floor(p / spriteSize);
-    const paperNoise = ((x * 17 + y * 11) % 9) - 4;
-    const paperBase = currentMinecraftPencilMode === "natural"
-      ? clampMinecraftColor(Math.round(226 + normalized[p] * 0.055 + paperNoise))
-      : clampMinecraftColor(Math.round(232 + normalized[p] * 0.035 + paperNoise));
+    const paperNoise = ((x * 13 + y * 17) % 11) - 5;
+    const localPaperDelta = Math.max(-lineConfig.paperVariation, Math.min(lineConfig.paperVariation, (localBg[p] - globalBg) * 0.06));
+    let paperBase = lineConfig.paperTone + localPaperDelta + paperNoise * 0.45;
+    if (!currentMinecraftPencilOptions.removePaperShadows) {
+      paperBase += Math.max(-8, Math.min(8, (gray[p] - globalBg) * 0.04));
+    }
+    paperBase = quantizeGrayForPixelArt(paperBase, currentMinecraftPencilMode === "natural" ? 6 : 8);
 
-    if (!binary[p]) {
-      // 弱い線や紙の濃淡は、透明ではなく薄いグレーとして残す。
-      if (lineConfig.preserveSoftShade && strength[p] > lineConfig.retainThreshold && normalized[p] < 226) {
-        const soft = Math.max(92, Math.min(190, Math.round(paperBase - (strength[p] - lineConfig.retainThreshold) * 1.8)));
-        data[idx] = soft;
-        data[idx + 1] = soft;
-        data[idx + 2] = clampMinecraftColor(soft + 2);
-      } else {
-        data[idx] = paperBase;
-        data[idx + 1] = paperBase;
-        data[idx + 2] = clampMinecraftColor(paperBase + 2);
-      }
+    if (binary[p]) {
+      const normalizedScore = Math.min(1, Math.max(0, (lineScore[p] - lineConfig.lineThreshold) / 36));
+      const lineValue = lineConfig.lineDarkMax - normalizedScore * (lineConfig.lineDarkMax - lineConfig.lineDarkMin);
+      const shade = ((x + y) % 5 === 0) ? 3 : 0;
+      const v = quantizeGrayForPixelArt(lineValue + shade, currentMinecraftPencilMode === "natural" ? 8 : 10);
+      data[idx] = v;
+      data[idx + 1] = v;
+      data[idx + 2] = clampMinecraftColor(v + 2);
       data[idx + 3] = 255;
       continue;
     }
 
-    const darkness = 255 - normalized[p];
-    let shade = 1;
-    if (x < spriteSize * 0.45 && y < spriteSize * 0.45) shade = styleConfig.lineHighlight;
-    else if (x > spriteSize * 0.58 && y > spriteSize * 0.58) shade = styleConfig.lineShadow;
-    const lineDepth = currentMinecraftPencilMode === "simplified" ? 1.12 : (currentMinecraftPencilMode === "natural" ? 0.86 : 1.0);
-    const base = Math.max(28, Math.min(132, Math.round((styleConfig.lineBase + 22 - darkness * 0.16 * lineDepth) * shade)));
-    data[idx] = base;
-    data[idx + 1] = clampMinecraftColor(base + 4);
-    data[idx + 2] = clampMinecraftColor(base + 8);
+    if (lineConfig.keepSoftShade && softMask[p]) {
+      const softStrength = Math.min(1, Math.max(0, (lineScore[p] - lineConfig.softThreshold) / Math.max(1, lineConfig.lineThreshold - lineConfig.softThreshold)));
+      const soft = paperBase - softStrength * 36 * lineConfig.softShadeStrength;
+      const v = quantizeGrayForPixelArt(soft, currentMinecraftPencilMode === "natural" ? 6 : 8);
+      data[idx] = v;
+      data[idx + 1] = v;
+      data[idx + 2] = clampMinecraftColor(v + 2);
+      data[idx + 3] = 255;
+      continue;
+    }
+
+    data[idx] = paperBase;
+    data[idx + 1] = paperBase;
+    data[idx + 2] = clampMinecraftColor(paperBase + 2);
     data[idx + 3] = 255;
   }
 
-  // 線の周囲だけごく薄くなじませる。白抜きの輪郭ではなく紙になじむ影にする。
-  const blended = new Uint8ClampedArray(data);
-  for (let y = 1; y < spriteSize - 1; y++) {
-    for (let x = 1; x < spriteSize - 1; x++) {
-      const p = y * spriteSize + x;
-      if (binary[p]) continue;
-      const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize];
-      if (neighbors.some(n => binary[n])) {
-        const idx = p * 4;
-        blended[idx] = Math.max(168, data[idx] - 12);
-        blended[idx + 1] = Math.max(168, data[idx + 1] - 12);
-        blended[idx + 2] = Math.max(168, data[idx + 2] - 12);
-        blended[idx + 3] = 255;
+  // 輪郭の読みやすさを上げるため、線の隣だけ薄い影を置く。ただし背景全体は暗くしない。
+  if (currentMinecraftPencilMode !== "natural") {
+    const blended = new Uint8ClampedArray(data);
+    for (let y = 1; y < spriteSize - 1; y++) {
+      for (let x = 1; x < spriteSize - 1; x++) {
+        const p = y * spriteSize + x;
+        if (binary[p]) continue;
+        const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize];
+        if (neighbors.some(n => binary[n])) {
+          const idx = p * 4;
+          blended[idx] = Math.max(184, data[idx] - 8);
+          blended[idx + 1] = Math.max(184, data[idx + 1] - 8);
+          blended[idx + 2] = Math.max(184, data[idx + 2] - 8);
+        }
       }
     }
+    data.set(blended);
   }
-  data.set(blended);
 
   spriteCtx.putImageData(imageData, 0, 0);
   return spriteCanvas;
@@ -5197,7 +5239,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
           const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
           const brightness = (r + g + b) / 3;
           const isForeground = detectedArtworkMode === "line"
-            ? (a > 18 && (brightness < 228 || distance > 32))
+            ? (a > 18 && (brightness < 214 || distance > 52))
             : (a > 18 && (distance > 50 || brightness < 234));
           if (isForeground) {
             if (xx < minX) minX = xx;
