@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v167]</title>
+<title>コドモカプセル [v168]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -625,7 +625,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v167</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v168</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1286,7 +1286,7 @@ isSupported().then((supported) => {
 });
 
 function buildCapsuleIconSvgMarkup() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="コドモカプセル"><rect width="180" height="180" rx="42" fill="#F7F4EE"/><ellipse cx="90" cy="156" rx="40" ry="10" fill="#dcdde1"/><path d="M 40 90 A 50 50 0 0 0 140 90 Z" fill="#ff6b6b"/><path d="M 48 95 A 42 42 0 0 0 132 95 Z" fill="#ff5252" opacity="0.5"/><path d="M 140 90 A 50 50 0 0 0 40 90 Z" fill="#a5d8ff" opacity="0.75"/><rect x="34" y="85" width="112" height="10" rx="5" fill="#ffffff"/><path d="M 90 48 L 95 61 L 108 63 L 99 72 L 102 85 L 90 78 L 78 85 L 81 72 L 72 63 L 85 61 Z" fill="#feca57"/><circle cx="118" cy="49" r="4" fill="#ffd32a"/><path d="M 55 51 A 30 30 0 0 1 82 38" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.85"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="コドモカプセル"><defs><linearGradient id="bg" x1="20" y1="20" x2="160" y2="160" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF7ED"/><stop offset="1" stop-color="#FFF1F2"/></linearGradient><linearGradient id="heart" x1="54" y1="44" x2="126" y2="130" gradientUnits="userSpaceOnUse"><stop stop-color="#ff8a8a"/><stop offset="1" stop-color="#e85d75"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#9f1239" flood-opacity="0.18"/></filter></defs><rect width="180" height="180" rx="42" fill="url(#bg)"/><circle cx="42" cy="38" r="10" fill="#a5d8ff" opacity="0.55"/><circle cx="144" cy="46" r="7" fill="#feca57" opacity="0.65"/><circle cx="142" cy="137" r="10" fill="#a7f3d0" opacity="0.5"/><ellipse cx="90" cy="150" rx="42" ry="8" fill="#dcdde1" opacity="0.9"/><path filter="url(#shadow)" d="M90 134 C58 108 38 90 38 66 C38 47 52 34 69 34 C79 34 87 39 90 46 C93 39 101 34 111 34 C128 34 142 47 142 66 C142 90 122 108 90 134 Z" fill="url(#heart)"/><g transform="rotate(-32 90 83)"><rect x="52" y="69" width="76" height="34" rx="17" fill="#ffffff" opacity="0.98"/><path d="M52 86a17 17 0 0 1 17-17h21v34H69a17 17 0 0 1-17-17Z" fill="#fff7ed"/><path d="M90 69h21a17 17 0 0 1 0 34H90Z" fill="#ffd6d6"/><rect x="86" y="70" width="8" height="32" fill="#f8fafc" opacity="0.9"/></g><path d="M90 58 L94 70 L107 71 L97 79 L100 92 L90 85 L80 92 L83 79 L73 71 L86 70 Z" fill="#feca57"/><path d="M57 57 C64 45 78 41 88 48" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.75"/></svg>`;
 }
 
 function buildCreeperIconSvgMarkup() {
@@ -1350,7 +1350,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v167",
+        app_version: "v168",
         is_guest_mode: isGuestMode,
         ...params
       });
