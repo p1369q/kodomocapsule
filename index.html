@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v163]</title>
+<title>コドモカプセル [v164]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -625,7 +625,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v163</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v164</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1189,9 +1189,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
       <div class="flex flex-wrap gap-2">
-        <button id="minecraftModeAutoBtn" type="button" class="minecraft-mode-chip active">おすすめ</button>
-        <button id="minecraftModeColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
-        <button id="minecraftModeLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
+        <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
+        <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
       </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
@@ -1334,7 +1333,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v163",
+        app_version: "v164",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4177,15 +4176,14 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 
 
 let currentMinecraftPreviewTarget = null;
-let currentMinecraftPreviewMode = "auto";
+let currentMinecraftPreviewMode = "fidelity";
 let currentMinecraftSpriteCanvas = null;
 
 function setMinecraftPreviewMode(mode, shouldRedraw = true) {
-  currentMinecraftPreviewMode = mode || "auto";
+  currentMinecraftPreviewMode = mode || "fidelity";
   const map = {
-    auto: document.getElementById("minecraftModeAutoBtn"),
-    color: document.getElementById("minecraftModeColorBtn"),
-    line: document.getElementById("minecraftModeLineBtn")
+    fidelity: document.getElementById("minecraftModeFidelityBtn"),
+    pixel: document.getElementById("minecraftModePixelBtn")
   };
   Object.entries(map).forEach(([key, el]) => {
     if (el) el.classList.toggle("active", key === currentMinecraftPreviewMode);
@@ -4205,8 +4203,10 @@ function drawMinecraftChecker(ctx, width, height, tile = 24, colorA = "#f8fafc",
   }
 }
 
-function quantizeMinecraftColor(value) {
-  const palette = [0, 20, 40, 60, 84, 108, 132, 156, 180, 204, 228, 255];
+function quantizeMinecraftColor(value, style = "fidelity") {
+  const palette = style === "pixel"
+    ? [0, 36, 72, 108, 144, 180, 216, 255]
+    : [0, 20, 40, 60, 84, 108, 132, 156, 180, 204, 228, 255];
   let best = palette[0];
   let minDiff = Math.abs(value - best);
   for (let i = 1; i < palette.length; i++) {
@@ -4223,7 +4223,7 @@ function clampMinecraftColor(value) {
   return Math.max(0, Math.min(255, value));
 }
 
-function applyMinecraftDither(imageData, mask, size) {
+function applyMinecraftDither(imageData, mask, size, style = "fidelity") {
   const data = imageData.data;
   const work = new Float32Array(data.length);
   for (let i = 0; i < data.length; i++) work[i] = data[i];
@@ -4246,9 +4246,9 @@ function applyMinecraftDither(imageData, mask, size) {
       const oldR = work[idx];
       const oldG = work[idx + 1];
       const oldB = work[idx + 2];
-      const newR = quantizeMinecraftColor(oldR);
-      const newG = quantizeMinecraftColor(oldG);
-      const newB = quantizeMinecraftColor(oldB);
+      const newR = quantizeMinecraftColor(oldR, style);
+      const newG = quantizeMinecraftColor(oldG, style);
+      const newB = quantizeMinecraftColor(oldB, style);
       data[idx] = newR;
       data[idx + 1] = newG;
       data[idx + 2] = newB;
@@ -4289,28 +4289,30 @@ function detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) {
   return (colorfulRatio < 0.16 && darkRatio > 0.16) ? "line" : "color";
 }
 
-function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
+function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
   const spriteSize = 64;
   const spriteCanvas = document.createElement("canvas");
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = 60;
+  const innerSize = style === "pixel" ? 56 : 60;
   const scale = Math.min(innerSize / srcW, innerSize / srcH);
   const drawW = srcW * scale;
   const drawH = srcH * scale;
   const drawX = (spriteSize - drawW) / 2;
   const drawY = (spriteSize - drawH) / 2;
   spriteCtx.clearRect(0, 0, spriteSize, spriteSize);
-  spriteCtx.imageSmoothingEnabled = true;
-  spriteCtx.imageSmoothingQuality = "high";
+  spriteCtx.imageSmoothingEnabled = style !== "pixel";
+  spriteCtx.imageSmoothingQuality = style === "pixel" ? "medium" : "high";
   spriteCtx.drawImage(sourceCanvas, srcX, srcY, srcW, srcH, drawX, drawY, drawW, drawH);
 
   const imageData = spriteCtx.getImageData(0, 0, spriteSize, spriteSize);
   const data = imageData.data;
   const binary = new Uint8ClampedArray(spriteSize * spriteSize);
   const bgBrightness = (bgR + bgG + bgB) / 3;
-  const threshold = Math.min(236, Math.max(176, bgBrightness - 12));
+  const threshold = style === "pixel"
+    ? Math.min(228, Math.max(168, bgBrightness - 16))
+    : Math.min(236, Math.max(176, bgBrightness - 12));
   for (let y = 0; y < spriteSize; y++) {
     for (let x = 0; x < spriteSize; x++) {
       const idx = (y * spriteSize + x) * 4;
@@ -4376,13 +4378,13 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB)
   return spriteCanvas;
 }
 
-function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
+function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
   const spriteSize = 64;
   const spriteCanvas = document.createElement("canvas");
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = 60;
+  const innerSize = style === "pixel" ? 58 : 60;
   const aspectRatio = srcW / Math.max(1, srcH);
   const useCoverFit = aspectRatio > 1.35 || aspectRatio < 0.74;
   const scale = useCoverFit
@@ -4393,8 +4395,8 @@ function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
   const drawX = (spriteSize - drawW) / 2;
   const drawY = (spriteSize - drawH) / 2;
   spriteCtx.clearRect(0, 0, spriteSize, spriteSize);
-  spriteCtx.imageSmoothingEnabled = true;
-  spriteCtx.imageSmoothingQuality = "high";
+  spriteCtx.imageSmoothingEnabled = style !== "pixel";
+  spriteCtx.imageSmoothingQuality = style === "pixel" ? "medium" : "high";
   spriteCtx.drawImage(sourceCanvas, srcX, srcY, srcW, srcH, drawX, drawY, drawW, drawH);
 
   const imageData = spriteCtx.getImageData(0, 0, spriteSize, spriteSize);
@@ -4417,10 +4419,13 @@ function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
       continue;
     }
     const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-    const contrast = 1.08;
-    let nr = ((gray + (r - gray) * 1.28) - 128) * contrast + 128;
-    let ng = ((gray + (g - gray) * 1.22) - 128) * contrast + 128;
-    let nb = ((gray + (b - gray) * 1.18) - 128) * contrast + 128;
+    const contrast = style === "pixel" ? 1.16 : 1.08;
+    const satR = style === "pixel" ? 1.14 : 1.28;
+    const satG = style === "pixel" ? 1.1 : 1.22;
+    const satB = style === "pixel" ? 1.06 : 1.18;
+    let nr = ((gray + (r - gray) * satR) - 128) * contrast + 128;
+    let ng = ((gray + (g - gray) * satG) - 128) * contrast + 128;
+    let nb = ((gray + (b - gray) * satB) - 128) * contrast + 128;
     data[i] = clampMinecraftColor(nr);
     data[i + 1] = clampMinecraftColor(ng);
     data[i + 2] = clampMinecraftColor(nb);
@@ -4428,16 +4433,16 @@ function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB) {
     mask[p] = 1;
   }
 
-  applyMinecraftDither(imageData, mask, spriteSize);
+  applyMinecraftDither(imageData, mask, spriteSize, style);
 
   for (let y = 0; y < spriteSize; y++) {
     for (let x = 0; x < spriteSize; x++) {
       const idx = (y * spriteSize + x) * 4;
       if (!data[idx + 3]) continue;
       let shade = 1;
-      if (x < spriteSize * 0.42 && y < spriteSize * 0.42) shade = 1.04;
-      else if (x > spriteSize * 0.62 && y > spriteSize * 0.62) shade = 0.95;
-      else if ((x + y) % 5 === 0) shade = 0.99;
+      if (x < spriteSize * 0.42 && y < spriteSize * 0.42) shade = style === "pixel" ? 1.02 : 1.04;
+      else if (x > spriteSize * 0.62 && y > spriteSize * 0.62) shade = style === "pixel" ? 0.97 : 0.95;
+      else if ((x + y) % (style === "pixel" ? 7 : 5) === 0) shade = style === "pixel" ? 1 : 0.99;
       data[idx] = clampMinecraftColor(Math.round(data[idx] * shade));
       data[idx + 1] = clampMinecraftColor(Math.round(data[idx + 1] * shade));
       data[idx + 2] = clampMinecraftColor(Math.round(data[idx + 2] * shade));
@@ -4533,7 +4538,8 @@ function drawMinecraftPixelPreview(sourceUrl) {
       bgG /= samplePoints.length;
       bgB /= samplePoints.length;
 
-      const selectedMode = currentMinecraftPreviewMode === "auto" ? detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) : currentMinecraftPreviewMode;
+      const selectedStyle = currentMinecraftPreviewMode || "fidelity";
+      const detectedArtworkMode = detectMinecraftPreviewMode(pixels, bgR, bgG, bgB);
       let minX = analysisSize, minY = analysisSize, maxX = -1, maxY = -1;
       for (let yy = 0; yy < analysisSize; yy++) {
         for (let xx = 0; xx < analysisSize; xx++) {
@@ -4544,7 +4550,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
           const a = pixels[idx + 3];
           const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
           const brightness = (r + g + b) / 3;
-          const isForeground = selectedMode === "line"
+          const isForeground = detectedArtworkMode === "line"
             ? (a > 18 && (brightness < 228 || distance > 32))
             : (a > 18 && (distance > 50 || brightness < 234));
           if (isForeground) {
@@ -4563,20 +4569,20 @@ function drawMinecraftPixelPreview(sourceUrl) {
       }
       const cropW = Math.max(1, maxX - minX + 1);
       const cropH = Math.max(1, maxY - minY + 1);
-      const paddingRatio = selectedMode === "line" ? 0.04 : 0.08;
+      const paddingRatio = detectedArtworkMode === "line" ? 0.04 : (selectedStyle === "pixel" ? 0.06 : 0.08);
       const padding = Math.max(4, Math.round(Math.max(cropW, cropH) * paddingRatio));
       const srcX = Math.max(0, minX - padding);
       const srcY = Math.max(0, minY - padding);
       const srcW = Math.min(analysisSize - srcX, cropW + padding * 2);
       const srcH = Math.min(analysisSize - srcY, cropH + padding * 2);
 
-      const spriteCanvas = selectedMode === "line"
-        ? buildLineArtSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB)
-        : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB);
+      const spriteCanvas = detectedArtworkMode === "line"
+        ? buildLineArtSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle)
+        : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle);
       renderMinecraftPreviewCanvases(spriteCanvas);
 
       if (statusEl) statusEl.textContent = "";
-      trackEvent("minecraft_pixel_preview_success", { size: 64, style: selectedMode === "line" ? "frame_lineart" : "frame_color", mode_requested: currentMinecraftPreviewMode });
+      trackEvent("minecraft_pixel_preview_success", { size: 64, style: detectedArtworkMode === "line" ? "frame_lineart" : "frame_color", finish_style: selectedStyle, mode_requested: currentMinecraftPreviewMode });
     } catch (err) {
       if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
       trackEvent("minecraft_pixel_preview_error", { message: err.message || "unknown" });
@@ -5028,15 +5034,13 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   currentMinecraftPreviewTarget = { workId, mediaIndex, sourceUrl };
   currentMinecraftSpriteCanvas = null;
   const titleEl = document.getElementById("minecraftPreviewTitle");
-  const autoBtn = document.getElementById("minecraftModeAutoBtn");
-  const colorBtn = document.getElementById("minecraftModeColorBtn");
-  const lineBtn = document.getElementById("minecraftModeLineBtn");
+  const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
+  const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (titleEl) titleEl.textContent = work.title || "マイクラ用アートプレビュー";
-  if (autoBtn) autoBtn.onclick = function() { setMinecraftPreviewMode("auto"); };
-  if (colorBtn) colorBtn.onclick = function() { setMinecraftPreviewMode("color"); };
-  if (lineBtn) lineBtn.onclick = function() { setMinecraftPreviewMode("line"); };
-  setMinecraftPreviewMode("auto", false);
+  if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
+  if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
+  setMinecraftPreviewMode("fidelity", false);
   if (drawer) drawer.classList.add("open");
   drawMinecraftPixelPreview(sourceUrl);
   trackEvent("minecraft_pixel_preview_open", { work_id: workId, media_index: mediaIndex });
