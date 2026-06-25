@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v175</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v176</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1294,6 +1294,34 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <button id="minecraftArtworkLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
         </div>
       </div>
+      <div id="minecraftPencilControls" class="hidden rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-3">
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-slate-500">線画補正モード</div>
+          <div class="flex flex-wrap gap-2">
+            <button id="minecraftPencilModeCrispBtn" type="button" class="minecraft-mode-chip active">線くっきり</button>
+            <button id="minecraftPencilModeNaturalBtn" type="button" class="minecraft-mode-chip">原画そのまま</button>
+            <button id="minecraftPencilModeSimplifiedBtn" type="button" class="minecraft-mode-chip">マイクラ向け簡略化</button>
+          </div>
+          <p id="minecraftPencilModeDescription" class="text-[11px] text-slate-500 leading-relaxed">白黒の鉛筆画向け。紙の影やムラを抑え、薄い線を見やすく整えます。</p>
+        </div>
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-slate-500">補助オプション</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label class="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600 cursor-pointer">
+              <input id="minecraftPencilEnhanceChk" type="checkbox" class="mt-0.5 accent-emerald-600" checked>
+              <span><span class="block font-bold text-slate-700">薄い線を強調</span><span class="block text-slate-500">消えやすい鉛筆線を見やすくします</span></span>
+            </label>
+            <label class="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600 cursor-pointer">
+              <input id="minecraftPencilShadowChk" type="checkbox" class="mt-0.5 accent-emerald-600" checked>
+              <span><span class="block font-bold text-slate-700">紙の影を消す</span><span class="block text-slate-500">撮影時の暗がりや黄ばみを抑えます</span></span>
+            </label>
+            <label class="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600 cursor-pointer">
+              <input id="minecraftPencilThickenChk" type="checkbox" class="mt-0.5 accent-emerald-600">
+              <span><span class="block font-bold text-slate-700">線を少し太くする</span><span class="block text-slate-500">小さく表示しても形が分かりやすくなります</span></span>
+            </label>
+          </div>
+        </div>
+      </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <details class="rounded-2xl bg-emerald-50/80 border border-emerald-100 p-3 text-left">
         <summary class="cursor-pointer select-none text-xs font-extrabold text-emerald-800 flex items-center gap-1.5">
@@ -1501,7 +1529,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v175",
+        app_version: "v176",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4389,7 +4417,84 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 let currentMinecraftPreviewTarget = null;
 let currentMinecraftPreviewMode = "fidelity";
 let currentMinecraftArtworkMode = "auto";
+let currentMinecraftPencilMode = "crisp";
+let currentMinecraftPencilOptions = {
+  enhanceFaintLines: true,
+  removePaperShadows: true,
+  thickenLines: false
+};
+let currentMinecraftLastAutoDetectedArtworkMode = "color";
 let currentMinecraftSpriteCanvas = null;
+
+function getMinecraftPencilModeMeta(mode = "crisp") {
+  const map = {
+    crisp: {
+      label: "線くっきり",
+      description: "白黒の鉛筆画向け。紙の影やムラを抑え、薄い線を見やすく整えます。"
+    },
+    natural: {
+      label: "原画そのまま",
+      description: "鉛筆の濃淡や手描き感をできるだけ残して変換します。"
+    },
+    simplified: {
+      label: "マイクラ向け簡略化",
+      description: "細かい線を整理し、形が分かりやすいように簡略化して変換します。"
+    }
+  };
+  return map[mode] || map.crisp;
+}
+
+function setMinecraftPreviewStatus(message = "", tone = "info") {
+  const statusEl = document.getElementById("minecraftPreviewStatus");
+  if (!statusEl) return;
+  statusEl.textContent = message || "";
+  statusEl.classList.toggle("hidden", !message);
+  statusEl.classList.remove("text-slate-500", "text-emerald-700", "text-amber-700", "text-rose-600");
+  if (tone === "success") statusEl.classList.add("text-emerald-700");
+  else if (tone === "warning") statusEl.classList.add("text-amber-700");
+  else if (tone === "error") statusEl.classList.add("text-rose-600");
+  else statusEl.classList.add("text-slate-500");
+}
+
+function updateMinecraftPencilControlsVisibility(resolvedArtworkMode = currentMinecraftArtworkMode, autoDetectedMode = currentMinecraftLastAutoDetectedArtworkMode) {
+  const controls = document.getElementById("minecraftPencilControls");
+  const descriptionEl = document.getElementById("minecraftPencilModeDescription");
+  const showLineControls = (resolvedArtworkMode === "line") || (resolvedArtworkMode === "auto" && autoDetectedMode === "line");
+  if (controls) controls.classList.toggle("hidden", !showLineControls);
+  const meta = getMinecraftPencilModeMeta(currentMinecraftPencilMode);
+  if (descriptionEl) descriptionEl.textContent = meta.description;
+}
+
+function setMinecraftPencilMode(mode, shouldRedraw = true) {
+  currentMinecraftPencilMode = mode || "crisp";
+  const map = {
+    crisp: document.getElementById("minecraftPencilModeCrispBtn"),
+    natural: document.getElementById("minecraftPencilModeNaturalBtn"),
+    simplified: document.getElementById("minecraftPencilModeSimplifiedBtn")
+  };
+  Object.entries(map).forEach(([key, el]) => {
+    if (el) el.classList.toggle("active", key === currentMinecraftPencilMode);
+  });
+  updateMinecraftPencilControlsVisibility();
+  if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
+    drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
+  }
+}
+
+function setMinecraftPencilOption(key, value, shouldRedraw = true) {
+  if (!(key in currentMinecraftPencilOptions)) return;
+  currentMinecraftPencilOptions[key] = !!value;
+  const checkboxMap = {
+    enhanceFaintLines: document.getElementById("minecraftPencilEnhanceChk"),
+    removePaperShadows: document.getElementById("minecraftPencilShadowChk"),
+    thickenLines: document.getElementById("minecraftPencilThickenChk")
+  };
+  const inputEl = checkboxMap[key];
+  if (inputEl) inputEl.checked = !!currentMinecraftPencilOptions[key];
+  if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
+    drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
+  }
+}
 
 function setMinecraftPreviewMode(mode, shouldRedraw = true) {
   currentMinecraftPreviewMode = mode || "fidelity";
@@ -4419,6 +4524,7 @@ function setMinecraftArtworkMode(mode, shouldRedraw = true) {
   Object.entries(map).forEach(([key, el]) => {
     if (el) el.classList.toggle("active", key === currentMinecraftArtworkMode);
   });
+  updateMinecraftPencilControlsVisibility(currentMinecraftArtworkMode, currentMinecraftLastAutoDetectedArtworkMode);
   if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
     drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
   }
@@ -4611,7 +4717,99 @@ function applyMinecraftDither(imageData, mask, size, style = "fidelity") {
   }
 }
 
+function getPercentileValue(values, percentile = 0.5) {
+  if (!values?.length) return 255;
+  const sorted = Array.from(values).sort((a, b) => a - b);
+  const index = Math.max(0, Math.min(sorted.length - 1, Math.round((sorted.length - 1) * percentile)));
+  return sorted[index];
+}
+
+function getMinecraftLineProcessingConfig(mode = "crisp", options = currentMinecraftPencilOptions) {
+  const base = {
+    whitePercentile: 0.93,
+    blackPercentile: 0.08,
+    backgroundMix: 0.78,
+    darknessWeight: 0.78,
+    contrastWeight: 1.15,
+    distanceWeight: 0.12,
+    strengthThreshold: 42,
+    brightnessThreshold: 200,
+    retainThreshold: 28,
+    connectThreshold: 2,
+    removeThreshold: 1,
+    bridgePasses: 2,
+    cleanPasses: 1,
+    dilationPasses: 0,
+    preserveSoftShade: false,
+    softAlpha: 80,
+    simplifyDetail: 0
+  };
+  const presets = {
+    crisp: {
+      backgroundMix: 0.9,
+      darknessWeight: 0.82,
+      contrastWeight: 1.28,
+      strengthThreshold: 40,
+      brightnessThreshold: 208,
+      retainThreshold: 26,
+      connectThreshold: 2,
+      bridgePasses: 2,
+      cleanPasses: 1,
+      dilationPasses: 0
+    },
+    natural: {
+      whitePercentile: 0.9,
+      blackPercentile: 0.05,
+      backgroundMix: 0.48,
+      darknessWeight: 0.68,
+      contrastWeight: 0.95,
+      distanceWeight: 0.08,
+      strengthThreshold: 34,
+      brightnessThreshold: 214,
+      retainThreshold: 20,
+      connectThreshold: 3,
+      bridgePasses: 1,
+      cleanPasses: 0,
+      preserveSoftShade: true,
+      softAlpha: 110
+    },
+    simplified: {
+      whitePercentile: 0.95,
+      blackPercentile: 0.1,
+      backgroundMix: 0.95,
+      darknessWeight: 0.86,
+      contrastWeight: 1.34,
+      distanceWeight: 0.14,
+      strengthThreshold: 46,
+      brightnessThreshold: 204,
+      retainThreshold: 34,
+      connectThreshold: 2,
+      removeThreshold: 2,
+      bridgePasses: 2,
+      cleanPasses: 2,
+      dilationPasses: 1,
+      simplifyDetail: 1
+    }
+  };
+  const config = Object.assign({}, base, presets[mode] || presets.crisp);
+  if (options?.enhanceFaintLines) {
+    config.strengthThreshold -= 4;
+    config.brightnessThreshold += 8;
+    config.retainThreshold -= 4;
+  }
+  if (!options?.removePaperShadows) {
+    config.backgroundMix *= 0.55;
+    config.brightnessThreshold -= 6;
+  }
+  if (options?.thickenLines) {
+    config.dilationPasses += 1;
+    config.bridgePasses += 1;
+  }
+  return config;
+}
+
 function detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) {
+
   let darkPixels = 0;
   let colorfulPixels = 0;
   let candidatePixels = 0;
@@ -4638,74 +4836,149 @@ function detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) {
 
 function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
   const spriteSize = 64;
-  const config = getMinecraftStyleConfig(style, "line");
+  const styleConfig = getMinecraftStyleConfig(style, "line");
+  const lineConfig = getMinecraftLineProcessingConfig(currentMinecraftPencilMode, currentMinecraftPencilOptions);
   const spriteCanvas = document.createElement("canvas");
   spriteCanvas.width = spriteSize;
   spriteCanvas.height = spriteSize;
   const spriteCtx = spriteCanvas.getContext("2d", { willReadFrequently: true });
-  const innerSize = config.innerSizeLine;
+  const innerSize = styleConfig.innerSizeLine;
   const scale = Math.min(innerSize / srcW, innerSize / srcH);
   const drawW = srcW * scale;
   const drawH = srcH * scale;
   const drawX = (spriteSize - drawW) / 2;
   const drawY = (spriteSize - drawH) / 2;
   spriteCtx.clearRect(0, 0, spriteSize, spriteSize);
-  spriteCtx.imageSmoothingEnabled = config.smoothing;
-  spriteCtx.imageSmoothingQuality = config.smoothingQuality;
+  spriteCtx.imageSmoothingEnabled = styleConfig.smoothing;
+  spriteCtx.imageSmoothingQuality = styleConfig.smoothingQuality;
   spriteCtx.drawImage(sourceCanvas, srcX, srcY, srcW, srcH, drawX, drawY, drawW, drawH);
 
   const imageData = spriteCtx.getImageData(0, 0, spriteSize, spriteSize);
   const data = imageData.data;
-  const binary = new Uint8ClampedArray(spriteSize * spriteSize);
+  const totalPixels = spriteSize * spriteSize;
+  const gray = new Float32Array(totalPixels);
+  const normalized = new Float32Array(totalPixels);
+  const strength = new Float32Array(totalPixels);
+  const binary = new Uint8ClampedArray(totalPixels);
+  const samples = [];
+
+  for (let p = 0; p < totalPixels; p++) {
+    const idx = p * 4;
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+    const a = data[idx + 3];
+    const value = 0.299 * r + 0.587 * g + 0.114 * b;
+    gray[p] = value;
+    if (a > 16) samples.push(value);
+  }
+
   const bgBrightness = (bgR + bgG + bgB) / 3;
-  const threshold = Math.min(238, Math.max(160, bgBrightness + config.lineThresholdBias));
-  for (let y = 0; y < spriteSize; y++) {
-    for (let x = 0; x < spriteSize; x++) {
-      const idx = (y * spriteSize + x) * 4;
+  const whitePoint = Math.max(bgBrightness, getPercentileValue(samples, lineConfig.whitePercentile));
+  const blackPoint = Math.min(whitePoint - 12, getPercentileValue(samples, lineConfig.blackPercentile));
+  const denom = Math.max(18, whitePoint - blackPoint);
+
+  for (let p = 0; p < totalPixels; p++) {
+    const idx = p * 4;
+    const raw = gray[p];
+    const lifted = clampMinecraftColor(((raw - blackPoint) / denom) * 255);
+    normalized[p] = raw * (1 - lineConfig.backgroundMix) + lifted * lineConfig.backgroundMix;
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+    const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+    const darkness = 255 - normalized[p];
+    strength[p] = darkness * lineConfig.darknessWeight + distance * lineConfig.distanceWeight;
+  }
+
+  for (let y = 1; y < spriteSize - 1; y++) {
+    for (let x = 1; x < spriteSize - 1; x++) {
       const p = y * spriteSize + x;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      const a = data[idx + 3];
-      const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-      const distance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-      binary[p] = (a > 16 && (brightness < threshold || distance > 46)) ? 1 : 0;
+      const neighborAvg = (
+        normalized[p - 1] + normalized[p + 1] + normalized[p - spriteSize] + normalized[p + spriteSize] +
+        normalized[p - spriteSize - 1] + normalized[p - spriteSize + 1] + normalized[p + spriteSize - 1] + normalized[p + spriteSize + 1]
+      ) / 8;
+      const localContrast = Math.max(0, neighborAvg - normalized[p]);
+      strength[p] += localContrast * lineConfig.contrastWeight;
+      if (currentMinecraftPencilOptions.enhanceFaintLines && normalized[p] < 230) {
+        strength[p] += Math.max(0, (228 - normalized[p]) * 0.12);
+      }
+      const isLine = normalized[p] < lineConfig.brightnessThreshold || strength[p] > lineConfig.strengthThreshold;
+      binary[p] = isLine ? 1 : 0;
     }
   }
-  for (let pass = 0; pass < 2; pass++) {
+
+  for (let pass = 0; pass < lineConfig.bridgePasses; pass++) {
     const next = new Uint8ClampedArray(binary);
     for (let y = 1; y < spriteSize - 1; y++) {
       for (let x = 1; x < spriteSize - 1; x++) {
         const p = y * spriteSize + x;
         const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize, p - spriteSize - 1, p - spriteSize + 1, p + spriteSize - 1, p + spriteSize + 1];
         const count = neighbors.reduce((sum, n) => sum + (binary[n] ? 1 : 0), 0);
-        if (!binary[p] && count >= 2) next[p] = 1;
-        if (binary[p] && count === 0) next[p] = 0;
+        if (!binary[p] && count >= lineConfig.connectThreshold && strength[p] > lineConfig.retainThreshold) next[p] = 1;
       }
     }
     binary.set(next);
   }
-  for (let y = 0; y < spriteSize; y++) {
-    for (let x = 0; x < spriteSize; x++) {
-      const idx = (y * spriteSize + x) * 4;
-      const p = y * spriteSize + x;
-      if (!binary[p]) {
+
+  for (let pass = 0; pass < lineConfig.cleanPasses; pass++) {
+    const next = new Uint8ClampedArray(binary);
+    for (let y = 1; y < spriteSize - 1; y++) {
+      for (let x = 1; x < spriteSize - 1; x++) {
+        const p = y * spriteSize + x;
+        if (!binary[p]) continue;
+        const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize, p - spriteSize - 1, p - spriteSize + 1, p + spriteSize - 1, p + spriteSize + 1];
+        const count = neighbors.reduce((sum, n) => sum + (binary[n] ? 1 : 0), 0);
+        if (count <= lineConfig.removeThreshold && strength[p] < lineConfig.retainThreshold + 8) next[p] = 0;
+      }
+    }
+    binary.set(next);
+  }
+
+  for (let pass = 0; pass < lineConfig.dilationPasses; pass++) {
+    const next = new Uint8ClampedArray(binary);
+    for (let y = 1; y < spriteSize - 1; y++) {
+      for (let x = 1; x < spriteSize - 1; x++) {
+        const p = y * spriteSize + x;
+        if (binary[p]) continue;
+        const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize];
+        if (neighbors.some(n => binary[n])) next[p] = 1;
+      }
+    }
+    binary.set(next);
+  }
+
+  for (let p = 0; p < totalPixels; p++) {
+    const idx = p * 4;
+    if (!binary[p]) {
+      if (lineConfig.preserveSoftShade && strength[p] > lineConfig.retainThreshold && normalized[p] < 224) {
+        const alpha = Math.max(28, Math.min(lineConfig.softAlpha, Math.round((strength[p] - lineConfig.retainThreshold) * 2.4)));
+        const baseSoft = clampMinecraftColor(Math.round(132 + normalized[p] * 0.12));
+        data[idx] = baseSoft;
+        data[idx + 1] = clampMinecraftColor(baseSoft + 6);
+        data[idx + 2] = clampMinecraftColor(baseSoft + 12);
+        data[idx + 3] = alpha;
+      } else {
         data[idx] = 0;
         data[idx + 1] = 0;
         data[idx + 2] = 0;
         data[idx + 3] = 0;
-        continue;
       }
-      let shade = 1;
-      if (x < spriteSize * 0.45 && y < spriteSize * 0.45) shade = config.lineHighlight;
-      else if (x > spriteSize * 0.58 && y > spriteSize * 0.58) shade = config.lineShadow;
-      const base = Math.max(18, Math.min(96, Math.round(config.lineBase * shade)));
-      data[idx] = base;
-      data[idx + 1] = clampMinecraftColor(base + 6);
-      data[idx + 2] = clampMinecraftColor(base + 14);
-      data[idx + 3] = 255;
+      continue;
     }
+    const darkness = 255 - normalized[p];
+    let shade = 1;
+    const x = p % spriteSize;
+    const y = Math.floor(p / spriteSize);
+    if (x < spriteSize * 0.45 && y < spriteSize * 0.45) shade = styleConfig.lineHighlight;
+    else if (x > spriteSize * 0.58 && y > spriteSize * 0.58) shade = styleConfig.lineShadow;
+    const base = Math.max(14, Math.min(104, Math.round((styleConfig.lineBase - darkness * 0.08) * shade)));
+    data[idx] = base;
+    data[idx + 1] = clampMinecraftColor(base + 6);
+    data[idx + 2] = clampMinecraftColor(base + 14);
+    data[idx + 3] = 255;
   }
+
   for (let y = 1; y < spriteSize - 1; y++) {
     for (let x = 1; x < spriteSize - 1; x++) {
       const p = y * spriteSize + x;
@@ -4713,13 +4986,15 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
       const neighbors = [p - 1, p + 1, p - spriteSize, p + spriteSize];
       if (neighbors.some(n => binary[n])) {
         const idx = p * 4;
-        data[idx] = config.outlineR;
-        data[idx + 1] = config.outlineG;
-        data[idx + 2] = config.outlineB;
-        data[idx + 3] = 255;
+        if (data[idx + 3] > 0) continue;
+        data[idx] = styleConfig.outlineR;
+        data[idx + 1] = styleConfig.outlineG;
+        data[idx + 2] = styleConfig.outlineB;
+        data[idx + 3] = currentMinecraftPencilMode === "natural" ? 180 : 255;
       }
     }
   }
+
   spriteCtx.putImageData(imageData, 0, 0);
   return spriteCanvas;
 }
@@ -4847,7 +5122,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
 function drawMinecraftPixelPreview(sourceUrl) {
   const statusEl = document.getElementById("minecraftPreviewStatus");
   if (!sourceUrl) return;
-  if (statusEl) statusEl.textContent = "";
+  setMinecraftPreviewStatus("");
 
   const img = new Image();
   img.crossOrigin = "anonymous";
@@ -4889,9 +5164,11 @@ function drawMinecraftPixelPreview(sourceUrl) {
 
       const selectedStyle = currentMinecraftPreviewMode || "fidelity";
       const autoDetectedArtworkMode = detectMinecraftPreviewMode(pixels, bgR, bgG, bgB);
+      currentMinecraftLastAutoDetectedArtworkMode = autoDetectedArtworkMode;
       const detectedArtworkMode = currentMinecraftArtworkMode === "auto"
         ? autoDetectedArtworkMode
         : currentMinecraftArtworkMode;
+      updateMinecraftPencilControlsVisibility(currentMinecraftArtworkMode, autoDetectedArtworkMode);
       let minX = analysisSize, minY = analysisSize, maxX = -1, maxY = -1;
       for (let yy = 0; yy < analysisSize; yy++) {
         for (let xx = 0; xx < analysisSize; xx++) {
@@ -4934,22 +5211,36 @@ function drawMinecraftPixelPreview(sourceUrl) {
         : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle);
       renderMinecraftPreviewCanvases(spriteCanvas);
 
-      if (statusEl) statusEl.textContent = "";
+      if (currentMinecraftArtworkMode === "auto") {
+        if (detectedArtworkMode === "line") {
+          const modeMeta = getMinecraftPencilModeMeta(currentMinecraftPencilMode);
+          setMinecraftPreviewStatus(`自動判定：えんぴつ線画（${modeMeta.label}）として補正しています。`, "success");
+        } else {
+          setMinecraftPreviewStatus("自動判定：色つき作品として変換しています。", "info");
+        }
+      } else if (detectedArtworkMode === "line") {
+        const modeMeta = getMinecraftPencilModeMeta(currentMinecraftPencilMode);
+        setMinecraftPreviewStatus(`えんぴつ線画モード：${modeMeta.label}。必要に応じて補助オプションも切り替えられます。`, "info");
+      } else {
+        setMinecraftPreviewStatus("");
+      }
       trackEvent("minecraft_pixel_preview_success", {
         size: 64,
         style: detectedArtworkMode === "line" ? "frame_lineart" : "frame_color",
         finish_style: selectedStyle,
         mode_requested: currentMinecraftPreviewMode,
         artwork_mode_requested: currentMinecraftArtworkMode,
-        artwork_mode_auto_detected: autoDetectedArtworkMode
+        artwork_mode_auto_detected: autoDetectedArtworkMode,
+        pencil_mode: currentMinecraftPencilMode,
+        pencil_options: Object.entries(currentMinecraftPencilOptions).filter(([, value]) => value).map(([key]) => key).join(",")
       });
     } catch (err) {
-      if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
+      setMinecraftPreviewStatus("この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。", "error");
       trackEvent("minecraft_pixel_preview_error", { message: err.message || "unknown" });
     }
   };
   img.onerror = function() {
-    if (statusEl) statusEl.textContent = "画像を読み込めませんでした。別の画像でお試しください。";
+    setMinecraftPreviewStatus("画像を読み込めませんでした。別の画像でお試しください。", "error");
     trackEvent("minecraft_pixel_preview_error", { message: "image_load_failed" });
   };
   img.src = sourceUrl;
@@ -5411,6 +5702,7 @@ window.downloadMinecraftAddon = async function(event) {
 window.closeMinecraftPixelPreview = function() {
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (drawer) drawer.classList.remove("open");
+  setMinecraftPreviewStatus("");
 };
 
 function isMinecraftPreviewEligibleWork(work) {
@@ -5446,6 +5738,12 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const artworkAutoBtn = document.getElementById("minecraftArtworkAutoBtn");
   const artworkColorBtn = document.getElementById("minecraftArtworkColorBtn");
   const artworkLineBtn = document.getElementById("minecraftArtworkLineBtn");
+  const pencilCrispBtn = document.getElementById("minecraftPencilModeCrispBtn");
+  const pencilNaturalBtn = document.getElementById("minecraftPencilModeNaturalBtn");
+  const pencilSimplifiedBtn = document.getElementById("minecraftPencilModeSimplifiedBtn");
+  const pencilEnhanceChk = document.getElementById("minecraftPencilEnhanceChk");
+  const pencilShadowChk = document.getElementById("minecraftPencilShadowChk");
+  const pencilThickenChk = document.getElementById("minecraftPencilThickenChk");
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (titleEl) titleEl.textContent = work.title || "マイクラ用アートプレビュー";
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
@@ -5457,8 +5755,25 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (artworkAutoBtn) artworkAutoBtn.onclick = function() { setMinecraftArtworkMode("auto"); };
   if (artworkColorBtn) artworkColorBtn.onclick = function() { setMinecraftArtworkMode("color"); };
   if (artworkLineBtn) artworkLineBtn.onclick = function() { setMinecraftArtworkMode("line"); };
+  if (pencilCrispBtn) pencilCrispBtn.onclick = function() { setMinecraftPencilMode("crisp"); };
+  if (pencilNaturalBtn) pencilNaturalBtn.onclick = function() { setMinecraftPencilMode("natural"); };
+  if (pencilSimplifiedBtn) pencilSimplifiedBtn.onclick = function() { setMinecraftPencilMode("simplified"); };
+  if (pencilEnhanceChk) pencilEnhanceChk.onchange = function() { setMinecraftPencilOption("enhanceFaintLines", this.checked); };
+  if (pencilShadowChk) pencilShadowChk.onchange = function() { setMinecraftPencilOption("removePaperShadows", this.checked); };
+  if (pencilThickenChk) pencilThickenChk.onchange = function() { setMinecraftPencilOption("thickenLines", this.checked); };
+  currentMinecraftPencilOptions = {
+    enhanceFaintLines: true,
+    removePaperShadows: true,
+    thickenLines: false
+  };
   setMinecraftPreviewMode("fidelity", false);
   setMinecraftArtworkMode("auto", false);
+  setMinecraftPencilMode("crisp", false);
+  setMinecraftPencilOption("enhanceFaintLines", true, false);
+  setMinecraftPencilOption("removePaperShadows", true, false);
+  setMinecraftPencilOption("thickenLines", false, false);
+  updateMinecraftPencilControlsVisibility("auto", "color");
+  setMinecraftPreviewStatus("");
   if (drawer) drawer.classList.add("open");
   drawMinecraftPixelPreview(sourceUrl);
   trackEvent("minecraft_pixel_preview_open", { work_id: workId, media_index: mediaIndex });
