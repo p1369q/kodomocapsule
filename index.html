@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v182</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v184</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1564,7 +1564,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v182",
+        app_version: "v184",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5800,6 +5800,11 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
 
 
 
+function buildMinecraftLang(blockId, displayName) {
+  return `tile.${blockId}.name=${displayName}
+`;
+}
+
 function showMinecraftInstallGuideAfterExport(displayName) {
   const name = displayName ? `「${displayName}」` : "この作品";
   alert(`${name}のマイクラ用ファイルを作成しました。\n\n次の流れで進めてください。\n\n1. 共有画面でMinecraftを選ぶ、または保存した .mcaddon を開く\n2. Minecraftで「インポート完了」が出るまで待つ\n3. 使いたいワールドの設定を開く\n4. リソースパックでコドモカプセルの作品を有効化\n5. ビヘイビアーパックでも同じ作品を有効化\n6. ワールドを開いて、クリエイティブの装飾カテゴリなどから作品を探す\n\n※表示されない場合は、リソースパックとビヘイビアーパックの両方が有効になっているか確認してください。`);
@@ -5904,7 +5909,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v182: ブロック表示名に必要なtexts/*.langは維持し、案内用のREADME.txtだけ含めない。
+    // v184: ブロック表示名に必要なtexts/*.langは維持し、案内用のREADME.txtだけ含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
