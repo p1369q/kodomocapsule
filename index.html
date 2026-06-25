@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v165]</title>
+<title>コドモカプセル [v166]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -625,7 +625,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v165</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v166</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -667,6 +667,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
               <option value="dateDesc">作品の日付が新しい順</option>
               <option value="dateAsc">作品の日付が古い順</option>
+              <option value="categoryAsc">カテゴリ順</option>
               <option value="createdDesc">登録が新しい順</option>
               <option value="createdAsc">登録が古い順</option>
             </select>
@@ -1344,7 +1345,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v165",
+        app_version: "v166",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -1780,6 +1781,33 @@ window.downloadWorkMedia = async function(workId, mediaIndex, event) {
   trackEvent("photo_download", { work_id: workId, media_index: mediaIndex });
 };
 
+function getCategorySortInfo(categoryId) {
+  const index = localCategories.findIndex(c => c.id === categoryId);
+  const category = index >= 0 ? localCategories[index] : null;
+  return {
+    index: index >= 0 ? index : 9999,
+    name: category?.name || "未分類"
+  };
+}
+
+function compareWorksByCategory(a, b) {
+  const catA = getCategorySortInfo(a.category);
+  const catB = getCategorySortInfo(b.category);
+  if (catA.index !== catB.index) return catA.index - catB.index;
+  const nameCompare = String(catA.name).localeCompare(String(catB.name), "ja");
+  if (nameCompare) return nameCompare;
+  const dateA = a.date ? new Date(a.date + "T00:00:00").getTime() : null;
+  const dateB = b.date ? new Date(b.date + "T00:00:00").getTime() : null;
+  const validDateA = Number.isFinite(dateA) ? dateA : null;
+  const validDateB = Number.isFinite(dateB) ? dateB : null;
+  const createdA = a.createdAt || 0;
+  const createdB = b.createdAt || 0;
+  if (validDateA === null && validDateB === null) return createdB - createdA;
+  if (validDateA === null) return 1;
+  if (validDateB === null) return -1;
+  return (validDateB - validDateA) || (createdB - createdA);
+}
+
 function getFilteredPhotoWallItems() {
   const sortSelect = document.getElementById("gallerySortSelect");
   const filterSelect = document.getElementById("galleryChildFilterSelect");
@@ -1831,6 +1859,7 @@ function getFilteredPhotoWallItems() {
       if (validDateB === null) return -1;
       return (validDateA - validDateB) || (createdA - createdB);
     }
+    if (sortValue === "categoryAsc") return compareWorksByCategory(a, b);
     if (sortValue === "createdDesc") return createdB - createdA;
     if (sortValue === "createdAsc") return createdA - createdB;
     return 0;
@@ -5344,6 +5373,7 @@ function renderGallery(){
       if (validDateB === null) return -1;
       return (validDateA - validDateB) || (createdA - createdB);
     }
+    if (sortValue === "categoryAsc") return compareWorksByCategory(a, b);
     if (sortValue === "createdDesc") return createdB - createdA;
     if (sortValue === "createdAsc") return createdA - createdB;
     return 0;
