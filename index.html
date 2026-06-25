@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>コドモカプセル [v164]</title>
+<title>コドモカプセル [v165]</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -625,7 +625,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v164</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v165</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1188,9 +1188,20 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
-      <div class="flex flex-wrap gap-2">
-        <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
-        <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
+      <div class="space-y-2">
+        <div class="text-[11px] font-bold text-slate-500">仕上がり</div>
+        <div class="flex flex-wrap gap-2">
+          <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
+          <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <div class="text-[11px] font-bold text-slate-500">作品タイプ</div>
+        <div class="flex flex-wrap gap-2">
+          <button id="minecraftArtworkAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
+          <button id="minecraftArtworkColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
+          <button id="minecraftArtworkLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
+        </div>
       </div>
       <div id="minecraftPreviewStatus" class="hidden text-xs text-slate-500 leading-relaxed" aria-live="polite"></div>
       <div class="flex flex-col sm:flex-row gap-2 pt-2">
@@ -1333,7 +1344,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v164",
+        app_version: "v165",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4177,6 +4188,7 @@ window.changeCarouselIndex = function(id, direction, event, maxCount) {
 
 let currentMinecraftPreviewTarget = null;
 let currentMinecraftPreviewMode = "fidelity";
+let currentMinecraftArtworkMode = "auto";
 let currentMinecraftSpriteCanvas = null;
 
 function setMinecraftPreviewMode(mode, shouldRedraw = true) {
@@ -4187,6 +4199,21 @@ function setMinecraftPreviewMode(mode, shouldRedraw = true) {
   };
   Object.entries(map).forEach(([key, el]) => {
     if (el) el.classList.toggle("active", key === currentMinecraftPreviewMode);
+  });
+  if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
+    drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
+  }
+}
+
+function setMinecraftArtworkMode(mode, shouldRedraw = true) {
+  currentMinecraftArtworkMode = mode || "auto";
+  const map = {
+    auto: document.getElementById("minecraftArtworkAutoBtn"),
+    color: document.getElementById("minecraftArtworkColorBtn"),
+    line: document.getElementById("minecraftArtworkLineBtn")
+  };
+  Object.entries(map).forEach(([key, el]) => {
+    if (el) el.classList.toggle("active", key === currentMinecraftArtworkMode);
   });
   if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
     drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
@@ -4539,7 +4566,10 @@ function drawMinecraftPixelPreview(sourceUrl) {
       bgB /= samplePoints.length;
 
       const selectedStyle = currentMinecraftPreviewMode || "fidelity";
-      const detectedArtworkMode = detectMinecraftPreviewMode(pixels, bgR, bgG, bgB);
+      const autoDetectedArtworkMode = detectMinecraftPreviewMode(pixels, bgR, bgG, bgB);
+      const detectedArtworkMode = currentMinecraftArtworkMode === "auto"
+        ? autoDetectedArtworkMode
+        : currentMinecraftArtworkMode;
       let minX = analysisSize, minY = analysisSize, maxX = -1, maxY = -1;
       for (let yy = 0; yy < analysisSize; yy++) {
         for (let xx = 0; xx < analysisSize; xx++) {
@@ -4582,7 +4612,14 @@ function drawMinecraftPixelPreview(sourceUrl) {
       renderMinecraftPreviewCanvases(spriteCanvas);
 
       if (statusEl) statusEl.textContent = "";
-      trackEvent("minecraft_pixel_preview_success", { size: 64, style: detectedArtworkMode === "line" ? "frame_lineart" : "frame_color", finish_style: selectedStyle, mode_requested: currentMinecraftPreviewMode });
+      trackEvent("minecraft_pixel_preview_success", {
+        size: 64,
+        style: detectedArtworkMode === "line" ? "frame_lineart" : "frame_color",
+        finish_style: selectedStyle,
+        mode_requested: currentMinecraftPreviewMode,
+        artwork_mode_requested: currentMinecraftArtworkMode,
+        artwork_mode_auto_detected: autoDetectedArtworkMode
+      });
     } catch (err) {
       if (statusEl) statusEl.textContent = "この画像はブラウザの制限により変換できませんでした。Firebase StorageのCORS設定が必要な場合があります。";
       trackEvent("minecraft_pixel_preview_error", { message: err.message || "unknown" });
@@ -5036,11 +5073,18 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const titleEl = document.getElementById("minecraftPreviewTitle");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
+  const artworkAutoBtn = document.getElementById("minecraftArtworkAutoBtn");
+  const artworkColorBtn = document.getElementById("minecraftArtworkColorBtn");
+  const artworkLineBtn = document.getElementById("minecraftArtworkLineBtn");
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (titleEl) titleEl.textContent = work.title || "マイクラ用アートプレビュー";
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
+  if (artworkAutoBtn) artworkAutoBtn.onclick = function() { setMinecraftArtworkMode("auto"); };
+  if (artworkColorBtn) artworkColorBtn.onclick = function() { setMinecraftArtworkMode("color"); };
+  if (artworkLineBtn) artworkLineBtn.onclick = function() { setMinecraftArtworkMode("line"); };
   setMinecraftPreviewMode("fidelity", false);
+  setMinecraftArtworkMode("auto", false);
   if (drawer) drawer.classList.add("open");
   drawMinecraftPixelPreview(sourceUrl);
   trackEvent("minecraft_pixel_preview_open", { work_id: workId, media_index: mediaIndex });
