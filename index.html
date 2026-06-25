@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v181</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v182</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1529,7 +1529,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v181",
+        app_version: "v182",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5700,6 +5700,8 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
     rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
     rp.file("models/blocks/" + blockSlug + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId), null, 2));
+    rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
+    rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     rp.file("pack_icon.png", wallArtTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
@@ -5711,9 +5713,11 @@ window.downloadMinecraftAddon = async function(event) {
       [{ uuid: rpHeaderUuid, version: [1, 0, 0] }]
     ), null, 2));
     bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryId), null, 2));
+    bp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
+    bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v181以降: .mcaddon内にはREADME.txtやtexts/*.langなどの案内用テキストファイルを含めない。
+    // v182: ブロック表示名に必要なtexts/*.langは維持し、案内用のREADME.txtだけ含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
