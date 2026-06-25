@@ -1275,25 +1275,60 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
-      <div class="space-y-2">
-        <div class="text-[11px] font-bold text-slate-500">仕上がり</div>
-        <div class="flex flex-wrap gap-2">
-          <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
-          <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
-          <button id="minecraftModeVividBtn" type="button" class="minecraft-mode-chip">色くっきり</button>
-          <button id="minecraftModeSoftBtn" type="button" class="minecraft-mode-chip">やさしい色合い</button>
-          <button id="minecraftModePosterBtn" type="button" class="minecraft-mode-chip">輪郭くっきり</button>
-          <button id="minecraftModeRetroBtn" type="button" class="minecraft-mode-chip">レトロ風</button>
+      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-3">
+        <div>
+          <div class="text-[11px] font-bold text-slate-500">かんたん設定</div>
+          <p class="text-[11px] text-slate-500 mt-1">まずはここだけ選べばOKです。下の詳細設定は必要なときだけ使えます。</p>
+        </div>
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-slate-500">出力モード</div>
+          <div class="flex flex-wrap gap-2">
+            <button id="minecraftOutputAutoBtn" type="button" class="minecraft-mode-chip active">自動判定</button>
+            <button id="minecraftOutputMinecraftBtn" type="button" class="minecraft-mode-chip">マイクラ風</button>
+            <button id="minecraftOutputBalanceBtn" type="button" class="minecraft-mode-chip">バランス</button>
+            <button id="minecraftOutputHighDetailBtn" type="button" class="minecraft-mode-chip">高精細</button>
+            <button id="minecraftOutputLineartBtn" type="button" class="minecraft-mode-chip">鉛筆画向け</button>
+          </div>
+          <p id="minecraftOutputModeDescription" class="text-[11px] text-slate-500 leading-relaxed">作品を自動判定して、おすすめの見た目とサイズを選びます。</p>
+        </div>
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-slate-500">テクスチャサイズ</div>
+          <div class="flex flex-wrap gap-2">
+            <button id="minecraftSizeAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
+            <button id="minecraftSize64Btn" type="button" class="minecraft-mode-chip">64px</button>
+            <button id="minecraftSize128Btn" type="button" class="minecraft-mode-chip">128px</button>
+            <button id="minecraftSize256Btn" type="button" class="minecraft-mode-chip">256px</button>
+            <button id="minecraftSize512Btn" type="button" class="minecraft-mode-chip">512px</button>
+          </div>
+          <p id="minecraftTextureSizeStatus" class="text-[11px] text-slate-500 leading-relaxed">プレビューと .mcaddon の両方で同じサイズを使用します。</p>
         </div>
       </div>
-      <div class="space-y-2">
-        <div class="text-[11px] font-bold text-slate-500">作品タイプ</div>
-        <div class="flex flex-wrap gap-2">
-          <button id="minecraftArtworkAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
-          <button id="minecraftArtworkColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
-          <button id="minecraftArtworkLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
+      <details class="rounded-2xl bg-white border border-slate-200 p-3 text-left">
+        <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+          <span>🎛️</span><span>詳細な見た目調整を開く</span>
+        </summary>
+        <div class="pt-3 space-y-3">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold text-slate-500">色・雰囲気</div>
+            <div class="flex flex-wrap gap-2">
+              <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
+              <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
+              <button id="minecraftModeVividBtn" type="button" class="minecraft-mode-chip">色くっきり</button>
+              <button id="minecraftModeSoftBtn" type="button" class="minecraft-mode-chip">やさしい色合い</button>
+              <button id="minecraftModePosterBtn" type="button" class="minecraft-mode-chip">輪郭くっきり</button>
+              <button id="minecraftModeRetroBtn" type="button" class="minecraft-mode-chip">レトロ風</button>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold text-slate-500">作品タイプ</div>
+            <div class="flex flex-wrap gap-2">
+              <button id="minecraftArtworkAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
+              <button id="minecraftArtworkColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
+              <button id="minecraftArtworkLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
       <div id="minecraftPencilControls" class="hidden rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-3">
         <div class="space-y-2">
           <div class="text-[11px] font-bold text-slate-500">線画補正モード</div>
@@ -4425,7 +4460,10 @@ let currentMinecraftPencilOptions = {
 };
 let currentMinecraftLastAutoDetectedArtworkMode = "color";
 let currentMinecraftSpriteCanvas = null;
-const MINECRAFT_SPRITE_SIZE = 128; // v180: 鉛筆画の細い線を潰さないため、内部ドット絵を128pxで生成する
+let currentMinecraftOutputMode = "auto";
+let currentMinecraftTextureSizeSelection = "auto";
+let currentMinecraftResolvedTextureSize = 128;
+const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
 
 function getMinecraftPencilModeMeta(mode = "crisp") {
   const map = {
@@ -4443,6 +4481,152 @@ function getMinecraftPencilModeMeta(mode = "crisp") {
     }
   };
   return map[mode] || map.crisp;
+}
+
+function getMinecraftOutputModeMeta(mode = "auto") {
+  const map = {
+    auto: {
+      label: "自動判定",
+      description: "作品を自動判定して、おすすめの見た目とサイズを選びます。",
+      defaultSizeText: "カラー作品は128px、鉛筆画は256pxを優先します。"
+    },
+    minecraft: {
+      label: "マイクラ風",
+      description: "ドット感を強めて、Minecraftらしい見え方を優先します。",
+      defaultSizeText: "自動サイズでは64pxを優先します。"
+    },
+    balance: {
+      label: "バランス",
+      description: "見た目の分かりやすさとマイクラ感のバランスを取ります。",
+      defaultSizeText: "自動サイズでは128pxを優先します。"
+    },
+    highDetail: {
+      label: "高精細",
+      description: "細部をなるべく残して、高品質に仕上げます。",
+      defaultSizeText: "自動サイズでは256pxを優先します。"
+    },
+    lineart: {
+      label: "鉛筆画向け",
+      description: "白黒の鉛筆線を見やすく整え、紙の雰囲気を自然に残します。",
+      defaultSizeText: "自動サイズでは256pxを優先します。"
+    }
+  };
+  return map[mode] || map.auto;
+}
+
+function getMinecraftResolvedArtworkMode() {
+  return currentMinecraftArtworkMode === "auto"
+    ? (currentMinecraftLastAutoDetectedArtworkMode || "color")
+    : currentMinecraftArtworkMode;
+}
+
+function resolveMinecraftSpriteSize(artworkMode = getMinecraftResolvedArtworkMode(), outputMode = currentMinecraftOutputMode, selection = currentMinecraftTextureSizeSelection) {
+  if (selection !== "auto") {
+    const explicit = Number(selection);
+    return MINECRAFT_TEXTURE_SIZE_OPTIONS.includes(explicit) ? explicit : 128;
+  }
+  if (outputMode === "minecraft") return 64;
+  if (outputMode === "highDetail") return artworkMode === "line" ? 256 : 256;
+  if (outputMode === "lineart") return 256;
+  if (outputMode === "balance") return artworkMode === "line" ? 256 : 128;
+  return artworkMode === "line" ? 256 : 128;
+}
+
+function updateMinecraftOutputModeUi() {
+  const buttonMap = {
+    auto: document.getElementById("minecraftOutputAutoBtn"),
+    minecraft: document.getElementById("minecraftOutputMinecraftBtn"),
+    balance: document.getElementById("minecraftOutputBalanceBtn"),
+    highDetail: document.getElementById("minecraftOutputHighDetailBtn"),
+    lineart: document.getElementById("minecraftOutputLineartBtn")
+  };
+  Object.entries(buttonMap).forEach(([key, el]) => {
+    if (el) el.classList.toggle("active", key === currentMinecraftOutputMode);
+  });
+  const meta = getMinecraftOutputModeMeta(currentMinecraftOutputMode);
+  const descEl = document.getElementById("minecraftOutputModeDescription");
+  if (descEl) descEl.textContent = `${meta.description} ${meta.defaultSizeText}`;
+}
+
+function updateMinecraftTextureSizeUi(resolvedArtworkMode = getMinecraftResolvedArtworkMode()) {
+  const buttonMap = {
+    auto: document.getElementById("minecraftSizeAutoBtn"),
+    64: document.getElementById("minecraftSize64Btn"),
+    128: document.getElementById("minecraftSize128Btn"),
+    256: document.getElementById("minecraftSize256Btn"),
+    512: document.getElementById("minecraftSize512Btn")
+  };
+  Object.entries(buttonMap).forEach(([key, el]) => {
+    if (el) el.classList.toggle("active", String(currentMinecraftTextureSizeSelection) === String(key));
+  });
+  const size = resolveMinecraftSpriteSize(resolvedArtworkMode);
+  currentMinecraftResolvedTextureSize = size;
+  const statusEl = document.getElementById("minecraftTextureSizeStatus");
+  if (statusEl) {
+    if (currentMinecraftTextureSizeSelection === "auto") {
+      const modeLabel = resolvedArtworkMode === "line" ? "鉛筆画 / 線画" : "カラー作品";
+      statusEl.textContent = `現在は ${modeLabel} と判定し、${size}px で出力します。プレビューと .mcaddon の両方に反映されます。`;
+    } else {
+      const extra = size >= 512 ? "（高精細ですが、生成や読み込みがやや重くなる場合があります）" : "";
+      statusEl.textContent = `現在は ${size}px で固定して出力します。プレビューと .mcaddon の両方に反映されます。${extra}`.trim();
+    }
+  }
+}
+
+function setMinecraftTextureSizeSelection(selection, shouldRedraw = true) {
+  currentMinecraftTextureSizeSelection = selection || "auto";
+  updateMinecraftTextureSizeUi();
+  if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
+    drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
+  }
+}
+
+function setMinecraftOutputMode(mode, shouldRedraw = true) {
+  currentMinecraftOutputMode = mode || "auto";
+  updateMinecraftOutputModeUi();
+
+  if (currentMinecraftOutputMode === "minecraft") {
+    setMinecraftPreviewMode("pixel", false);
+    setMinecraftArtworkMode("auto", false);
+    setMinecraftPencilMode("simplified", false);
+    setMinecraftPencilOption("enhanceFaintLines", true, false);
+    setMinecraftPencilOption("removePaperShadows", true, false);
+    setMinecraftPencilOption("thickenLines", true, false);
+  } else if (currentMinecraftOutputMode === "balance") {
+    setMinecraftPreviewMode("fidelity", false);
+    setMinecraftArtworkMode("auto", false);
+    setMinecraftPencilMode("crisp", false);
+    setMinecraftPencilOption("enhanceFaintLines", true, false);
+    setMinecraftPencilOption("removePaperShadows", true, false);
+    setMinecraftPencilOption("thickenLines", false, false);
+  } else if (currentMinecraftOutputMode === "highDetail") {
+    setMinecraftPreviewMode("fidelity", false);
+    setMinecraftArtworkMode("auto", false);
+    setMinecraftPencilMode("natural", false);
+    setMinecraftPencilOption("enhanceFaintLines", true, false);
+    setMinecraftPencilOption("removePaperShadows", true, false);
+    setMinecraftPencilOption("thickenLines", false, false);
+  } else if (currentMinecraftOutputMode === "lineart") {
+    setMinecraftPreviewMode("poster", false);
+    setMinecraftArtworkMode("line", false);
+    setMinecraftPencilMode("crisp", false);
+    setMinecraftPencilOption("enhanceFaintLines", true, false);
+    setMinecraftPencilOption("removePaperShadows", true, false);
+    setMinecraftPencilOption("thickenLines", false, false);
+  } else {
+    setMinecraftPreviewMode("fidelity", false);
+    setMinecraftArtworkMode("auto", false);
+    setMinecraftPencilMode("crisp", false);
+    setMinecraftPencilOption("enhanceFaintLines", true, false);
+    setMinecraftPencilOption("removePaperShadows", true, false);
+    setMinecraftPencilOption("thickenLines", false, false);
+  }
+
+  updateMinecraftPencilControlsVisibility(currentMinecraftArtworkMode, currentMinecraftLastAutoDetectedArtworkMode);
+  updateMinecraftTextureSizeUi();
+  if (shouldRedraw && currentMinecraftPreviewTarget?.sourceUrl) {
+    drawMinecraftPixelPreview(currentMinecraftPreviewTarget.sourceUrl);
+  }
 }
 
 function setMinecraftPreviewStatus(message = "", tone = "info") {
@@ -4907,8 +5091,7 @@ function detectMinecraftPreviewMode(pixels, bgR, bgG, bgB) {
   return (colorfulRatio < 0.16 && darkRatio > 0.16) ? "line" : "color";
 }
 
-function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
-  const spriteSize = MINECRAFT_SPRITE_SIZE;
+function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity", spriteSize = currentMinecraftResolvedTextureSize || 128) {
   const styleConfig = getMinecraftStyleConfig(style, "line");
   const lineConfig = getMinecraftLineProcessingConfig(currentMinecraftPencilMode, currentMinecraftPencilOptions);
   const spriteCanvas = document.createElement("canvas");
@@ -5078,8 +5261,7 @@ function buildLineArtSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB,
   return spriteCanvas;
 }
 
-function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity") {
-  const spriteSize = MINECRAFT_SPRITE_SIZE;
+function buildColorSprite(sourceCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, style = "fidelity", spriteSize = currentMinecraftResolvedTextureSize || 128) {
   const config = getMinecraftStyleConfig(style, "color");
   const spriteCanvas = document.createElement("canvas");
   spriteCanvas.width = spriteSize;
@@ -5289,26 +5471,29 @@ function drawMinecraftPixelPreview(sourceUrl) {
 
       // v180: 線画も作品領域に寄せて高精細化する。ただし背景は透明化せず、紙色として自然に残す。
 
+      const resolvedTextureSize = resolveMinecraftSpriteSize(detectedArtworkMode);
+      currentMinecraftResolvedTextureSize = resolvedTextureSize;
+      updateMinecraftTextureSizeUi(detectedArtworkMode);
       const spriteCanvas = detectedArtworkMode === "line"
-        ? buildLineArtSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle)
-        : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle);
+        ? buildLineArtSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle, resolvedTextureSize)
+        : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle, resolvedTextureSize);
       renderMinecraftPreviewCanvases(spriteCanvas);
 
       if (currentMinecraftArtworkMode === "auto") {
         if (detectedArtworkMode === "line") {
           const modeMeta = getMinecraftPencilModeMeta(currentMinecraftPencilMode);
-          setMinecraftPreviewStatus(`自動判定：えんぴつ線画（${modeMeta.label}）。紙面を残したまま、線を見やすく補正しています。`, "success");
+          setMinecraftPreviewStatus(`自動判定：えんぴつ線画（${modeMeta.label} / ${resolvedTextureSize}px）。紙面を残したまま、線を見やすく補正しています。`, "success");
         } else {
-          setMinecraftPreviewStatus("自動判定：色つき作品として変換しています。", "info");
+          setMinecraftPreviewStatus(`自動判定：色つき作品として変換しています（${resolvedTextureSize}px）。`, "info");
         }
       } else if (detectedArtworkMode === "line") {
         const modeMeta = getMinecraftPencilModeMeta(currentMinecraftPencilMode);
-        setMinecraftPreviewStatus(`えんぴつ線画モード：${modeMeta.label}。紙面を残したまま、線を見やすく補正します。`, "info");
+        setMinecraftPreviewStatus(`えんぴつ線画モード：${modeMeta.label}（${resolvedTextureSize}px）。紙面を残したまま、線を見やすく補正します。`, "info");
       } else {
-        setMinecraftPreviewStatus("");
+        setMinecraftPreviewStatus(`現在の出力サイズ：${resolvedTextureSize}px`, "info");
       }
       trackEvent("minecraft_pixel_preview_success", {
-        size: MINECRAFT_SPRITE_SIZE,
+        size: resolvedTextureSize,
         style: detectedArtworkMode === "line" ? "frame_lineart" : "frame_color",
         finish_style: selectedStyle,
         mode_requested: currentMinecraftPreviewMode,
@@ -5389,7 +5574,7 @@ window.downloadMinecraftSpritePng = async function(event) {
     const work = currentMinecraftPreviewTarget
       ? localWorks.find(w => w.id === currentMinecraftPreviewTarget.workId)
       : null;
-    const fileName = sanitizeMinecraftDownloadName(work?.title || "kodomo_frame_art") + "_128x128.png";
+    const fileName = sanitizeMinecraftDownloadName(work?.title || "kodomo_frame_art") + `_${currentMinecraftResolvedTextureSize}x${currentMinecraftResolvedTextureSize}.png`;
 
     const blob = await new Promise((resolve, reject) => {
       currentMinecraftSpriteCanvas.toBlob(blobResult => {
@@ -5409,7 +5594,7 @@ window.downloadMinecraftSpritePng = async function(event) {
       trackEvent("minecraft_frame_png_share", {
         work_id: currentMinecraftPreviewTarget?.workId || "",
         media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
-        size: MINECRAFT_SPRITE_SIZE
+        size: currentMinecraftResolvedTextureSize
       });
       return;
     }
@@ -5427,7 +5612,7 @@ window.downloadMinecraftSpritePng = async function(event) {
     trackEvent("minecraft_frame_png_download", {
       work_id: currentMinecraftPreviewTarget?.workId || "",
       media_index: currentMinecraftPreviewTarget?.mediaIndex ?? 0,
-      size: MINECRAFT_SPRITE_SIZE
+      size: currentMinecraftResolvedTextureSize
     });
   } catch (err) {
     alert("画像だけ保存に失敗しました。\nスマホでは共有メニューから「画像を保存」を選べる場合があります。");
@@ -5504,20 +5689,22 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
   return new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement("canvas");
-      const textureSize = MINECRAFT_SPRITE_SIZE;
+      const textureSize = currentMinecraftResolvedTextureSize || 128;
       canvas.width = textureSize;
       canvas.height = textureSize;
       const ctx = canvas.getContext("2d");
       ctx.imageSmoothingEnabled = false;
 
-      // v180: 128pxテクスチャで、細い鉛筆線をmcaddon側にも残しやすくする。
+      const frameInsetOuter = Math.max(4, Math.round(textureSize * 0.0625));
+      const frameInsetInner = Math.max(frameInsetOuter + 2, Math.round(textureSize * 0.125));
+      const artInset = Math.max(frameInsetInner + 2, Math.round(textureSize * 0.15625));
       ctx.fillStyle = "#6b4d2d";
       ctx.fillRect(0, 0, textureSize, textureSize);
       ctx.fillStyle = "#8a6438";
-      ctx.fillRect(8, 8, textureSize - 16, textureSize - 16);
+      ctx.fillRect(frameInsetOuter, frameInsetOuter, textureSize - frameInsetOuter * 2, textureSize - frameInsetOuter * 2);
       ctx.fillStyle = "#b98a54";
-      ctx.fillRect(16, 16, textureSize - 32, textureSize - 32);
-      ctx.drawImage(spriteCanvas, 20, 20, textureSize - 40, textureSize - 40);
+      ctx.fillRect(frameInsetInner, frameInsetInner, textureSize - frameInsetInner * 2, textureSize - frameInsetInner * 2);
+      ctx.drawImage(spriteCanvas, artInset, artInset, textureSize - artInset * 2, textureSize - artInset * 2);
 
       canvas.toBlob(blob => {
         if (blob) resolve(blob);
@@ -5529,16 +5716,16 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
   });
 }
 
-function buildMinecraftWallArtGeometry(geometryId) {
-  const fullFaceUv = { uv: [0, 0], uv_size: [128, 128] };
+function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraftResolvedTextureSize || 128) {
+  const fullFaceUv = { uv: [0, 0], uv_size: [textureSize, textureSize] };
   return {
     format_version: "1.12.0",
     "minecraft:geometry": [
       {
         description: {
           identifier: geometryId,
-          texture_width: 128,
-          texture_height: 128,
+          texture_width: textureSize,
+          texture_height: textureSize,
           visible_bounds_width: 2,
           visible_bounds_height: 2,
           visible_bounds_offset: [0, 0.5, 0]
@@ -5699,7 +5886,7 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("textures/blocks/" + textureKey + ".png", wallArtTextureBlob);
     rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
     rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
-    rp.file("models/blocks/" + blockSlug + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId), null, 2));
+    rp.file("models/blocks/" + blockSlug + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId, currentMinecraftResolvedTextureSize), null, 2));
     rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
     rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     rp.file("pack_icon.png", wallArtTextureBlob);
@@ -5773,6 +5960,16 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   currentMinecraftPreviewTarget = { workId, mediaIndex, sourceUrl };
   currentMinecraftSpriteCanvas = null;
   const titleEl = document.getElementById("minecraftPreviewTitle");
+  const outputAutoBtn = document.getElementById("minecraftOutputAutoBtn");
+  const outputMinecraftBtn = document.getElementById("minecraftOutputMinecraftBtn");
+  const outputBalanceBtn = document.getElementById("minecraftOutputBalanceBtn");
+  const outputHighDetailBtn = document.getElementById("minecraftOutputHighDetailBtn");
+  const outputLineartBtn = document.getElementById("minecraftOutputLineartBtn");
+  const sizeAutoBtn = document.getElementById("minecraftSizeAutoBtn");
+  const size64Btn = document.getElementById("minecraftSize64Btn");
+  const size128Btn = document.getElementById("minecraftSize128Btn");
+  const size256Btn = document.getElementById("minecraftSize256Btn");
+  const size512Btn = document.getElementById("minecraftSize512Btn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -5790,6 +5987,16 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const pencilThickenChk = document.getElementById("minecraftPencilThickenChk");
   const drawer = document.getElementById("minecraftPreviewDrawer");
   if (titleEl) titleEl.textContent = work.title || "マイクラ用アートプレビュー";
+  if (outputAutoBtn) outputAutoBtn.onclick = function() { setMinecraftOutputMode("auto"); };
+  if (outputMinecraftBtn) outputMinecraftBtn.onclick = function() { setMinecraftOutputMode("minecraft"); };
+  if (outputBalanceBtn) outputBalanceBtn.onclick = function() { setMinecraftOutputMode("balance"); };
+  if (outputHighDetailBtn) outputHighDetailBtn.onclick = function() { setMinecraftOutputMode("highDetail"); };
+  if (outputLineartBtn) outputLineartBtn.onclick = function() { setMinecraftOutputMode("lineart"); };
+  if (sizeAutoBtn) sizeAutoBtn.onclick = function() { setMinecraftTextureSizeSelection("auto"); };
+  if (size64Btn) size64Btn.onclick = function() { setMinecraftTextureSizeSelection(64); };
+  if (size128Btn) size128Btn.onclick = function() { setMinecraftTextureSizeSelection(128); };
+  if (size256Btn) size256Btn.onclick = function() { setMinecraftTextureSizeSelection(256); };
+  if (size512Btn) size512Btn.onclick = function() { setMinecraftTextureSizeSelection(512); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
@@ -5810,12 +6017,13 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
     removePaperShadows: true,
     thickenLines: false
   };
-  setMinecraftPreviewMode("fidelity", false);
-  setMinecraftArtworkMode("auto", false);
-  setMinecraftPencilMode("crisp", false);
-  setMinecraftPencilOption("enhanceFaintLines", true, false);
-  setMinecraftPencilOption("removePaperShadows", true, false);
-  setMinecraftPencilOption("thickenLines", false, false);
+  currentMinecraftLastAutoDetectedArtworkMode = "color";
+  currentMinecraftOutputMode = "auto";
+  currentMinecraftTextureSizeSelection = "auto";
+  currentMinecraftResolvedTextureSize = 128;
+  setMinecraftOutputMode("auto", false);
+  updateMinecraftOutputModeUi();
+  updateMinecraftTextureSizeUi("color");
   updateMinecraftPencilControlsVisibility("auto", "color");
   setMinecraftPreviewStatus("");
   if (drawer) drawer.classList.add("open");
