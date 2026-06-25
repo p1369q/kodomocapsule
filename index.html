@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v185</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v186</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1564,7 +1564,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v185",
+        app_version: "v186",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5716,8 +5716,21 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
   });
 }
 
-function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraftResolvedTextureSize || 128) {
+function getMinecraftWallArtGeometryShape(face = "south") {
+  // v186: iPad版ではプレイヤー向きより「タップしたブロック面」を優先した方が壁に密着しやすい。
+  // 回転コンポーネントだけに頼らず、面ごとの薄型ジオメトリを用意する。
+  const map = {
+    north: { origin: [-8, 0, -8], size: [16, 16, 2] },
+    south: { origin: [-8, 0, 6], size: [16, 16, 2] },
+    west: { origin: [-8, 0, -8], size: [2, 16, 16] },
+    east: { origin: [6, 0, -8], size: [2, 16, 16] }
+  };
+  return map[face] || map.south;
+}
+
+function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraftResolvedTextureSize || 128, face = "south") {
   const fullFaceUv = { uv: [0, 0], uv_size: [textureSize, textureSize] };
+  const shape = getMinecraftWallArtGeometryShape(face);
   return {
     format_version: "1.12.0",
     "minecraft:geometry": [
@@ -5737,8 +5750,8 @@ function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraf
             cubes: [
               {
                 // 1ブロック幅・1ブロック高さ・かなり薄いアートパネル
-                origin: [-8, 0, 6],
-                size: [16, 16, 2],
+                origin: shape.origin,
+                size: shape.size,
                 uv: {
                   north: fullFaceUv,
                   south: fullFaceUv,
@@ -5756,7 +5769,10 @@ function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraf
   };
 }
 
-function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryId) {
+function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryIds) {
+  const ids = typeof geometryIds === "string"
+    ? { north: geometryIds, south: geometryIds, west: geometryIds, east: geometryIds }
+    : geometryIds;
   const baseComponents = {
     "minecraft:display_name": displayName,
     "minecraft:destructible_by_mining": {
@@ -5768,14 +5784,14 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
     "minecraft:friction": 0.6,
     "minecraft:light_dampening": 0,
     "minecraft:map_color": "#f8fafc",
-    "minecraft:geometry": geometryId,
+    "minecraft:geometry": ids.south,
     "minecraft:collision_box": {
-      origin: [-8, 0, 6],
-      size: [16, 16, 2]
+      origin: [-8, 0, -8],
+      size: [16, 16, 16]
     },
     "minecraft:selection_box": {
-      origin: [-8, 0, 6],
-      size: [16, 16, 2]
+      origin: [-8, 0, -8],
+      size: [16, 16, 16]
     },
     "minecraft:material_instances": {
       "*": {
@@ -5797,34 +5813,47 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
           "minecraft:placement_direction": {
             enabled_states: ["minecraft:cardinal_direction"],
             y_rotation_offset: 180
+          },
+          "minecraft:placement_position": {
+            enabled_states: ["minecraft:block_face"]
           }
         }
       },
       components: baseComponents,
       permutations: [
+        // PCなど、プレイヤーの向きで置かれる環境向けのフォールバック
         {
           condition: "q.block_state('minecraft:cardinal_direction') == 'north'",
-          components: {
-            "minecraft:transformation": { rotation: [0, 180, 0] }
-          }
+          components: { "minecraft:geometry": ids.north }
         },
         {
           condition: "q.block_state('minecraft:cardinal_direction') == 'south'",
-          components: {
-            "minecraft:transformation": { rotation: [0, 0, 0] }
-          }
+          components: { "minecraft:geometry": ids.south }
         },
         {
           condition: "q.block_state('minecraft:cardinal_direction') == 'west'",
-          components: {
-            "minecraft:transformation": { rotation: [0, 90, 0] }
-          }
+          components: { "minecraft:geometry": ids.west }
         },
         {
           condition: "q.block_state('minecraft:cardinal_direction') == 'east'",
-          components: {
-            "minecraft:transformation": { rotation: [0, 270, 0] }
-          }
+          components: { "minecraft:geometry": ids.east }
+        },
+        // iPad / タッチ操作では、タップした壁面を優先して密着方向を決める
+        {
+          condition: "q.block_state('minecraft:block_face') == 'north'",
+          components: { "minecraft:geometry": ids.north }
+        },
+        {
+          condition: "q.block_state('minecraft:block_face') == 'south'",
+          components: { "minecraft:geometry": ids.south }
+        },
+        {
+          condition: "q.block_state('minecraft:block_face') == 'west'",
+          components: { "minecraft:geometry": ids.west }
+        },
+        {
+          condition: "q.block_state('minecraft:block_face') == 'east'",
+          components: { "minecraft:geometry": ids.east }
         }
       ]
     }
@@ -5899,7 +5928,13 @@ window.downloadMinecraftAddon = async function(event) {
     const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
     const blockId = `kodomo:${blockSlug}`;
     const textureKey = `kodomo_${blockSlug}`;
-    const geometryId = `geometry.kodomo_${blockSlug}_wall_art`;
+    const geometryBaseId = `geometry.kodomo_${blockSlug}_wall_art`;
+    const geometryIds = {
+      north: `${geometryBaseId}_north`,
+      south: `${geometryBaseId}_south`,
+      west: `${geometryBaseId}_west`,
+      east: `${geometryBaseId}_east`
+    };
     const displayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const shortId = blockSlug.slice(-8);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -5924,7 +5959,9 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("textures/blocks/" + textureKey + ".png", wallArtTextureBlob);
     rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
     rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
-    rp.file("models/blocks/" + blockSlug + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId, currentMinecraftResolvedTextureSize), null, 2));
+    Object.entries(geometryIds).forEach(([face, geometryId]) => {
+      rp.file("models/blocks/" + blockSlug + "_" + face + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId, currentMinecraftResolvedTextureSize, face), null, 2));
+    });
     rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
     rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     rp.file("pack_icon.png", wallArtTextureBlob);
@@ -5937,12 +5974,12 @@ window.downloadMinecraftAddon = async function(event) {
       "data",
       [{ uuid: rpHeaderUuid, version: [1, 0, 0] }]
     ), null, 2));
-    bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryId), null, 2));
+    bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryIds), null, 2));
     bp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v185: ブロック表示名に必要なtexts/*.langは維持し、案内用のREADME.txtだけ含めない。
+    // v186: 表示名用texts/*.langは維持。案内用README.txtは含めず、iPad向けにblock_face配置を優先する。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
