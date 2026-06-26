@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v210</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v211</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1597,7 +1597,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v210",
+        app_version: "v211",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2075,58 +2075,77 @@ const AGE_DETAIL_GROUPS = {
   preschool: {
     label: "幼児",
     items: [
-      { stage: "age3", label: "年少 (3歳)" },
-      { stage: "age4", label: "年中 (4歳)" },
-      { stage: "age5", label: "年長 (5歳)" }
+      { stage: "nensho", label: "年少" },
+      { stage: "nenchu", label: "年中" },
+      { stage: "nencho", label: "年長" }
     ]
   },
   elementary: {
     label: "小学生",
     items: [
-      { stage: "age7", label: "小1 (7歳)" },
-      { stage: "age8", label: "小2 (8歳)" },
-      { stage: "age9", label: "小3 (9歳)" },
-      { stage: "age10", label: "小4 (10歳)" },
-      { stage: "age11", label: "小5 (11歳)" },
-      { stage: "age12", label: "小6 (12歳)" }
+      { stage: "elem1", label: "小1" },
+      { stage: "elem2", label: "小2" },
+      { stage: "elem3", label: "小3" },
+      { stage: "elem4", label: "小4" },
+      { stage: "elem5", label: "小5" },
+      { stage: "elem6", label: "小6" }
     ]
   },
   junior: {
     label: "中学生",
     items: [
-      { stage: "age13", label: "中1 (13歳)" },
-      { stage: "age14", label: "中2 (14歳)" },
-      { stage: "age15", label: "中3 (15歳)" }
+      { stage: "junior1", label: "中1" },
+      { stage: "junior2", label: "中2" },
+      { stage: "junior3", label: "中3" }
     ]
   },
   high: {
     label: "高校生",
     items: [
-      { stage: "age16", label: "高1 (16歳)" },
-      { stage: "age17", label: "高2 (17歳)" },
-      { stage: "age18", label: "高3 (18歳)" }
+      { stage: "high1", label: "高1" },
+      { stage: "high2", label: "高2" },
+      { stage: "high3", label: "高3" }
     ]
   }
 };
 
-function getWorkAgeYears(work) {
+function parseLocalDateParts(value) {
+  if (!value || typeof value !== "string" || !value.includes("-")) return null;
+  const parts = value.split("-").map(Number);
+  if (parts.length !== 3 || parts.some(n => !Number.isFinite(n))) return null;
+  return { year: parts[0], month: parts[1], day: parts[2] };
+}
+
+function getWorkSchoolStage(work) {
   if (!work?.childId) return null;
   const child = localChildren.find(c => c.id === work.childId);
   if (!child) return null;
-  const totalMonths = calculateAgeInMonths(child.birthday, work.date);
-  if (totalMonths === null || totalMonths < 0) return null;
-  return Math.floor(totalMonths / 12);
+  const birthday = parseLocalDateParts(child.birthday);
+  const workDate = parseLocalDateParts(work.date);
+  if (!birthday || !workDate) return null;
+
+  // v211: 日本の4月始まりの学年相当で判定する。
+  // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
+  const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
+  const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
+  const ageOnApr1 = academicYear - birthday.year - (bornAfterApr1 ? 1 : 0);
+
+  if (ageOnApr1 <= 2) return "baby";
+  if (ageOnApr1 === 3) return "nensho";
+  if (ageOnApr1 === 4) return "nenchu";
+  if (ageOnApr1 === 5) return "nencho";
+  if (ageOnApr1 >= 6 && ageOnApr1 <= 11) return `elem${ageOnApr1 - 5}`;
+  if (ageOnApr1 >= 12 && ageOnApr1 <= 14) return `junior${ageOnApr1 - 11}`;
+  if (ageOnApr1 >= 15 && ageOnApr1 <= 17) return `high${ageOnApr1 - 14}`;
+  return "adult19";
 }
 
 function doesWorkMatchAgeStage(work, stage) {
   if (!stage || stage === "all") return true;
-  const ageYears = getWorkAgeYears(work);
-  if (ageYears === null) return stage === "unknown";
-  if (stage === "baby") return ageYears >= 0 && ageYears <= 2;
-  if (stage && stage.startsWith("age")) return ageYears === Number(stage.replace("age", ""));
-  if (stage === "adult19") return ageYears >= 19;
+  const workStage = getWorkSchoolStage(work);
+  if (!workStage) return stage === "unknown";
   if (stage === "unknown") return false;
-  return false;
+  return workStage === stage;
 }
 
 function renderAgeDetailFilter() {
@@ -2150,14 +2169,15 @@ function renderAgeDetailFilter() {
 
 function doesWorkMatchAgeGroup(work, group) {
   if (!group || group === "all") return true;
-  const ageYears = getWorkAgeYears(work);
-  if (ageYears === null) return group === "unknown";
-  if (group === "baby") return ageYears >= 0 && ageYears <= 2;
-  if (group === "preschool") return ageYears >= 3 && ageYears <= 5;
-  if (group === "elementary") return ageYears >= 7 && ageYears <= 12;
-  if (group === "junior") return ageYears >= 13 && ageYears <= 15;
-  if (group === "high") return ageYears >= 16 && ageYears <= 18;
-  if (group === "adult19") return ageYears >= 19;
+  const workStage = getWorkSchoolStage(work);
+  if (!workStage) return group === "unknown";
+  if (group === "unknown") return false;
+  if (group === "baby") return workStage === "baby";
+  if (group === "preschool") return ["nensho", "nenchu", "nencho"].includes(workStage);
+  if (group === "elementary") return workStage.startsWith("elem");
+  if (group === "junior") return workStage.startsWith("junior");
+  if (group === "high") return workStage.startsWith("high");
+  if (group === "adult19") return workStage === "adult19";
   return false;
 }
 
@@ -4004,7 +4024,7 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  // v210: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // v211: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
   // 引数なしなら現在値を反転する。
   currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
@@ -6626,10 +6646,10 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v210: 壁に貼る専用アイテム・エンティティ方式。学年相当の年齢表記を7歳基準へ修正する。
+    // v211: 壁に貼る専用アイテム・エンティティ方式。年齢ではなく4月始まりの学年相当で絞り込む。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v210壁貼り`.slice(0, 34);
-    // v210: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const displayName = `${displayNameBase} v211壁貼り`.slice(0, 34);
+    // v211: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6678,7 +6698,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v210: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
+    // v211: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
