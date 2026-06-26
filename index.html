@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v200</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v201</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v200",
+        app_version: "v201",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5788,24 +5788,28 @@ function buildMinecraftFrameItemTextureBlob(spriteCanvas) {
       const ctx = canvas.getContext("2d");
       ctx.imageSmoothingEnabled = false;
 
-      const outer = Math.max(4, Math.round(artSize * 0.0625));
-      const middle = Math.max(outer + 2, Math.round(artSize * 0.125));
-      const inner = Math.max(middle + 2, Math.round(artSize * 0.15625));
+      const pad = Math.max(6, Math.round(artSize * 0.08));
       const shadow = Math.max(1, Math.round(artSize * 0.02));
+      const x = pad;
+      const y = pad;
+      const s = artSize - pad * 2 - shadow;
+      const outer = Math.max(3, Math.round(s * 0.08));
+      const middle = Math.max(outer + 2, Math.round(s * 0.16));
+      const inner = Math.max(middle + 2, Math.round(s * 0.22));
 
       ctx.clearRect(0, 0, artSize, artSize);
 
-      // ほんの少しだけ影を入れて、透明背景の上でも額縁らしく見せる
-      ctx.fillStyle = "rgba(0,0,0,0.16)";
-      ctx.fillRect(shadow, shadow, artSize - shadow, artSize - shadow);
+      // v201: インベントリ上でも“武器”ではなく、透明背景の額縁アイコンとして見えるように余白を作る。
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(x + shadow, y + shadow, s, s);
 
-      ctx.fillStyle = "#6b4d2d";
-      ctx.fillRect(0, 0, artSize - shadow, artSize - shadow);
+      ctx.fillStyle = "#5f3f24";
+      ctx.fillRect(x, y, s, s);
       ctx.fillStyle = "#8a6438";
-      ctx.fillRect(outer, outer, artSize - outer * 2 - shadow, artSize - outer * 2 - shadow);
-      ctx.fillStyle = "#b98a54";
-      ctx.fillRect(middle, middle, artSize - middle * 2 - shadow, artSize - middle * 2 - shadow);
-      ctx.drawImage(spriteCanvas, inner, inner, artSize - inner * 2 - shadow, artSize - inner * 2 - shadow);
+      ctx.fillRect(x + outer, y + outer, s - outer * 2, s - outer * 2);
+      ctx.fillStyle = "#c28b4f";
+      ctx.fillRect(x + middle, y + middle, s - middle * 2, s - middle * 2);
+      ctx.drawImage(spriteCanvas, x + inner, y + inner, s - inner * 2, s - inner * 2);
 
       canvas.toBlob(blob => {
         if (blob) resolve(blob);
@@ -6090,9 +6094,11 @@ function buildMinecraftBehaviorEntity(entityId, displayName) {
           value: 1,
           max: 1
         },
+        // v201: iPad/iPhoneでタップや長押しが壁ブロックへ抜けにくいよう、選択しやすい当たり判定にする。
+        // 物理衝突は無効のままなので、プレイヤー移動の邪魔にはなりにくい。
         "minecraft:collision_box": {
-          width: 0.02,
-          height: 1
+          width: 0.95,
+          height: 0.95
         },
         "minecraft:physics": {
           has_collision: false,
@@ -6126,8 +6132,34 @@ function buildMinecraftFramePlacerItem(itemId, itemTextureKey, displayName) {
           texture: itemTextureKey
         },
         "minecraft:max_stack_size": 64,
-        // v200: 武器持ちのような見え方を避け、平面の額縁アイテムとして表示する。
+        // v201: 武器持ちのような見え方を避け、平面の額縁アイテムとして表示する。
         "minecraft:hand_equipped": false,
+        "minecraft:render_offsets": {
+          main_hand: {
+            first_person: {
+              scale: [0.42, 0.42, 0.42],
+              rotation: [0, 0, 0],
+              translation: [0, 0, 0]
+            },
+            third_person: {
+              scale: [0.32, 0.32, 0.32],
+              rotation: [0, 0, 0],
+              translation: [0, 0, 0]
+            }
+          },
+          off_hand: {
+            first_person: {
+              scale: [0.42, 0.42, 0.42],
+              rotation: [0, 0, 0],
+              translation: [0, 0, 0]
+            },
+            third_person: {
+              scale: [0.32, 0.32, 0.32],
+              rotation: [0, 0, 0],
+              translation: [0, 0, 0]
+            }
+          }
+        },
         "minecraft:use_modifiers": {
           use_duration: 0.05,
           movement_modifier: 1
@@ -6270,12 +6302,56 @@ function placeFrameAfter(event) {
   placeFrameNow(event);
 }
 
+function removeNearestFrameNearBlock(event) {
+  // v201: iPad/iPhoneでは額縁を壊そうとして壁ブロックに長押しが抜けることがある。
+  // 額縁の近くの壁ブロックを壊そうとした場合は、先に額縁を消してブロック破壊を止める。
+  const block = event.block;
+  const player = event.player || event.source;
+  if (!block) return;
+  const dimension = block.dimension || player?.dimension;
+  if (!dimension) return;
+
+  const loc = block.location;
+  const center = { x: loc.x + 0.5, y: loc.y + 0.5, z: loc.z + 0.5 };
+  let frames = [];
+  try {
+    frames = dimension.getEntities({
+      type: FRAME_ENTITY_ID,
+      location: center,
+      maxDistance: 1.45
+    });
+  } catch (e) {
+    frames = [];
+  }
+  if (!frames.length) return;
+
+  frames.sort((a, b) => {
+    const la = a.location;
+    const lb = b.location;
+    const da = Math.pow(la.x - center.x, 2) + Math.pow(la.y - center.y, 2) + Math.pow(la.z - center.z, 2);
+    const db = Math.pow(lb.x - center.x, 2) + Math.pow(lb.y - center.y, 2) + Math.pow(lb.z - center.z, 2);
+    return da - db;
+  });
+
+  try { event.cancel = true; } catch (e) {}
+  system.run(() => {
+    try {
+      frames[0].remove();
+      try { player?.runCommandAsync?.("playsound random.pop @s"); } catch (soundError) {}
+    } catch (e) {}
+  });
+}
+
 try {
   world.beforeEvents.itemUseOn.subscribe(placeFrameBefore);
 } catch (e) {}
 
 try {
   world.afterEvents.itemUseOn.subscribe(placeFrameAfter);
+} catch (e) {}
+
+try {
+  world.beforeEvents.playerBreakBlock.subscribe(removeNearestFrameNearBlock);
 } catch (e) {}
 `;
 }
@@ -6360,9 +6436,9 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v200: 壁に貼る専用アイテム・エンティティ方式。作品面は外向きを維持し、手持ち表示とアイコンを額縁らしくする。
+    // v201: 壁に貼る専用アイテム・エンティティ方式。削除しやすくし、アイテム表示をさらに額縁らしくする。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v200壁貼り`.slice(0, 34);
+    const displayName = `${displayNameBase} v201壁貼り`.slice(0, 34);
     const itemDisplayName = `${displayNameBase}を壁に貼る`.slice(0, 34);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
@@ -6410,7 +6486,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v200: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。作品面は外向き、手持ち/アイコンは額縁らしくし、README.txtは含めない。
+    // v201: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。削除しやすくし、手持ち/アイコンは額縁らしくし、README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
