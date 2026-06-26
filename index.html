@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v190</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v191</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v190",
+        app_version: "v191",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5745,8 +5745,9 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
 }
 
 function getMinecraftWallArtGeometryShape(face = "south") {
-  // v190: face は「新しく置かれたブロック内で、アートを寄せる面」を表す。
-  // 見た目・当たり判定・選択枠を同じ薄型サイズに揃え、透明な1ブロック分の選択枠で浮いて見える問題を抑える。
+  // v191: face は「新しく置かれたブロック内で、アートを寄せる面」を表す。
+  // block_face はタップした既存ブロック側の面なので、permutation側で反対面へ寄せる。
+  // 見た目・当たり判定・選択枠を同じ薄型サイズに揃える。
   const map = {
     north: { origin: [-8, 0, -8], size: [16, 16, 2] },
     south: { origin: [-8, 0, 6], size: [16, 16, 2] },
@@ -5859,10 +5860,6 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
           group: "itemGroup.name.decorations"
         },
         traits: {
-          "minecraft:placement_direction": {
-            enabled_states: ["minecraft:cardinal_direction"],
-            y_rotation_offset: 180
-          },
           "minecraft:placement_position": {
             enabled_states: ["minecraft:block_face"]
           }
@@ -5870,41 +5867,24 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
       },
       components: baseComponents,
       permutations: [
-        // PCなど、プレイヤーの向きで置かれる環境向けのフォールバック。
-        // 見た目だけでなく、当たり判定・選択枠も薄型パネルに合わせる。
-        {
-          condition: "q.block_state('minecraft:cardinal_direction') == 'north'",
-          components: makeFaceComponents("north")
-        },
-        {
-          condition: "q.block_state('minecraft:cardinal_direction') == 'south'",
-          components: makeFaceComponents("south")
-        },
-        {
-          condition: "q.block_state('minecraft:cardinal_direction') == 'west'",
-          components: makeFaceComponents("west")
-        },
-        {
-          condition: "q.block_state('minecraft:cardinal_direction') == 'east'",
-          components: makeFaceComponents("east")
-        },
-        // iPad / タッチ操作では、タップした面の情報を使う。
-        // v189の反転では環境によって大きく浮くため、v190では直接対応に戻し、薄い選択枠で違和感を抑える。
+        // v191: PC/iPad/iPhoneとも、プレイヤーの向きではなく「タップした壁面」だけを基準にする。
+        // block_face はタップした既存ブロック側の面なので、新しく置かれるアートブロック内では反対面へ寄せる。
+        // これにより、壁のすぐ外側に薄い額縁が密着する。
         {
           condition: "q.block_state('minecraft:block_face') == 'north'",
-          components: makeFaceComponents("north")
+          components: makeFaceComponents("south")
         },
         {
           condition: "q.block_state('minecraft:block_face') == 'south'",
-          components: makeFaceComponents("south")
+          components: makeFaceComponents("north")
         },
         {
           condition: "q.block_state('minecraft:block_face') == 'west'",
-          components: makeFaceComponents("west")
+          components: makeFaceComponents("east")
         },
         {
           condition: "q.block_state('minecraft:block_face') == 'east'",
-          components: makeFaceComponents("east")
+          components: makeFaceComponents("west")
         }
       ]
     }
@@ -6030,7 +6010,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v190: 表示名用texts/*.langは維持。案内用README.txtは含めず、薄型の当たり判定・選択枠で壁浮き表示を抑える。
+    // v191: 表示名用texts/*.langは維持。案内用README.txtは含めず、block_faceだけで壁面へ密着させる。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
