@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v196</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v197</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v196",
+        app_version: "v197",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5913,6 +5913,254 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
   };
 }
 
+
+function buildMinecraftBehaviorScriptPackManifest(name, description, uuid1, dataModuleUuid, scriptModuleUuid, resourcePackUuid) {
+  return {
+    format_version: 2,
+    header: {
+      name,
+      description,
+      uuid: uuid1,
+      version: [1, 0, 0],
+      min_engine_version: [1, 20, 50]
+    },
+    modules: [
+      {
+        type: "data",
+        uuid: dataModuleUuid,
+        version: [1, 0, 0]
+      },
+      {
+        type: "script",
+        language: "javascript",
+        uuid: scriptModuleUuid,
+        version: [1, 0, 0],
+        entry: "scripts/main.js"
+      }
+    ],
+    dependencies: [
+      { uuid: resourcePackUuid, version: [1, 0, 0] },
+      { module_name: "@minecraft/server", version: "1.9.0" }
+    ]
+  };
+}
+
+function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraftResolvedTextureSize || 128) {
+  const atlasSize = textureSize * 2;
+  const artUv = { uv: [0, 0], uv_size: [textureSize, textureSize] };
+  const woodTile = Math.max(16, Math.round(textureSize * 0.25));
+  const woodUv = { uv: [textureSize, 0], uv_size: [woodTile, woodTile] };
+  const backUv = { uv: [textureSize, woodTile], uv_size: [textureSize, textureSize] };
+  return {
+    format_version: "1.12.0",
+    "minecraft:geometry": [
+      {
+        description: {
+          identifier: geometryId,
+          texture_width: atlasSize,
+          texture_height: atlasSize,
+          visible_bounds_width: 2,
+          visible_bounds_height: 2,
+          visible_bounds_offset: [0, 0.5, 0]
+        },
+        bones: [
+          {
+            name: "wall_frame_entity",
+            pivot: [0, 8, 0],
+            cubes: [
+              {
+                // v197: 壁に貼るための極薄エンティティ額縁。south面を正面として使う。
+                origin: [-8, 0, -0.5],
+                size: [16, 16, 1],
+                uv: {
+                  north: backUv,
+                  south: artUv,
+                  east: woodUv,
+                  west: woodUv,
+                  up: woodUv,
+                  down: woodUv
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+function buildMinecraftClientEntity(entityId, geometryId, texturePath, renderControllerId) {
+  return {
+    format_version: "1.10.0",
+    "minecraft:client_entity": {
+      description: {
+        identifier: entityId,
+        materials: {
+          default: "entity_alphatest"
+        },
+        textures: {
+          default: texturePath
+        },
+        geometry: {
+          default: geometryId
+        },
+        render_controllers: [renderControllerId]
+      }
+    }
+  };
+}
+
+function buildMinecraftFrameRenderController(renderControllerId) {
+  return {
+    format_version: "1.8.0",
+    render_controllers: {
+      [renderControllerId]: {
+        geometry: "Geometry.default",
+        materials: [
+          { "*": "Material.default" }
+        ],
+        textures: [
+          "Texture.default"
+        ]
+      }
+    }
+  };
+}
+
+function buildMinecraftBehaviorEntity(entityId, displayName) {
+  return {
+    format_version: "1.20.50",
+    "minecraft:entity": {
+      description: {
+        identifier: entityId,
+        is_spawnable: false,
+        is_summonable: true,
+        is_experimental: false
+      },
+      components: {
+        "minecraft:type_family": {
+          family: ["kodomo_wall_frame"]
+        },
+        "minecraft:nameable": {
+          always_show: false,
+          allow_name_tag_renaming: false
+        },
+        "minecraft:health": {
+          value: 1,
+          max: 1
+        },
+        "minecraft:collision_box": {
+          width: 0.02,
+          height: 1
+        },
+        "minecraft:physics": {
+          has_collision: false,
+          has_gravity: false
+        },
+        "minecraft:pushable": {
+          is_pushable: false,
+          is_pushable_by_piston: false
+        }
+      }
+    }
+  };
+}
+
+function buildMinecraftFramePlacerItem(itemId, itemTextureKey, displayName) {
+  return {
+    format_version: "1.20.50",
+    "minecraft:item": {
+      description: {
+        identifier: itemId,
+        menu_category: {
+          category: "items",
+          group: "itemGroup.name.decorations"
+        }
+      },
+      components: {
+        "minecraft:display_name": {
+          value: displayName
+        },
+        "minecraft:icon": {
+          texture: itemTextureKey
+        },
+        "minecraft:max_stack_size": 64
+      }
+    }
+  };
+}
+
+function buildMinecraftItemTextureJson(itemTextureKey) {
+  return {
+    resource_pack_name: "kodomo_capsule_frame_art",
+    texture_name: "atlas.items",
+    texture_data: {
+      [itemTextureKey]: {
+        textures: `textures/items/${itemTextureKey}`
+      }
+    }
+  };
+}
+
+function buildMinecraftFramePlacementScript(itemId, entityId) {
+  const safeItemId = JSON.stringify(itemId);
+  const safeEntityId = JSON.stringify(entityId);
+  return `import { world } from "@minecraft/server";
+
+const FRAME_ITEM_ID = ${safeItemId};
+const FRAME_ENTITY_ID = ${safeEntityId};
+
+function placeFrame(event) {
+  const item = event.itemStack;
+  const source = event.source;
+  const block = event.block;
+  if (!item || !source || !block || item.typeId !== FRAME_ITEM_ID) return;
+
+  const face = String(event.blockFace || "").toLowerCase();
+  const loc = block.location;
+  const dimension = block.dimension || source.dimension;
+  if (!dimension) return;
+
+  const offset = 0.035;
+  const spawn = { x: loc.x + 0.5, y: loc.y, z: loc.z + 0.5 };
+  let yaw = 0;
+
+  if (face === "north") {
+    spawn.z = loc.z - offset;
+    yaw = 180;
+  } else if (face === "south") {
+    spawn.z = loc.z + 1 + offset;
+    yaw = 0;
+  } else if (face === "west") {
+    spawn.x = loc.x - offset;
+    yaw = 90;
+  } else if (face === "east") {
+    spawn.x = loc.x + 1 + offset;
+    yaw = -90;
+  } else {
+    try { source.sendMessage("壁の側面に向かって使ってください。"); } catch (e) {}
+    return;
+  }
+
+  try {
+    const frame = dimension.spawnEntity(FRAME_ENTITY_ID, spawn);
+    frame.setRotation({ x: 0, y: yaw });
+    try { source.runCommandAsync("playsound random.pop @s"); } catch (e) {}
+  } catch (e) {
+    try { source.sendMessage("額縁の設置に失敗しました。ワールド設定でスクリプトAPIが有効か確認してください。"); } catch (sendError) {}
+  }
+}
+
+world.afterEvents.itemUseOn.subscribe(placeFrame);
+`;
+}
+
+function buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName) {
+  return `entity.${entityId}.name=${displayName}
+item.${itemId}.name=${itemDisplayName}
+`;
+}
+
 function buildMinecraftLang(blockId, displayName) {
   return `tile.${blockId}.name=${displayName}
 `;
@@ -5920,7 +6168,7 @@ function buildMinecraftLang(blockId, displayName) {
 
 function showMinecraftInstallGuideAfterExport(displayName) {
   const name = displayName ? `「${displayName}」` : "この作品";
-  alert(`${name}のマイクラ用ファイルを作成しました。\n\n次の流れで進めてください。\n\n1. 共有画面でMinecraftを選ぶ、または保存した .mcaddon を開く\n2. Minecraftで「インポート完了」が出るまで待つ\n3. 使いたいワールドの設定を開く\n4. リソースパックでコドモカプセルの作品を有効化\n5. ビヘイビアーパックでも同じ作品を有効化\n6. ワールドを開いて、クリエイティブの装飾カテゴリなどから作品を探す\n\n※表示されない場合は、リソースパックとビヘイビアーパックの両方が有効になっているか確認してください。`);
+  alert(`${name}のマイクラ用ファイルを作成しました。\n\n次の流れで進めてください。\n\n1. 共有画面でMinecraftを選ぶ、または保存した .mcaddon を開く\n2. Minecraftで「インポート完了」が出るまで待つ\n3. 使いたいワールドの設定を開く\n4. リソースパックでコドモカプセルの作品を有効化\n5. ビヘイビアーパックでも同じ作品を有効化\n6. ワールドを開いて、クリエイティブのアイテム一覧から「壁に貼る」アイテムを探す\n7. そのアイテムを持って、飾りたい壁の側面をタップ/クリックする\n\n※表示されない場合は、リソースパックとビヘイビアーパックの両方が有効か、スクリプトAPIが利用できるワールド設定か確認してください。`);
 }
 
 async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
@@ -5979,60 +6227,63 @@ window.downloadMinecraftAddon = async function(event) {
     const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
     const blockId = `kodomo:${blockSlug}`;
     const textureKey = `kodomo_${blockSlug}`;
-    const geometryBaseId = `geometry.kodomo_${blockSlug}_wall_art`;
-    const geometryIds = {
-      north: `${geometryBaseId}_north`,
-      south: `${geometryBaseId}_south`,
-      west: `${geometryBaseId}_west`,
-      east: `${geometryBaseId}_east`
-    };
+    const entityId = `kodomo:${blockSlug}_wall_frame`;
+    const itemId = `kodomo:${blockSlug}_frame_item`;
+    const entityTextureKey = `${textureKey}_entity`;
+    const itemTextureKey = `${textureKey}_item`;
+    const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
+    const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v196: 既にインポート済みの旧アドオンと見分けるため、Minecraft内の表示名にもバージョンを付ける。
+    // v197: 壁に貼る専用アイテム・エンティティ方式。旧ブロック方式と見分けるため表示名にもバージョンを付ける。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v196額縁`.slice(0, 34);
+    const displayName = `${displayNameBase} v197壁貼り`.slice(0, 34);
+    const itemDisplayName = `${displayNameBase}を壁に貼る`.slice(0, 34);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
 
     const rpHeaderUuid = crypto.randomUUID();
     const rpModuleUuid = crypto.randomUUID();
     const bpHeaderUuid = crypto.randomUUID();
-    const bpModuleUuid = crypto.randomUUID();
+    const bpDataModuleUuid = crypto.randomUUID();
+    const bpScriptModuleUuid = crypto.randomUUID();
 
     const zip = new JSZip();
     const rp = zip.folder(`KodomoFrameArt_${shortId}_RP`);
     const bp = zip.folder(`KodomoFrameArt_${shortId}_BP`);
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル Minecraft用アート RP - ${displayName} #${shortId}`,
-      "コドモカプセルで作成したMinecraft用展示アートのリソースパックです。",
+      `コドモカプセル Minecraft壁貼り額縁 RP - ${displayName} #${shortId}`,
+      "コドモカプセルで作成したMinecraft用の壁貼り額縁リソースパックです。",
       rpHeaderUuid,
       rpModuleUuid,
       "resources"
     ), null, 2));
-    rp.file("textures/blocks/" + textureKey + ".png", wallArtTextureBlob);
-    rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
-    rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
-    Object.entries(geometryIds).forEach(([face, geometryId]) => {
-      rp.file("models/blocks/" + blockSlug + "_" + face + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId, currentMinecraftResolvedTextureSize, face), null, 2));
-    });
-    rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
-    rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
+    rp.file("textures/entity/" + entityTextureKey + ".png", wallArtTextureBlob);
+    rp.file("textures/items/" + itemTextureKey + ".png", wallArtTextureBlob);
+    rp.file("textures/item_texture.json", JSON.stringify(buildMinecraftItemTextureJson(itemTextureKey), null, 2));
+    rp.file("entity/" + blockSlug + "_wall_frame.entity.json", JSON.stringify(buildMinecraftClientEntity(entityId, entityGeometryId, `textures/entity/${entityTextureKey}`, renderControllerId), null, 2));
+    rp.file("models/entity/" + blockSlug + "_wall_frame.geo.json", JSON.stringify(buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize), null, 2));
+    rp.file("render_controllers/" + blockSlug + "_wall_frame.render_controllers.json", JSON.stringify(buildMinecraftFrameRenderController(renderControllerId), null, 2));
+    rp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
+    rp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     rp.file("pack_icon.png", wallArtTextureBlob);
 
-    bp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル Minecraft用アート BP - ${displayName} #${shortId}`,
-      "コドモカプセルで作成したMinecraft用展示アートのビヘイビアーパックです。",
+    bp.file("manifest.json", JSON.stringify(buildMinecraftBehaviorScriptPackManifest(
+      `コドモカプセル Minecraft壁貼り額縁 BP - ${displayName} #${shortId}`,
+      "コドモカプセルで作成したMinecraft用の壁貼り額縁ビヘイビアーパックです。",
       bpHeaderUuid,
-      bpModuleUuid,
-      "data",
-      [{ uuid: rpHeaderUuid, version: [1, 0, 0] }]
+      bpDataModuleUuid,
+      bpScriptModuleUuid,
+      rpHeaderUuid
     ), null, 2));
-    bp.file("blocks/" + blockSlug + ".json", JSON.stringify(buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryIds), null, 2));
-    bp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
-    bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
+    bp.file("entities/" + blockSlug + "_wall_frame.json", JSON.stringify(buildMinecraftBehaviorEntity(entityId, displayName), null, 2));
+    bp.file("items/" + blockSlug + "_frame_item.json", JSON.stringify(buildMinecraftFramePlacerItem(itemId, itemTextureKey, itemDisplayName), null, 2));
+    bp.file("scripts/main.js", buildMinecraftFramePlacementScript(itemId, entityId));
+    bp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
+    bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v196: 表示名用texts/*.langは維持。案内用README.txtは含めず、安定型ブロックのまま正面だけ額縁・側面は木目にする。表示名にもv196額縁を付ける。
+    // v197: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式へ切り替える。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
