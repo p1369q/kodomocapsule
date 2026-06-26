@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v188</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v189</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v188",
+        app_version: "v189",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5745,8 +5745,12 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
 }
 
 function getMinecraftWallArtGeometryShape(face = "south") {
-  // v186: iPad版ではプレイヤー向きより「タップしたブロック面」を優先した方が壁に密着しやすい。
-  // 回転コンポーネントだけに頼らず、面ごとの薄型ジオメトリを用意する。
+  // v189: face は「新しく置かれたブロック内で、アートを寄せる面」を表す。
+  // - north: z=-8 側に密着
+  // - south: z=+8 側に密着
+  // - west : x=-8 側に密着
+  // - east : x=+8 側に密着
+  // iPad版の block_face は「タップした既存ブロックの面」なので、後段の permutation で反対側のジオメトリに割り当てる。
   const map = {
     north: { origin: [-8, 0, -8], size: [16, 16, 2] },
     south: { origin: [-8, 0, 6], size: [16, 16, 2] },
@@ -5866,22 +5870,24 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
           condition: "q.block_state('minecraft:cardinal_direction') == 'east'",
           components: { "minecraft:geometry": ids.east }
         },
-        // iPad / タッチ操作では、タップした壁面を優先して密着方向を決める
+        // iPad / タッチ操作では、タップした既存ブロックの面を優先する。
+        // block_face は「タップした壁側の面」なので、新しく置かれるアートブロック内では反対側へ寄せる。
+        // 例：壁のsouth面をタップして置く場合、新ブロックのnorth面が壁に接する。
         {
           condition: "q.block_state('minecraft:block_face') == 'north'",
-          components: { "minecraft:geometry": ids.north }
-        },
-        {
-          condition: "q.block_state('minecraft:block_face') == 'south'",
           components: { "minecraft:geometry": ids.south }
         },
         {
+          condition: "q.block_state('minecraft:block_face') == 'south'",
+          components: { "minecraft:geometry": ids.north }
+        },
+        {
           condition: "q.block_state('minecraft:block_face') == 'west'",
-          components: { "minecraft:geometry": ids.west }
+          components: { "minecraft:geometry": ids.east }
         },
         {
           condition: "q.block_state('minecraft:block_face') == 'east'",
-          components: { "minecraft:geometry": ids.east }
+          components: { "minecraft:geometry": ids.west }
         }
       ]
     }
@@ -6007,7 +6013,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v186: 表示名用texts/*.langは維持。案内用README.txtは含めず、iPad向けにblock_face配置を優先する。
+    // v189: 表示名用texts/*.langは維持。案内用README.txtは含めず、iPad向けにblock_face配置を反対面へ寄せて壁浮きを抑える。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
