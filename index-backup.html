@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v206</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v212</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -737,7 +737,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div>
           <div class="flex items-center justify-between gap-2 mb-1.5 ml-1">
             <div class="text-[10px] font-bold text-slate-400">表示する子ども</div>
-            <button onclick="setFavoriteFilter(!currentFavoriteFilter)" id="favoriteToggleBtn" type="button" class="age-tab px-2.5 py-1 text-[10px] rounded-full border bg-white border-[#E7E1D7] text-slate-500 font-bold whitespace-nowrap transition">☆ お気に入り</button>
+            <button onclick="setFavoriteFilter()" id="favoriteToggleBtn" type="button" class="age-tab px-2.5 py-1 text-[10px] rounded-full border bg-white border-[#E7E1D7] text-slate-500 font-bold whitespace-nowrap transition" aria-pressed="false">☆ お気に入り</button>
           </div>
           <select id="galleryChildFilterSelect" class="hidden">
             <option value="all">すべての子ども</option>
@@ -757,12 +757,19 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
         <div>
           <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">作品を作ったころの年齢</div>
-          <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
-            <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
-            <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
-            <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
-            <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
-            <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+          <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageGroupTabContainer">
+            <button onclick="setAgeGroupFilter('all')" id="ageGroupTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+            <button onclick="setAgeGroupFilter('baby')" id="ageGroupTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">乳幼児</button>
+            <button onclick="setAgeGroupFilter('preschool')" id="ageGroupTab-preschool" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">幼児</button>
+            <button onclick="setAgeGroupFilter('elementary')" id="ageGroupTab-elementary" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小学生</button>
+            <button onclick="setAgeGroupFilter('junior')" id="ageGroupTab-junior" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">中学生</button>
+            <button onclick="setAgeGroupFilter('high')" id="ageGroupTab-high" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">高校生</button>
+            <button onclick="setAgeGroupFilter('adult19')" id="ageGroupTab-adult19" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">19歳以上</button>
+            <button onclick="setAgeGroupFilter('unknown')" id="ageGroupTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">未分類</button>
+          </div>
+          <div id="ageDetailFilterWrap" class="hidden mt-2">
+            <div id="ageDetailFilterLabel" class="text-[10px] font-bold text-slate-400 mb-1 ml-1"></div>
+            <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer"></div>
           </div>
         </div>
         <div>
@@ -1560,6 +1567,7 @@ let unsubscribeFamilyPlan = null;
 let unsubscribeJoinRequests = null;
 let unsubscribeUserJoinRequests = null;
 let currentAgeStageFilter = "all";
+let currentAgeGroupFilter = "all";
 let currentFavoriteFilter = false;
 let carouselIndices = {};
 let pendingOwnFamilyId = null;
@@ -1589,7 +1597,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v206",
+        app_version: "v212",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2063,6 +2071,118 @@ function applyGalleryCategoryFilter(displayWorks, categoryFilterValue) {
   return displayWorks.filter(w => w.category === categoryFilterValue);
 }
 
+const AGE_DETAIL_GROUPS = {
+  preschool: {
+    label: "幼児",
+    items: [
+      { stage: "nensho", label: "年少" },
+      { stage: "nenchu", label: "年中" },
+      { stage: "nencho", label: "年長" }
+    ]
+  },
+  elementary: {
+    label: "小学生",
+    items: [
+      { stage: "elem1", label: "小1" },
+      { stage: "elem2", label: "小2" },
+      { stage: "elem3", label: "小3" },
+      { stage: "elem4", label: "小4" },
+      { stage: "elem5", label: "小5" },
+      { stage: "elem6", label: "小6" }
+    ]
+  },
+  junior: {
+    label: "中学生",
+    items: [
+      { stage: "junior1", label: "中1" },
+      { stage: "junior2", label: "中2" },
+      { stage: "junior3", label: "中3" }
+    ]
+  },
+  high: {
+    label: "高校生",
+    items: [
+      { stage: "high1", label: "高1" },
+      { stage: "high2", label: "高2" },
+      { stage: "high3", label: "高3" }
+    ]
+  }
+};
+
+function parseLocalDateParts(value) {
+  if (!value || typeof value !== "string" || !value.includes("-")) return null;
+  const parts = value.split("-").map(Number);
+  if (parts.length !== 3 || parts.some(n => !Number.isFinite(n))) return null;
+  return { year: parts[0], month: parts[1], day: parts[2] };
+}
+
+function getWorkSchoolStage(work) {
+  if (!work?.childId) return null;
+  const child = localChildren.find(c => c.id === work.childId);
+  if (!child) return null;
+  const birthday = parseLocalDateParts(child.birthday);
+  const workDate = parseLocalDateParts(work.date);
+  if (!birthday || !workDate) return null;
+
+  // v212: 日本の4月始まりの学年相当で判定する。
+  // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
+  const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
+  const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
+  const ageOnApr1 = academicYear - birthday.year - (bornAfterApr1 ? 1 : 0);
+
+  if (ageOnApr1 <= 2) return "baby";
+  if (ageOnApr1 === 3) return "nensho";
+  if (ageOnApr1 === 4) return "nenchu";
+  if (ageOnApr1 === 5) return "nencho";
+  if (ageOnApr1 >= 6 && ageOnApr1 <= 11) return `elem${ageOnApr1 - 5}`;
+  if (ageOnApr1 >= 12 && ageOnApr1 <= 14) return `junior${ageOnApr1 - 11}`;
+  if (ageOnApr1 >= 15 && ageOnApr1 <= 17) return `high${ageOnApr1 - 14}`;
+  return "adult19";
+}
+
+function doesWorkMatchAgeStage(work, stage) {
+  if (!stage || stage === "all") return true;
+  const workStage = getWorkSchoolStage(work);
+  if (!workStage) return stage === "unknown";
+  if (stage === "unknown") return false;
+  return workStage === stage;
+}
+
+function renderAgeDetailFilter() {
+  const wrap = document.getElementById("ageDetailFilterWrap");
+  const label = document.getElementById("ageDetailFilterLabel");
+  const container = document.getElementById("ageTabContainer");
+  if (!wrap || !label || !container) return;
+
+  const group = AGE_DETAIL_GROUPS[currentAgeGroupFilter];
+  if (!group) {
+    wrap.classList.add("hidden");
+    container.innerHTML = "";
+    return;
+  }
+
+  wrap.classList.remove("hidden");
+  label.innerText = group.label;
+  container.innerHTML = group.items.map(item => (
+    `<button onclick="setAgeStageFilter('${item.stage}')" id="ageTab-${item.stage}" class="age-tab ${currentAgeStageFilter === item.stage ? "active" : ""} px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">${item.label}</button>`
+  )).join("");
+}
+
+function doesWorkMatchAgeGroup(work, group) {
+  if (!group || group === "all") return true;
+  const workStage = getWorkSchoolStage(work);
+  if (!workStage) return group === "unknown";
+  if (group === "unknown") return false;
+  if (group === "baby") return workStage === "baby";
+  if (group === "preschool") return ["nensho", "nenchu", "nencho"].includes(workStage);
+  if (group === "elementary") return workStage.startsWith("elem");
+  if (group === "junior") return workStage.startsWith("junior");
+  if (group === "high") return workStage.startsWith("high");
+  if (group === "adult19") return workStage === "adult19";
+  return false;
+}
+
+
 function getFilteredPhotoWallItems() {
   const sortSelect = document.getElementById("gallerySortSelect");
   const filterSelect = document.getElementById("galleryChildFilterSelect");
@@ -2080,17 +2200,11 @@ function getFilteredPhotoWallItems() {
   displayWorks = applyGalleryCategoryFilter(displayWorks, categoryFilterValue);
   if (currentFavoriteFilter) { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
 
+  if (currentAgeGroupFilter !== "all") {
+    displayWorks = displayWorks.filter(w => doesWorkMatchAgeGroup(w, currentAgeGroupFilter));
+  }
   if (currentAgeStageFilter !== "all") {
-    displayWorks = displayWorks.filter(w => {
-      if (!w.childId) return currentAgeStageFilter === "unknown";
-      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
-      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
-      const ageYears = Math.floor(totalMonths / 12);
-      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
-      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
-      if (currentAgeStageFilter === "school") return ageYears >= 6;
-      return false;
-    });
+    displayWorks = displayWorks.filter(w => doesWorkMatchAgeStage(w, currentAgeStageFilter));
   }
 
   if (searchQuery !== "") {
@@ -3886,7 +4000,7 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
-  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateGalleryCategoryFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner(); renderAccountDeletionStatus();
+  renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateGalleryCategoryFilter(); renderAgeDetailFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner(); renderAccountDeletionStatus();
 }
 
 document.getElementById("gallerySortSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
@@ -3911,7 +4025,9 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  currentFavoriteFilter = !!enabled;
+  // v212: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // 引数なしなら現在値を反転する。
+  currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
   if (btn) {
     btn.classList.toggle("active", currentFavoriteFilter);
@@ -3922,8 +4038,18 @@ window.setFavoriteFilter = function(enabled) {
   renderPhotoWall();
 };
 
+window.setAgeGroupFilter = function(group) {
+  currentAgeGroupFilter = group || "all";
+  currentAgeStageFilter = "all";
+  document.querySelectorAll("#ageGroupTabContainer .age-tab").forEach(btn => btn.classList.remove("active"));
+  document.getElementById(`ageGroupTab-${currentAgeGroupFilter}`)?.classList.add("active");
+  renderAgeDetailFilter();
+  renderGallery();
+  renderPhotoWall();
+};
+
 window.setAgeStageFilter = function(stage) {
-  currentAgeStageFilter = stage;
+  currentAgeStageFilter = stage || "all";
   document.querySelectorAll("#ageTabContainer .age-tab").forEach(btn => btn.classList.remove("active"));
   document.getElementById(`ageTab-${stage}`)?.classList.add("active");
   renderGallery();
@@ -3936,11 +4062,13 @@ window.goToTopPage = function() {
   document.getElementById("galleryCategoryFilterSelect").value = "all";
   document.getElementById("gallerySortSelect").value = "dateDesc";
   currentAgeStageFilter = "all";
+  currentAgeGroupFilter = "all";
   currentFavoriteFilter = false;
   populateGalleryChildFilter();
   populateGalleryCategoryFilter();
-  document.querySelectorAll("#ageTabContainer .age-tab").forEach(btn => btn.classList.remove("active"));
-  if(document.getElementById("ageTab-all")) document.getElementById("ageTab-all").classList.add("active");
+  document.querySelectorAll("#ageGroupTabContainer .age-tab").forEach(btn => btn.classList.remove("active"));
+  if(document.getElementById("ageGroupTab-all")) document.getElementById("ageGroupTab-all").classList.add("active");
+  renderAgeDetailFilter();
   const favBtn = document.getElementById("favoriteToggleBtn");
   if (favBtn) {
     favBtn.classList.remove("active");
@@ -6519,10 +6647,10 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v206: 壁に貼る専用アイテム・エンティティ方式。お気に入りフィルターを省スペース化する。
+    // v212: 壁に貼る専用アイテム・エンティティ方式。年次詳細タグが表示されない不具合を修正する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v206壁貼り`.slice(0, 34);
-    // v206: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const displayName = `${displayNameBase} v212壁貼り`.slice(0, 34);
+    // v212: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6571,7 +6699,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v206: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
+    // v212: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -6985,17 +7113,11 @@ function renderGallery(){
   displayWorks = applyGalleryCategoryFilter(displayWorks, categoryFilterValue);
   if (currentFavoriteFilter) { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
 
+  if (currentAgeGroupFilter !== "all") {
+    displayWorks = displayWorks.filter(w => doesWorkMatchAgeGroup(w, currentAgeGroupFilter));
+  }
   if (currentAgeStageFilter !== "all") {
-    displayWorks = displayWorks.filter(w => {
-      if (!w.childId) return currentAgeStageFilter === "unknown";
-      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
-      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
-      const ageYears = Math.floor(totalMonths / 12);
-      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
-      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
-      if (currentAgeStageFilter === "school") return ageYears >= 6;
-      return false;
-    });
+    displayWorks = displayWorks.filter(w => doesWorkMatchAgeStage(w, currentAgeStageFilter));
   }
 
   if (searchQuery !== "") {
