@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v214</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v215</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1333,15 +1333,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
           <p id="minecraftTextureSizeStatus" class="text-[11px] text-slate-500 leading-relaxed">プレビューと .mcaddon の両方で同じサイズを使用します。</p>
         </div>
-        <div class="space-y-2">
-          <div class="text-[11px] font-bold text-slate-500">アドオン形式</div>
-          <div class="flex flex-wrap gap-2">
-            <button id="minecraftAddonStyleAutoBtn" type="button" class="minecraft-mode-chip active">作品に合わせる</button>
-            <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画として出力</button>
-            <button id="minecraftAddonStyleSolidBtn" type="button" class="minecraft-mode-chip">立体展示として出力</button>
-          </div>
-          <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">作品の種類に合わせて、自動で壁画または立体展示を選びます。</p>
-        </div>
+
       </div>
       <details class="rounded-2xl bg-white border border-slate-200 p-3 text-left">
         <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
@@ -1426,10 +1418,21 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
         </div>
       </details>
-      <div class="flex flex-col sm:flex-row gap-2 pt-2">
+      <div id="minecraftAddonActionSingle" class="flex flex-col sm:flex-row gap-2 pt-2">
         <button id="minecraftPreviewAddonBtn" onclick="downloadMinecraftAddon(event)" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span>マイクラ用ファイル保存</span></span></button>
         <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
+      </div>
+      <div id="minecraftAddonActionSolid" class="hidden space-y-2 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button id="minecraftPreviewWallAddonBtn" onclick="downloadMinecraftAddon(event, 'wall')" type="button" class="py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span>壁画用ファイル保存</span></span></button>
+          <button id="minecraftPreviewSolidAddonBtn" onclick="downloadMinecraftAddon(event, 'solid')" type="button" class="py-3 rounded-2xl bg-amber-600 text-white text-xs font-bold shadow-sm hover:bg-amber-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span>立体展示用ファイル保存</span></span></button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button id="minecraftPreviewDownloadBtnSolid" onclick="downloadMinecraftSpritePng(event)" type="button" class="py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
+          <button onclick="closeMinecraftPixelPreview()" type="button" class="py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
+        </div>
+        <p class="text-[11px] text-slate-500 leading-relaxed">立体作品は、壁に飾る「壁画用」と、床や棚に置く「立体展示用」を選んで保存できます。</p>
       </div>
     </div>
   </div>
@@ -1606,7 +1609,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v214",
+        app_version: "v215",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2133,7 +2136,7 @@ function getWorkSchoolStage(work) {
   const workDate = parseLocalDateParts(work.date);
   if (!birthday || !workDate) return null;
 
-  // v214: 日本の4月始まりの学年相当で判定する。
+  // v215: 日本の4月始まりの学年相当で判定する。
   // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
   const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
   const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
@@ -2362,10 +2365,8 @@ window.redirectToStripeCheckout = async function() {
     alert("Stripe決済画面への移行に失敗しました。\n詳細: " + e.message);
 
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = originalText;
-    }
+    exportButtons.forEach(b => { b.disabled = false; });
+    if (btn) btn.innerText = originalText;
   }
 };
 
@@ -4034,7 +4035,7 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  // v214: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // v215: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
   // 引数なしなら現在値を反転する。
   currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
@@ -6306,7 +6307,7 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
             pivot: [0, 0, 0],
             cubes: [
               {
-                // v214: より展示台らしく、薄くて落ち着いた台座にする。
+                // v215: より展示台らしく、薄くて落ち着いた台座にする。
                 origin: [-6, 0, -5],
                 size: [12, 1, 10],
                 uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
@@ -6899,7 +6900,7 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
   trackEvent("minecraft_frame_addon_download", { work_id: workId || "" });
 }
 
-window.downloadMinecraftAddon = async function(event) {
+window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
   if (event) event.stopPropagation();
   if (!currentMinecraftSpriteCanvas) {
     alert("先にマイクラ用アートを作成してください。");
@@ -6910,12 +6911,15 @@ window.downloadMinecraftAddon = async function(event) {
     return;
   }
 
-  const btn = document.getElementById("minecraftPreviewAddonBtn");
+  const btn = event?.currentTarget || document.getElementById("minecraftPreviewAddonBtn");
   const originalText = btn ? btn.innerText : "";
-  if (btn) {
-    btn.disabled = true;
-    btn.innerText = "作成中...";
-  }
+  const exportButtons = [
+    document.getElementById("minecraftPreviewAddonBtn"),
+    document.getElementById("minecraftPreviewWallAddonBtn"),
+    document.getElementById("minecraftPreviewSolidAddonBtn")
+  ].filter(Boolean);
+  exportButtons.forEach(b => { b.disabled = true; });
+  if (btn) btn.innerText = "作成中...";
 
   try {
     const work = getMinecraftAddonTargetWork();
@@ -6923,7 +6927,7 @@ window.downloadMinecraftAddon = async function(event) {
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
     const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
-    const resolvedAddonStyle = resolveMinecraftAddonStyle(work);
+    const resolvedAddonStyle = forcedAddonStyle || resolveMinecraftAddonStyle(work);
     const isSolidExhibit = resolvedAddonStyle === "solid";
     const packKindLabel = isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画";
     const packDescription = isSolidExhibit
@@ -6939,9 +6943,9 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v214: 作品種別とは別に、壁画/立体展示の出力形式をユーザーが選べるようにする。
+    // v215: 立体作品では保存ボタンを壁画用/立体展示用に分ける。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} ${isSolidExhibit ? "v214立体" : "v214壁貼り"}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isSolidExhibit ? "v215立体" : "v215壁貼り"}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6990,7 +6994,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v214: 壁画/立体展示の選択に応じてエンティティ方式で出力する。README.txtは含めない。
+    // v215: 立体作品では壁画用/立体展示用の保存ボタンから選んで出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -7056,9 +7060,8 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const size128Btn = document.getElementById("minecraftSize128Btn");
   const size256Btn = document.getElementById("minecraftSize256Btn");
   const size512Btn = document.getElementById("minecraftSize512Btn");
-  const addonStyleAutoBtn = document.getElementById("minecraftAddonStyleAutoBtn");
-  const addonStyleWallBtn = document.getElementById("minecraftAddonStyleWallBtn");
-  const addonStyleSolidBtn = document.getElementById("minecraftAddonStyleSolidBtn");
+  const singleAddonActions = document.getElementById("minecraftAddonActionSingle");
+  const solidAddonActions = document.getElementById("minecraftAddonActionSolid");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -7086,9 +7089,8 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (size128Btn) size128Btn.onclick = function() { setMinecraftTextureSizeSelection(128); };
   if (size256Btn) size256Btn.onclick = function() { setMinecraftTextureSizeSelection(256); };
   if (size512Btn) size512Btn.onclick = function() { setMinecraftTextureSizeSelection(512); };
-  if (addonStyleAutoBtn) addonStyleAutoBtn.onclick = function() { setMinecraftAddonStyleSelection("auto"); };
-  if (addonStyleWallBtn) addonStyleWallBtn.onclick = function() { setMinecraftAddonStyleSelection("wall"); };
-  if (addonStyleSolidBtn) addonStyleSolidBtn.onclick = function() { setMinecraftAddonStyleSelection("solid"); };
+  if (singleAddonActions) singleAddonActions.classList.toggle("hidden", work.artworkShape === "solid");
+  if (solidAddonActions) solidAddonActions.classList.toggle("hidden", work.artworkShape !== "solid");
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
@@ -7117,7 +7119,6 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   setMinecraftOutputMode("auto", false);
   updateMinecraftOutputModeUi();
   updateMinecraftTextureSizeUi("color");
-  updateMinecraftAddonStyleUi(work);
   updateMinecraftPencilControlsVisibility("auto", "color");
   setMinecraftPreviewStatus("");
   if (drawer) drawer.classList.add("open");
