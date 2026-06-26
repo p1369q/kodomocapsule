@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v203</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v204</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v203",
+        app_version: "v204",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6476,10 +6476,11 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v203: 壁に貼る専用アイテム・エンティティ方式。配置直後の一瞬の傾き表示を抑える。
+    // v204: 壁に貼る専用アイテム・エンティティ方式。アイテム名を作品タイトルにする。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v203壁貼り`.slice(0, 34);
-    const itemDisplayName = `${displayNameBase}を壁に貼る`.slice(0, 34);
+    const displayName = `${displayNameBase} v204壁貼り`.slice(0, 34);
+    // v204: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
@@ -6527,7 +6528,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v203: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。配置直後の傾き表示を抑え、README.txtは含めない。
+    // v204: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。アイテム名を作品タイトルにし、README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
