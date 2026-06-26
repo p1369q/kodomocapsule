@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v195</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v196</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v195",
+        app_version: "v196",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5716,23 +5716,56 @@ function buildMinecraftBlocksJson(blockId, textureKey) {
 function buildMinecraftWallArtTextureBlob(spriteCanvas) {
   return new Promise((resolve, reject) => {
     try {
+      const artSize = currentMinecraftResolvedTextureSize || 128;
+      const atlasSize = artSize * 2;
       const canvas = document.createElement("canvas");
-      const textureSize = currentMinecraftResolvedTextureSize || 128;
-      canvas.width = textureSize;
-      canvas.height = textureSize;
+      canvas.width = atlasSize;
+      canvas.height = atlasSize;
       const ctx = canvas.getContext("2d");
       ctx.imageSmoothingEnabled = false;
 
-      const frameInsetOuter = Math.max(4, Math.round(textureSize * 0.0625));
-      const frameInsetInner = Math.max(frameInsetOuter + 2, Math.round(textureSize * 0.125));
-      const artInset = Math.max(frameInsetInner + 2, Math.round(textureSize * 0.15625));
+      // v196: 1枚のテクスチャ内に「正面の額縁」「木目側面」「背面」を入れる。
+      // これにより、全方向に同じ絵が貼られた“ただのブロック”感を減らす。
+      const frameInsetOuter = Math.max(4, Math.round(artSize * 0.0625));
+      const frameInsetInner = Math.max(frameInsetOuter + 2, Math.round(artSize * 0.125));
+      const artInset = Math.max(frameInsetInner + 2, Math.round(artSize * 0.15625));
+
+      // 正面用の額縁テクスチャ
       ctx.fillStyle = "#6b4d2d";
-      ctx.fillRect(0, 0, textureSize, textureSize);
+      ctx.fillRect(0, 0, artSize, artSize);
       ctx.fillStyle = "#8a6438";
-      ctx.fillRect(frameInsetOuter, frameInsetOuter, textureSize - frameInsetOuter * 2, textureSize - frameInsetOuter * 2);
+      ctx.fillRect(frameInsetOuter, frameInsetOuter, artSize - frameInsetOuter * 2, artSize - frameInsetOuter * 2);
       ctx.fillStyle = "#b98a54";
-      ctx.fillRect(frameInsetInner, frameInsetInner, textureSize - frameInsetInner * 2, textureSize - frameInsetInner * 2);
-      ctx.drawImage(spriteCanvas, artInset, artInset, textureSize - artInset * 2, textureSize - artInset * 2);
+      ctx.fillRect(frameInsetInner, frameInsetInner, artSize - frameInsetInner * 2, artSize - frameInsetInner * 2);
+      ctx.drawImage(spriteCanvas, artInset, artInset, artSize - artInset * 2, artSize - artInset * 2);
+
+      // 側面用の木目タイル
+      const woodX = artSize;
+      const woodY = 0;
+      const woodTile = Math.max(16, Math.round(artSize * 0.25));
+      ctx.fillStyle = "#7a532f";
+      ctx.fillRect(woodX, woodY, woodTile, woodTile);
+      ctx.fillStyle = "#8e6238";
+      for (let y = 0; y < woodTile; y += Math.max(2, Math.round(woodTile / 8))) {
+        ctx.fillRect(woodX, woodY + y, woodTile, 1);
+      }
+      ctx.fillStyle = "#5f3f24";
+      ctx.fillRect(woodX, woodY, woodTile, Math.max(2, Math.round(woodTile * 0.12)));
+      ctx.fillRect(woodX, woodY + woodTile - Math.max(2, Math.round(woodTile * 0.12)), woodTile, Math.max(2, Math.round(woodTile * 0.12)));
+
+      // 背面用の木板テクスチャ
+      const backX = artSize;
+      const backY = woodTile;
+      ctx.fillStyle = "#6f4a29";
+      ctx.fillRect(backX, backY, artSize, artSize);
+      ctx.fillStyle = "#805735";
+      const plank = Math.max(8, Math.round(artSize / 8));
+      for (let y = 0; y < artSize; y += plank) {
+        ctx.fillRect(backX, backY + y, artSize, Math.max(1, Math.round(plank * 0.18)));
+      }
+      ctx.fillStyle = "#5b3b21";
+      ctx.fillRect(backX, backY, artSize, 2);
+      ctx.fillRect(backX, backY + artSize - 2, artSize, 2);
 
       canvas.toBlob(blob => {
         if (blob) resolve(blob);
@@ -5745,9 +5778,7 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
 }
 
 function getMinecraftWallArtGeometryShape(face = "south") {
-  // v195: 薄型壁掛けはBedrock実機で端末・設置面により浮いて見えるため、
-  // いったん安定優先の「展示額縁ブロック」に切り替える。
-  // 1ブロック分をしっかり埋めることで、壁や床から離れた空白ブロックに見える問題を避ける。
+  // v196: 安定した1ブロック設置は維持しつつ、見た目は「額縁」に寄せる。
   return { origin: [-8, 0, -8], size: [16, 16, 16] };
 }
 
@@ -5767,37 +5798,48 @@ function getMinecraftWallArtBoxComponents(face = "south") {
 }
 
 function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraftResolvedTextureSize || 128, face = "south") {
-  const fullFaceUv = { uv: [0, 0], uv_size: [textureSize, textureSize] };
+  const atlasSize = textureSize * 2;
+  const artUv = { uv: [0, 0], uv_size: [textureSize, textureSize] };
+  const woodTile = Math.max(16, Math.round(textureSize * 0.25));
+  const woodUv = { uv: [textureSize, 0], uv_size: [woodTile, woodTile] };
+  const backUv = { uv: [textureSize, woodTile], uv_size: [textureSize, textureSize] };
   const shape = getMinecraftWallArtGeometryShape(face);
+  const uv = {
+    north: face === "north" ? artUv : backUv,
+    south: face === "south" ? artUv : backUv,
+    east: face === "east" ? artUv : woodUv,
+    west: face === "west" ? artUv : woodUv,
+    up: woodUv,
+    down: woodUv
+  };
+  // 横向き額縁の場合、反対側の面も背面扱いにする。
+  if (face === "east") uv.west = backUv;
+  if (face === "west") uv.east = backUv;
+  if (face === "north") uv.south = backUv;
+  if (face === "south") uv.north = backUv;
+
   return {
     format_version: "1.12.0",
     "minecraft:geometry": [
       {
         description: {
           identifier: geometryId,
-          texture_width: textureSize,
-          texture_height: textureSize,
+          texture_width: atlasSize,
+          texture_height: atlasSize,
           visible_bounds_width: 2,
           visible_bounds_height: 2,
           visible_bounds_offset: [0, 0.5, 0]
         },
         bones: [
           {
-            name: "display_frame_block",
+            name: "framed_art_block",
             pivot: [0, 8, 8],
             cubes: [
               {
-                // v195: 隙間が出ない安定型。1ブロックの各面に額縁テクスチャを貼る。
+                // v196: 安定型の1ブロック。正面だけ額縁、側面・上下面・背面は木目にする。
                 origin: shape.origin,
                 size: shape.size,
-                uv: {
-                  north: fullFaceUv,
-                  south: fullFaceUv,
-                  east: fullFaceUv,
-                  west: fullFaceUv,
-                  up: fullFaceUv,
-                  down: fullFaceUv
-                }
+                uv
               }
             ]
           }
@@ -5808,7 +5850,9 @@ function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraf
 }
 
 function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometryIds) {
-  const geometryId = typeof geometryIds === "string" ? geometryIds : geometryIds.south;
+  const ids = typeof geometryIds === "string"
+    ? { north: geometryIds, south: geometryIds, west: geometryIds, east: geometryIds }
+    : geometryIds;
   const box = getMinecraftWallArtBoxComponents("south");
   return {
     format_version: "1.20.50",
@@ -5818,6 +5862,12 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
         menu_category: {
           category: "construction",
           group: "itemGroup.name.decorations"
+        },
+        traits: {
+          "minecraft:placement_direction": {
+            enabled_states: ["minecraft:cardinal_direction"],
+            y_rotation_offset: 180
+          }
         }
       },
       components: {
@@ -5830,8 +5880,8 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
         },
         "minecraft:friction": 0.6,
         "minecraft:light_dampening": 0,
-        "minecraft:map_color": "#f8fafc",
-        "minecraft:geometry": geometryId,
+        "minecraft:map_color": "#8a6438",
+        "minecraft:geometry": ids.south,
         "minecraft:collision_box": box["minecraft:collision_box"],
         "minecraft:selection_box": box["minecraft:selection_box"],
         "minecraft:material_instances": {
@@ -5840,7 +5890,25 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
             render_method: "opaque"
           }
         }
-      }
+      },
+      permutations: [
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'north'",
+          components: { "minecraft:geometry": ids.north }
+        },
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'south'",
+          components: { "minecraft:geometry": ids.south }
+        },
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'west'",
+          components: { "minecraft:geometry": ids.west }
+        },
+        {
+          condition: "q.block_state('minecraft:cardinal_direction') == 'east'",
+          components: { "minecraft:geometry": ids.east }
+        }
+      ]
     }
   };
 }
@@ -5919,9 +5987,9 @@ window.downloadMinecraftAddon = async function(event) {
       east: `${geometryBaseId}_east`
     };
     const shortId = blockSlug.slice(-8);
-    // v195: 既にインポート済みの旧アドオンと見分けるため、Minecraft内の表示名にもバージョンを付ける。
+    // v196: 既にインポート済みの旧アドオンと見分けるため、Minecraft内の表示名にもバージョンを付ける。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v195展示`.slice(0, 34);
+    const displayName = `${displayNameBase} v196額縁`.slice(0, 34);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
 
@@ -5944,7 +6012,9 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("textures/blocks/" + textureKey + ".png", wallArtTextureBlob);
     rp.file("textures/terrain_texture.json", JSON.stringify(buildMinecraftTerrainTexture(textureKey), null, 2));
     rp.file("blocks.json", JSON.stringify(buildMinecraftBlocksJson(blockId, textureKey), null, 2));
-    rp.file("models/blocks/" + blockSlug + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryIds.south, currentMinecraftResolvedTextureSize, "south"), null, 2));
+    Object.entries(geometryIds).forEach(([face, geometryId]) => {
+      rp.file("models/blocks/" + blockSlug + "_" + face + ".geo.json", JSON.stringify(buildMinecraftWallArtGeometry(geometryId, currentMinecraftResolvedTextureSize, face), null, 2));
+    });
     rp.file("texts/ja_JP.lang", buildMinecraftLang(blockId, displayName));
     rp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     rp.file("pack_icon.png", wallArtTextureBlob);
@@ -5962,7 +6032,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v195: 表示名用texts/*.langは維持。案内用README.txtは含めず、浮き対策として安定型の展示額縁ブロックへ切り替える。表示名にもv195展示を付ける。
+    // v196: 表示名用texts/*.langは維持。案内用README.txtは含めず、安定型ブロックのまま正面だけ額縁・側面は木目にする。表示名にもv196額縁を付ける。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
