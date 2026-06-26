@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v209</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v210</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1597,7 +1597,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v209",
+        app_version: "v210",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2083,28 +2083,28 @@ const AGE_DETAIL_GROUPS = {
   elementary: {
     label: "小学生",
     items: [
-      { stage: "age6", label: "小1 (6歳)" },
-      { stage: "age7", label: "小2 (7歳)" },
-      { stage: "age8", label: "小3 (8歳)" },
-      { stage: "age9", label: "小4 (9歳)" },
-      { stage: "age10", label: "小5 (10歳)" },
-      { stage: "age11", label: "小6 (11歳)" }
+      { stage: "age7", label: "小1 (7歳)" },
+      { stage: "age8", label: "小2 (8歳)" },
+      { stage: "age9", label: "小3 (9歳)" },
+      { stage: "age10", label: "小4 (10歳)" },
+      { stage: "age11", label: "小5 (11歳)" },
+      { stage: "age12", label: "小6 (12歳)" }
     ]
   },
   junior: {
     label: "中学生",
     items: [
-      { stage: "age12", label: "中1 (12歳)" },
-      { stage: "age13", label: "中2 (13歳)" },
-      { stage: "age14", label: "中3 (14歳)" }
+      { stage: "age13", label: "中1 (13歳)" },
+      { stage: "age14", label: "中2 (14歳)" },
+      { stage: "age15", label: "中3 (15歳)" }
     ]
   },
   high: {
     label: "高校生",
     items: [
-      { stage: "age15", label: "高1 (15歳)" },
-      { stage: "age16", label: "高2 (16歳)" },
-      { stage: "age17", label: "高3 (17歳)" }
+      { stage: "age16", label: "高1 (16歳)" },
+      { stage: "age17", label: "高2 (17歳)" },
+      { stage: "age18", label: "高3 (18歳)" }
     ]
   }
 };
@@ -2154,9 +2154,9 @@ function doesWorkMatchAgeGroup(work, group) {
   if (ageYears === null) return group === "unknown";
   if (group === "baby") return ageYears >= 0 && ageYears <= 2;
   if (group === "preschool") return ageYears >= 3 && ageYears <= 5;
-  if (group === "elementary") return ageYears >= 6 && ageYears <= 11;
-  if (group === "junior") return ageYears >= 12 && ageYears <= 14;
-  if (group === "high") return ageYears >= 15 && ageYears <= 17;
+  if (group === "elementary") return ageYears >= 7 && ageYears <= 12;
+  if (group === "junior") return ageYears >= 13 && ageYears <= 15;
+  if (group === "high") return ageYears >= 16 && ageYears <= 18;
   if (group === "adult19") return ageYears >= 19;
   return false;
 }
@@ -4004,7 +4004,7 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  // v209: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // v210: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
   // 引数なしなら現在値を反転する。
   currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
@@ -6626,10 +6626,10 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v209: 壁に貼る専用アイテム・エンティティ方式。年齢フィルターを2段階化する。
+    // v210: 壁に貼る専用アイテム・エンティティ方式。学年相当の年齢表記を7歳基準へ修正する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v209壁貼り`.slice(0, 34);
-    // v209: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const displayName = `${displayNameBase} v210壁貼り`.slice(0, 34);
+    // v210: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6678,7 +6678,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v209: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
+    // v210: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
