@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v212</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v213</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1597,7 +1597,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v212",
+        app_version: "v213",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2124,7 +2124,7 @@ function getWorkSchoolStage(work) {
   const workDate = parseLocalDateParts(work.date);
   if (!birthday || !workDate) return null;
 
-  // v212: 日本の4月始まりの学年相当で判定する。
+  // v213: 日本の4月始まりの学年相当で判定する。
   // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
   const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
   const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
@@ -4025,7 +4025,7 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  // v212: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // v213: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
   // 引数なしなら現在値を反転する。
   currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
@@ -6221,6 +6221,77 @@ function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraft
   };
 }
 
+function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMinecraftResolvedTextureSize || 128) {
+  const atlasSize = textureSize * 2;
+  const artUv = { uv: [0, 0], uv_size: [textureSize, textureSize] };
+  const woodTile = Math.max(16, Math.round(textureSize * 0.25));
+  const woodUv = { uv: [textureSize, 0], uv_size: [woodTile, woodTile] };
+  const backUv = { uv: [textureSize, woodTile], uv_size: [textureSize, textureSize] };
+  return {
+    format_version: "1.12.0",
+    "minecraft:geometry": [
+      {
+        description: {
+          identifier: geometryId,
+          texture_width: atlasSize,
+          texture_height: atlasSize,
+          visible_bounds_width: 2,
+          visible_bounds_height: 2,
+          visible_bounds_offset: [0, 0.5, 0]
+        },
+        bones: [
+          {
+            name: "solid_exhibit_entity",
+            pivot: [0, 0, 0],
+            cubes: [
+              {
+                // v213: 立体作品の第一段階。展示台として床や棚の上に置ける土台。
+                origin: [-7, 0, -7],
+                size: [14, 2, 14],
+                uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+              },
+              {
+                // 作品の代表写真を、展示台の正面パネルとして見せる。
+                origin: [-7, 2, -6.75],
+                size: [14, 12, 1],
+                uv: { north: artUv, south: backUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+              },
+              {
+                // 立体作品らしく見えるよう、背面に少し奥行きのある支えを置く。
+                origin: [-5, 2, 2],
+                size: [10, 8, 4],
+                uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+function buildMinecraftSolidBehaviorEntity(entityId, displayName) {
+  return {
+    format_version: "1.20.50",
+    "minecraft:entity": {
+      description: {
+        identifier: entityId,
+        is_spawnable: false,
+        is_summonable: true,
+        is_experimental: false
+      },
+      components: {
+        "minecraft:type_family": { family: ["kodomo_solid_exhibit"] },
+        "minecraft:nameable": { always_show: false, allow_name_tag_renaming: false },
+        "minecraft:health": { value: 1, max: 1 },
+        "minecraft:collision_box": { width: 0.9, height: 0.95 },
+        "minecraft:physics": { has_collision: false, has_gravity: false },
+        "minecraft:pushable": { is_pushable: false, is_pushable_by_piston: false }
+      }
+    }
+  };
+}
+
 function buildMinecraftClientEntity(entityId, geometryId, texturePath, renderControllerId) {
   return {
     format_version: "1.10.0",
@@ -6568,6 +6639,138 @@ try {
 }
 
 
+function buildMinecraftSolidExhibitPlacementScript(itemId, entityId) {
+  const safeItemId = JSON.stringify(itemId);
+  const safeEntityId = JSON.stringify(entityId);
+  return `import { world, system, EquipmentSlot } from "@minecraft/server";
+
+const EXHIBIT_ITEM_ID = ${safeItemId};
+const EXHIBIT_ENTITY_ID = ${safeEntityId};
+const recentPlacements = new Map();
+
+function normalizeFace(faceValue) {
+  const raw = String(faceValue || "").toLowerCase();
+  if (raw.includes("up")) return "up";
+  if (raw.includes("down")) return "down";
+  if (raw.includes("north")) return "north";
+  if (raw.includes("south")) return "south";
+  if (raw.includes("west")) return "west";
+  if (raw.includes("east")) return "east";
+  return "";
+}
+
+function getHeldItem(source) {
+  try {
+    const equippable = source.getComponent("minecraft:equippable") || source.getComponent("equippable");
+    return equippable?.getEquipment(EquipmentSlot.Mainhand);
+  } catch (e) { return null; }
+}
+
+function isExhibitItem(event) {
+  const item = event.itemStack || getHeldItem(event.source);
+  return !!item && item.typeId === EXHIBIT_ITEM_ID;
+}
+
+function shouldSkipDuplicate(source, block) {
+  const loc = block.location;
+  const name = source?.name || source?.id || "player";
+  const key = name + ":" + loc.x + "," + loc.y + "," + loc.z;
+  const now = system.currentTick;
+  const last = recentPlacements.get(key) || -999;
+  recentPlacements.set(key, now);
+  return now - last < 6;
+}
+
+function consumeOneItem(source) {
+  try {
+    const gameMode = String(source.getGameMode?.() || "").toLowerCase();
+    if (gameMode.includes("creative")) return;
+    const equippable = source.getComponent("minecraft:equippable") || source.getComponent("equippable");
+    const item = equippable?.getEquipment(EquipmentSlot.Mainhand);
+    if (!item || item.typeId !== EXHIBIT_ITEM_ID) return;
+    if (item.amount > 1) {
+      item.amount -= 1;
+      equippable.setEquipment(EquipmentSlot.Mainhand, item);
+    } else {
+      equippable.setEquipment(EquipmentSlot.Mainhand, undefined);
+    }
+  } catch (e) {}
+}
+
+function getSnappedYaw(source) {
+  try {
+    const y = Number(source.getRotation?.().y || 0);
+    return Math.round(y / 90) * 90;
+  } catch (e) { return 0; }
+}
+
+function placeExhibitNow(event) {
+  const source = event.source;
+  const block = event.block;
+  if (!source || !block || !isExhibitItem(event)) return;
+
+  const face = normalizeFace(event.blockFace || event.face);
+  if (face !== "up") {
+    try { source.sendMessage("立体作品は床や棚の上面に向かって使ってください。"); } catch (e) {}
+    return;
+  }
+  if (shouldSkipDuplicate(source, block)) return;
+
+  const loc = block.location;
+  const dimension = block.dimension || source.dimension;
+  if (!dimension) return;
+  const spawn = { x: loc.x + 0.5, y: loc.y + 1, z: loc.z + 0.5 };
+  const yaw = getSnappedYaw(source);
+
+  try {
+    const exhibit = dimension.spawnEntity(EXHIBIT_ENTITY_ID, spawn);
+    try { exhibit.teleport(spawn, { dimension, rotation: { x: 0, y: yaw } }); }
+    catch (teleportError) { try { exhibit.setRotation({ x: 0, y: yaw }); } catch (rotationError) {} }
+    consumeOneItem(source);
+    try { source.runCommandAsync("playsound random.pop @s"); } catch (e) {}
+  } catch (e) {
+    try { source.sendMessage("立体作品の設置に失敗しました。ワールド設定でスクリプトAPIが有効か確認してください。"); } catch (sendError) {}
+  }
+}
+
+function placeExhibitBefore(event) {
+  if (!event || !isExhibitItem(event)) return;
+  try { event.cancel = true; } catch (e) {}
+  system.run(() => placeExhibitNow(event));
+}
+
+function placeExhibitAfter(event) {
+  if (!event || !isExhibitItem(event)) return;
+  placeExhibitNow(event);
+}
+
+function removeNearestExhibitNearBlock(event) {
+  const block = event.block;
+  const player = event.player || event.source;
+  if (!block) return;
+  const dimension = block.dimension || player?.dimension;
+  if (!dimension) return;
+  const loc = block.location;
+  const center = { x: loc.x + 0.5, y: loc.y + 1, z: loc.z + 0.5 };
+  let exhibits = [];
+  try { exhibits = dimension.getEntities({ type: EXHIBIT_ENTITY_ID, location: center, maxDistance: 1.35 }); }
+  catch (e) { exhibits = []; }
+  if (!exhibits.length) return;
+  try { event.cancel = true; } catch (e) {}
+  system.run(() => {
+    try {
+      exhibits[0].remove();
+      try { player?.runCommandAsync?.("playsound random.pop @s"); } catch (soundError) {}
+    } catch (e) {}
+  });
+}
+
+try { world.beforeEvents.itemUseOn.subscribe(placeExhibitBefore); } catch (e) {}
+try { world.afterEvents.itemUseOn.subscribe(placeExhibitAfter); } catch (e) {}
+try { world.beforeEvents.playerBreakBlock.subscribe(removeNearestExhibitNearBlock); } catch (e) {}
+`;
+}
+
 function buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName) {
   return `entity.${entityId}.name=${displayName}
 item.${itemId}.name=${itemDisplayName}
@@ -6579,9 +6782,12 @@ function buildMinecraftLang(blockId, displayName) {
 `;
 }
 
-function showMinecraftInstallGuideAfterExport(displayName) {
+function showMinecraftInstallGuideAfterExport(displayName, isSolidExhibit = false) {
   const name = displayName ? `「${displayName}」` : "この作品";
-  alert(`${name}のマイクラ用ファイルを作成しました。\n\n次の流れで進めてください。\n\n1. 共有画面でMinecraftを選ぶ、または保存した .mcaddon を開く\n2. Minecraftで「インポート完了」が出るまで待つ\n3. 使いたいワールドの設定を開く\n4. リソースパックでコドモカプセルの作品を有効化\n5. ビヘイビアーパックでも同じ作品を有効化\n6. ワールドを開いて、クリエイティブのアイテム一覧から「壁に貼る」アイテムを探す\n7. そのアイテムを持って、飾りたい壁の側面をタップ/クリックする\n\n※表示されない場合は、リソースパックとビヘイビアーパックの両方が有効か、スクリプトAPIが利用できるワールド設定か確認してください。`);
+  const lastStep = isSolidExhibit
+    ? "6. ワールドを開いて、クリエイティブのアイテム一覧から作品アイテムを探す\n7. そのアイテムを持って、床や棚の上面をタップ/クリックする"
+    : "6. ワールドを開いて、クリエイティブのアイテム一覧から作品アイテムを探す\n7. そのアイテムを持って、飾りたい壁の側面をタップ/クリックする";
+  alert(`${name}のマイクラ用ファイルを作成しました。\n\n次の流れで進めてください。\n\n1. 共有画面でMinecraftを選ぶ、または保存した .mcaddon を開く\n2. Minecraftで「インポート完了」が出るまで待つ\n3. 使いたいワールドの設定を開く\n4. リソースパックでコドモカプセルの作品を有効化\n5. ビヘイビアーパックでも同じ作品を有効化\n${lastStep}\n\n※表示されない場合は、リソースパックとビヘイビアーパックの両方が有効か、スクリプトAPIが利用できるワールド設定か確認してください。`);
 }
 
 async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
@@ -6638,19 +6844,20 @@ window.downloadMinecraftAddon = async function(event) {
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
     const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
-    const blockId = `kodomo:${blockSlug}`;
+    const isSolidExhibit = work?.artworkShape === "solid";
     const textureKey = `kodomo_${blockSlug}`;
-    const entityId = `kodomo:${blockSlug}_wall_frame`;
-    const itemId = `kodomo:${blockSlug}_frame_item`;
+    const entitySuffix = isSolidExhibit ? "solid_exhibit" : "wall_frame";
+    const itemSuffix = isSolidExhibit ? "solid_item" : "frame_item";
+    const entityId = `kodomo:${blockSlug}_${entitySuffix}`;
+    const itemId = `kodomo:${blockSlug}_${itemSuffix}`;
     const entityTextureKey = `${textureKey}_entity`;
     const itemTextureKey = `${textureKey}_item`;
-    const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
-    const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
+    const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
+    const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v212: 壁に貼る専用アイテム・エンティティ方式。年次詳細タグが表示されない不具合を修正する。
+    // v213: 平面は壁貼り額縁、立体は床や棚に置ける展示台として出力する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v212壁貼り`.slice(0, 34);
-    // v212: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const displayName = `${displayNameBase} ${isSolidExhibit ? "v213立体" : "v213壁貼り"}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6668,7 +6875,7 @@ window.downloadMinecraftAddon = async function(event) {
     const bp = zip.folder(`KodomoFrameArt_${shortId}_BP`);
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル壁画 RP - ${packTitle}`,
+      `${isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画"} RP - ${packTitle}`,
       "コドモカプセルで作成したMinecraft用の壁貼り額縁リソースパックです。",
       rpHeaderUuid,
       rpModuleUuid,
@@ -6677,29 +6884,29 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("textures/entity/" + entityTextureKey + ".png", wallArtTextureBlob);
     rp.file("textures/items/" + itemTextureKey + ".png", frameItemTextureBlob);
     rp.file("textures/item_texture.json", JSON.stringify(buildMinecraftItemTextureJson(itemTextureKey), null, 2));
-    rp.file("entity/" + blockSlug + "_wall_frame.entity.json", JSON.stringify(buildMinecraftClientEntity(entityId, entityGeometryId, `textures/entity/${entityTextureKey}`, renderControllerId), null, 2));
-    rp.file("models/entity/" + blockSlug + "_wall_frame.geo.json", JSON.stringify(buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize), null, 2));
-    rp.file("render_controllers/" + blockSlug + "_wall_frame.render_controllers.json", JSON.stringify(buildMinecraftFrameRenderController(renderControllerId), null, 2));
+    rp.file("entity/" + blockSlug + "_" + entitySuffix + ".entity.json", JSON.stringify(buildMinecraftClientEntity(entityId, entityGeometryId, `textures/entity/${entityTextureKey}`, renderControllerId), null, 2));
+    rp.file("models/entity/" + blockSlug + "_" + entitySuffix + ".geo.json", JSON.stringify(isSolidExhibit ? buildMinecraftSolidExhibitGeometry(entityGeometryId, currentMinecraftResolvedTextureSize) : buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize), null, 2));
+    rp.file("render_controllers/" + blockSlug + "_" + entitySuffix + ".render_controllers.json", JSON.stringify(buildMinecraftFrameRenderController(renderControllerId), null, 2));
     rp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     rp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     rp.file("pack_icon.png", frameItemTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftBehaviorScriptPackManifest(
-      `コドモカプセル壁画 BP - ${packTitle}`,
+      `${isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画"} BP - ${packTitle}`,
       "コドモカプセルで作成したMinecraft用の壁貼り額縁ビヘイビアーパックです。",
       bpHeaderUuid,
       bpDataModuleUuid,
       bpScriptModuleUuid,
       rpHeaderUuid
     ), null, 2));
-    bp.file("entities/" + blockSlug + "_wall_frame.json", JSON.stringify(buildMinecraftBehaviorEntity(entityId, displayName), null, 2));
-    bp.file("items/" + blockSlug + "_frame_item.json", JSON.stringify(buildMinecraftFramePlacerItem(itemId, itemTextureKey, itemDisplayName), null, 2));
-    bp.file("scripts/main.js", buildMinecraftFramePlacementScript(itemId, entityId));
+    bp.file("entities/" + blockSlug + "_" + entitySuffix + ".json", JSON.stringify(isSolidExhibit ? buildMinecraftSolidBehaviorEntity(entityId, displayName) : buildMinecraftBehaviorEntity(entityId, displayName), null, 2));
+    bp.file("items/" + blockSlug + "_" + itemSuffix + ".json", JSON.stringify(buildMinecraftFramePlacerItem(itemId, itemTextureKey, itemDisplayName), null, 2));
+    bp.file("scripts/main.js", isSolidExhibit ? buildMinecraftSolidExhibitPlacementScript(itemId, entityId) : buildMinecraftFramePlacementScript(itemId, entityId));
     bp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v212: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
+    // v213: 平面は壁面に極薄額縁エンティティ、立体は床置き展示台エンティティとして出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -6710,7 +6917,7 @@ window.downloadMinecraftAddon = async function(event) {
 
     const addonFileName = buildUniqueMinecraftAddonFileName(work, blockSlug);
     await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "");
-    showMinecraftInstallGuideAfterExport(displayName);
+    showMinecraftInstallGuideAfterExport(displayName, isSolidExhibit);
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
     alert("Minecraft用ファイルの作成に失敗しました。\n共有メニューが開けない場合は通常ダウンロードに切り替えます。\n詳細: " + (err.message || "unknown"));
