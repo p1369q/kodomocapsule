@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v213</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v214</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1333,6 +1333,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
           <p id="minecraftTextureSizeStatus" class="text-[11px] text-slate-500 leading-relaxed">プレビューと .mcaddon の両方で同じサイズを使用します。</p>
         </div>
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-slate-500">アドオン形式</div>
+          <div class="flex flex-wrap gap-2">
+            <button id="minecraftAddonStyleAutoBtn" type="button" class="minecraft-mode-chip active">作品に合わせる</button>
+            <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画として出力</button>
+            <button id="minecraftAddonStyleSolidBtn" type="button" class="minecraft-mode-chip">立体展示として出力</button>
+          </div>
+          <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">作品の種類に合わせて、自動で壁画または立体展示を選びます。</p>
+        </div>
       </div>
       <details class="rounded-2xl bg-white border border-slate-200 p-3 text-left">
         <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
@@ -1597,7 +1606,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v213",
+        app_version: "v214",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2124,7 +2133,7 @@ function getWorkSchoolStage(work) {
   const workDate = parseLocalDateParts(work.date);
   if (!birthday || !workDate) return null;
 
-  // v213: 日本の4月始まりの学年相当で判定する。
+  // v214: 日本の4月始まりの学年相当で判定する。
   // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
   const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
   const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
@@ -4025,7 +4034,7 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  // v213: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // v214: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
   // 引数なしなら現在値を反転する。
   currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
@@ -4662,6 +4671,7 @@ let currentMinecraftSpriteCanvas = null;
 let currentMinecraftOutputMode = "auto";
 let currentMinecraftTextureSizeSelection = "auto";
 let currentMinecraftResolvedTextureSize = 128;
+let currentMinecraftAddonStyleSelection = "auto";
 const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
 
 function getMinecraftPencilModeMeta(mode = "crisp") {
@@ -4711,6 +4721,57 @@ function getMinecraftOutputModeMeta(mode = "auto") {
     }
   };
   return map[mode] || map.auto;
+}
+
+function getMinecraftAddonStyleMeta(mode = "auto") {
+  const map = {
+    auto: {
+      label: "作品に合わせる",
+      description: "作品の種類に合わせて、自動で壁画または立体展示を選びます。"
+    },
+    wall: {
+      label: "壁画として出力",
+      description: "作品の種類に関係なく、壁に貼る額縁として出力します。"
+    },
+    solid: {
+      label: "立体展示として出力",
+      description: "作品の種類に関係なく、床や棚に置く展示台として出力します。"
+    }
+  };
+  return map[mode] || map.auto;
+}
+
+function resolveMinecraftAddonStyle(work = getMinecraftAddonTargetWork()) {
+  if (currentMinecraftAddonStyleSelection === "wall") return "wall";
+  if (currentMinecraftAddonStyleSelection === "solid") return "solid";
+  return work?.artworkShape === "solid" ? "solid" : "wall";
+}
+
+function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
+  const buttonMap = {
+    auto: document.getElementById("minecraftAddonStyleAutoBtn"),
+    wall: document.getElementById("minecraftAddonStyleWallBtn"),
+    solid: document.getElementById("minecraftAddonStyleSolidBtn")
+  };
+  Object.entries(buttonMap).forEach(([key, el]) => {
+    if (el) el.classList.toggle("active", key === currentMinecraftAddonStyleSelection);
+  });
+  const descEl = document.getElementById("minecraftAddonStyleDescription");
+  if (!descEl) return;
+  const meta = getMinecraftAddonStyleMeta(currentMinecraftAddonStyleSelection);
+  const resolved = resolveMinecraftAddonStyle(work);
+  const resultLabel = resolved === "solid" ? "立体展示" : "壁画";
+  const workLabel = work?.artworkShape === "solid" ? "立体作品" : "平面作品";
+  if (currentMinecraftAddonStyleSelection === "auto") {
+    descEl.textContent = `${meta.description} 現在の作品は${workLabel}なので、今回は「${resultLabel}」として出力します。`;
+  } else {
+    descEl.textContent = `${meta.description} 今回は「${resultLabel}」として出力します。`;
+  }
+}
+
+function setMinecraftAddonStyleSelection(mode = "auto") {
+  currentMinecraftAddonStyleSelection = mode || "auto";
+  updateMinecraftAddonStyleUi();
 }
 
 function getMinecraftResolvedArtworkMode() {
@@ -6245,21 +6306,39 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
             pivot: [0, 0, 0],
             cubes: [
               {
-                // v213: 立体作品の第一段階。展示台として床や棚の上に置ける土台。
-                origin: [-7, 0, -7],
-                size: [14, 2, 14],
+                // v214: より展示台らしく、薄くて落ち着いた台座にする。
+                origin: [-6, 0, -5],
+                size: [12, 1, 10],
                 uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
               },
               {
-                // 作品の代表写真を、展示台の正面パネルとして見せる。
-                origin: [-7, 2, -6.75],
-                size: [14, 12, 1],
+                // 正面の作品パネル。前より少し大きく見せて、主役が目立つようにする。
+                origin: [-6, 1, -4.75],
+                size: [12, 12, 1],
                 uv: { north: artUv, south: backUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
               },
               {
-                // 立体作品らしく見えるよう、背面に少し奥行きのある支えを置く。
-                origin: [-5, 2, 2],
-                size: [10, 8, 4],
+                // 背面左支柱
+                origin: [-5, 1, 2.5],
+                size: [1, 9, 1],
+                uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+              },
+              {
+                // 背面右支柱
+                origin: [4, 1, 2.5],
+                size: [1, 9, 1],
+                uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+              },
+              {
+                // 上部の横木で、展示台らしいまとまりを出す。
+                origin: [-5, 10, 2.5],
+                size: [10, 1, 1],
+                uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+              },
+              {
+                // 後ろの薄い支え。
+                origin: [-3, 2, 3.25],
+                size: [6, 6, 1],
                 uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
               }
             ]
@@ -6798,7 +6877,7 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId) {
       await navigator.share({
         files: [file],
         title: "コドモカプセル Minecraftアドオン",
-        text: "Minecraft統合版で家の壁に飾るためのアドオンです。"
+        text: "Minecraft統合版で作品を飾るためのアドオンです。"
       });
       trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
       return;
@@ -6844,7 +6923,12 @@ window.downloadMinecraftAddon = async function(event) {
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
     const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
-    const isSolidExhibit = work?.artworkShape === "solid";
+    const resolvedAddonStyle = resolveMinecraftAddonStyle(work);
+    const isSolidExhibit = resolvedAddonStyle === "solid";
+    const packKindLabel = isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画";
+    const packDescription = isSolidExhibit
+      ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。"
+      : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。";
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isSolidExhibit ? "solid_exhibit" : "wall_frame";
     const itemSuffix = isSolidExhibit ? "solid_item" : "frame_item";
@@ -6855,9 +6939,9 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v213: 平面は壁貼り額縁、立体は床や棚に置ける展示台として出力する。
+    // v214: 作品種別とは別に、壁画/立体展示の出力形式をユーザーが選べるようにする。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} ${isSolidExhibit ? "v213立体" : "v213壁貼り"}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isSolidExhibit ? "v214立体" : "v214壁貼り"}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6875,8 +6959,8 @@ window.downloadMinecraftAddon = async function(event) {
     const bp = zip.folder(`KodomoFrameArt_${shortId}_BP`);
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `${isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画"} RP - ${packTitle}`,
-      "コドモカプセルで作成したMinecraft用の壁貼り額縁リソースパックです。",
+      `${packKindLabel} RP - ${packTitle}`,
+      packDescription,
       rpHeaderUuid,
       rpModuleUuid,
       "resources"
@@ -6892,8 +6976,8 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("pack_icon.png", frameItemTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftBehaviorScriptPackManifest(
-      `${isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画"} BP - ${packTitle}`,
-      "コドモカプセルで作成したMinecraft用の壁貼り額縁ビヘイビアーパックです。",
+      `${packKindLabel} BP - ${packTitle}`,
+      packDescription,
       bpHeaderUuid,
       bpDataModuleUuid,
       bpScriptModuleUuid,
@@ -6906,7 +6990,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v213: 平面は壁面に極薄額縁エンティティ、立体は床置き展示台エンティティとして出力する。README.txtは含めない。
+    // v214: 壁画/立体展示の選択に応じてエンティティ方式で出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -6917,7 +7001,7 @@ window.downloadMinecraftAddon = async function(event) {
 
     const addonFileName = buildUniqueMinecraftAddonFileName(work, blockSlug);
     await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "");
-    showMinecraftInstallGuideAfterExport(displayName, isSolidExhibit);
+    showMinecraftInstallGuideAfterExport(displayName, resolvedAddonStyle);
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
     alert("Minecraft用ファイルの作成に失敗しました。\n共有メニューが開けない場合は通常ダウンロードに切り替えます。\n詳細: " + (err.message || "unknown"));
@@ -6972,6 +7056,9 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const size128Btn = document.getElementById("minecraftSize128Btn");
   const size256Btn = document.getElementById("minecraftSize256Btn");
   const size512Btn = document.getElementById("minecraftSize512Btn");
+  const addonStyleAutoBtn = document.getElementById("minecraftAddonStyleAutoBtn");
+  const addonStyleWallBtn = document.getElementById("minecraftAddonStyleWallBtn");
+  const addonStyleSolidBtn = document.getElementById("minecraftAddonStyleSolidBtn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -6999,6 +7086,9 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (size128Btn) size128Btn.onclick = function() { setMinecraftTextureSizeSelection(128); };
   if (size256Btn) size256Btn.onclick = function() { setMinecraftTextureSizeSelection(256); };
   if (size512Btn) size512Btn.onclick = function() { setMinecraftTextureSizeSelection(512); };
+  if (addonStyleAutoBtn) addonStyleAutoBtn.onclick = function() { setMinecraftAddonStyleSelection("auto"); };
+  if (addonStyleWallBtn) addonStyleWallBtn.onclick = function() { setMinecraftAddonStyleSelection("wall"); };
+  if (addonStyleSolidBtn) addonStyleSolidBtn.onclick = function() { setMinecraftAddonStyleSelection("solid"); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
@@ -7023,9 +7113,11 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   currentMinecraftOutputMode = "auto";
   currentMinecraftTextureSizeSelection = "auto";
   currentMinecraftResolvedTextureSize = 128;
+  currentMinecraftAddonStyleSelection = "auto";
   setMinecraftOutputMode("auto", false);
   updateMinecraftOutputModeUi();
   updateMinecraftTextureSizeUi("color");
+  updateMinecraftAddonStyleUi(work);
   updateMinecraftPencilControlsVisibility("auto", "color");
   setMinecraftPreviewStatus("");
   if (drawer) drawer.classList.add("open");
