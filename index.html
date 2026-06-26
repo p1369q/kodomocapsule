@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v197</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v198</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v197",
+        app_version: "v198",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6084,7 +6084,12 @@ function buildMinecraftFramePlacerItem(itemId, itemTextureKey, displayName) {
         "minecraft:icon": {
           texture: itemTextureKey
         },
-        "minecraft:max_stack_size": 64
+        "minecraft:max_stack_size": 64,
+        "minecraft:hand_equipped": true,
+        "minecraft:use_modifiers": {
+          use_duration: 0.05,
+          movement_modifier: 1
+        }
       }
     }
   };
@@ -6105,23 +6110,86 @@ function buildMinecraftItemTextureJson(itemTextureKey) {
 function buildMinecraftFramePlacementScript(itemId, entityId) {
   const safeItemId = JSON.stringify(itemId);
   const safeEntityId = JSON.stringify(entityId);
-  return `import { world } from "@minecraft/server";
+  return `import { world, system, EquipmentSlot } from "@minecraft/server";
 
 const FRAME_ITEM_ID = ${safeItemId};
 const FRAME_ENTITY_ID = ${safeEntityId};
+const recentPlacements = new Map();
 
-function placeFrame(event) {
-  const item = event.itemStack;
+function normalizeFace(faceValue) {
+  const raw = String(faceValue || "").toLowerCase();
+  if (raw.includes("north")) return "north";
+  if (raw.includes("south")) return "south";
+  if (raw.includes("west")) return "west";
+  if (raw.includes("east")) return "east";
+  if (raw.includes("up")) return "up";
+  if (raw.includes("down")) return "down";
+  return "";
+}
+
+function getHeldItem(source) {
+  try {
+    const equippable = source.getComponent("minecraft:equippable") || source.getComponent("equippable");
+    return equippable?.getEquipment(EquipmentSlot.Mainhand);
+  } catch (e) {
+    return null;
+  }
+}
+
+function isFrameItem(event) {
+  const item = event.itemStack || getHeldItem(event.source);
+  return !!item && item.typeId === FRAME_ITEM_ID;
+}
+
+function getPlacementKey(source, block, face) {
+  const loc = block.location;
+  const name = source?.name || source?.id || "player";
+  return name + ":" + loc.x + "," + loc.y + "," + loc.z + ":" + face;
+}
+
+function shouldSkipDuplicate(source, block, face) {
+  const key = getPlacementKey(source, block, face);
+  const now = system.currentTick;
+  const last = recentPlacements.get(key) || -999;
+  recentPlacements.set(key, now);
+  return now - last < 6;
+}
+
+function consumeOneItem(source) {
+  // クリエイティブでは減らさず、サバイバル系ではできる範囲で1個消費する。
+  try {
+    const gameMode = String(source.getGameMode?.() || "").toLowerCase();
+    if (gameMode.includes("creative")) return;
+    const equippable = source.getComponent("minecraft:equippable") || source.getComponent("equippable");
+    const item = equippable?.getEquipment(EquipmentSlot.Mainhand);
+    if (!item || item.typeId !== FRAME_ITEM_ID) return;
+    if (item.amount > 1) {
+      item.amount -= 1;
+      equippable.setEquipment(EquipmentSlot.Mainhand, item);
+    } else {
+      equippable.setEquipment(EquipmentSlot.Mainhand, undefined);
+    }
+  } catch (e) {}
+}
+
+function placeFrameNow(event) {
   const source = event.source;
   const block = event.block;
-  if (!item || !source || !block || item.typeId !== FRAME_ITEM_ID) return;
+  if (!source || !block || !isFrameItem(event)) return;
 
-  const face = String(event.blockFace || "").toLowerCase();
+  const face = normalizeFace(event.blockFace || event.face);
+  if (face === "up" || face === "down" || !face) {
+    try { source.sendMessage("壁の側面に向かって使ってください。"); } catch (e) {}
+    return;
+  }
+
+  if (shouldSkipDuplicate(source, block, face)) return;
+
   const loc = block.location;
   const dimension = block.dimension || source.dimension;
   if (!dimension) return;
 
-  const offset = 0.035;
+  const offset = 0.03125;
   const spawn = { x: loc.x + 0.5, y: loc.y, z: loc.z + 0.5 };
   let yaw = 0;
 
@@ -6137,23 +6205,39 @@ function placeFrame(event) {
   } else if (face === "east") {
     spawn.x = loc.x + 1 + offset;
     yaw = -90;
-  } else {
-    try { source.sendMessage("壁の側面に向かって使ってください。"); } catch (e) {}
-    return;
   }
 
   try {
     const frame = dimension.spawnEntity(FRAME_ENTITY_ID, spawn);
     frame.setRotation({ x: 0, y: yaw });
+    consumeOneItem(source);
     try { source.runCommandAsync("playsound random.pop @s"); } catch (e) {}
   } catch (e) {
     try { source.sendMessage("額縁の設置に失敗しました。ワールド設定でスクリプトAPIが有効か確認してください。"); } catch (sendError) {}
   }
 }
 
-world.afterEvents.itemUseOn.subscribe(placeFrame);
+function placeFrameBefore(event) {
+  if (!event || !isFrameItem(event)) return;
+  try { event.cancel = true; } catch (e) {}
+  system.run(() => placeFrameNow(event));
+}
+
+function placeFrameAfter(event) {
+  if (!event || !isFrameItem(event)) return;
+  placeFrameNow(event);
+}
+
+try {
+  world.beforeEvents.itemUseOn.subscribe(placeFrameBefore);
+} catch (e) {}
+
+try {
+  world.afterEvents.itemUseOn.subscribe(placeFrameAfter);
+} catch (e) {}
 `;
 }
+
 
 function buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName) {
   return `entity.${entityId}.name=${displayName}
@@ -6234,9 +6318,9 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v197: 壁に貼る専用アイテム・エンティティ方式。旧ブロック方式と見分けるため表示名にもバージョンを付ける。
+    // v198: 壁に貼る専用アイテム・エンティティ方式。配置イベントをbefore/after両方で拾う。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v197壁貼り`.slice(0, 34);
+    const displayName = `${displayNameBase} v198壁貼り`.slice(0, 34);
     const itemDisplayName = `${displayNameBase}を壁に貼る`.slice(0, 34);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
@@ -6283,7 +6367,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v197: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式へ切り替える。README.txtは含めない。
+    // v198: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。before/after両イベントで配置を補強し、README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
