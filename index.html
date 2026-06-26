@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v193</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v194</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v193",
+        app_version: "v194",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5875,23 +5875,24 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
       },
       components: baseComponents,
       permutations: [
-        // v193: PC/iPad/iPhoneとも、プレイヤーの向きではなく「タップした壁面」だけを基準にする。
-        // 実機では block_face と同じ面へ寄せる方が、白ブロックとの間に1ブロック分の空きが出にくい。
+        // v194: block_face は「タップした隣接ブロックの面」を表す。
+        // 例：壁の south 面をタップして置いた場合、新しいアートブロックの north 面が壁に接する。
+        // そのため、見た目・当たり判定・選択枠を反対面へ寄せる。
         {
           condition: "q.block_state('minecraft:block_face') == 'north'",
-          components: makeFaceComponents("north")
-        },
-        {
-          condition: "q.block_state('minecraft:block_face') == 'south'",
           components: makeFaceComponents("south")
         },
         {
+          condition: "q.block_state('minecraft:block_face') == 'south'",
+          components: makeFaceComponents("north")
+        },
+        {
           condition: "q.block_state('minecraft:block_face') == 'west'",
-          components: makeFaceComponents("west")
+          components: makeFaceComponents("east")
         },
         {
           condition: "q.block_state('minecraft:block_face') == 'east'",
-          components: makeFaceComponents("east")
+          components: makeFaceComponents("west")
         }
       ]
     }
@@ -5973,8 +5974,10 @@ window.downloadMinecraftAddon = async function(event) {
       west: `${geometryBaseId}_west`,
       east: `${geometryBaseId}_east`
     };
-    const displayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const shortId = blockSlug.slice(-8);
+    // v194: 既にインポート済みの旧アドオンと見分けるため、Minecraft内の表示名にもバージョンを付ける。
+    const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 26);
+    const displayName = `${displayNameBase} v194`.slice(0, 34);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
 
@@ -6017,7 +6020,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v193: 表示名用texts/*.langは維持。案内用README.txtは含めず、block_faceと同じ面へ寄せて壁との隙間を抑える。
+    // v194: 表示名用texts/*.langは維持。案内用README.txtは含めず、block_face仕様に合わせて反対面へ寄せる。表示名にもv194を付け、旧アドオンとの取り違えを防ぐ。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
