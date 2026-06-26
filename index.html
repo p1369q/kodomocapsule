@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v201</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v203</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v201",
+        app_version: "v203",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5788,28 +5788,44 @@ function buildMinecraftFrameItemTextureBlob(spriteCanvas) {
       const ctx = canvas.getContext("2d");
       ctx.imageSmoothingEnabled = false;
 
-      const pad = Math.max(6, Math.round(artSize * 0.08));
-      const shadow = Math.max(1, Math.round(artSize * 0.02));
+      const pad = Math.max(5, Math.round(artSize * 0.055));
+      const shadow = Math.max(2, Math.round(artSize * 0.025));
       const x = pad;
       const y = pad;
       const s = artSize - pad * 2 - shadow;
-      const outer = Math.max(3, Math.round(s * 0.08));
-      const middle = Math.max(outer + 2, Math.round(s * 0.16));
-      const inner = Math.max(middle + 2, Math.round(s * 0.22));
+      const outer = Math.max(4, Math.round(s * 0.075));
+      const middle = Math.max(outer + 2, Math.round(s * 0.145));
+      const mat = Math.max(middle + 3, Math.round(s * 0.20));
 
       ctx.clearRect(0, 0, artSize, artSize);
 
-      // v201: インベントリ上でも“武器”ではなく、透明背景の額縁アイコンとして見えるように余白を作る。
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      // v202: パック一覧やインベントリでも壁画に見える、正方形の額縁アイコンにする。
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.fillRect(x + shadow, y + shadow, s, s);
 
+      // 外枠
       ctx.fillStyle = "#5f3f24";
       ctx.fillRect(x, y, s, s);
+
+      // 木のフレーム
       ctx.fillStyle = "#8a6438";
       ctx.fillRect(x + outer, y + outer, s - outer * 2, s - outer * 2);
-      ctx.fillStyle = "#c28b4f";
+
+      // 明るい縁
+      ctx.fillStyle = "#c58c4d";
       ctx.fillRect(x + middle, y + middle, s - middle * 2, s - middle * 2);
-      ctx.drawImage(spriteCanvas, x + inner, y + inner, s - inner * 2, s - inner * 2);
+
+      // 台紙
+      ctx.fillStyle = "#eee4d1";
+      ctx.fillRect(x + mat, y + mat, s - mat * 2, s - mat * 2);
+
+      // 作品画像
+      const artPad = Math.max(mat + 2, Math.round(s * 0.24));
+      ctx.drawImage(spriteCanvas, x + artPad, y + artPad, s - artPad * 2, s - artPad * 2);
+
+      // ハイライトを少しだけ
+      ctx.fillStyle = "rgba(255,255,255,0.20)";
+      ctx.fillRect(x + outer, y + outer, s - outer * 2, Math.max(2, Math.round(s * 0.035)));
 
       canvas.toBlob(blob => {
         if (blob) resolve(blob);
@@ -6161,7 +6177,7 @@ function buildMinecraftFramePlacerItem(itemId, itemTextureKey, displayName) {
           }
         },
         "minecraft:use_modifiers": {
-          use_duration: 0.05,
+          use_duration: 0.01,
           movement_modifier: 1
         }
       }
@@ -6283,7 +6299,31 @@ function placeFrameNow(event) {
 
   try {
     const frame = dimension.spawnEntity(FRAME_ENTITY_ID, spawn);
-    frame.setRotation({ x: 0, y: yaw });
+
+    // v203: 生成直後に斜め向きの初期姿勢が一瞬見えるのを抑えるため、
+    // setRotationだけでなくteleportのrotation指定も同じtickで実行する。
+    try {
+      frame.teleport(spawn, {
+        dimension,
+        rotation: { x: 0, y: yaw }
+      });
+    } catch (teleportError) {
+      try { frame.teleport(spawn, { rotation: { x: 0, y: yaw } }); } catch (fallbackError) {}
+    }
+    try { frame.setRotation({ x: 0, y: yaw }); } catch (rotationError) {}
+
+    // クライアント同期の遅れ対策として、次tickでも同じ姿勢を再適用する。
+    system.run(() => {
+      try {
+        frame.teleport(frame.location, {
+          dimension,
+          rotation: { x: 0, y: yaw }
+        });
+      } catch (lateTeleportError) {
+        try { frame.setRotation({ x: 0, y: yaw }); } catch (lateRotationError) {}
+      }
+    });
+
     consumeOneItem(source);
     try { source.runCommandAsync("playsound random.pop @s"); } catch (e) {}
   } catch (e) {
@@ -6436,10 +6476,11 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v201: 壁に貼る専用アイテム・エンティティ方式。削除しやすくし、アイテム表示をさらに額縁らしくする。
+    // v203: 壁に貼る専用アイテム・エンティティ方式。配置直後の一瞬の傾き表示を抑える。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v201壁貼り`.slice(0, 34);
+    const displayName = `${displayNameBase} v203壁貼り`.slice(0, 34);
     const itemDisplayName = `${displayNameBase}を壁に貼る`.slice(0, 34);
+    const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
     const frameItemTextureBlob = await buildMinecraftFrameItemTextureBlob(currentMinecraftSpriteCanvas);
@@ -6455,7 +6496,7 @@ window.downloadMinecraftAddon = async function(event) {
     const bp = zip.folder(`KodomoFrameArt_${shortId}_BP`);
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `コドモカプセル Minecraft壁貼り額縁 RP - ${displayName} #${shortId}`,
+      `コドモカプセル壁画 RP - ${packTitle}`,
       "コドモカプセルで作成したMinecraft用の壁貼り額縁リソースパックです。",
       rpHeaderUuid,
       rpModuleUuid,
@@ -6469,10 +6510,10 @@ window.downloadMinecraftAddon = async function(event) {
     rp.file("render_controllers/" + blockSlug + "_wall_frame.render_controllers.json", JSON.stringify(buildMinecraftFrameRenderController(renderControllerId), null, 2));
     rp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     rp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
-    rp.file("pack_icon.png", wallArtTextureBlob);
+    rp.file("pack_icon.png", frameItemTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftBehaviorScriptPackManifest(
-      `コドモカプセル Minecraft壁貼り額縁 BP - ${displayName} #${shortId}`,
+      `コドモカプセル壁画 BP - ${packTitle}`,
       "コドモカプセルで作成したMinecraft用の壁貼り額縁ビヘイビアーパックです。",
       bpHeaderUuid,
       bpDataModuleUuid,
@@ -6484,9 +6525,9 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("scripts/main.js", buildMinecraftFramePlacementScript(itemId, entityId));
     bp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
-    bp.file("pack_icon.png", wallArtTextureBlob);
+    bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v201: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。削除しやすくし、手持ち/アイコンは額縁らしくし、README.txtは含めない。
+    // v203: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。配置直後の傾き表示を抑え、README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
