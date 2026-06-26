@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v207</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v208</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -759,10 +759,24 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">作品を作ったころの年齢</div>
           <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
             <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
-            <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
-            <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
-            <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
-            <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+            <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">乳幼児 (0-2歳)</button>
+            <button onclick="setAgeStageFilter('age3')" id="ageTab-age3" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">年少 (3歳)</button>
+            <button onclick="setAgeStageFilter('age4')" id="ageTab-age4" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">年中 (4歳)</button>
+            <button onclick="setAgeStageFilter('age5')" id="ageTab-age5" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">年長 (5歳)</button>
+            <button onclick="setAgeStageFilter('age6')" id="ageTab-age6" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小1 (6歳)</button>
+            <button onclick="setAgeStageFilter('age7')" id="ageTab-age7" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小2 (7歳)</button>
+            <button onclick="setAgeStageFilter('age8')" id="ageTab-age8" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小3 (8歳)</button>
+            <button onclick="setAgeStageFilter('age9')" id="ageTab-age9" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小4 (9歳)</button>
+            <button onclick="setAgeStageFilter('age11')" id="ageTab-age11" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小5 (11歳)</button>
+            <button onclick="setAgeStageFilter('age12')" id="ageTab-age12" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">小6 (12歳)</button>
+            <button onclick="setAgeStageFilter('age13')" id="ageTab-age13" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">中1 (13歳)</button>
+            <button onclick="setAgeStageFilter('age14')" id="ageTab-age14" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">中2 (14歳)</button>
+            <button onclick="setAgeStageFilter('age15')" id="ageTab-age15" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">中3 (15歳)</button>
+            <button onclick="setAgeStageFilter('age16')" id="ageTab-age16" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">高1 (16歳)</button>
+            <button onclick="setAgeStageFilter('age17')" id="ageTab-age17" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">高2 (17歳)</button>
+            <button onclick="setAgeStageFilter('age18')" id="ageTab-age18" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">高3 (18歳)</button>
+            <button onclick="setAgeStageFilter('adult19')" id="ageTab-adult19" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">19歳以上</button>
+            <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">未分類</button>
           </div>
         </div>
         <div>
@@ -1589,7 +1603,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v207",
+        app_version: "v208",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2063,6 +2077,20 @@ function applyGalleryCategoryFilter(displayWorks, categoryFilterValue) {
   return displayWorks.filter(w => w.category === categoryFilterValue);
 }
 
+function doesWorkMatchAgeStage(work, stage) {
+  if (!stage || stage === "all") return true;
+  if (!work?.childId) return stage === "unknown";
+  const child = localChildren.find(c => c.id === work.childId);
+  if (!child) return stage === "unknown";
+  const totalMonths = calculateAgeInMonths(child.birthday, work.date);
+  if (totalMonths === null || totalMonths < 0) return stage === "unknown";
+  const ageYears = Math.floor(totalMonths / 12);
+  if (stage === "baby") return ageYears >= 0 && ageYears <= 2;
+  if (stage && stage.startsWith("age")) return ageYears === Number(stage.replace("age", ""));
+  if (stage === "adult19") return ageYears >= 19;
+  return false;
+}
+
 function getFilteredPhotoWallItems() {
   const sortSelect = document.getElementById("gallerySortSelect");
   const filterSelect = document.getElementById("galleryChildFilterSelect");
@@ -2081,16 +2109,7 @@ function getFilteredPhotoWallItems() {
   if (currentFavoriteFilter) { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
 
   if (currentAgeStageFilter !== "all") {
-    displayWorks = displayWorks.filter(w => {
-      if (!w.childId) return currentAgeStageFilter === "unknown";
-      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
-      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
-      const ageYears = Math.floor(totalMonths / 12);
-      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
-      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
-      if (currentAgeStageFilter === "school") return ageYears >= 6;
-      return false;
-    });
+    displayWorks = displayWorks.filter(w => doesWorkMatchAgeStage(w, currentAgeStageFilter));
   }
 
   if (searchQuery !== "") {
@@ -3911,7 +3930,7 @@ window.setGalleryCategoryFilter = function(value) {
 };
 
 window.setFavoriteFilter = function(enabled) {
-  // v207: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
+  // v208: インラインonclickからmodule内のcurrentFavoriteFilterを直接参照しない。
   // 引数なしなら現在値を反転する。
   currentFavoriteFilter = typeof enabled === "boolean" ? enabled : !currentFavoriteFilter;
   const btn = document.getElementById("favoriteToggleBtn");
@@ -6521,10 +6540,10 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v207: 壁に貼る専用アイテム・エンティティ方式。お気に入りフィルターの反応不具合を修正する。
+    // v208: 壁に貼る専用アイテム・エンティティ方式。年齢フィルターを詳細化する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v207壁貼り`.slice(0, 34);
-    // v207: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const displayName = `${displayNameBase} v208壁貼り`.slice(0, 34);
+    // v208: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6573,7 +6592,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v207: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
+    // v208: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -6988,16 +7007,7 @@ function renderGallery(){
   if (currentFavoriteFilter) { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
 
   if (currentAgeStageFilter !== "all") {
-    displayWorks = displayWorks.filter(w => {
-      if (!w.childId) return currentAgeStageFilter === "unknown";
-      const child = localChildren.find(c => c.id === w.childId); if (!child) return currentAgeStageFilter === "unknown";
-      const totalMonths = calculateAgeInMonths(child.birthday, w.date); if (totalMonths === null || totalMonths < 0) return currentAgeStageFilter === "unknown";
-      const ageYears = Math.floor(totalMonths / 12);
-      if (currentAgeStageFilter === "baby") return ageYears >= 0 && ageYears <= 2;
-      if (currentAgeStageFilter === "kinder") return ageYears >= 3 && ageYears <= 5;
-      if (currentAgeStageFilter === "school") return ageYears >= 6;
-      return false;
-    });
+    displayWorks = displayWorks.filter(w => doesWorkMatchAgeStage(w, currentAgeStageFilter));
   }
 
   if (searchQuery !== "") {
