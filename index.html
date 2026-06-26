@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v191</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v192</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v191",
+        app_version: "v192",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5745,14 +5745,15 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
 }
 
 function getMinecraftWallArtGeometryShape(face = "south") {
-  // v191: face は「新しく置かれたブロック内で、アートを寄せる面」を表す。
+  // v192: 壁画は「壁に貼った額縁」に見えるよう、厚みを1/16ブロックまで薄くする。
   // block_face はタップした既存ブロック側の面なので、permutation側で反対面へ寄せる。
-  // 見た目・当たり判定・選択枠を同じ薄型サイズに揃える。
+  // 見た目・当たり判定・選択枠を同じ極薄サイズに揃える。
+  const t = 1;
   const map = {
-    north: { origin: [-8, 0, -8], size: [16, 16, 2] },
-    south: { origin: [-8, 0, 6], size: [16, 16, 2] },
-    west: { origin: [-8, 0, -8], size: [2, 16, 16] },
-    east: { origin: [6, 0, -8], size: [2, 16, 16] }
+    north: { origin: [-8, 0, -8], size: [16, 16, t] },
+    south: { origin: [-8, 0, 8 - t], size: [16, 16, t] },
+    west: { origin: [-8, 0, -8], size: [t, 16, 16] },
+    east: { origin: [8 - t, 0, -8], size: [t, 16, 16] }
   };
   return map[face] || map.south;
 }
@@ -5843,6 +5844,13 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
     "minecraft:geometry": ids[baseFace],
     "minecraft:collision_box": baseBox["minecraft:collision_box"],
     "minecraft:selection_box": baseBox["minecraft:selection_box"],
+    "minecraft:placement_filter": {
+      conditions: [
+        {
+          allowed_faces: ["side"]
+        }
+      ]
+    },
     "minecraft:material_instances": {
       "*": {
         texture: textureKey,
@@ -5867,7 +5875,7 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
       },
       components: baseComponents,
       permutations: [
-        // v191: PC/iPad/iPhoneとも、プレイヤーの向きではなく「タップした壁面」だけを基準にする。
+        // v192: PC/iPad/iPhoneとも、プレイヤーの向きではなく「タップした壁面」だけを基準にする。
         // block_face はタップした既存ブロック側の面なので、新しく置かれるアートブロック内では反対面へ寄せる。
         // これにより、壁のすぐ外側に薄い額縁が密着する。
         {
@@ -6010,7 +6018,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftLang(blockId, displayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v191: 表示名用texts/*.langは維持。案内用README.txtは含めず、block_faceだけで壁面へ密着させる。
+    // v192: 表示名用texts/*.langは維持。案内用README.txtは含めず、極薄パネル＋側面配置のみで壁画らしく見せる。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
