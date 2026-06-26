@@ -95,6 +95,29 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .minecraft-mode-chip.active{background:#ECFDF5;color:#047857;border-color:#A7F3D0;}
 @media (max-width:640px){#minecraftPreviewDrawer{padding:8px;}#minecraftPreviewDrawer .drawer-panel{max-height:calc(100dvh - 16px);border-radius:24px;}.minecraft-preview-stage{min-height:220px;padding:12px;}.minecraft-preview-card{padding:10px;}.minecraft-preview-info-grid{gap:8px;}.minecraft-preview-info-card{padding:9px 11px;font-size:10.5px;line-height:1.65;}}
 
+/* v221: iPhone縦画面でボクセル設定が増えても、プレビューと下部操作が見切れにくいように圧縮する。 */
+@media (max-width:640px){
+  #minecraftPreviewDrawer .drawer-panel{height:calc(100dvh - 16px);overflow:hidden;}
+  #minecraftPreviewDrawer .drawer-panel>div:first-child{padding:12px 14px;}
+  #minecraftPreviewDrawer .drawer-panel>div:first-child h3{font-size:18px;line-height:1.25;}
+  #minecraftPreviewDrawer .drawer-panel>div:first-child p{font-size:10.5px;line-height:1.45;margin-top:4px;}
+  #minecraftPreviewDrawer .drawer-panel>div:first-child button{width:42px;height:42px;}
+  #minecraftAddonStylePanel{padding:8px 10px 0;}
+  #minecraftAddonStylePanel>div{border-radius:18px;padding:10px;gap:8px;}
+  #minecraftAddonStylePanel .minecraft-mode-chip{height:30px;min-width:0;padding:0 10px;font-size:11px;line-height:1.1;}
+  #minecraftAddonStylePanel .flex.flex-wrap.gap-2{gap:6px;}
+  #minecraftAddonStyleDescription{display:none;}
+  #minecraftVoxelSizePanel{padding-top:8px;margin-top:6px;}
+  #minecraftVoxelSizePanel .minecraft-mode-chip{flex:1 1 0;text-align:center;padding:0 6px;}
+  #minecraftVoxelSizeDescription{font-size:10.5px;line-height:1.45;}
+  #minecraftPreviewDrawer .minecraft-preview-stage{flex:0 0 auto;min-height:0;padding:8px 10px;max-height:32dvh;overflow:hidden;}
+  #minecraftPreviewDrawer .minecraft-preview-grid{gap:8px;}
+  #minecraftPreviewDrawer .minecraft-preview-card{padding:6px;border-radius:14px;gap:5px;}
+  #minecraftPreviewDrawer .minecraft-preview-card .preview-label{font-size:9.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #minecraftPreviewDrawer .minecraft-preview-card canvas{max-height:calc(32dvh - 52px);object-fit:contain;}
+  #minecraftPreviewDrawer .minecraft-preview-body{flex:1;min-height:0;overflow:auto;padding:10px 12px;}
+}
+
 #minecraftPreviewDrawer .minecraft-preview-body{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;}
 #minecraftPreviewDrawer .minecraft-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;}
 @media (max-width:640px){
@@ -705,7 +728,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v220</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v221</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1618,7 +1641,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v220",
+        app_version: "v221",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2145,7 +2168,7 @@ function getWorkSchoolStage(work) {
   const workDate = parseLocalDateParts(work.date);
   if (!birthday || !workDate) return null;
 
-  // v220: 日本の4月始まりの学年相当で判定する。
+  // v221: 日本の4月始まりの学年相当で判定する。
   // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
   const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
   const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
@@ -5779,7 +5802,7 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   sctx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
   const pixels = sctx.getImageData(0, 0, sampleSize, sampleSize).data;
 
-  // v220: 16×16 / 24×24 / 32×32 を切り替えられる直立レリーフとしてプレビューする。
+  // v221: 16×16 / 24×24 / 32×32 を切り替えられる直立レリーフとしてプレビューする。
   const block = Math.max(4, Math.floor(128 / sampleSize));
   const totalSize = block * sampleSize;
   const startX = Math.round((canvas.width - totalSize) / 2);
@@ -6515,7 +6538,7 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
             pivot: [0, 0, 0],
             cubes: [
               {
-                // v220: より展示台らしく、薄くて落ち着いた台座にする。
+                // v221: より展示台らしく、薄くて落ち着いた台座にする。
                 origin: [-6, 0, -5],
                 size: [12, 1, 10],
                 uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
@@ -6581,7 +6604,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSiz
 
   const woodUv = { uv: [0, 0], uv_size: [1, 1] };
 
-  // v220: サイズ切替対応の台座付きボクセルレリーフにする。
+  // v221: サイズ切替対応の台座付きボクセルレリーフにする。
   cubes.push({
     origin: [-7, 0, -5.2],
     size: [14, 1, 3.2],
@@ -7244,10 +7267,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v220: ボクセル風立体はサイズ違いの3パターンに対応。
+    // v221: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v220ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v220立体" : "v220壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v221ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v221立体" : "v221壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -7296,7 +7319,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v220: ボクセル風立体は16×16/24×24/32×32から選べる直立レリーフとして出力する。README.txtは含めない。
+    // v221: ボクセル風立体は16×16/24×24/32×32から選べる直立レリーフとして出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
