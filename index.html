@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v198</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v199</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1583,7 +1583,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v198",
+        app_version: "v199",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5969,12 +5969,13 @@ function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraft
             pivot: [0, 8, 0],
             cubes: [
               {
-                // v197: 壁に貼るための極薄エンティティ額縁。south面を正面として使う。
+                // v199: 実機ではsouth面が壁側を向いていたため、north面を作品の正面として使う。
+                // これにより、中央ブロックを壊した時にも絵が外側を向く。
                 origin: [-8, 0, -0.5],
                 size: [16, 16, 1],
                 uv: {
-                  north: backUv,
-                  south: artUv,
+                  north: artUv,
+                  south: backUv,
                   east: woodUv,
                   west: woodUv,
                   up: woodUv,
@@ -6318,9 +6319,9 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v198: 壁に貼る専用アイテム・エンティティ方式。配置イベントをbefore/after両方で拾う。
+    // v199: 壁に貼る専用アイテム・エンティティ方式。作品面を外向きに修正する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v198壁貼り`.slice(0, 34);
+    const displayName = `${displayNameBase} v199壁貼り`.slice(0, 34);
     const itemDisplayName = `${displayNameBase}を壁に貼る`.slice(0, 34);
     const spriteBlob = await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
@@ -6367,7 +6368,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", wallArtTextureBlob);
 
-    // v198: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。before/after両イベントで配置を補強し、README.txtは含めない。
+    // v199: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。作品面を外向きにし、README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
