@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v216</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v217</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1295,8 +1295,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="flex flex-wrap gap-2">
           <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画用</button>
           <button id="minecraftAddonStyleSolidBtn" type="button" class="minecraft-mode-chip">立体展示用</button>
+          <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">ボクセル風立体</button>
         </div>
-        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">どちらで出力するかを切り替えると、下のプレビューと保存内容がそのまま切り替わります。</p>
+        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">どの形式で出力するかを切り替えると、下のプレビューと保存内容がそのまま切り替わります。</p>
       </div>
     </div>
     <div class="minecraft-preview-stage bg-slate-100 flex items-center justify-center p-5">
@@ -1608,7 +1609,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v216",
+        app_version: "v217",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2135,7 +2136,7 @@ function getWorkSchoolStage(work) {
   const workDate = parseLocalDateParts(work.date);
   if (!birthday || !workDate) return null;
 
-  // v216: 日本の4月始まりの学年相当で判定する。
+  // v217: 日本の4月始まりの学年相当で判定する。
   // 4月1日時点の年齢を基準にすることで、6歳1ヶ月でも入学前なら「年長」に入る。
   const academicYear = workDate.month >= 4 ? workDate.year : workDate.year - 1;
   const bornAfterApr1 = birthday.month > 4 || (birthday.month === 4 && birthday.day >= 2);
@@ -4732,12 +4733,17 @@ function getMinecraftAddonStyleMeta(mode = "wall") {
     solid: {
       label: "立体展示用",
       description: "床や棚に置く展示台として出力します。プレビューも展示台として表示します。"
+    },
+    voxel: {
+      label: "ボクセル風立体",
+      description: "登録写真を16×16の小さな立方体に変換し、ブロックで作ったミニ作品風に出力します。"
     }
   };
   return map[mode] || map.wall;
 }
 
 function resolveMinecraftAddonStyle(work = getMinecraftAddonTargetWork()) {
+  if (currentMinecraftAddonStyleSelection === "voxel") return "voxel";
   if (currentMinecraftAddonStyleSelection === "solid") return "solid";
   if (currentMinecraftAddonStyleSelection === "wall") return "wall";
   return work?.artworkShape === "solid" ? "solid" : "wall";
@@ -4747,6 +4753,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const panelEl = document.getElementById("minecraftAddonStylePanel");
   const wallBtn = document.getElementById("minecraftAddonStyleWallBtn");
   const solidBtn = document.getElementById("minecraftAddonStyleSolidBtn");
+  const voxelBtn = document.getElementById("minecraftAddonStyleVoxelBtn");
   const descEl = document.getElementById("minecraftAddonStyleDescription");
   const spriteLabelEl = document.getElementById("minecraftPreviewSpriteLabel");
   const displayLabelEl = document.getElementById("minecraftPreviewDisplayLabel");
@@ -4755,6 +4762,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   if (panelEl) panelEl.classList.toggle("hidden", !isSolidWork);
   if (wallBtn) wallBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "wall");
   if (solidBtn) solidBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "solid");
+  if (voxelBtn) voxelBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "voxel");
   const resolved = resolveMinecraftAddonStyle(work);
   const meta = getMinecraftAddonStyleMeta(resolved);
   if (descEl) {
@@ -4762,8 +4770,12 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
       ? `${meta.description} 上で切り替えた内容が、そのまま保存されます。`
       : "平面作品は壁画用として出力します。";
   }
-  if (spriteLabelEl) spriteLabelEl.textContent = resolved === "solid" ? "変換後の作品画像" : "変換後の絵";
-  if (displayLabelEl) displayLabelEl.textContent = resolved === "solid" ? "マイクラでの見え方（立体展示）" : "マイクラでの見え方（壁画）";
+  if (spriteLabelEl) spriteLabelEl.textContent = resolved === "voxel" ? "ボクセル化の元画像" : (resolved === "solid" ? "変換後の作品画像" : "変換後の絵");
+  if (displayLabelEl) {
+    displayLabelEl.textContent = resolved === "voxel"
+      ? "マイクラでの見え方（ボクセル風立体）"
+      : (resolved === "solid" ? "マイクラでの見え方（立体展示）" : "マイクラでの見え方（壁画）");
+  }
   if (saveLabelEl) saveLabelEl.textContent = isSolidWork ? `マイクラ用ファイル保存（${meta.label}）` : "マイクラ用ファイル保存";
   if (currentMinecraftSpriteCanvas) {
     renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
@@ -4771,9 +4783,10 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
 }
 
 function setMinecraftAddonStyleSelection(mode = "wall") {
-  currentMinecraftAddonStyleSelection = mode === "solid" ? "solid" : "wall";
+  currentMinecraftAddonStyleSelection = ["wall", "solid", "voxel"].includes(mode) ? mode : "wall";
   updateMinecraftAddonStyleUi();
 }
+
 
 function getMinecraftResolvedArtworkMode() {
   return currentMinecraftArtworkMode === "auto"
@@ -5680,6 +5693,60 @@ function drawMinecraftSolidExhibitPreview(ctx, canvas, spriteCanvas) {
   ctx.drawImage(spriteCanvas, frameX + artMargin, frameY + artMargin - 2, frameW - artMargin * 2, frameH - artMargin * 2);
 }
 
+function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  bg.addColorStop(0, "#f8fafc");
+  bg.addColorStop(1, "#e8eef5");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let y = canvas.height * 0.66; y < canvas.height; y += 24) {
+    for (let x = -20; x < canvas.width + 20; x += 34) {
+      ctx.fillStyle = ((Math.floor((x + 20) / 34) + Math.floor((y - canvas.height * 0.66) / 24)) % 2 === 0) ? "#d9d0ba" : "#cfc4aa";
+      ctx.fillRect(x, y, 34, 24);
+    }
+  }
+  ctx.fillStyle = "rgba(15,23,42,0.14)";
+  ctx.beginPath();
+  ctx.ellipse(canvas.width * 0.5, canvas.height * 0.78, 90, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const sample = document.createElement("canvas");
+  sample.width = 16;
+  sample.height = 16;
+  const sctx = sample.getContext("2d", { willReadFrequently: true });
+  sctx.imageSmoothingEnabled = true;
+  sctx.drawImage(spriteCanvas, 0, 0, 16, 16);
+  const pixels = sctx.getImageData(0, 0, 16, 16).data;
+  const block = 7;
+  const startX = 74;
+  const startY = 198;
+  const depthX = 3;
+  const depthY = -3;
+  for (let y = 15; y >= 0; y--) {
+    for (let x = 0; x < 16; x++) {
+      const idx = (y * 16 + x) * 4;
+      const a = pixels[idx + 3];
+      if (a < 24) continue;
+      const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
+      const brightness = (r + g + b) / 3;
+      const height = Math.max(1, Math.min(5, Math.round((255 - brightness) / 64) + 1));
+      const px = startX + (x - y) * (block * 0.52);
+      const py = startY + (x + y) * (block * 0.28) - height * 2;
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(px, py, block, block);
+      ctx.fillStyle = `rgba(0,0,0,0.16)`;
+      ctx.fillRect(px + block, py + depthY, depthX, block);
+      ctx.fillStyle = `rgba(255,255,255,0.16)`;
+      ctx.fillRect(px, py, block, 1);
+    }
+  }
+  ctx.fillStyle = "#6b4d2d";
+  ctx.fillRect(96, 246, 128, 14);
+  ctx.fillStyle = "#9a7044";
+  ctx.fillRect(106, 238, 108, 10);
+}
+
 function renderMinecraftPreviewCanvases(spriteCanvas) {
   currentMinecraftSpriteCanvas = spriteCanvas || null;
   const spritePreviewCanvas = document.getElementById("minecraftSpriteCanvas");
@@ -5697,7 +5764,9 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     const ctx = framePreviewCanvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     const addonStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
-    if (addonStyle === "solid") {
+    if (addonStyle === "voxel") {
+      drawMinecraftVoxelExhibitPreview(ctx, framePreviewCanvas, spriteCanvas);
+    } else if (addonStyle === "solid") {
       drawMinecraftSolidExhibitPreview(ctx, framePreviewCanvas, spriteCanvas);
     } else {
       drawMinecraftWallPreview(ctx, framePreviewCanvas, spriteCanvas);
@@ -6371,7 +6440,7 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
             pivot: [0, 0, 0],
             cubes: [
               {
-                // v216: より展示台らしく、薄くて落ち着いた台座にする。
+                // v217: より展示台らしく、薄くて落ち着いた台座にする。
                 origin: [-6, 0, -5],
                 size: [12, 1, 10],
                 uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
@@ -6407,6 +6476,78 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
                 uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
               }
             ]
+          }
+        ]
+      }
+    ]
+  };
+}
+
+function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSize = currentMinecraftResolvedTextureSize || 128) {
+  const sampleSize = 16;
+  const sampleCanvas = document.createElement("canvas");
+  sampleCanvas.width = sampleSize;
+  sampleCanvas.height = sampleSize;
+  const sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+  sampleCtx.imageSmoothingEnabled = true;
+  sampleCtx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
+  const data = sampleCtx.getImageData(0, 0, sampleSize, sampleSize).data;
+  const cubes = [];
+  const cubeStep = 0.75;
+  const baseX = -6;
+  const baseZ = -6;
+  const minY = 1;
+  const maxCubeHeight = 5;
+  const makeUv = (x, y) => {
+    const uvX = Math.max(0, Math.min(textureSize - 1, Math.floor((x + 0.5) / sampleSize * textureSize)));
+    const uvY = Math.max(0, Math.min(textureSize - 1, Math.floor((y + 0.5) / sampleSize * textureSize)));
+    return { uv: [uvX, uvY], uv_size: [1, 1] };
+  };
+
+  const woodUv = { uv: [0, 0], uv_size: [1, 1] };
+  cubes.push({
+    origin: [-6.8, 0, -6.8],
+    size: [13.6, 1, 13.6],
+    uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+  });
+
+  for (let y = 0; y < sampleSize; y++) {
+    for (let x = 0; x < sampleSize; x++) {
+      const idx = (y * sampleSize + x) * 4;
+      const a = data[idx + 3];
+      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+      const brightness = (r + g + b) / 3;
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      if (a < 24 || (brightness > 246 && chroma < 10)) continue;
+      const h = Math.max(1, Math.min(maxCubeHeight, Math.round((255 - brightness) / 58) + (chroma > 45 ? 1 : 0)));
+      const originX = baseX + x * cubeStep;
+      const originZ = baseZ + y * cubeStep;
+      const uv = makeUv(x, y);
+      cubes.push({
+        origin: [Number(originX.toFixed(3)), minY, Number(originZ.toFixed(3))],
+        size: [cubeStep, h * 0.45, cubeStep],
+        uv: { north: uv, south: uv, east: uv, west: uv, up: uv, down: uv }
+      });
+    }
+  }
+
+  return {
+    format_version: "1.12.0",
+    "minecraft:geometry": [
+      {
+        description: {
+          identifier: geometryId,
+          texture_width: textureSize,
+          texture_height: textureSize,
+          visible_bounds_width: 2,
+          visible_bounds_height: 2,
+          visible_bounds_offset: [0, 0.5, 0]
+        },
+        bones: [
+          {
+            name: "voxel_exhibit_entity",
+            pivot: [0, 0, 0],
+            cubes
           }
         ]
       }
@@ -6926,8 +7067,9 @@ function buildMinecraftLang(blockId, displayName) {
 `;
 }
 
-function showMinecraftInstallGuideAfterExport(displayName, isSolidExhibit = false) {
+function showMinecraftInstallGuideAfterExport(displayName, exportStyle = "wall") {
   const name = displayName ? `「${displayName}」` : "この作品";
+  const isSolidExhibit = exportStyle === "solid" || exportStyle === "voxel";
   const lastStep = isSolidExhibit
     ? "6. ワールドを開いて、クリエイティブのアイテム一覧から作品アイテムを探す\n7. そのアイテムを持って、床や棚の上面をタップ/クリックする"
     : "6. ワールドを開いて、クリエイティブのアイテム一覧から作品アイテムを探す\n7. そのアイテムを持って、飾りたい壁の側面をタップ/クリックする";
@@ -6990,14 +7132,15 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
     const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
     const resolvedAddonStyle = forcedAddonStyle || resolveMinecraftAddonStyle(work);
-    const isSolidExhibit = resolvedAddonStyle === "solid";
-    const packKindLabel = isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画";
-    const packDescription = isSolidExhibit
-      ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。"
-      : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。";
+    const isSolidExhibit = resolvedAddonStyle === "solid" || resolvedAddonStyle === "voxel";
+    const isVoxelExhibit = resolvedAddonStyle === "voxel";
+    const packKindLabel = isVoxelExhibit ? "コドモカプセルボクセル" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
+    const packDescription = isVoxelExhibit
+      ? "コドモカプセルで作成したMinecraft用のボクセル風立体作品パックです。"
+      : (isSolidExhibit ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。" : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。");
     const textureKey = `kodomo_${blockSlug}`;
-    const entitySuffix = isSolidExhibit ? "solid_exhibit" : "wall_frame";
-    const itemSuffix = isSolidExhibit ? "solid_item" : "frame_item";
+    const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
+    const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
     const entityId = `kodomo:${blockSlug}_${entitySuffix}`;
     const itemId = `kodomo:${blockSlug}_${itemSuffix}`;
     const entityTextureKey = `${textureKey}_entity`;
@@ -7005,9 +7148,9 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v216: 立体作品では上部で壁画用/立体展示用を切り替え、プレビューと保存に反映する。
+    // v217: 立体作品にボクセル風立体出力を追加する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} ${isSolidExhibit ? "v216立体" : "v216壁貼り"}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? "v217ボクセル" : (isSolidExhibit ? "v217立体" : "v217壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -7031,11 +7174,11 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
       rpModuleUuid,
       "resources"
     ), null, 2));
-    rp.file("textures/entity/" + entityTextureKey + ".png", wallArtTextureBlob);
+    rp.file("textures/entity/" + entityTextureKey + ".png", isVoxelExhibit ? spriteBlob : wallArtTextureBlob);
     rp.file("textures/items/" + itemTextureKey + ".png", frameItemTextureBlob);
     rp.file("textures/item_texture.json", JSON.stringify(buildMinecraftItemTextureJson(itemTextureKey), null, 2));
     rp.file("entity/" + blockSlug + "_" + entitySuffix + ".entity.json", JSON.stringify(buildMinecraftClientEntity(entityId, entityGeometryId, `textures/entity/${entityTextureKey}`, renderControllerId), null, 2));
-    rp.file("models/entity/" + blockSlug + "_" + entitySuffix + ".geo.json", JSON.stringify(isSolidExhibit ? buildMinecraftSolidExhibitGeometry(entityGeometryId, currentMinecraftResolvedTextureSize) : buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize), null, 2));
+    rp.file("models/entity/" + blockSlug + "_" + entitySuffix + ".geo.json", JSON.stringify(isVoxelExhibit ? buildMinecraftVoxelExhibitGeometry(entityGeometryId, currentMinecraftSpriteCanvas, currentMinecraftResolvedTextureSize) : (isSolidExhibit ? buildMinecraftSolidExhibitGeometry(entityGeometryId, currentMinecraftResolvedTextureSize) : buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize)), null, 2));
     rp.file("render_controllers/" + blockSlug + "_" + entitySuffix + ".render_controllers.json", JSON.stringify(buildMinecraftFrameRenderController(renderControllerId), null, 2));
     rp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     rp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
@@ -7056,7 +7199,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v216: 立体作品では上部の切替に応じて壁画用/立体展示用を出力する。README.txtは含めない。
+    // v217: 立体作品では壁画/立体展示/ボクセル風立体の切替に応じて出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -7124,6 +7267,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const size512Btn = document.getElementById("minecraftSize512Btn");
   const addonStyleWallBtn = document.getElementById("minecraftAddonStyleWallBtn");
   const addonStyleSolidBtn = document.getElementById("minecraftAddonStyleSolidBtn");
+  const addonStyleVoxelBtn = document.getElementById("minecraftAddonStyleVoxelBtn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -7153,6 +7297,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (size512Btn) size512Btn.onclick = function() { setMinecraftTextureSizeSelection(512); };
   if (addonStyleWallBtn) addonStyleWallBtn.onclick = function() { setMinecraftAddonStyleSelection("wall"); };
   if (addonStyleSolidBtn) addonStyleSolidBtn.onclick = function() { setMinecraftAddonStyleSelection("solid"); };
+  if (addonStyleVoxelBtn) addonStyleVoxelBtn.onclick = function() { setMinecraftAddonStyleSelection("voxel"); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
