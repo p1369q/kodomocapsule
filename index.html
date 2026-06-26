@@ -705,7 +705,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v204</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v205</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -733,41 +733,50 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔎</span>
         <input type="text" id="gallerySearchInput" placeholder="タイトルやメモを入力" class="w-full py-2.5 pl-9 pr-3 text-sm rounded-xl bg-white border border-[#E7E1D7] shadow-sm">
       </div>
-      <div class="flex gap-2 items-center w-full justify-between">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">表示する子ども</label>
-            <select id="galleryChildFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-              <option value="all">すべての子ども</option>
-              <option value="favorite">⭐ お気に入り</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">カテゴリ</label>
-            <select id="galleryCategoryFilterSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-              <option value="all">すべてのカテゴリ</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-400 mb-1 ml-1">並び順</label>
-            <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
-              <option value="dateDesc">作品の日付が新しい順</option>
-              <option value="dateAsc">作品の日付が古い順</option>
-              <option value="createdDesc">登録が新しい順</option>
-              <option value="createdAsc">登録が古い順</option>
-            </select>
+      <div class="space-y-3">
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">表示する子ども</div>
+          <select id="galleryChildFilterSelect" class="hidden">
+            <option value="all">すべての子ども</option>
+          </select>
+          <div id="childFilterChipContainer" class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0">
+            <button type="button" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべての子ども</button>
           </div>
         </div>
-      </div>
-
-      <div>
-        <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">作品を作ったころの年齢</div>
-        <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
-        <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
-        <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
-        <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
-        <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
-        <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">カテゴリ</div>
+          <select id="galleryCategoryFilterSelect" class="hidden">
+            <option value="all">すべてのカテゴリ</option>
+          </select>
+          <div id="categoryFilterChipContainer" class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0">
+            <button type="button" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">作品を作ったころの年齢</div>
+          <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0" id="ageTabContainer">
+            <button onclick="setAgeStageFilter('all')" id="ageTab-all" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+            <button onclick="setAgeStageFilter('baby')" id="ageTab-baby" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">👶 乳幼児 (0-2歳)</button>
+            <button onclick="setAgeStageFilter('kinder')" id="ageTab-kinder" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">🎒 園児期 (3-5歳)</button>
+            <button onclick="setAgeStageFilter('school')" id="ageTab-school" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">✏️ 小学生 (6歳〜)</button>
+            <button onclick="setAgeStageFilter('unknown')" id="ageTab-unknown" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">❓ 未分類</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 mb-1.5 ml-1">お気に入り</div>
+          <div class="flex gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none shrink-0">
+            <button onclick="setFavoriteFilter(false)" id="favoriteTab-all" type="button" class="age-tab active px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">すべて</button>
+            <button onclick="setFavoriteFilter(true)" id="favoriteTab-on" type="button" class="age-tab px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">⭐ お気に入りのみ</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-bold text-slate-400 mb-1 ml-1">並び順</div>
+          <select id="gallerySortSelect" class="w-full py-1.5 px-2 text-xs rounded-xl bg-white border border-[#E7E1D7] shadow-sm cursor-pointer">
+            <option value="dateDesc">作品の日付が新しい順</option>
+            <option value="dateAsc">作品の日付が古い順</option>
+            <option value="createdDesc">登録が新しい順</option>
+            <option value="createdAsc">登録が古い順</option>
+          </select>
         </div>
       </div>
     </div>
@@ -825,7 +834,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">FAMILY CAPSULES</div>
         <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">思い出ギャラリー</h2>
-        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">作品・プリント・テストに加えて、工作や粘土などの立体作品も、成長した年齢と一緒に残していきましょう。</p>
+        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">作品・プリント・テストに加えて、工作や粘土などの立体も、成長した年齢と一緒に残していきましょう。</p>
       </div>
       <button onclick="handleFabClick()" class="hidden sm:flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition">
         <span class="text-lg leading-none">＋</span> 新しいカプセル
@@ -905,16 +914,16 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="grid grid-cols-2 gap-2">
             <label class="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 cursor-pointer">
               <input type="radio" name="inputArtworkShape" value="flat" class="mt-0.5 accent-[#ff6b6b]" checked>
-              <span><span class="block font-bold text-slate-700">平面作品</span><span class="block text-slate-500 mt-0.5">絵・プリント・テストなど</span></span>
+              <span><span class="block font-bold text-slate-700">平面</span><span class="block text-slate-500 mt-0.5">絵・プリント・テストなど</span></span>
             </label>
             <label class="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 cursor-pointer">
               <input type="radio" name="inputArtworkShape" value="solid" class="mt-0.5 accent-[#ff6b6b]">
-              <span><span class="block font-bold text-slate-700">立体作品</span><span class="block text-slate-500 mt-0.5">工作・粘土・折り紙など</span></span>
+              <span><span class="block font-bold text-slate-700">立体</span><span class="block text-slate-500 mt-0.5">工作・粘土・折り紙など</span></span>
             </label>
           </div>
           <p class="field-help">まずは記録用の分類です。Minecraftへの立体展示は次の段階で少しずつ追加します。</p>
           <div id="solidArtworkPhotoGuide" class="hidden mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-[11px] text-emerald-800 leading-relaxed">
-            <div class="font-extrabold mb-1">🧊 立体作品の撮影ガイド</div>
+            <div class="font-extrabold mb-1">🧊 立体の撮影ガイド</div>
             <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。将来Minecraftの展示台にする場合も、この写真が使いやすくなります。</p>
             <p class="mt-1 text-emerald-700">写真一覧では、同じ作品の写真が何枚あっても1作品につき1枚だけ表示します。</p>
           </div>
@@ -924,7 +933,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       
       <div id="fileInputContainer" class="form-section space-y-3">
         <div class="flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-[10px] font-bold">2</span><span class="text-sm font-extrabold text-slate-700">写真・PDFを追加</span></div>
-        <p class="text-[11px] text-slate-400 leading-relaxed">作品の表裏や複数ページ、立体作品の正面・横・上からの写真も、まとめてひとつのカプセルにできます。</p>
+        <p class="text-[11px] text-slate-400 leading-relaxed">作品の表裏や複数ページ、立体の正面・横・上からの写真も、まとめてひとつのカプセルにできます。</p>
         <input id="fileInput" type="file" accept="image/*,application/pdf" multiple class="hidden"/>
         <input id="cameraInput" type="file" accept="image/*" capture="environment" multiple class="hidden"/>
         
@@ -1555,6 +1564,7 @@ let unsubscribeFamilyPlan = null;
 let unsubscribeJoinRequests = null;
 let unsubscribeUserJoinRequests = null;
 let currentAgeStageFilter = "all";
+let currentFavoriteFilter = false;
 let carouselIndices = {};
 let pendingOwnFamilyId = null;
 let hasSelectedFamilyGroup = false;
@@ -1583,7 +1593,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v204",
+        app_version: "v205",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2070,9 +2080,9 @@ function getFilteredPhotoWallItems() {
   const searchQuery = searchInput.value.toLowerCase().trim();
   let displayWorks = localWorks.filter(w => !w.isDeleted);
 
-  if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
-  else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
+  if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
   displayWorks = applyGalleryCategoryFilter(displayWorks, categoryFilterValue);
+  if (currentFavoriteFilter) { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
 
   if (currentAgeStageFilter !== "all") {
     displayWorks = displayWorks.filter(w => {
@@ -3888,10 +3898,34 @@ document.getElementById("galleryChildFilterSelect").addEventListener("change", (
 document.getElementById("galleryCategoryFilterSelect").addEventListener("change", () => { renderGallery(); renderPhotoWall(); });
 document.getElementById("gallerySearchInput").addEventListener("input", () => { renderGallery(); renderPhotoWall(); });
 
+window.setGalleryChildFilter = function(value) {
+  const filterSelect = document.getElementById("galleryChildFilterSelect");
+  if (filterSelect) filterSelect.value = value || "all";
+  populateGalleryChildFilter();
+  renderGallery();
+  renderPhotoWall();
+};
+
+window.setGalleryCategoryFilter = function(value) {
+  const categoryFilterSelect = document.getElementById("galleryCategoryFilterSelect");
+  if (categoryFilterSelect) categoryFilterSelect.value = value || "all";
+  populateGalleryCategoryFilter();
+  renderGallery();
+  renderPhotoWall();
+};
+
+window.setFavoriteFilter = function(enabled) {
+  currentFavoriteFilter = !!enabled;
+  document.getElementById("favoriteTab-all")?.classList.toggle("active", !currentFavoriteFilter);
+  document.getElementById("favoriteTab-on")?.classList.toggle("active", currentFavoriteFilter);
+  renderGallery();
+  renderPhotoWall();
+};
+
 window.setAgeStageFilter = function(stage) {
   currentAgeStageFilter = stage;
-  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
-  document.getElementById(`ageTab-${stage}`).classList.add("active");
+  document.querySelectorAll("#ageTabContainer .age-tab").forEach(btn => btn.classList.remove("active"));
+  document.getElementById(`ageTab-${stage}`)?.classList.add("active");
   renderGallery();
   renderPhotoWall();
 };
@@ -3902,8 +3936,13 @@ window.goToTopPage = function() {
   document.getElementById("galleryCategoryFilterSelect").value = "all";
   document.getElementById("gallerySortSelect").value = "dateDesc";
   currentAgeStageFilter = "all";
-  document.querySelectorAll(".age-tab").forEach(btn => btn.classList.remove("active"));
+  currentFavoriteFilter = false;
+  populateGalleryChildFilter();
+  populateGalleryCategoryFilter();
+  document.querySelectorAll("#ageTabContainer .age-tab").forEach(btn => btn.classList.remove("active"));
   if(document.getElementById("ageTab-all")) document.getElementById("ageTab-all").classList.add("active");
+  document.getElementById("favoriteTab-all")?.classList.add("active");
+  document.getElementById("favoriteTab-on")?.classList.remove("active");
   closeDrawer(); switchPage('gallery');
 };
 
@@ -6476,10 +6515,10 @@ window.downloadMinecraftAddon = async function(event) {
     const entityGeometryId = `geometry.kodomo_${blockSlug}_wall_frame`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_wall_frame`;
     const shortId = blockSlug.slice(-8);
-    // v204: 壁に貼る専用アイテム・エンティティ方式。アイテム名を作品タイトルにする。
+    // v205: 壁に貼る専用アイテム・エンティティ方式。絞り込みUIをタグ型に変更する。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const displayName = `${displayNameBase} v204壁貼り`.slice(0, 34);
-    // v204: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
+    const displayName = `${displayNameBase} v205壁貼り`.slice(0, 34);
+    // v205: インベントリ上のアイテム名は操作説明ではなく、作品タイトルそのものにする。
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -6528,7 +6567,7 @@ window.downloadMinecraftAddon = async function(event) {
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v204: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。アイテム名を作品タイトルにし、README.txtは含めない。
+    // v205: ブロックではなく、壁面に極薄額縁エンティティをスポーンする方式。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -6820,22 +6859,46 @@ function populateChildSelect(){
   const sel = document.getElementById("inputWorkChild"); if(sel) sel.innerHTML = html;
 }
 
+function renderFilterChip(containerId, label, isActive, onclick) {
+  return `<button type="button" onclick="${onclick}" class="age-tab ${isActive ? "active" : ""} px-3 py-1 text-xs rounded-full border bg-white border-[#E7E1D7] whitespace-nowrap transition">${label}</button>`;
+}
+
 function populateGalleryChildFilter(){
   const filterSelect = document.getElementById("galleryChildFilterSelect"); if(!filterSelect) return;
-  const val = filterSelect.value;
-  let html = `<option value="all">すべての子ども</option><option value="favorite">⭐ お気に入り</option>`;
+  const val = filterSelect.value || "all";
+  let html = `<option value="all">すべての子ども</option>`;
   localChildren.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
-  filterSelect.innerHTML = html; if([...filterSelect.options].some(o => o.value === val)) filterSelect.value = val;
+  filterSelect.innerHTML = html;
+  filterSelect.value = [...filterSelect.options].some(o => o.value === val) ? val : "all";
+
+  const chipContainer = document.getElementById("childFilterChipContainer");
+  if (chipContainer) {
+    let chipHtml = renderFilterChip("childFilterChipContainer", "すべての子ども", filterSelect.value === "all", "setGalleryChildFilter('all')");
+    localChildren.forEach(c => {
+      chipHtml += renderFilterChip("childFilterChipContainer", c.name, filterSelect.value === c.id, `setGalleryChildFilter('${c.id}')`);
+    });
+    chipContainer.innerHTML = chipHtml;
+  }
 }
 
 function populateGalleryCategoryFilter(){
   const categoryFilterSelect = document.getElementById("galleryCategoryFilterSelect"); if(!categoryFilterSelect) return;
-  const val = categoryFilterSelect.value;
+  const val = categoryFilterSelect.value || "all";
   let html = `<option value="all">すべてのカテゴリ</option>`;
   localCategories.forEach(c => { html += `<option value="${c.id}">${c.name}</option>`; });
   html += `<option value="__uncategorized">未分類</option>`;
   categoryFilterSelect.innerHTML = html;
   categoryFilterSelect.value = [...categoryFilterSelect.options].some(o => o.value === val) ? val : "all";
+
+  const chipContainer = document.getElementById("categoryFilterChipContainer");
+  if (chipContainer) {
+    let chipHtml = renderFilterChip("categoryFilterChipContainer", "すべて", categoryFilterSelect.value === "all", "setGalleryCategoryFilter('all')");
+    localCategories.forEach(c => {
+      chipHtml += renderFilterChip("categoryFilterChipContainer", c.name, categoryFilterSelect.value === c.id, `setGalleryCategoryFilter('${c.id}')`);
+    });
+    chipHtml += renderFilterChip("categoryFilterChipContainer", "未分類", categoryFilterSelect.value === "__uncategorized", "setGalleryCategoryFilter('__uncategorized')");
+    chipContainer.innerHTML = chipHtml;
+  }
 }
 
 function getCategoryBadgeHtml(catId) {
@@ -6876,9 +6939,9 @@ function bindArtworkShapeGuideEvents() {
 
 function getArtworkShapeBadgeHtml(shape) {
   if (shape === "solid") {
-    return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-medium">🧊 立体作品</span>`;
+    return `<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-medium">🧊 立体</span>`;
   }
-  return `<span class="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded-full font-medium">🖼️ 平面作品</span>`;
+  return `<span class="text-[10px] bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded-full font-medium">🖼️ 平面</span>`;
 }
 
 function renderGallery(){
@@ -6914,9 +6977,9 @@ function renderGallery(){
     html += freePlanNoticeHtml;
   }
 
-  if (filterValue === "favorite") { displayWorks = displayWorks.filter(w => w.isFavorite === true); } 
-  else if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
+  if (filterValue !== "all") { displayWorks = displayWorks.filter(w => w.childId === filterValue); }
   displayWorks = applyGalleryCategoryFilter(displayWorks, categoryFilterValue);
+  if (currentFavoriteFilter) { displayWorks = displayWorks.filter(w => w.isFavorite === true); }
 
   if (currentAgeStageFilter !== "all") {
     displayWorks = displayWorks.filter(w => {
