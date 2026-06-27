@@ -684,6 +684,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 #minecraftPreviewDrawer.minecraft-desktop-download-mode #minecraftPreviewAddonBtnLabel::after{content:"";}
 
 /* v234: iPhone/iPadでも共有画面を使わず、まずダウンロード確認からMinecraftで開く動線にする。 */
+/* v235: 予備ボタンだけは共有画面を開き、メッセージ/メール送付ルートを使えるようにする。 */
 
 </style>
 </head>
@@ -939,7 +940,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v234</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v235</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1601,11 +1602,12 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
             <div class="font-extrabold text-slate-800 mb-1">iPhone/iPadでMinecraftが出ない場合</div>
             <p>緑のボタンを押すと、共有画面ではなくダウンロード確認を出します。ダウンロード後、画面右上のダウンロード一覧から .mcaddon を開き、右上のMinecraftボタンを押します。</p>
-            <p class="mt-2">ダウンロード一覧から開けない場合は、予備としてメッセージやメールに送ってから、届いた .mcaddon を開く方法も使えます。</p>
-            <p class="mt-2">それでも難しい場合は、下の予備ボタンでもう一度 .mcaddon を保存してから開きます。</p>
-            <button id="minecraftPreviewFileSaveBtn" onclick="downloadMinecraftAddon(event, null, true)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">予備：もう一度ファイルを保存する</button>
+            <p class="mt-2">ダウンロード一覧から開けない場合は、予備として下のボタンから共有画面を開き、メッセージやメールに送ってください。</p>
+            <p class="mt-2">届いた .mcaddon を開くと、右上にMinecraftボタンが出やすくなります。</p>
+            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">予備：共有画面で送る</button>
             <ol class="list-decimal pl-4 space-y-1">
-              <li>保存した .mcaddon をファイルアプリから開きます。</li>
+              <li>共有画面でメッセージ、メール、AirDropなどを選びます。</li>
+              <li>届いた .mcaddon を開き、右上のMinecraftボタンを押します。</li>
               <li>Minecraftで「インポート完了」が出るまで待ちます。</li>
             </ol>
           </div>
@@ -1885,7 +1887,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v234",
+        app_version: "v235",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5174,6 +5176,11 @@ window.handleMinecraftPrimaryAddonAction = function(event) {
   return window.downloadMinecraftAddon(event, null, true);
 };
 
+window.shareMinecraftAddonFromFallback = function(event) {
+  setMinecraftPreviewStatus("共有画面を開きます。メッセージやメールに送って、届いた .mcaddon を開いてください。", "info");
+  return window.downloadMinecraftAddon(event, null, false);
+};
+
 function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const panelEl = document.getElementById("minecraftAddonStylePanel");
   const wallBtn = document.getElementById("minecraftAddonStyleWallBtn");
@@ -7666,7 +7673,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v234ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v234立体" : "v234壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v235ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v235立体" : "v235壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
