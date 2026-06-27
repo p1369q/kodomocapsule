@@ -651,6 +651,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   }
 }
 
+
+/* v225: 壁画用・ボクセル風立体とも、変換後画像カードを表示せずMinecraftでの見え方だけにする。 */
+#minecraftPreviewDrawer .minecraft-preview-grid{
+  grid-template-columns:minmax(0,1fr);
+  max-width:520px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
 </style>
 </head>
 <body>
@@ -905,7 +914,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v224</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v225</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1511,12 +1520,6 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="minecraft-preview-stage bg-slate-100 flex items-center justify-center p-5">
       <div class="minecraft-preview-grid">
         <div class="minecraft-preview-card">
-          <div id="minecraftPreviewSpriteLabel" class="preview-label text-[11px] font-bold text-slate-500">変換後の絵</div>
-          <div class="w-full aspect-square rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden">
-            <canvas id="minecraftSpriteCanvas" width="320" height="320" class="w-full h-full"></canvas>
-          </div>
-        </div>
-        <div class="minecraft-preview-card">
           <div id="minecraftPreviewDisplayLabel" class="preview-label text-[11px] font-bold text-slate-500">マイクラでの見え方</div>
           <div class="w-full aspect-square rounded-2xl bg-white border border-slate-200 overflow-hidden">
             <canvas id="minecraftPixelCanvas" width="320" height="320" class="w-full h-full"></canvas>
@@ -1817,7 +1820,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v224",
+        app_version: "v225",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7447,7 +7450,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null) {
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v224ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v224立体" : "v224壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v225ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v225立体" : "v225壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
