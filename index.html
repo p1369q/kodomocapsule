@@ -683,6 +683,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 /* v230: PCブラウザでは共有APIが反応しない場合があるため、必ず保存動線として表示する。 */
 #minecraftPreviewDrawer.minecraft-desktop-download-mode #minecraftPreviewAddonBtnLabel::after{content:"";}
 
+/* v232: iPhone/iPadでは、受信した.mcaddonからMinecraftボタンを押す実際の成功動線に案内を寄せる。 */
+
 </style>
 </head>
 <body>
@@ -937,7 +939,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v231</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v232</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1517,7 +1519,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
-        <p class="text-[11px] text-slate-400 mt-1">見え方を確認したら、緑のボタンで共有画面を開き、Minecraftを選びます。</p>
+        <p class="text-[11px] text-slate-400 mt-1">見え方を確認したら、緑のボタンでメッセージやメールに送り、届いた.mcaddonからMinecraftを開きます。</p>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -1561,7 +1563,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
       <div id="minecraftAddonActionSingle" class="minecraft-primary-actions flex flex-col sm:flex-row gap-2 pt-0">
-        <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn flex-[1.8] py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① マイクラをひらく</span></span></button>
+        <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn flex-[1.8] py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① 送ってマイクラで開く</span></span></button>
         <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
         <button onclick="closeMinecraftPixelPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
@@ -1570,24 +1572,24 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="w-9 h-9 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-lg shrink-0">🧭</div>
           <div>
             <div class="text-sm font-extrabold text-emerald-900">ここからは、緑のボタンを押せばOK</div>
-            <p id="minecraftMobileFlowText" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">保存先を選ばず、共有画面でMinecraftを選ぶだけで進めます。</p><p id="minecraftPcFlowNote" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">この端末では、まずファイルを保存します。保存した .mcaddon を開くとMinecraftに入れられます。</p>
+            <p id="minecraftMobileFlowText" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">共有画面でメッセージやメールを選び、自分や家族に送ってから開きます。</p><p id="minecraftPcFlowNote" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">この端末では、まずファイルを保存します。保存した .mcaddon を開くとMinecraftに入れられます。</p>
           </div>
         </div>
         <div class="grid sm:grid-cols-3 gap-2 text-[11px] leading-relaxed">
           <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 1</div>
-            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">マイクラを選ぶ</span><span class="minecraft-pc-step hidden">ファイルを保存</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">共有画面が出たら Minecraft をタップします。</span><span class="minecraft-pc-step hidden">ダウンロードされた .mcaddon を開きます。</span></p>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">メッセージ/メールで送る</span><span class="minecraft-pc-step hidden">ファイルを保存</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">共有画面が出たら、メッセージやメールを選んで送ります。</span><span class="minecraft-pc-step hidden">ダウンロードされた .mcaddon を開きます。</span></p>
           </div>
           <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 2</div>
-            <div class="font-extrabold text-slate-800">完了まで待つ</div>
-            <p class="text-slate-500 mt-1">Minecraftが開いたら「インポート完了」まで待ちます。</p>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">届いたファイルを開く</span><span class="minecraft-pc-step hidden">完了まで待つ</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">届いた .mcaddon をタップします。</span><span class="minecraft-pc-step hidden">Minecraftが開いたら「インポート完了」まで待ちます。</span></p>
           </div>
           <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 3</div>
-            <div class="font-extrabold text-slate-800">ワールドでON</div>
-            <p class="text-slate-500 mt-1">リソースパックとビヘイビアーパックをONにします。</p>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">右上のMinecraft</span><span class="minecraft-pc-step hidden">ワールドでON</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">プレビュー画面の右上に出るMinecraftボタンを押します。</span><span class="minecraft-pc-step hidden">リソースパックとビヘイビアーパックをONにします。</span></p>
           </div>
         </div>
       </div>
@@ -1597,8 +1599,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </summary>
         <div class="mt-3 space-y-3 text-[11px] text-slate-600 leading-relaxed">
           <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
-            <div class="font-extrabold text-slate-800 mb-1">共有画面でMinecraftが出ない場合</div>
-            <p>下の予備ボタンで .mcaddon を保存してから、ファイルアプリで開きます。</p>
+            <div class="font-extrabold text-slate-800 mb-1">iPhone/iPadでMinecraftボタンが出ない場合</div>
+            <p>共有画面でメッセージやメールを選び、自分や家族に送ってください。届いた .mcaddon をタップすると、右上にMinecraftボタンが出やすくなります。</p>
+            <p class="mt-2">それでも難しい場合は、下の予備ボタンで .mcaddon を保存してから開きます。</p>
             <button id="minecraftPreviewFileSaveBtn" onclick="downloadMinecraftAddon(event, null, true)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">予備：ファイルに保存する</button>
             <ol class="list-decimal pl-4 space-y-1">
               <li>保存した .mcaddon をファイルアプリから開きます。</li>
@@ -1881,7 +1884,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v231",
+        app_version: "v232",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5146,7 +5149,7 @@ function getMinecraftPrimaryActionLabel(work = getMinecraftAddonTargetWork(), re
   const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
   const meta = getMinecraftAddonStyleMeta(resolved);
   const suffix = isSolidWork ? `（${resolved === "voxel" ? `${voxelMeta.label}` : meta.label}）` : "";
-  return canUseMinecraftFileShare() ? `① マイクラをひらく${suffix}` : `① ファイルを保存${suffix}`;
+  return canUseMinecraftFileShare() ? `① 送ってマイクラで開く${suffix}` : `① ファイルを保存${suffix}`;
 }
 
 function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
@@ -7542,12 +7545,12 @@ function showMinecraftInstallGuideAfterExport(displayName, exportStyle = "wall",
     : "作品アイテムを持って、壁の側面をタップします。";
 
   if (deliveryMode === "shared") {
-    setMinecraftPreviewStatus(`${name}をMinecraftに渡しました。Minecraftが開いたら「インポート完了」を待ち、ワールド設定でリソースパックとビヘイビアーパックをONにしてください。`, "success");
+    setMinecraftPreviewStatus(`${name}を共有しました。届いた .mcaddon をタップし、右上のMinecraftボタンを押してください。Minecraftが開いたら「インポート完了」を待ちます。`, "success");
     return;
   }
 
   if (deliveryMode === "share_cancelled") {
-    setMinecraftPreviewStatus("共有画面を閉じました。もう一度、緑の「マイクラをひらく」ボタンからMinecraftを選べます。", "warning");
+    setMinecraftPreviewStatus("共有画面を閉じました。もう一度、緑の「送ってマイクラで開く」ボタンからメッセージやメールを選べます。", "warning");
     return;
   }
 
@@ -7627,8 +7630,8 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     document.getElementById("minecraftPreviewFileSaveBtn")
   ].filter(Boolean);
   exportButtons.forEach(b => { b.disabled = true; });
-  if (btnLabelEl) btnLabelEl.textContent = forceDownload ? "ファイル作成中..." : "共有画面を開く準備中...";
-  else if (btn) btn.innerText = forceDownload ? "ファイル作成中..." : "共有画面を開く準備中...";
+  if (btnLabelEl) btnLabelEl.textContent = forceDownload ? "ファイル作成中..." : "送る準備中...";
+  else if (btn) btn.innerText = forceDownload ? "ファイル作成中..." : "送る準備中...";
 
   try {
     const work = getMinecraftAddonTargetWork();
@@ -7656,7 +7659,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v231ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v231立体" : "v231壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v232ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v232立体" : "v232壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
