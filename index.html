@@ -686,6 +686,10 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 /* v234: iPhone/iPadでも共有画面を使わず、まずダウンロード確認からMinecraftで開く動線にする。 */
 /* v236: 予備ボタンだけは共有画面を開き、メッセージ/メール送付ルートを使えるようにする。 */
 
+/* v238: 立体作品の置き方を子どもにも分かるように、床置き/壁貼りガイドを追加する。 */
+#minecraftPlacementGuide strong{font-weight:800;}
+#minecraftPlacementGuide .minecraft-placement-badge{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;border-radius:14px;background:white;border:1px solid rgba(125,211,252,.55);}
+
 </style>
 </head>
 <body>
@@ -940,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v236</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v238</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1520,7 +1524,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
-        <p class="text-[11px] text-slate-400 mt-1">見え方を確認したら、緑のボタンで .mcaddon をダウンロードし、右上のダウンロード一覧から開きます。</p>
+        <p class="text-[11px] text-slate-400 mt-1">見え方と置き方を確認したら、緑のボタンで .mcaddon をダウンロードします。</p>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -1591,6 +1595,16 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 3</div>
             <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">Minecraftボタン</span><span class="minecraft-pc-step hidden">ワールドでON</span></div>
             <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">ファイル画面の右上に出るMinecraftボタンを押します。</span><span class="minecraft-pc-step hidden">リソースパックとビヘイビアーパックをONにします。</span></p>
+          </div>
+        </div>
+      </div>
+      <div id="minecraftPlacementGuide" class="hidden rounded-2xl bg-sky-50/90 border border-sky-100 p-3 text-left">
+        <div class="flex items-start gap-2">
+          <div id="minecraftPlacementGuideIcon" class="minecraft-placement-badge text-lg shrink-0">🧊</div>
+          <div>
+            <div id="minecraftPlacementGuideTitle" class="text-sm font-extrabold text-sky-900">置き方ガイド</div>
+            <p id="minecraftPlacementGuideText" class="text-[11px] text-sky-800/85 leading-relaxed mt-1"></p>
+            <p id="minecraftPlacementGuideSubText" class="text-[10px] text-slate-500 leading-relaxed mt-1"></p>
           </div>
         </div>
       </div>
@@ -1887,7 +1901,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v236",
+        app_version: "v238",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5088,6 +5102,69 @@ function getMinecraftVoxelPixelRelief(data, sampleSize, x, y, reliefMeta) {
   return Math.max(1, Math.min(10, height * Math.max(0.8, reliefScale * 0.75)));
 }
 
+function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
+  const total = sampleSize * sampleSize;
+  const visible = new Uint8Array(total);
+  let visibleCount = 0;
+  let minX = sampleSize, minY = sampleSize, maxX = -1, maxY = -1;
+  for (let y = 0; y < sampleSize; y++) {
+    for (let x = 0; x < sampleSize; x++) {
+      if (!isMinecraftVoxelVisiblePixel(data, sampleSize, x, y)) continue;
+      const pos = y * sampleSize + x;
+      visible[pos] = 1;
+      visibleCount++;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (!visibleCount) return visible;
+
+  const trimmed = new Uint8Array(visible);
+  const bottomKeepY = Math.max(minY, maxY - Math.max(1, Math.floor(sampleSize * 0.14)));
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const pos = y * sampleSize + x;
+      if (!visible[pos]) continue;
+      let neighborCount = 0;
+      let orthCount = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) continue;
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= sampleSize || ny >= sampleSize) continue;
+          if (!visible[ny * sampleSize + nx]) continue;
+          neighborCount++;
+          if (!dx || !dy) orthCount++;
+        }
+      }
+      const idx = pos * 4;
+      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+      const brightness = (r + g + b) / 3;
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      const touchesBounds = x === minX || x === maxX || y === minY || y === maxY;
+      const isLikelyBackground = brightness > 216 && chroma < 58;
+      const isThinNoise = neighborCount <= 1 || orthCount === 0;
+      const isLooseEdge = touchesBounds && neighborCount <= 3 && orthCount <= 2;
+      const keepBottomSupport = y >= bottomKeepY && neighborCount >= 1;
+      const keepStrongColor = chroma >= 62 && neighborCount >= 1;
+      const keepDenseArea = neighborCount >= 5 || orthCount >= 3;
+      if (!keepBottomSupport && !keepStrongColor && !keepDenseArea) {
+        if ((isThinNoise && (touchesBounds || isLikelyBackground)) || (isLooseEdge && isLikelyBackground)) {
+          trimmed[pos] = 0;
+        }
+      }
+    }
+  }
+
+  let keptCount = 0;
+  for (let i = 0; i < trimmed.length; i++) keptCount += trimmed[i] ? 1 : 0;
+  if (keptCount < Math.max(visibleCount * 0.58, 12)) return visible;
+  return trimmed;
+}
+
 function updateMinecraftVoxelReliefUi(forceVisible = null) {
   const panelEl = document.getElementById("minecraftVoxelReliefPanel");
   const standardBtn = document.getElementById("minecraftVoxelReliefStandardBtn");
@@ -5222,6 +5299,28 @@ window.shareMinecraftAddonFromFallback = function(event) {
   return window.downloadMinecraftAddon(event, null, false);
 };
 
+function updateMinecraftPlacementGuideUi(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
+  const guideEl = document.getElementById("minecraftPlacementGuide");
+  const iconEl = document.getElementById("minecraftPlacementGuideIcon");
+  const titleEl = document.getElementById("minecraftPlacementGuideTitle");
+  const textEl = document.getElementById("minecraftPlacementGuideText");
+  const subTextEl = document.getElementById("minecraftPlacementGuideSubText");
+  const isSolidWork = work?.artworkShape === "solid";
+  if (guideEl) guideEl.classList.toggle("hidden", !isSolidWork);
+  if (!isSolidWork) return;
+  if (resolved === "voxel") {
+    if (iconEl) iconEl.textContent = "🧊";
+    if (titleEl) titleEl.textContent = "置き方：床や棚の上に置く立体作品";
+    if (textEl) textEl.innerHTML = "ワールドでは、作品アイテムを持って<strong>床・棚・台の上面</strong>をタップします。壁ではなく、上から置くタイプです。";
+    if (subTextEl) subTextEl.textContent = "置いたときの正面は、プレイヤーが向いている方向に合わせます。向きが違うときは一度壊して、向きを変えて置き直してください。";
+  } else {
+    if (iconEl) iconEl.textContent = "🖼️";
+    if (titleEl) titleEl.textContent = "置き方：壁の側面に貼る作品";
+    if (textEl) textEl.innerHTML = "ワールドでは、作品アイテムを持って<strong>壁の側面</strong>をタップします。床ではなく、壁に貼るタイプです。";
+    if (subTextEl) subTextEl.textContent = "立体作品でも「壁画用」を選んだ場合は、通常の絵のように壁へ飾ります。";
+  }
+}
+
 function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const panelEl = document.getElementById("minecraftAddonStylePanel");
   const wallBtn = document.getElementById("minecraftAddonStyleWallBtn");
@@ -5254,6 +5353,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
       ? `マイクラでの見え方（ボクセル風立体 ${voxelMeta.label} / ${reliefMeta.label}）`
       : "マイクラでの見え方（壁画）";
   }
+  updateMinecraftPlacementGuideUi(work, resolved);
   updateMinecraftDeliveryUi(work);
   if (currentMinecraftSpriteCanvas) {
     renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
@@ -6197,8 +6297,9 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   sctx.imageSmoothingEnabled = true;
   sctx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
   const pixels = sctx.getImageData(0, 0, sampleSize, sampleSize).data;
+  const silhouetteMask = buildMinecraftVoxelSilhouetteMask(pixels, sampleSize);
 
-  // v236: 輪郭・明暗差・影を使い、立体作品らしい厚みが分かるレリーフ表現にする。
+  // v237: 輪郭・明暗差・影に加え、外周の余分なボクセルを控えめに減らして形らしさを上げる。
   const reliefMaxSize = 174;
   const block = Math.max(4, Math.floor(reliefMaxSize / sampleSize));
   const totalSize = block * sampleSize;
@@ -6225,12 +6326,8 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
       const idx = (y * sampleSize + x) * 4;
-      const a = pixels[idx + 3];
-      if (a < 24) continue;
+      if (!silhouetteMask[y * sampleSize + x]) continue;
       const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
-      const brightness = (r + g + b) / 3;
-      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-      if (brightness > 248 && chroma < 8) continue;
       const reliefHeight = getMinecraftVoxelPixelRelief(pixels, sampleSize, x, y, reliefMeta);
       const side = Math.max(1, Math.round(reliefHeight * 0.48));
       const rise = Math.max(0.5, Math.min(block * 0.85, reliefHeight * 0.55));
@@ -7019,6 +7116,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSiz
   sampleCtx.imageSmoothingEnabled = true;
   sampleCtx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
   const data = sampleCtx.getImageData(0, 0, sampleSize, sampleSize).data;
+  const silhouetteMask = buildMinecraftVoxelSilhouetteMask(data, sampleSize);
   const cubes = [];
   const cubeStep = 12 / sampleSize;
   const baseX = -6;
@@ -7060,11 +7158,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSiz
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
       const idx = (y * sampleSize + x) * 4;
-      const a = data[idx + 3];
-      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-      const brightness = (r + g + b) / 3;
-      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-      if (a < 24 || (brightness > 248 && chroma < 8)) continue;
+      if (!silhouetteMask[y * sampleSize + x]) continue;
       const reliefHeight = getMinecraftVoxelPixelRelief(data, sampleSize, x, y, reliefMeta);
       const d = Math.max(1, Math.min(maxDepth, Math.round(reliefHeight * reliefScale * 0.7)));
       const depth = cubeStep * (0.75 + d * 0.36);
@@ -7635,7 +7729,7 @@ function showMinecraftInstallGuideAfterExport(displayName, exportStyle = "wall",
     return;
   }
 
-  setMinecraftPreviewStatus(isMinecraftMobileShareDevice() ? `${name}の.mcaddonをダウンロードしました。右上のダウンロード一覧からファイルを開き、Minecraftボタンを押してください。` : `${name}の.mcaddonを保存しました。ダウンロードされたファイルを開くとMinecraftにインポートできます。`, "success");
+  setMinecraftPreviewStatus(isMinecraftMobileShareDevice() ? `${name}の.mcaddonをダウンロードしました。右上のダウンロード一覧からファイルを開き、Minecraftボタンを押してください。インポート後は、${placeHint}` : `${name}の.mcaddonを保存しました。ダウンロードされたファイルを開くとMinecraftにインポートできます。インポート後は、${placeHint}`, "success");
 }
 
 
@@ -7744,7 +7838,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v236ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v236立体" : "v236壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v238ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v238立体" : "v238壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
