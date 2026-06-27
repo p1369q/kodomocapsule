@@ -937,7 +937,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v230</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v231</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1881,7 +1881,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v230",
+        app_version: "v231",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7552,17 +7552,8 @@ function showMinecraftInstallGuideAfterExport(displayName, exportStyle = "wall",
   }
 
   setMinecraftPreviewStatus(`${name}の.mcaddonを保存しました。ダウンロードされたファイルを開くとMinecraftにインポートできます。`, "success");
-  alert([
-    `${name}のファイルを保存しました。`,
-    "",
-    "次はこれだけです。",
-    "1. ダウンロードされた .mcaddon を開く",
-    "2. Minecraftで「インポート完了」を待つ",
-    "3. ワールド設定で2つのパックをON",
-    "",
-    placeHint
-  ].join("\n"));
 }
+
 
 function downloadMinecraftAddonBlob(blob, fileName, workId) {
   const link = document.createElement("a");
@@ -7665,7 +7656,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v230ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v230立体" : "v230壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v231ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v231立体" : "v231壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
