@@ -680,6 +680,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 #minecraftPreviewDrawer.minecraft-share-unavailable .minecraft-pc-step{display:block !important;}
 #minecraftPreviewDrawer:not(.minecraft-share-unavailable) .minecraft-pc-step{display:none !important;}
 
+/* v230: PCブラウザでは共有APIが反応しない場合があるため、必ず保存動線として表示する。 */
+#minecraftPreviewDrawer.minecraft-desktop-download-mode #minecraftPreviewAddonBtnLabel::after{content:"";}
+
 </style>
 </head>
 <body>
@@ -934,7 +937,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v229</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v230</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1878,7 +1881,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v229",
+        app_version: "v230",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5115,8 +5118,21 @@ function resolveMinecraftAddonStyle(work = getMinecraftAddonTargetWork()) {
   return "wall";
 }
 
+function isMinecraftMobileShareDevice() {
+  try {
+    const ua = navigator.userAgent || "";
+    const isAndroid = /Android/i.test(ua);
+    return isIosLikeDevice() || isAndroid;
+  } catch (e) {
+    return false;
+  }
+}
+
 function canUseMinecraftFileShare() {
   try {
+    // v230: Chrome/EdgeなどのPCブラウザは canShare がtrueでも共有画面が開かず
+    // 「準備中」のままに見えることがあるため、Minecraftへ直接渡す共有はモバイル/タブレット限定にする。
+    if (!isMinecraftMobileShareDevice()) return false;
     if (!navigator.share || !navigator.canShare || typeof File === "undefined") return false;
     const testFile = new File([""], "kodomo_test.mcaddon", { type: "application/octet-stream" });
     return !!navigator.canShare({ files: [testFile] });
@@ -5137,14 +5153,17 @@ function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
   const drawer = document.getElementById("minecraftPreviewDrawer");
   const labelEl = document.getElementById("minecraftPreviewAddonBtnLabel");
   const canShare = canUseMinecraftFileShare();
-  if (drawer) drawer.classList.toggle("minecraft-share-unavailable", !canShare);
+  if (drawer) {
+    drawer.classList.toggle("minecraft-share-unavailable", !canShare);
+    drawer.classList.toggle("minecraft-desktop-download-mode", !isMinecraftMobileShareDevice());
+  }
   if (labelEl) labelEl.textContent = getMinecraftPrimaryActionLabel(work);
 }
 
 window.handleMinecraftPrimaryAddonAction = function(event) {
   const forceDownload = !canUseMinecraftFileShare();
   if (forceDownload) {
-    setMinecraftPreviewStatus("この端末では共有画面を使えないため、.mcaddonファイルを保存します。保存後にファイルを開いてMinecraftへ入れてください。", "info");
+    setMinecraftPreviewStatus("PCでは共有画面を開かず、.mcaddonファイルを保存します。ダウンロードされたファイルを開くとMinecraftに入れられます。", "info");
   }
   return window.downloadMinecraftAddon(event, null, forceDownload);
 };
@@ -7569,11 +7588,18 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId, forceDownlo
 
   if (canShareFile) {
     try {
-      await navigator.share({
-        files: [file],
-        title: "コドモカプセル Minecraftアドオン",
-        text: "Minecraft統合版で作品を飾るためのアドオンです。"
-      });
+      await Promise.race([
+        navigator.share({
+          files: [file],
+          title: "コドモカプセル Minecraftアドオン",
+          text: "Minecraft統合版で作品を飾るためのアドオンです。"
+        }),
+        new Promise((_, reject) => setTimeout(() => {
+          const timeoutError = new Error("share_timeout");
+          timeoutError.name = "ShareTimeoutError";
+          reject(timeoutError);
+        }, 8000))
+      ]);
       trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
       return "shared";
     } catch (shareError) {
@@ -7639,7 +7665,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v229ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v229立体" : "v229壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v230ボクセル${voxelLabelShort}` : (isSolidExhibit ? "v230立体" : "v230壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
