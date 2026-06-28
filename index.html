@@ -944,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v238</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v240</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1166,7 +1166,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <p class="field-help">まずは記録用の分類です。Minecraftへの立体展示は次の段階で少しずつ追加します。</p>
           <div id="solidArtworkPhotoGuide" class="hidden mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-[11px] text-emerald-800 leading-relaxed">
             <div class="font-extrabold mb-1">🧊 立体の撮影ガイド</div>
-            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。将来Minecraftの展示台にする場合も、この写真が使いやすくなります。</p>
+            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。画像ごとに「正面・横・上」のラベルを付けておくと、将来Minecraftの疑似3D展示にも使いやすくなります。</p>
             <p class="mt-1 text-emerald-700">写真一覧では、同じ作品の写真が何枚あっても1作品につき1枚だけ表示します。</p>
           </div>
         </div>
@@ -1525,6 +1525,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
         <p class="text-[11px] text-slate-400 mt-1">見え方と置き方を確認したら、緑のボタンで .mcaddon をダウンロードします。</p>
+        <p id="minecraftSourcePhotoNote" class="hidden text-[11px] text-emerald-700 font-bold mt-1"></p>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -1901,7 +1902,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v238",
+        app_version: "v240",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -4665,16 +4666,22 @@ function makeStoredMediaItem(type, url, originalUrl = null) {
   return item;
 }
 
+function finalizeStoredMediaItem(sourceItem, storedItem) {
+  const view = sourceItem && typeof sourceItem.solidView === "string" ? sourceItem.solidView : "";
+  if (["front", "side", "top", "other"].includes(view)) storedItem.solidView = view;
+  return storedItem;
+}
+
 async function uploadMediaItemForWork(item, artworkId, index) {
   const isPdf = item.type === "pdf";
   if (isPdf) {
     if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("http")) {
-      return makeStoredMediaItem("pdf", item.dataUrl);
+      return finalizeStoredMediaItem(item, makeStoredMediaItem("pdf", item.dataUrl));
     }
     const path = `families/${currentSession.familyId}/artworks/${artworkId}/media_${Date.now()}_${index}.pdf`;
     const r = ref(storage, path);
     await uploadString(r, item.dataUrl, "data_url");
-    return makeStoredMediaItem("pdf", await getDownloadURL(r));
+    return finalizeStoredMediaItem(item, makeStoredMediaItem("pdf", await getDownloadURL(r)));
   }
 
   let originalUrl = item.originalUrl || null;
@@ -4686,14 +4693,14 @@ async function uploadMediaItemForWork(item, artworkId, index) {
   }
 
   if (typeof item.dataUrl === "string" && item.dataUrl.startsWith("http")) {
-    return makeStoredMediaItem("image", item.dataUrl, originalUrl || item.originalUrl || null);
+    return finalizeStoredMediaItem(item, makeStoredMediaItem("image", item.dataUrl, originalUrl || item.originalUrl || null));
   }
 
   const displayPath = `families/${currentSession.familyId}/artworks/${artworkId}/display_${Date.now()}_${index}.jpg`;
   const displayRef = ref(storage, displayPath);
   await uploadString(displayRef, item.dataUrl, "data_url");
   const displayUrl = await getDownloadURL(displayRef);
-  return makeStoredMediaItem("image", displayUrl, originalUrl || displayUrl);
+  return finalizeStoredMediaItem(item, makeStoredMediaItem("image", displayUrl, originalUrl || displayUrl));
 }
 
 async function showCropperImage(sourceDataUrl, aspectMode = currentCropAspectMode || "free") {
@@ -4868,18 +4875,45 @@ async function processSelectedFiles(files) {
   }
 }
 
+function getSolidMediaViewMeta(value) {
+  const map = {
+    front: { label: "正面", emoji: "⬜" },
+    side: { label: "横", emoji: "↔️" },
+    top: { label: "上", emoji: "⬆️" },
+    other: { label: "その他", emoji: "📷" }
+  };
+  return map[value] || map.other;
+}
+
+window.setSolidMediaView = function(index, value) {
+  const item = base64MediaArray[index];
+  if (!item) return;
+  item.solidView = ["front", "side", "top", "other"].includes(value) ? value : "other";
+  trackEvent("solid_media_view_changed", { media_index: index, solid_view: item.solidView });
+};
+
+function buildSolidMediaViewSelect(index, item) {
+  if (getArtworkShapeValue() !== "solid" || item.type !== "image") return "";
+  const value = ["front", "side", "top", "other"].includes(item.solidView) ? item.solidView : (index === 0 ? "front" : "other");
+  item.solidView = value;
+  return `<div class="mt-1.5"><select onchange="setSolidMediaView(${index}, this.value)" class="w-full rounded-xl border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-[10px] font-bold text-emerald-800"><option value="front" ${value === "front" ? "selected" : ""}>⬜ 正面</option><option value="side" ${value === "side" ? "selected" : ""}>↔️ 横</option><option value="top" ${value === "top" ? "selected" : ""}>⬆️ 上</option><option value="other" ${value === "other" ? "selected" : ""}>📷 その他</option></select></div>`;
+}
+
 function renderMediaPreviews() {
   let previewHtml = "";
+  const isSolid = getArtworkShapeValue() === "solid";
   base64MediaArray.forEach((item, index) => {
-    const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">✕</button>`;
+    const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow z-10">✕</button>`;
     if(item.type === "pdf") {
-      previewHtml += `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
+      const pdfCard = `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
+      previewHtml += isSolid ? `<div>${pdfCard}</div>` : pdfCard;
     } else {
       const cropBtn = canAddData() ? `<button type="button" onclick="openCropperForMedia(${index}, event)" class="absolute bottom-1.5 right-1.5 rounded-full bg-white/95 text-[10px] font-bold text-slate-600 px-2 py-1 shadow">✂</button>` : ``;
       const statusBadge = item.autoTrimApplied
         ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-black/65 text-white text-[9px] font-bold px-2 py-1">自動</div>`
         : (mediaItemHasOriginal(item) ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 text-slate-600 text-[9px] font-bold px-2 py-1 shadow">元あり</div>` : ``);
-      previewHtml += `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}${cropBtn}${statusBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      const imageCard = `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}${cropBtn}${statusBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      previewHtml += isSolid ? `<div>${imageCard}${buildSolidMediaViewSelect(index, item)}</div>` : imageCard;
     }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
@@ -7838,7 +7872,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v238ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v238立体" : "v238壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v240ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v240立体" : "v240壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = await getMinecraftSpriteBlob();
@@ -7923,6 +7957,47 @@ function isMinecraftPreviewEligibleWork(work) {
   const category = localCategories.find(c => c.id === work?.category);
   return category?.name === "作品" || work?.category === "作品";
 }
+function isMinecraftImageMedia(media) {
+  const sourceUrl = media?.url || media?.dataUrl || media;
+  const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
+  return !!sourceUrl && !isPdf;
+}
+
+function getPreferredMinecraftMediaIndex(work, requestedIndex = 0) {
+  const mediaList = Array.isArray(work?.mediaUrls) ? work.mediaUrls : [];
+  const normalizedRequested = Number.isFinite(Number(requestedIndex)) ? Number(requestedIndex) : 0;
+  if (work?.artworkShape === "solid") {
+    const frontIndex = mediaList.findIndex(media => media && media.solidView === "front" && isMinecraftImageMedia(media));
+    if (frontIndex >= 0) return frontIndex;
+  }
+  if (mediaList[normalizedRequested] && isMinecraftImageMedia(mediaList[normalizedRequested])) return normalizedRequested;
+  const firstImageIndex = mediaList.findIndex(media => isMinecraftImageMedia(media));
+  return firstImageIndex >= 0 ? firstImageIndex : normalizedRequested;
+}
+
+function updateMinecraftSourcePhotoNote(work, requestedIndex, actualIndex) {
+  const noteEl = document.getElementById("minecraftSourcePhotoNote");
+  if (!noteEl) return;
+  const isSolid = work?.artworkShape === "solid";
+  const actualMedia = Array.isArray(work?.mediaUrls) ? work.mediaUrls[actualIndex] : null;
+  const requestedMedia = Array.isArray(work?.mediaUrls) ? work.mediaUrls[requestedIndex] : null;
+  if (!isSolid) {
+    noteEl.classList.add("hidden");
+    noteEl.textContent = "";
+    return;
+  }
+  const actualView = actualMedia?.solidView || "";
+  const requestedView = requestedMedia?.solidView || "";
+  if (actualView === "front") {
+    noteEl.textContent = actualIndex === requestedIndex
+      ? "⬜ 正面写真を使ってマイクラ用にしています。"
+      : "⬜ 正面ラベルの写真を優先してマイクラ用にしています。";
+  } else {
+    noteEl.textContent = "📷 正面ラベルがないため、選択中の写真を使っています。";
+  }
+  noteEl.classList.remove("hidden");
+}
+
 
 window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (event) event.stopPropagation();
@@ -7932,15 +8007,16 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
     alert("マイクラ用アート変換は、カテゴリが「作品」のカプセルで利用できます。");
     return;
   }
-  const media = work.mediaUrls[mediaIndex];
+  const requestedMediaIndex = Number.isFinite(Number(mediaIndex)) ? Number(mediaIndex) : 0;
+  const preferredMediaIndex = getPreferredMinecraftMediaIndex(work, requestedMediaIndex);
+  const media = work.mediaUrls[preferredMediaIndex];
   const sourceUrl = media?.url || media?.dataUrl || media;
-  const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
-  if (!sourceUrl || isPdf) {
+  if (!isMinecraftImageMedia(media)) {
     alert("PDFはマイクラ用アート変換の対象外です。画像を選択してください。");
     return;
   }
 
-  currentMinecraftPreviewTarget = { workId, mediaIndex, sourceUrl };
+  currentMinecraftPreviewTarget = { workId, mediaIndex: preferredMediaIndex, requestedMediaIndex, sourceUrl };
   currentMinecraftSpriteCanvas = null;
   const titleEl = document.getElementById("minecraftPreviewTitle");
   const outputAutoBtn = document.getElementById("minecraftOutputAutoBtn");
@@ -8030,9 +8106,10 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   setMinecraftPreviewStatus("");
   updateMinecraftAddonStyleUi(work);
   updateMinecraftDeliveryUi(work);
+  updateMinecraftSourcePhotoNote(work, requestedMediaIndex, preferredMediaIndex);
   if (drawer) drawer.classList.add("open");
   drawMinecraftPixelPreview(sourceUrl);
-  trackEvent("minecraft_pixel_preview_open", { work_id: workId, media_index: mediaIndex });
+  trackEvent("minecraft_pixel_preview_open", { work_id: workId, media_index: preferredMediaIndex, requested_media_index: requestedMediaIndex, used_front_photo: preferredMediaIndex !== requestedMediaIndex });
 };
 
 
@@ -8127,7 +8204,8 @@ window.openEditWork = function(id) {
         type: m.type,
         dataUrl: m.url,
         originalUrl: m.originalUrl || null,
-        hasOriginal: !!m.originalUrl
+        hasOriginal: !!m.originalUrl,
+        solidView: m.solidView || ""
       });
     });
   }
@@ -8262,6 +8340,7 @@ function updateArtworkShapeGuide() {
   const guide = document.getElementById("solidArtworkPhotoGuide");
   if (!guide) return;
   guide.classList.toggle("hidden", getArtworkShapeValue() !== "solid");
+  if (Array.isArray(base64MediaArray) && base64MediaArray.length) renderMediaPreviews();
 }
 
 function setArtworkShapeValue(value = "flat") {
