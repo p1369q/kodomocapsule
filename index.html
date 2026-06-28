@@ -953,7 +953,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v247</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v248</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1932,7 +1932,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v247",
+        app_version: "v248",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5418,8 +5418,8 @@ window.handleMinecraftPrimaryAddonAction = function(event) {
 };
 
 window.shareMinecraftAddonFromFallback = function(event) {
-  setMinecraftPreviewStatus("アドオンを共有します。メッセージ・メール・AirDropなどで送り、届いた .mcaddon を開いてください。", "info");
-  return window.downloadMinecraftAddon(event, null, false);
+  setMinecraftPreviewStatus("共有画面を開きます。メッセージ・メール・AirDropなどで送り、届いた .mcaddon を開いてください。", "info");
+  return window.downloadMinecraftAddon(event, null, false, true);
 };
 
 function updateMinecraftPlacementGuideUi(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
@@ -7855,7 +7855,12 @@ function showMinecraftInstallGuideAfterExport(displayName, exportStyle = "wall",
   }
 
   if (deliveryMode === "share_cancelled") {
-    setMinecraftPreviewStatus("もう一度、緑のボタンを押してダウンロードできます。", "warning");
+    setMinecraftPreviewStatus("共有を閉じました。この端末で入れる場合は「① この端末で実行」を押してください。", "warning");
+    return;
+  }
+
+  if (deliveryMode === "share_unavailable") {
+    setMinecraftPreviewStatus("この端末では共有画面を開けませんでした。この端末で入れる場合は「① この端末で実行」を押してください。", "warning");
     return;
   }
 
@@ -7877,7 +7882,7 @@ function downloadMinecraftAddonBlob(blob, fileName, workId) {
   return "downloaded";
 }
 
-async function shareOrDownloadMinecraftAddon(blob, fileName, workId, forceDownload = false) {
+async function shareOrDownloadMinecraftAddon(blob, fileName, workId, forceDownload = false, shareOnly = false) {
   if (forceDownload) {
     return downloadMinecraftAddonBlob(blob, fileName, workId);
   }
@@ -7887,39 +7892,34 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId, forceDownlo
 
   if (canShareFile) {
     try {
-      setMinecraftPreviewStatus("ダウンロード確認が出たら「ダウンロード」を押してください。", "info");
-      await Promise.race([
-        navigator.share({
-          files: [file],
-          title: "コドモカプセル Minecraftアドオン",
-          text: "Minecraft統合版で作品を飾るためのアドオンです。"
-        }),
-        new Promise((_, reject) => setTimeout(() => {
-          const timeoutError = new Error("share_timeout");
-          timeoutError.name = "ShareTimeoutError";
-          reject(timeoutError);
-        }, 5000))
-      ]);
+      setMinecraftPreviewStatus(shareOnly ? "共有画面を開いています。送信先を選ぶか、閉じるまでそのままお待ちください。" : "共有画面を開きます。", "info");
+      await navigator.share({
+        files: [file],
+        title: "コドモカプセル Minecraftアドオン",
+        text: "Minecraft統合版で作品を飾るためのアドオンです。"
+      });
       trackEvent("minecraft_frame_addon_share", { work_id: workId || "" });
       return "shared";
     } catch (shareError) {
       const errorName = shareError?.name || "";
       console.warn("Minecraft addon share was not completed:", errorName || shareError?.message || shareError);
       trackEvent("minecraft_frame_addon_share_cancelled", { message: shareError?.message || errorName || "unknown" });
-      if (errorName === "AbortError" || errorName === "NotAllowedError") {
+      if (shareOnly || errorName === "AbortError" || errorName === "NotAllowedError") {
         return "share_cancelled";
       }
       trackEvent("minecraft_frame_addon_share_fallback", { message: shareError?.message || errorName || "unknown" });
-      if (errorName === "ShareTimeoutError") {
-        setMinecraftPreviewStatus("ダウンロード確認が出たら「ダウンロード」を押してください。右上のダウンロード一覧から .mcaddon を開くとMinecraftボタンが出やすくなります。", "info");
-      }
     }
+  }
+
+  if (shareOnly) {
+    trackEvent("minecraft_frame_addon_share_unavailable", { work_id: workId || "" });
+    return "share_unavailable";
   }
 
   return downloadMinecraftAddonBlob(blob, fileName, workId);
 }
 
-window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, forceDownload = false) {
+window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, forceDownload = false, shareOnly = false) {
   if (event) event.stopPropagation();
   if (!currentMinecraftSpriteCanvas) {
     alert("先にマイクラ用アートを作成してください。");
@@ -7936,6 +7936,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
   const originalLabelText = btnLabelEl ? btnLabelEl.textContent : "";
   const exportButtons = [
     document.getElementById("minecraftPreviewAddonBtn"),
+    document.getElementById("minecraftPreviewShareBtn"),
     document.getElementById("minecraftPreviewFileSaveBtn")
   ].filter(Boolean);
   exportButtons.forEach(b => { b.disabled = true; });
@@ -7968,7 +7969,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v247ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v247立体" : "v247壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v248ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v248立体" : "v248壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8029,7 +8030,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     });
 
     const addonFileName = buildUniqueMinecraftAddonFileName(work, blockSlug);
-    const deliveryMode = await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "", forceDownload);
+    const deliveryMode = await shareOrDownloadMinecraftAddon(addonBlob, addonFileName, work?.id || "", forceDownload, shareOnly);
     showMinecraftInstallGuideAfterExport(displayName, resolvedAddonStyle, deliveryMode);
   } catch (err) {
     console.error("Minecraft addon export failed:", err);
