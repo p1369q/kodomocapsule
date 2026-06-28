@@ -944,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v243</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v244</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1916,7 +1916,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v243",
+        app_version: "v244",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6347,8 +6347,9 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   sctx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
   const pixels = sctx.getImageData(0, 0, sampleSize, sampleSize).data;
   const silhouetteMask = buildMinecraftVoxelSilhouetteMask(pixels, sampleSize);
+  const previewPalette = getMinecraftVoxelPreviewPalette(pixels, sampleSize, silhouetteMask);
 
-  // v237: 輪郭・明暗差・影に加え、外周の余分なボクセルを控えめに減らして形らしさを上げる。
+  // v244: 側面・上面は作品全体の色味に寄せて、白い段差が目立ちにくい表示にする。
   const reliefMaxSize = 174;
   const block = Math.max(4, Math.floor(reliefMaxSize / sampleSize));
   const totalSize = block * sampleSize;
@@ -6377,16 +6378,21 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
       const idx = (y * sampleSize + x) * 4;
       if (!silhouetteMask[y * sampleSize + x]) continue;
       const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
-      const reliefHeight = getMinecraftVoxelPixelRelief(pixels, sampleSize, x, y, reliefMeta);
+      const pixelColor = { r, g, b };
+      const isLightPixel = isMinecraftLowChromaLightColor(r, g, b);
+      const reliefHeightBase = getMinecraftVoxelPixelRelief(pixels, sampleSize, x, y, reliefMeta);
+      const reliefHeight = isLightPixel ? Math.max(1, reliefHeightBase * 0.8) : reliefHeightBase;
       const side = Math.max(1, Math.round(reliefHeight * 0.48));
       const rise = Math.max(0.5, Math.min(block * 0.85, reliefHeight * 0.55));
       const px = startX + x * block;
       const py = startY + y * block - rise;
+      const sideFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.sideColor, pixelColor, isLightPixel ? 0.06 : 0.22), isLightPixel ? 0.9 : 0.94);
+      const topFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.topColor, pixelColor, isLightPixel ? 0.08 : 0.26), isLightPixel ? 0.97 : 1.02);
 
       ctx.fillStyle = "rgba(15,23,42,0.18)";
       ctx.fillRect(px + depthX, py + depthY + Math.max(1, side * 0.25), block, block);
 
-      ctx.fillStyle = `rgb(${Math.max(0, Math.round(r * 0.64))},${Math.max(0, Math.round(g * 0.64))},${Math.max(0, Math.round(b * 0.64))})`;
+      ctx.fillStyle = `rgb(${sideFace.r},${sideFace.g},${sideFace.b})`;
       ctx.beginPath();
       ctx.moveTo(px + block, py);
       ctx.lineTo(px + block + side, py + depthY * 0.35);
@@ -6395,7 +6401,7 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = `rgb(${Math.min(255, Math.round(r * 1.12 + 12))},${Math.min(255, Math.round(g * 1.12 + 12))},${Math.min(255, Math.round(b * 1.12 + 12))})`;
+      ctx.fillStyle = `rgb(${topFace.r},${topFace.g},${topFace.b})`;
       ctx.beginPath();
       ctx.moveTo(px, py);
       ctx.lineTo(px + side, py + depthY * 0.35);
@@ -7895,7 +7901,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v243ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v243立体" : "v243壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v244ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v244立体" : "v244壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8090,6 +8096,47 @@ function normalizeMinecraftPseudoFaceColor(sampleColor, fallbackColor, role = "s
     mixed = shadeMinecraftColor(mixed, 0.93);
   }
   return mixed;
+}
+
+function isMinecraftLowChromaLightColor(r, g, b) {
+  const brightness = (r + g + b) / 3;
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  return brightness > 216 && chroma < 42;
+}
+
+function getMinecraftVoxelPreviewPalette(data, sampleSize, silhouetteMask) {
+  let sumR = 0, sumG = 0, sumB = 0, count = 0;
+  for (let y = 0; y < sampleSize; y++) {
+    for (let x = 0; x < sampleSize; x++) {
+      if (silhouetteMask && !silhouetteMask[y * sampleSize + x]) continue;
+      const idx = (y * sampleSize + x) * 4;
+      const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
+      if (a < 24) continue;
+      if (isMinecraftLowChromaLightColor(r, g, b)) continue;
+      sumR += r; sumG += g; sumB += b; count++;
+    }
+  }
+  if (!count) {
+    for (let y = 0; y < sampleSize; y++) {
+      for (let x = 0; x < sampleSize; x++) {
+        if (silhouetteMask && !silhouetteMask[y * sampleSize + x]) continue;
+        const idx = (y * sampleSize + x) * 4;
+        const a = data[idx + 3];
+        if (a < 24) continue;
+        sumR += data[idx]; sumG += data[idx + 1]; sumB += data[idx + 2]; count++;
+      }
+    }
+  }
+  const frontColor = count ? {
+    r: Math.round(sumR / count),
+    g: Math.round(sumG / count),
+    b: Math.round(sumB / count)
+  } : { r: 156, g: 126, b: 92 };
+  return {
+    frontColor,
+    sideColor: normalizeMinecraftPseudoFaceColor(null, frontColor, "side"),
+    topColor: normalizeMinecraftPseudoFaceColor(null, frontColor, "top")
+  };
 }
 
 function fillMinecraftAtlasSwatch(ctx, x, y, w, h, color, labelShade = 1) {
