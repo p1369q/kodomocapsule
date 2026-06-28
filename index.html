@@ -944,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v244</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v245</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1916,7 +1916,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v244",
+        app_version: "v245",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5235,6 +5235,7 @@ function updateMinecraftVoxelReliefUi(forceVisible = null) {
 function setMinecraftVoxelReliefMode(mode = "standard") {
   currentMinecraftVoxelReliefMode = ["standard", "clear", "real"].includes(mode) ? mode : "standard";
   updateMinecraftVoxelReliefUi();
+  updateMinecraftVoxelPreviewMetaUi();
   if (currentMinecraftSpriteCanvas) {
     renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
   }
@@ -5262,6 +5263,7 @@ function updateMinecraftVoxelSizeUi(forceVisible = null) {
 function setMinecraftVoxelGridSize(size = 24) {
   currentMinecraftVoxelGridSize = [16, 24, 32].includes(Number(size)) ? Number(size) : 24;
   updateMinecraftVoxelSizeUi();
+  updateMinecraftVoxelPreviewMetaUi();
   if (currentMinecraftSpriteCanvas) {
     renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
   }
@@ -5322,6 +5324,20 @@ function getMinecraftPrimaryActionLabel(work = getMinecraftAddonTargetWork(), re
   return isMinecraftMobileShareDevice() ? `① ダウンロードしてマイクラで開く${suffix}` : `① ファイルを保存${suffix}`;
 }
 
+function updateMinecraftVoxelPreviewMetaUi(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
+  const displayLabelEl = document.getElementById("minecraftPreviewDisplayLabel");
+  if (displayLabelEl) {
+    if (resolved === "voxel") {
+      const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
+      const reliefMeta = getMinecraftVoxelReliefMeta(currentMinecraftVoxelReliefMode);
+      displayLabelEl.textContent = `マイクラでの見え方（ボクセル風立体 ${voxelMeta.label} / ${reliefMeta.label}）`;
+    } else {
+      displayLabelEl.textContent = "マイクラでの見え方（壁画）";
+    }
+  }
+  updateMinecraftDeliveryUi(work);
+}
+
 function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
   const drawer = document.getElementById("minecraftPreviewDrawer");
   const labelEl = document.getElementById("minecraftPreviewAddonBtnLabel");
@@ -5378,8 +5394,6 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const descEl = document.getElementById("minecraftAddonStyleDescription");
   const voxelPanelEl = document.getElementById("minecraftVoxelSizePanel");
   const spriteLabelEl = document.getElementById("minecraftPreviewSpriteLabel");
-  const displayLabelEl = document.getElementById("minecraftPreviewDisplayLabel");
-  const saveLabelEl = document.getElementById("minecraftPreviewAddonBtnLabel");
   const isSolidWork = work?.artworkShape === "solid";
   if (panelEl) panelEl.classList.toggle("hidden", !isSolidWork);
   if (wallBtn) wallBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "wall");
@@ -5397,13 +5411,8 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
       : "平面作品は壁画用として出力します。";
   }
   if (spriteLabelEl) spriteLabelEl.textContent = resolved === "voxel" ? `ボクセル化の元画像（${voxelMeta.label}）` : "変換後の絵";
-  if (displayLabelEl) {
-    displayLabelEl.textContent = resolved === "voxel"
-      ? `マイクラでの見え方（ボクセル風立体 ${voxelMeta.label} / ${reliefMeta.label}）`
-      : "マイクラでの見え方（壁画）";
-  }
   updateMinecraftPlacementGuideUi(work, resolved);
-  updateMinecraftDeliveryUi(work);
+  updateMinecraftVoxelPreviewMetaUi(work, resolved);
   if (currentMinecraftSpriteCanvas) {
     renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
   }
@@ -7901,7 +7910,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v244ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v244立体" : "v244壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v245ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v245立体" : "v245壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8916,7 +8925,7 @@ window.switchPage = function(p){
   else if (p === 'trash') { trackEvent("trash_view"); document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 　め
-document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
+document.getElementById("inputDate").val ue = new Date().toISOString().split("T")[0];
 </script>
 </body>
 </html>
