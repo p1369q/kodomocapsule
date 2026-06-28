@@ -944,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v242</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v243</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1916,7 +1916,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v242",
+        app_version: "v243",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7895,7 +7895,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v242ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v242立体" : "v242壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v243ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v243立体" : "v243壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8015,6 +8015,16 @@ async function getMinecraftAverageColorFromMedia(media) {
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(img, 0, 0, 32, 32);
     const data = ctx.getImageData(0, 0, 32, 32).data;
+    const getPixel = (x, y) => {
+      const idx = (y * 32 + x) * 4;
+      return { r: data[idx], g: data[idx + 1], b: data[idx + 2], a: data[idx + 3] };
+    };
+    const cornerPixels = [getPixel(0, 0), getPixel(31, 0), getPixel(0, 31), getPixel(31, 31)].filter(p => p.a >= 24);
+    const bg = cornerPixels.length ? {
+      r: Math.round(cornerPixels.reduce((sum, p) => sum + p.r, 0) / cornerPixels.length),
+      g: Math.round(cornerPixels.reduce((sum, p) => sum + p.g, 0) / cornerPixels.length),
+      b: Math.round(cornerPixels.reduce((sum, p) => sum + p.b, 0) / cornerPixels.length)
+    } : null;
     let sumR = 0, sumG = 0, sumB = 0, count = 0;
     for (let i = 0; i < data.length; i += 4) {
       const a = data[i + 3];
@@ -8022,7 +8032,9 @@ async function getMinecraftAverageColorFromMedia(media) {
       const r = data[i], g = data[i + 1], b = data[i + 2];
       const brightness = (r + g + b) / 3;
       const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      const bgDistance = bg ? Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b) : 999;
       if (brightness > 246 && chroma < 10) continue;
+      if (bg && bgDistance < 44 && brightness > 182) continue;
       sumR += r;
       sumG += g;
       sumB += b;
@@ -8047,6 +8059,37 @@ function shadeMinecraftColor(color, factor = 1) {
     g: clampMinecraftColor(Math.round(color.g * factor)),
     b: clampMinecraftColor(Math.round(color.b * factor))
   };
+}
+
+function mixMinecraftColors(base, sample, sampleWeight = 0.5) {
+  const a = base || { r: 150, g: 120, b: 90 };
+  const b = sample || a;
+  const w = Math.max(0, Math.min(1, sampleWeight));
+  return {
+    r: clampMinecraftColor(Math.round(a.r * (1 - w) + b.r * w)),
+    g: clampMinecraftColor(Math.round(a.g * (1 - w) + b.g * w)),
+    b: clampMinecraftColor(Math.round(a.b * (1 - w) + b.b * w))
+  };
+}
+
+function normalizeMinecraftPseudoFaceColor(sampleColor, fallbackColor, role = "side") {
+  const fallback = fallbackColor || { r: 156, g: 126, b: 92 };
+  const defaultShade = role === "top" ? shadeMinecraftColor(fallback, 1.08) : shadeMinecraftColor(fallback, 0.84);
+  if (!sampleColor) return defaultShade;
+
+  let mixed = mixMinecraftColors(fallback, sampleColor, role === "top" ? 0.45 : 0.38);
+  const brightness = (sampleColor.r + sampleColor.g + sampleColor.b) / 3;
+  const chroma = Math.max(sampleColor.r, sampleColor.g, sampleColor.b) - Math.min(sampleColor.r, sampleColor.g, sampleColor.b);
+  if (brightness > 222 && chroma < 36) {
+    mixed = mixMinecraftColors(fallback, sampleColor, role === "top" ? 0.24 : 0.18);
+  }
+  const mixedBrightness = (mixed.r + mixed.g + mixed.b) / 3;
+  if (role === "side" && mixedBrightness > 196) {
+    mixed = shadeMinecraftColor(mixed, 0.86);
+  } else if (role === "top" && mixedBrightness > 224) {
+    mixed = shadeMinecraftColor(mixed, 0.93);
+  }
+  return mixed;
 }
 
 function fillMinecraftAtlasSwatch(ctx, x, y, w, h, color, labelShade = 1) {
@@ -8074,8 +8117,10 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
   const sideMedia = getMinecraftSolidViewMedia(work, "side");
   const topMedia = getMinecraftSolidViewMedia(work, "top");
   const frontColor = await getMinecraftAverageColorFromMedia(getMinecraftSolidViewMedia(work, "front")) || { r: 156, g: 126, b: 92 };
-  const sideColor = await getMinecraftAverageColorFromMedia(sideMedia) || shadeMinecraftColor(frontColor, 0.78);
-  const topColor = await getMinecraftAverageColorFromMedia(topMedia) || shadeMinecraftColor(frontColor, 1.12);
+  const rawSideColor = await getMinecraftAverageColorFromMedia(sideMedia);
+  const rawTopColor = await getMinecraftAverageColorFromMedia(topMedia);
+  const sideColor = normalizeMinecraftPseudoFaceColor(rawSideColor, frontColor, "side");
+  const topColor = normalizeMinecraftPseudoFaceColor(rawTopColor, frontColor, "top");
   const stripX = size;
   const half = Math.max(8, Math.floor(size / 2));
   fillMinecraftAtlasSwatch(ctx, stripX, 0, size, half, topColor, 1.08);
