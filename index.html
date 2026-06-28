@@ -944,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v245</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v246</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1903,6 +1903,8 @@ let currentCropAspectMode = "free";
 let currentFamilyData = null;
 let currentUserPermission = "delete";
 let isCapsuleSwitcherOpen = false;
+let authGateStateResolved = false;
+let authGateUserLoadingTimer = null;
 
 function showGateError(msg) {
   const errLog = document.getElementById("gateErrorLog");
@@ -1916,7 +1918,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v245",
+        app_version: "v246",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3655,6 +3657,7 @@ async function activateFamilyGroup(familyId, user) {
   } catch(e) {
     console.warn("Last capsule profile sync skipped:", e.code || e.message);
   }
+  if (authGateUserLoadingTimer) { clearTimeout(authGateUserLoadingTimer); authGateUserLoadingTimer = null; }
   document.getElementById("authGatescreen").classList.add("hidden");
   isCapsuleSwitcherOpen = false;
   startRealtimeSync();
@@ -3697,7 +3700,30 @@ function updateAuthGateLayoutMode() {
   gateScreen.classList.toggle("setup-mode", !gateSetupArea.classList.contains("hidden"));
 }
 
+function showAuthGateLoginFallback(message = "読み込みに時間がかかっています。通信状況を確認し、下のボタンからもう一度お試しください。") {
+  const gateScreen = document.getElementById("authGatescreen");
+  const gateLoading = document.getElementById("gateLoading");
+  const gateLoginArea = document.getElementById("gateLoginArea");
+  const gateSetupArea = document.getElementById("gateSetupArea");
+  const statusText = document.getElementById("loadingStatusText");
+  if (statusText) statusText.innerText = message;
+  if (gateScreen) gateScreen.classList.remove("hidden");
+  if (gateLoading) gateLoading.classList.add("hidden");
+  if (gateSetupArea) gateSetupArea.classList.add("hidden");
+  if (gateLoginArea) gateLoginArea.classList.remove("hidden");
+  updateAuthGateLayoutMode();
+}
+
+setTimeout(() => {
+  if (!authGateStateResolved && !auth.currentUser && !isGuestMode) {
+    showAuthGateLoginFallback("読み込みに時間がかかっています。ボタンが出ない場合に備えて表示しました。");
+    trackEvent("auth_gate_timeout_fallback");
+  }
+}, 7000);
+
 onAuthStateChanged(auth, async (user) => {
+  authGateStateResolved = true;
+  if (authGateUserLoadingTimer) { clearTimeout(authGateUserLoadingTimer); authGateUserLoadingTimer = null; }
   const btnText = document.getElementById("authBtnText");
   const gateScreen = document.getElementById("authGatescreen");
   const gateLoading = document.getElementById("gateLoading");
@@ -3728,6 +3754,13 @@ onAuthStateChanged(auth, async (user) => {
     gateSetupArea.classList.add("hidden");
     updateAuthGateLayoutMode();
     if(errLog) errLog.classList.add("hidden");
+    authGateUserLoadingTimer = setTimeout(() => {
+      const statusText = document.getElementById("loadingStatusText");
+      if (statusText && auth.currentUser && !currentSession) {
+        statusText.innerText = "ログイン後のデータ確認に時間がかかっています。通信状況を確認してください。";
+        showGateError("読み込みが続く場合は、再読み込みするか、プライベートブラウズではない通常タブでお試しください。");
+      }
+    }, 9000);
 
     await checkUrlSessionParameters(user);
     await ensureUserProfileForInviteOnlyUse(user);
@@ -7910,7 +7943,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v245ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v245立体" : "v245壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v246ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v246立体" : "v246壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8925,7 +8958,7 @@ window.switchPage = function(p){
   else if (p === 'trash') { trackEvent("trash_view"); document.getElementById('trashPage').classList.add('active'); renderTrash(); }
 };
 　め
-document.getElementById("inputDate").val ue = new Date().toISOString().split("T")[0];
+document.getElementById("inputDate").value = new Date().toISOString().split("T")[0];
 </script>
 </body>
 </html>
