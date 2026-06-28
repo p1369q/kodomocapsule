@@ -944,7 +944,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v240</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v242</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1166,7 +1166,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <p class="field-help">まずは記録用の分類です。Minecraftへの立体展示は次の段階で少しずつ追加します。</p>
           <div id="solidArtworkPhotoGuide" class="hidden mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-[11px] text-emerald-800 leading-relaxed">
             <div class="font-extrabold mb-1">🧊 立体の撮影ガイド</div>
-            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。画像ごとに「正面・横・上」のラベルを付けておくと、将来Minecraftの疑似3D展示にも使いやすくなります。</p>
+            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。画像ごとに「正面・横・上」のラベルを付けておくと、Minecraftの疑似3D展示で正面・側面・上面の雰囲気を反映しやすくなります。</p>
             <p class="mt-1 text-emerald-700">写真一覧では、同じ作品の写真が何枚あっても1作品につき1枚だけ表示します。</p>
           </div>
         </div>
@@ -1526,6 +1526,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
         <p class="text-[11px] text-slate-400 mt-1">見え方と置き方を確認したら、緑のボタンで .mcaddon をダウンロードします。</p>
         <p id="minecraftSourcePhotoNote" class="hidden text-[11px] text-emerald-700 font-bold mt-1"></p>
+        <div id="minecraftSolidViewUsageGuide" class="hidden mt-2 flex flex-wrap gap-1.5 text-[10px] font-extrabold">
+          <span id="minecraftViewPillFront" class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">⬜ 正面</span>
+          <span id="minecraftViewPillSide" class="px-2 py-1 rounded-full bg-slate-50 text-slate-400 border border-slate-100">↔️ 横</span>
+          <span id="minecraftViewPillTop" class="px-2 py-1 rounded-full bg-slate-50 text-slate-400 border border-slate-100">⬆️ 上</span>
+        </div>
       </div>
       <button onclick="closeMinecraftPixelPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
@@ -1606,6 +1611,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div id="minecraftPlacementGuideTitle" class="text-sm font-extrabold text-sky-900">置き方ガイド</div>
             <p id="minecraftPlacementGuideText" class="text-[11px] text-sky-800/85 leading-relaxed mt-1"></p>
             <p id="minecraftPlacementGuideSubText" class="text-[10px] text-slate-500 leading-relaxed mt-1"></p>
+          </div>
+        </div>
+      </div>
+      <div id="minecraftPseudo3dGuide" class="hidden rounded-2xl bg-violet-50/90 border border-violet-100 p-3 text-left">
+        <div class="flex items-start gap-2">
+          <div class="text-lg shrink-0">🧩</div>
+          <div>
+            <div id="minecraftPseudo3dGuideTitle" class="text-sm font-extrabold text-violet-900">3D展示用写真</div>
+            <p id="minecraftPseudo3dGuideText" class="text-[11px] text-violet-800/85 leading-relaxed mt-1"></p>
           </div>
         </div>
       </div>
@@ -1902,7 +1916,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v240",
+        app_version: "v242",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5001,6 +5015,7 @@ let currentMinecraftResolvedTextureSize = 128;
 let currentMinecraftAddonStyleSelection = "auto";
 let currentMinecraftVoxelGridSize = 24;
 let currentMinecraftVoxelReliefMode = "real";
+let currentMinecraftVoxelTextureInfo = null;
 const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
 
 function getMinecraftPencilModeMeta(mode = "crisp") {
@@ -7141,7 +7156,13 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
   };
 }
 
-function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSize = currentMinecraftResolvedTextureSize || 128) {
+function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
+  const textureInfo = (textureInfoOrSize && typeof textureInfoOrSize === "object") ? textureInfoOrSize : null;
+  const textureSize = textureInfo?.frontSize || Number(textureInfoOrSize) || currentMinecraftResolvedTextureSize || 128;
+  const textureWidth = textureInfo?.textureWidth || textureSize;
+  const textureHeight = textureInfo?.textureHeight || textureSize;
+  const sideUv = textureInfo?.sideUv || null;
+  const topUv = textureInfo?.topUv || null;
   const sampleSize = [16, 24, 32].includes(Number(currentMinecraftVoxelGridSize)) ? Number(currentMinecraftVoxelGridSize) : 24;
   const sampleCanvas = document.createElement("canvas");
   sampleCanvas.width = sampleSize;
@@ -7200,10 +7221,12 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSiz
       const originY = baseY + (sampleSize - 1 - y) * cubeStep;
       const originZ = faceZ - depth;
       const uv = makeUv(x, y);
+      const sideFaceUv = sideUv || uv;
+      const topFaceUv = topUv || uv;
       cubes.push({
         origin: [Number(originX.toFixed(3)), Number(originY.toFixed(3)), Number(originZ.toFixed(3))],
         size: [Number(cubeStep.toFixed(3)), Number(cubeStep.toFixed(3)), Number(depth.toFixed(3))],
-        uv: { north: uv, south: uv, east: uv, west: uv, up: uv, down: uv }
+        uv: { north: uv, south: uv, east: sideFaceUv, west: sideFaceUv, up: topFaceUv, down: sideFaceUv }
       });
     }
   }
@@ -7214,8 +7237,8 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureSiz
       {
         description: {
           identifier: geometryId,
-          texture_width: textureSize,
-          texture_height: textureSize,
+          texture_width: textureWidth,
+          texture_height: textureHeight,
           visible_bounds_width: 2,
           visible_bounds_height: 2,
           visible_bounds_offset: [0, 0.65, 0]
@@ -7872,10 +7895,12 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v240ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v240立体" : "v240壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v242ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v242立体" : "v242壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
-    const spriteBlob = await getMinecraftSpriteBlob();
+    const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
+    currentMinecraftVoxelTextureInfo = voxelTextureInfo;
+    const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
     const frameItemTextureBlob = await buildMinecraftFrameItemTextureBlob(currentMinecraftSpriteCanvas);
 
@@ -7900,7 +7925,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     rp.file("textures/items/" + itemTextureKey + ".png", frameItemTextureBlob);
     rp.file("textures/item_texture.json", JSON.stringify(buildMinecraftItemTextureJson(itemTextureKey), null, 2));
     rp.file("entity/" + blockSlug + "_" + entitySuffix + ".entity.json", JSON.stringify(buildMinecraftClientEntity(entityId, entityGeometryId, `textures/entity/${entityTextureKey}`, renderControllerId), null, 2));
-    rp.file("models/entity/" + blockSlug + "_" + entitySuffix + ".geo.json", JSON.stringify(isVoxelExhibit ? buildMinecraftVoxelExhibitGeometry(entityGeometryId, currentMinecraftSpriteCanvas, currentMinecraftResolvedTextureSize) : (isSolidExhibit ? buildMinecraftSolidExhibitGeometry(entityGeometryId, currentMinecraftResolvedTextureSize) : buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize)), null, 2));
+    rp.file("models/entity/" + blockSlug + "_" + entitySuffix + ".geo.json", JSON.stringify(isVoxelExhibit ? buildMinecraftVoxelExhibitGeometry(entityGeometryId, currentMinecraftSpriteCanvas, voxelTextureInfo || currentMinecraftResolvedTextureSize) : (isSolidExhibit ? buildMinecraftSolidExhibitGeometry(entityGeometryId, currentMinecraftResolvedTextureSize) : buildMinecraftEntityGeometry(entityGeometryId, currentMinecraftResolvedTextureSize)), null, 2));
     rp.file("render_controllers/" + blockSlug + "_" + entitySuffix + ".render_controllers.json", JSON.stringify(buildMinecraftFrameRenderController(renderControllerId), null, 2));
     rp.file("texts/ja_JP.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     rp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
@@ -7963,6 +7988,113 @@ function isMinecraftImageMedia(media) {
   return !!sourceUrl && !isPdf;
 }
 
+function getMinecraftSolidViewMedia(work, view) {
+  const mediaList = Array.isArray(work?.mediaUrls) ? work.mediaUrls : [];
+  return mediaList.find(media => media && media.solidView === view && isMinecraftImageMedia(media)) || null;
+}
+
+function loadMinecraftImageForAnalysis(sourceUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("image_load_failed"));
+    img.src = sourceUrl;
+  });
+}
+
+async function getMinecraftAverageColorFromMedia(media) {
+  const sourceUrl = media?.url || media?.dataUrl || media;
+  if (!sourceUrl) return null;
+  try {
+    const img = await loadMinecraftImageForAnalysis(sourceUrl);
+    const sample = document.createElement("canvas");
+    sample.width = 32;
+    sample.height = 32;
+    const ctx = sample.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, 0, 0, 32, 32);
+    const data = ctx.getImageData(0, 0, 32, 32).data;
+    let sumR = 0, sumG = 0, sumB = 0, count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3];
+      if (a < 24) continue;
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const brightness = (r + g + b) / 3;
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      if (brightness > 246 && chroma < 10) continue;
+      sumR += r;
+      sumG += g;
+      sumB += b;
+      count++;
+    }
+    if (!count) return null;
+    return {
+      r: Math.round(sumR / count),
+      g: Math.round(sumG / count),
+      b: Math.round(sumB / count)
+    };
+  } catch (err) {
+    console.warn("Minecraft solid view color analysis skipped:", err);
+    return null;
+  }
+}
+
+function shadeMinecraftColor(color, factor = 1) {
+  if (!color) return { r: 150, g: 120, b: 90 };
+  return {
+    r: clampMinecraftColor(Math.round(color.r * factor)),
+    g: clampMinecraftColor(Math.round(color.g * factor)),
+    b: clampMinecraftColor(Math.round(color.b * factor))
+  };
+}
+
+function fillMinecraftAtlasSwatch(ctx, x, y, w, h, color, labelShade = 1) {
+  const base = shadeMinecraftColor(color, labelShade);
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, `rgb(${Math.min(255, base.r + 18)},${Math.min(255, base.g + 18)},${Math.min(255, base.b + 18)})`);
+  grad.addColorStop(1, `rgb(${Math.max(0, base.r - 18)},${Math.max(0, base.g - 18)},${Math.max(0, base.b - 18)})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  for (let i = 0; i < w; i += Math.max(3, Math.floor(w / 12))) ctx.fillRect(x + i, y, 1, h);
+}
+
+async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
+  if (!frontCanvas) return null;
+  const size = frontCanvas.width || currentMinecraftResolvedTextureSize || 128;
+  const atlas = document.createElement("canvas");
+  atlas.width = size * 2;
+  atlas.height = size;
+  const ctx = atlas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, atlas.width, atlas.height);
+  ctx.drawImage(frontCanvas, 0, 0, size, size);
+
+  const sideMedia = getMinecraftSolidViewMedia(work, "side");
+  const topMedia = getMinecraftSolidViewMedia(work, "top");
+  const frontColor = await getMinecraftAverageColorFromMedia(getMinecraftSolidViewMedia(work, "front")) || { r: 156, g: 126, b: 92 };
+  const sideColor = await getMinecraftAverageColorFromMedia(sideMedia) || shadeMinecraftColor(frontColor, 0.78);
+  const topColor = await getMinecraftAverageColorFromMedia(topMedia) || shadeMinecraftColor(frontColor, 1.12);
+  const stripX = size;
+  const half = Math.max(8, Math.floor(size / 2));
+  fillMinecraftAtlasSwatch(ctx, stripX, 0, size, half, topColor, 1.08);
+  fillMinecraftAtlasSwatch(ctx, stripX, half, size, size - half, sideColor, 0.86);
+
+  const blob = await new Promise(resolve => atlas.toBlob(resolve, "image/png"));
+  return {
+    canvas: atlas,
+    blob,
+    textureWidth: atlas.width,
+    textureHeight: atlas.height,
+    frontSize: size,
+    hasSide: !!sideMedia,
+    hasTop: !!topMedia,
+    topUv: { uv: [stripX + Math.floor(size * 0.25), Math.floor(half * 0.5)], uv_size: [1, 1] },
+    sideUv: { uv: [stripX + Math.floor(size * 0.25), half + Math.floor((size - half) * 0.5)], uv_size: [1, 1] }
+  };
+}
+
 function getPreferredMinecraftMediaIndex(work, requestedIndex = 0) {
   const mediaList = Array.isArray(work?.mediaUrls) ? work.mediaUrls : [];
   const normalizedRequested = Number.isFinite(Number(requestedIndex)) ? Number(requestedIndex) : 0;
@@ -7977,25 +8109,65 @@ function getPreferredMinecraftMediaIndex(work, requestedIndex = 0) {
 
 function updateMinecraftSourcePhotoNote(work, requestedIndex, actualIndex) {
   const noteEl = document.getElementById("minecraftSourcePhotoNote");
-  if (!noteEl) return;
+  const usageEl = document.getElementById("minecraftSolidViewUsageGuide");
+  const pseudoGuideEl = document.getElementById("minecraftPseudo3dGuide");
+  const pseudoTitleEl = document.getElementById("minecraftPseudo3dGuideTitle");
+  const pseudoTextEl = document.getElementById("minecraftPseudo3dGuideText");
+  const frontPill = document.getElementById("minecraftViewPillFront");
+  const sidePill = document.getElementById("minecraftViewPillSide");
+  const topPill = document.getElementById("minecraftViewPillTop");
   const isSolid = work?.artworkShape === "solid";
-  const actualMedia = Array.isArray(work?.mediaUrls) ? work.mediaUrls[actualIndex] : null;
-  const requestedMedia = Array.isArray(work?.mediaUrls) ? work.mediaUrls[requestedIndex] : null;
   if (!isSolid) {
-    noteEl.classList.add("hidden");
-    noteEl.textContent = "";
+    if (noteEl) {
+      noteEl.classList.add("hidden");
+      noteEl.textContent = "";
+    }
+    if (usageEl) usageEl.classList.add("hidden");
+    if (pseudoGuideEl) pseudoGuideEl.classList.add("hidden");
     return;
   }
+
+  const mediaList = Array.isArray(work?.mediaUrls) ? work.mediaUrls : [];
+  const actualMedia = mediaList[actualIndex] || null;
+  const requestedMedia = mediaList[requestedIndex] || null;
   const actualView = actualMedia?.solidView || "";
-  const requestedView = requestedMedia?.solidView || "";
-  if (actualView === "front") {
-    noteEl.textContent = actualIndex === requestedIndex
-      ? "⬜ 正面写真を使ってマイクラ用にしています。"
-      : "⬜ 正面ラベルの写真を優先してマイクラ用にしています。";
-  } else {
-    noteEl.textContent = "📷 正面ラベルがないため、選択中の写真を使っています。";
+  const hasFront = mediaList.some(media => media && media.solidView === "front" && isMinecraftImageMedia(media));
+  const hasSide = mediaList.some(media => media && media.solidView === "side" && isMinecraftImageMedia(media));
+  const hasTop = mediaList.some(media => media && media.solidView === "top" && isMinecraftImageMedia(media));
+  const hasPseudo3d = hasSide || hasTop;
+  const setPill = (el, active, activeClass, inactiveText) => {
+    if (!el) return;
+    el.className = active
+      ? `px-2 py-1 rounded-full ${activeClass}`
+      : `px-2 py-1 rounded-full bg-slate-50 text-slate-400 border border-slate-100`;
+    if (inactiveText) el.textContent = inactiveText;
+  };
+
+  setPill(frontPill, hasFront || actualView === "front", "bg-emerald-50 text-emerald-700 border border-emerald-100", "⬜ 正面");
+  setPill(sidePill, hasSide, "bg-violet-50 text-violet-700 border border-violet-100", "↔️ 横");
+  setPill(topPill, hasTop, "bg-amber-50 text-amber-700 border border-amber-100", "⬆️ 上");
+  if (usageEl) usageEl.classList.remove("hidden");
+
+  const viewHint = hasPseudo3d
+    ? ` 横/上写真も${hasSide && hasTop ? "側面と上面" : (hasSide ? "側面" : "上面")}の色に少し反映します。`
+    : " 正面写真のみで作成します。横・上ラベルを付けると、より立体っぽくできます。";
+  if (noteEl) {
+    if (actualView === "front") {
+      noteEl.textContent = (actualIndex === requestedIndex
+        ? "⬜ 正面写真を使ってマイクラ用にしています。"
+        : "⬜ 正面ラベルの写真を優先してマイクラ用にしています。") + viewHint;
+    } else {
+      noteEl.textContent = "📷 正面ラベルがないため、選択中の写真を使っています。" + viewHint;
+    }
+    noteEl.classList.remove("hidden");
   }
-  noteEl.classList.remove("hidden");
+  if (pseudoGuideEl) pseudoGuideEl.classList.remove("hidden");
+  if (pseudoTitleEl) pseudoTitleEl.textContent = hasPseudo3d ? "3D展示用写真を使用中" : "正面写真のみで作成中";
+  if (pseudoTextEl) {
+    pseudoTextEl.textContent = hasPseudo3d
+      ? `正面写真を前面に使い、${hasSide && hasTop ? "横写真と上写真" : (hasSide ? "横写真" : "上写真")}の色味を側面・上面に少し反映します。`
+      : "正面写真だけでも作れます。あとから横・上ラベルの写真を追加すると、疑似3D展示の雰囲気が増します。";
+  }
 }
 
 
@@ -8018,6 +8190,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
 
   currentMinecraftPreviewTarget = { workId, mediaIndex: preferredMediaIndex, requestedMediaIndex, sourceUrl };
   currentMinecraftSpriteCanvas = null;
+  currentMinecraftVoxelTextureInfo = null;
   const titleEl = document.getElementById("minecraftPreviewTitle");
   const outputAutoBtn = document.getElementById("minecraftOutputAutoBtn");
   const outputMinecraftBtn = document.getElementById("minecraftOutputMinecraftBtn");
