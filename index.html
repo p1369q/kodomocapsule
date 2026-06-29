@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v270</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v271</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1693,7 +1693,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
                 <button id="minecraftVoxel24Btn" type="button" class="minecraft-mode-chip">24×24</button>
                 <button id="minecraftVoxel32Btn" type="button" class="minecraft-mode-chip">32×32</button>
               </div>
-              <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">正面写真から頭・胴体・土台の色を拾う細かさです。通常は24×24がおすすめです。</p>
+              <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">正面・横・上写真をモブ風作品の面に貼る細かさです。通常は24×24がおすすめです。</p>
             </div>
             <div id="minecraftVoxelDisplaySizePanel" class="border-t border-slate-200 pt-3 space-y-2">
               <div class="text-[11px] font-bold text-slate-500">展示サイズ</div>
@@ -1982,7 +1982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v270",
+        app_version: "v271",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5704,7 +5704,7 @@ function getMinecraftAddonStyleMeta(mode = "wall") {
     },
     voxel: {
       label: "モブ風作品",
-      description: `正面写真から頭・帽子・胴体・土台の色を拾い、${getMinecraftVoxelDisplaySizeMeta().label}サイズの小さなモブ風の置物として出力します。`
+      description: `正面・横・上写真があれば面ごとに使い、${getMinecraftVoxelDisplaySizeMeta().label}サイズの小さなモブ風の置物として出力します。`
     }
   };
   return map[mode] || map.wall;
@@ -6895,7 +6895,7 @@ function getMinecraftMobPartColor(textureInfo, name, fallback) {
   return color;
 }
 
-function drawMinecraftMobPart(ctx, x, y, w, h, depth, color, frontCanvas, sx, sy, sw, sh) {
+function drawMinecraftMobPart(ctx, x, y, w, h, depth, color, frontCanvas, sx, sy, sw, sh, sideCanvas = null, sideRegion = null, topCanvas = null, topRegion = null) {
   const side = shadeMinecraftColor(color, 0.72);
   const top = shadeMinecraftColor(color, 1.13);
   ctx.fillStyle = `rgb(${side.r},${side.g},${side.b})`;
@@ -6906,6 +6906,19 @@ function drawMinecraftMobPart(ctx, x, y, w, h, depth, color, frontCanvas, sx, sy
   ctx.lineTo(x + w, y + h);
   ctx.closePath();
   ctx.fill();
+  if (sideCanvas && sideRegion) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x + w, y);
+    ctx.lineTo(x + w + depth, y - depth * 0.45);
+    ctx.lineTo(x + w + depth, y + h - depth * 0.45);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.clip();
+    ctx.globalAlpha = 0.72;
+    ctx.drawImage(sideCanvas, sideRegion.sx, sideRegion.sy, sideRegion.sw, sideRegion.sh, x + w, y - depth * 0.45, depth, h);
+    ctx.restore();
+  }
   ctx.fillStyle = `rgb(${top.r},${top.g},${top.b})`;
   ctx.beginPath();
   ctx.moveTo(x, y);
@@ -6914,6 +6927,19 @@ function drawMinecraftMobPart(ctx, x, y, w, h, depth, color, frontCanvas, sx, sy
   ctx.lineTo(x + w, y);
   ctx.closePath();
   ctx.fill();
+  if (topCanvas && topRegion) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + depth, y - depth * 0.45);
+    ctx.lineTo(x + w + depth, y - depth * 0.45);
+    ctx.lineTo(x + w, y);
+    ctx.closePath();
+    ctx.clip();
+    ctx.globalAlpha = 0.68;
+    ctx.drawImage(topCanvas, topRegion.sx, topRegion.sy, topRegion.sw, topRegion.sh, x, y - depth * 0.45, w + depth, Math.max(1, depth * 0.55));
+    ctx.restore();
+  }
   ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
   ctx.fillRect(x, y, w, h);
   if (frontCanvas) ctx.drawImage(frontCanvas, sx, sy, sw, sh, x, y, w, h);
@@ -6956,16 +6982,20 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
   const bodyRegion = rect("body", 0.44, 0.30);
   const headRegion = rect("head", 0.14, 0.30);
   const hatRegion = rect("hat", 0, 0.15);
+  const sideRegions = textureInfo?.sideRegions || {};
+  const topRegions = textureInfo?.topRegions || {};
+  const sideCanvas = textureInfo?.hasSide ? frontCanvas : null;
+  const topCanvas = textureInfo?.hasTop ? frontCanvas : null;
   ctx.fillStyle = "rgba(15,23,42,0.18)";
   ctx.beginPath();
   ctx.ellipse(cx + 10, baseY + 8, 66 * scale, 16 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
   // v267: 骨組み状に分裂して見えないよう、背面支柱なしの
   // 帽子・頭・胴体・薄い土台だけで構成するシンプルなモブ像にする。
-  drawMinecraftMobPart(ctx, cx - 58 * scale, baseY - 16 * scale, 116 * scale, 16 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh);
-  drawMinecraftMobPart(ctx, cx - 35 * scale, baseY - 98 * scale, 70 * scale, 76 * scale, 15 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh);
-  drawMinecraftMobPart(ctx, cx - 43 * scale, baseY - 178 * scale, 86 * scale, 72 * scale, 16 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh);
-  drawMinecraftMobPart(ctx, cx - 47 * scale, baseY - 198 * scale, 94 * scale, 16 * scale, 11 * scale, hatColor, frontCanvas, hatRegion.sx, hatRegion.sy, hatRegion.sw, hatRegion.sh);
+  drawMinecraftMobPart(ctx, cx - 58 * scale, baseY - 16 * scale, 116 * scale, 16 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh, sideCanvas, sideRegions.base, topCanvas, topRegions.base);
+  drawMinecraftMobPart(ctx, cx - 35 * scale, baseY - 98 * scale, 70 * scale, 76 * scale, 15 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
+  drawMinecraftMobPart(ctx, cx - 43 * scale, baseY - 178 * scale, 86 * scale, 72 * scale, 16 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
+  drawMinecraftMobPart(ctx, cx - 47 * scale, baseY - 198 * scale, 94 * scale, 16 * scale, 11 * scale, hatColor, frontCanvas, hatRegion.sx, hatRegion.sy, hatRegion.sw, hatRegion.sh, sideCanvas, sideRegions.hat, topCanvas, topRegions.hat);
 }
 
 function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
@@ -6977,6 +7007,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
   const topUv = textureInfo?.topUv || sideUv;
   const partSideUvs = textureInfo?.partSideUvs || {};
   const partTopUvs = textureInfo?.partTopUvs || {};
+  const partBackUvs = textureInfo?.partBackUvs || {};
   const scale = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize).geometryScale || 1;
   const uv = (name, y, h) => textureInfo?.uvRegions?.[name] || ({ uv: [0, Math.max(0, Math.round(textureSize * y))], uv_size: [textureSize, Math.max(1, Math.round(textureSize * h))] });
   const headUv = uv("head", 0.12, 0.40);
@@ -6997,11 +7028,11 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
   });
   const cubes = [
     // v267: 背面支柱や大きな背面板を使わず、写真は主に正面へ貼る。
-    // 側面・背面・上下は代表色の小さなUVを使い、骨組み状の回り込みを防ぐ。
-    cube([-5.8, 0, -3.2], [11.6, 0.9, 6.4], baseUv, { south: partSideUvs.base || sideUv, east: partSideUvs.base || sideUv, west: partSideUvs.base || sideUv, up: partTopUvs.base || topUv, down: partSideUvs.base || sideUv }),
-    cube([-3.4, 1.15, -2.45], [6.8, 6.65, 4.9], bodyUv, { south: partSideUvs.body || sideUv, east: partSideUvs.body || sideUv, west: partSideUvs.body || sideUv, up: partTopUvs.body || topUv, down: partSideUvs.body || sideUv }),
-    cube([-4.3, 8.35, -2.9], [8.6, 6.15, 5.8], headUv, { south: partSideUvs.head || sideUv, east: partSideUvs.head || sideUv, west: partSideUvs.head || sideUv, up: partTopUvs.head || topUv, down: partSideUvs.head || sideUv }),
-    cube([-4.65, 14.85, -2.65], [9.3, 1.25, 5.3], hatUv, { south: partSideUvs.hat || sideUv, east: partSideUvs.hat || sideUv, west: partSideUvs.hat || sideUv, up: partTopUvs.hat || topUv, down: partSideUvs.hat || sideUv })
+    // 側面は横写真、上面は上写真を控えめに使い、背面は代表色UVで回り込みを防ぐ。
+    cube([-5.8, 0, -3.2], [11.6, 0.9, 6.4], baseUv, { south: partBackUvs.base || partSideUvs.base || sideUv, east: partSideUvs.base || sideUv, west: partSideUvs.base || sideUv, up: partTopUvs.base || topUv, down: partBackUvs.base || sideUv }),
+    cube([-3.4, 1.15, -2.45], [6.8, 6.65, 4.9], bodyUv, { south: partBackUvs.body || partSideUvs.body || sideUv, east: partSideUvs.body || sideUv, west: partSideUvs.body || sideUv, up: partTopUvs.body || topUv, down: partBackUvs.body || sideUv }),
+    cube([-4.3, 8.35, -2.9], [8.6, 6.15, 5.8], headUv, { south: partBackUvs.head || partSideUvs.head || sideUv, east: partSideUvs.head || sideUv, west: partSideUvs.head || sideUv, up: partTopUvs.head || topUv, down: partBackUvs.head || sideUv }),
+    cube([-4.65, 14.85, -2.65], [9.3, 1.25, 5.3], hatUv, { south: partBackUvs.hat || partSideUvs.hat || sideUv, east: partSideUvs.hat || sideUv, west: partSideUvs.hat || sideUv, up: partTopUvs.hat || topUv, down: partBackUvs.hat || sideUv })
   ];
   return {
     format_version: "1.12.0",
@@ -7234,7 +7265,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`];
-  return [`app:v270`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v271`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -8545,10 +8576,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label}` : "";
-    const packManifestName = `${packKindLabel} ${packOptionName} v270`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v271`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v270 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v270 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v270 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v271 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v271 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v271 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8562,7 +8593,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelDisplayLabelShort = isVoxelExhibit ? getMinecraftVoxelDisplaySizeMeta().label : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v270モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v270立体" : "v270壁画用")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v271モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v271立体" : "v271壁画用")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8673,6 +8704,28 @@ function loadMinecraftImageForAnalysis(sourceUrl) {
     img.onerror = () => reject(new Error("image_load_failed"));
     img.src = sourceUrl;
   });
+}
+
+async function loadMinecraftMediaToCanvas(media, size) {
+  const sourceUrl = media?.url || media?.dataUrl || media;
+  if (!sourceUrl || !size) return null;
+  try {
+    const img = await loadMinecraftImageForAnalysis(sourceUrl);
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    const scale = Math.max(size / img.width, size / img.height);
+    const drawW = img.width * scale;
+    const drawH = img.height * scale;
+    ctx.drawImage(img, (size - drawW) / 2, (size - drawH) / 2, drawW, drawH);
+    return canvas;
+  } catch (err) {
+    console.warn("Minecraft solid view texture load skipped:", err);
+    return null;
+  }
 }
 
 async function getMinecraftAverageColorFromMedia(media) {
@@ -8856,7 +8909,7 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
   if (!frontCanvas) return null;
   const size = frontCanvas.width || currentMinecraftResolvedTextureSize || 128;
   const atlas = document.createElement("canvas");
-  atlas.width = size * 2;
+  atlas.width = size * 3;
   atlas.height = size;
   const ctx = atlas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
@@ -8896,21 +8949,43 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
   const rawTopColor = await getMinecraftAverageColorFromMedia(topMedia);
   const sideColor = normalizeMinecraftPseudoFaceColor(rawSideColor, frontColor, "side");
   const topColor = normalizeMinecraftPseudoFaceColor(rawTopColor, frontColor, "top");
-  const stripX = size;
-  const half = Math.max(8, Math.floor(size / 2));
-  fillMinecraftAtlasSwatch(ctx, stripX, 0, size, half, topColor, 1.08);
-  fillMinecraftAtlasSwatch(ctx, stripX, half, size, size - half, sideColor, 0.86);
+  const sideCanvas = sideMedia ? await loadMinecraftMediaToCanvas(sideMedia, size) : null;
+  const topCanvas = topMedia ? await loadMinecraftMediaToCanvas(topMedia, size) : null;
+  const sideSourceRegions = sideCanvas ? getMinecraftMobPhotoCrop(sideCanvas) : null;
+  const topSourceRegions = topCanvas ? getMinecraftMobPhotoCrop(topCanvas) : null;
+  const sideX = size;
+  const topX = size * 2;
+  const sideRegions = {};
+  const topRegions = {};
   const partSideUvs = {};
   const partTopUvs = {};
-  ["hat", "head", "body", "base"].forEach((name, index) => {
-    const rowH = Math.max(1, Math.floor(size / 4));
-    const y = Math.min(size - 1, index * rowH);
-    const h = index === 3 ? size - y : Math.min(rowH, size - y);
+  const partBackUvs = {};
+  ["hat", "head", "body", "base"].forEach((name) => {
+    const dst = atlasRegions[name];
+    const sideDst = { sx: sideX, sy: dst.sy, sw: dst.sw, sh: dst.sh };
+    const topDst = { sx: topX, sy: dst.sy, sw: dst.sw, sh: dst.sh };
     const color = partColors[name] || frontColor;
-    fillMinecraftAtlasSwatch(ctx, stripX, y, Math.floor(size / 2), h, color, 1.08);
-    fillMinecraftAtlasSwatch(ctx, stripX + Math.floor(size / 2), y, size - Math.floor(size / 2), h, color, 0.84);
-    partTopUvs[name] = { uv: [stripX + Math.floor(size * 0.25), y + Math.floor(h / 2)], uv_size: [1, 1] };
-    partSideUvs[name] = { uv: [stripX + Math.floor(size * 0.75), y + Math.floor(h / 2)], uv_size: [1, 1] };
+    fillMinecraftAtlasSwatch(ctx, sideDst.sx, sideDst.sy, sideDst.sw, sideDst.sh, normalizeMinecraftPseudoFaceColor(sideColor, color, "side"), 0.92);
+    if (sideCanvas && sideSourceRegions?.[name]) {
+      const src = sideSourceRegions[name];
+      ctx.globalAlpha = 0.64;
+      ctx.drawImage(sideCanvas, src.sx, src.sy, src.sw, src.sh, sideDst.sx, sideDst.sy, sideDst.sw, sideDst.sh);
+      ctx.globalAlpha = 1;
+      replaceMinecraftLightMarginWithColor(ctx, sideDst, normalizeMinecraftPseudoFaceColor(sideColor, color, "side"));
+    }
+    fillMinecraftAtlasSwatch(ctx, topDst.sx, topDst.sy, topDst.sw, topDst.sh, normalizeMinecraftPseudoFaceColor(topColor, color, "top"), 1.04);
+    if (topCanvas && topSourceRegions?.[name]) {
+      const src = topSourceRegions[name];
+      ctx.globalAlpha = 0.58;
+      ctx.drawImage(topCanvas, src.sx, src.sy, src.sw, src.sh, topDst.sx, topDst.sy, topDst.sw, topDst.sh);
+      ctx.globalAlpha = 1;
+      replaceMinecraftLightMarginWithColor(ctx, topDst, normalizeMinecraftPseudoFaceColor(topColor, color, "top"));
+    }
+    sideRegions[name] = sideDst;
+    topRegions[name] = topDst;
+    partSideUvs[name] = { uv: [sideDst.sx, sideDst.sy], uv_size: [sideDst.sw, sideDst.sh] };
+    partTopUvs[name] = { uv: [topDst.sx, topDst.sy], uv_size: [topDst.sw, topDst.sh] };
+    partBackUvs[name] = { uv: [sideDst.sx + Math.floor(sideDst.sw / 2), sideDst.sy + Math.floor(sideDst.sh / 2)], uv_size: [1, 1] };
   });
 
   const blob = await new Promise(resolve => atlas.toBlob(resolve, "image/png"));
@@ -8933,10 +9008,13 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
       body: { uv: [atlasRegions.body.sx, atlasRegions.body.sy], uv_size: [atlasRegions.body.sw, atlasRegions.body.sh] },
       base: { uv: [atlasRegions.base.sx, atlasRegions.base.sy], uv_size: [atlasRegions.base.sw, atlasRegions.base.sh] }
     },
-    topUv: { uv: [stripX + Math.floor(size * 0.25), Math.floor(half * 0.5)], uv_size: [1, 1] },
-    sideUv: { uv: [stripX + Math.floor(size * 0.25), half + Math.floor((size - half) * 0.5)], uv_size: [1, 1] },
+    topUv: { uv: [topX + Math.floor(size * 0.5), Math.floor(size * 0.25)], uv_size: [1, 1] },
+    sideUv: { uv: [sideX + Math.floor(size * 0.5), Math.floor(size * 0.5)], uv_size: [1, 1] },
+    sideRegions,
+    topRegions,
     partTopUvs,
-    partSideUvs
+    partSideUvs,
+    partBackUvs
   };
 }
 
