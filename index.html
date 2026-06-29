@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v254</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v255</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1604,6 +1604,29 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
         </div>
       </div>
+      <details id="minecraftPhotoGuide" class="hidden rounded-2xl bg-amber-50/90 border border-amber-100 p-3 text-left">
+        <summary class="cursor-pointer select-none text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+          <span>📸</span><span>きれいに作る撮影のコツ</span>
+        </summary>
+        <div class="mt-3 grid sm:grid-cols-2 gap-2 text-[11px] text-amber-900/90 leading-relaxed">
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">背景をすっきり</div>
+            <p>白い紙や無地の壁の前で、机や周りの物が写りすぎないように撮ると、余分なボクセルが減ります。</p>
+          </div>
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">明るく中央に</div>
+            <p>作品を画面の中央に置き、影が強く出ない明るい場所で撮ると、色と輪郭が残りやすくなります。</p>
+          </div>
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">正面を1枚</div>
+            <p>Minecraftの前面に使います。作品全体が切れないよう、少し余白を残して撮ってください。</p>
+          </div>
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">できれば横・上も</div>
+            <p>横写真と上写真にラベルを付けると、側面・上面の色味にも反映しやすくなります。</p>
+          </div>
+        </div>
+      </details>
       <div id="minecraftPlacementGuide" class="hidden rounded-2xl bg-sky-50/90 border border-sky-100 p-3 text-left">
         <div class="flex items-start gap-2">
           <div id="minecraftPlacementGuideIcon" class="minecraft-placement-badge text-lg shrink-0">🧊</div>
@@ -1949,7 +1972,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v254",
+        app_version: "v255",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5589,6 +5612,7 @@ function updateMinecraftPlacementGuideUi(work = getMinecraftAddonTargetWork(), r
 
 function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const panelEl = document.getElementById("minecraftAddonStylePanel");
+  const photoGuideEl = document.getElementById("minecraftPhotoGuide");
   const wallBtn = document.getElementById("minecraftAddonStyleWallBtn");
   const solidBtn = document.getElementById("minecraftAddonStyleSolidBtn");
   const voxelBtn = document.getElementById("minecraftAddonStyleVoxelBtn");
@@ -5597,6 +5621,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const spriteLabelEl = document.getElementById("minecraftPreviewSpriteLabel");
   const isSolidWork = work?.artworkShape === "solid";
   if (panelEl) panelEl.classList.toggle("hidden", !isSolidWork);
+  if (photoGuideEl) photoGuideEl.classList.toggle("hidden", !isSolidWork);
   if (wallBtn) wallBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "wall");
   if (solidBtn) solidBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "solid");
   if (voxelBtn) voxelBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "voxel");
@@ -8112,7 +8137,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v254ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v254立体" : "v254壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v255ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v255立体" : "v255壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
