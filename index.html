@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v260</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v261</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1973,7 +1973,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v260",
+        app_version: "v261",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5286,6 +5286,12 @@ function getMinecraftVoxelGeometryDepth(reliefHeight, cubeStep, reliefMeta) {
   return cubeStep * (0.75 + d * 0.36);
 }
 
+function getMinecraftVoxelFrontVisibilityDepth(depth) {
+  // v261: ボクセル風立体は正面写真の顔・線・絵柄を優先して見せるため、
+  // レリーフの奥行きを少し控えめにし、側面・上面が正面へ重なりすぎないようにする。
+  return Math.max(0.01, depth * 0.82);
+}
+
 function getMinecraftVoxelMaskBounds(mask, sampleSize) {
   if (!mask || !sampleSize) return null;
   let minX = sampleSize, minY = sampleSize, maxX = -1, maxY = -1, count = 0;
@@ -6759,6 +6765,7 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
     ctx.fillRect(supportX - 10, startY + totalSize + 10, supportW + 20, Math.max(6, block));
   }
 
+  const visibleVoxels = [];
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
       const idx = (y * sampleSize + x) * 4;
@@ -6768,48 +6775,55 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
       const isLightPixel = isMinecraftLowChromaLightColor(r, g, b);
       const reliefHeightBase = getMinecraftVoxelPixelRelief(pixels, sampleSize, x, y, reliefMeta);
       const reliefHeight = isLightPixel ? Math.max(1, reliefHeightBase * 0.8) : reliefHeightBase;
-      const geometryDepth = getMinecraftVoxelGeometryDepth(reliefHeight, previewCubeStep, reliefMeta) * previewDepthScale;
-      const side = Math.max(1, Math.round(geometryDepth * 0.58));
-      const rise = Math.max(0.5, Math.min(block * 0.72, geometryDepth * 0.34));
+      const geometryDepth = getMinecraftVoxelFrontVisibilityDepth(getMinecraftVoxelGeometryDepth(reliefHeight, previewCubeStep, reliefMeta)) * previewDepthScale;
+      const side = Math.max(1, Math.round(geometryDepth * 0.42));
+      const rise = Math.max(0.5, Math.min(block * 0.46, geometryDepth * 0.22));
       const blockW = block * xScale;
       const px = startX + totalSize / 2 + (x + 0.5 - sampleSize / 2) * blockW - blockW / 2;
       const py = startY + y * block - rise;
-      const sideFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.sideColor, pixelColor, isLightPixel ? 0.04 : 0.16), isLightPixel ? 0.86 : 0.9);
-      const topFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.topColor, pixelColor, isLightPixel ? 0.06 : 0.2), isLightPixel ? 0.94 : 0.98);
-
-      ctx.fillStyle = "rgba(15,23,42,0.12)";
-      ctx.fillRect(px + Math.max(1, side * 0.45), py - Math.max(1, side * 0.18), blockW, block);
-
-      ctx.fillStyle = `rgb(${sideFace.r},${sideFace.g},${sideFace.b})`;
-      ctx.beginPath();
-      ctx.moveTo(px + blockW, py);
-      ctx.lineTo(px + blockW + side, py - side * 0.38);
-      ctx.lineTo(px + blockW + side, py + block - side * 0.38);
-      ctx.lineTo(px + blockW, py + block);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = `rgb(${topFace.r},${topFace.g},${topFace.b})`;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(px + side, py - side * 0.38);
-      ctx.lineTo(px + blockW + side, py - side * 0.38);
-      ctx.lineTo(px + blockW, py);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fillRect(px, py, blockW, block);
-      ctx.fillStyle = "rgba(255,255,255,0.10)";
-      ctx.fillRect(px, py, blockW, Math.max(1, Math.round(block * 0.12)));
-      ctx.fillStyle = "rgba(0,0,0,0.10)";
-      ctx.fillRect(px + blockW - 1, py, 1, block);
-      if (reliefHeight > 5.5) {
-        ctx.fillStyle = "rgba(255,255,255,0.10)";
-        ctx.fillRect(px + 1, py + 1, Math.max(1, block - 3), 1);
-      }
+      const sideFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.sideColor, pixelColor, isLightPixel ? 0.02 : 0.08), isLightPixel ? 0.9 : 0.94);
+      const topFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.topColor, pixelColor, isLightPixel ? 0.03 : 0.1), isLightPixel ? 0.97 : 1.01);
+      visibleVoxels.push({ px, py, blockW, side, r, g, b, reliefHeight, sideFace, topFace });
     }
   }
+
+  // v261: 側面・上面・影を先に描き、正面写真の色面を最後に重ねる。
+  // 横方向のシマシマが正面の顔や細い線を潰さないよう、演出も控えめにする。
+  visibleVoxels.forEach(voxel => {
+    ctx.fillStyle = "rgba(15,23,42,0.055)";
+    ctx.fillRect(voxel.px + Math.max(1, voxel.side * 0.35), voxel.py - Math.max(1, voxel.side * 0.12), voxel.blockW, block);
+  });
+  visibleVoxels.forEach(voxel => {
+    ctx.fillStyle = `rgb(${voxel.sideFace.r},${voxel.sideFace.g},${voxel.sideFace.b})`;
+    ctx.beginPath();
+    ctx.moveTo(voxel.px + voxel.blockW, voxel.py);
+    ctx.lineTo(voxel.px + voxel.blockW + voxel.side, voxel.py - voxel.side * 0.32);
+    ctx.lineTo(voxel.px + voxel.blockW + voxel.side, voxel.py + block - voxel.side * 0.32);
+    ctx.lineTo(voxel.px + voxel.blockW, voxel.py + block);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = `rgb(${voxel.topFace.r},${voxel.topFace.g},${voxel.topFace.b})`;
+    ctx.beginPath();
+    ctx.moveTo(voxel.px, voxel.py);
+    ctx.lineTo(voxel.px + voxel.side, voxel.py - voxel.side * 0.32);
+    ctx.lineTo(voxel.px + voxel.blockW + voxel.side, voxel.py - voxel.side * 0.32);
+    ctx.lineTo(voxel.px + voxel.blockW, voxel.py);
+    ctx.closePath();
+    ctx.fill();
+  });
+  visibleVoxels.forEach(voxel => {
+    ctx.fillStyle = `rgb(${voxel.r},${voxel.g},${voxel.b})`;
+    ctx.fillRect(voxel.px, voxel.py, voxel.blockW, block);
+    ctx.fillStyle = "rgba(255,255,255,0.035)";
+    ctx.fillRect(voxel.px, voxel.py, voxel.blockW, Math.max(1, Math.round(block * 0.08)));
+    ctx.fillStyle = "rgba(0,0,0,0.045)";
+    ctx.fillRect(voxel.px + voxel.blockW - 1, voxel.py, 1, block);
+    if (voxel.reliefHeight > 6.5) {
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillRect(voxel.px + 1, voxel.py + 1, Math.max(1, block - 3), 1);
+    }
+  });
 }
 
 
@@ -7629,7 +7643,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
       const idx = (y * sampleSize + x) * 4;
       if (!silhouetteMask[y * sampleSize + x]) continue;
       const reliefHeight = getMinecraftVoxelPixelRelief(data, sampleSize, x, y, reliefMeta);
-      const depth = getMinecraftVoxelGeometryDepth(reliefHeight, cubeStep, reliefMeta);
+      const depth = getMinecraftVoxelFrontVisibilityDepth(getMinecraftVoxelGeometryDepth(reliefHeight, cubeStep, reliefMeta));
       const originX = (x + 0.5 - sampleSize / 2) * cubeStepX - cubeStepX / 2;
       const originY = baseY + (sampleSize - 1 - y) * cubeStep;
       const originZ = faceZ - depth;
@@ -8309,7 +8323,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v260ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v260立体" : "v260壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v261ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v261立体" : "v261壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8510,11 +8524,11 @@ function normalizeMinecraftPseudoFaceColor(sampleColor, fallbackColor, role = "s
   const defaultShade = role === "top" ? shadeMinecraftColor(fallback, 1.08) : shadeMinecraftColor(fallback, 0.84);
   if (!sampleColor) return defaultShade;
 
-  let mixed = mixMinecraftColors(fallback, sampleColor, role === "top" ? 0.45 : 0.38);
+  let mixed = mixMinecraftColors(fallback, sampleColor, role === "top" ? 0.32 : 0.26);
   const brightness = (sampleColor.r + sampleColor.g + sampleColor.b) / 3;
   const chroma = Math.max(sampleColor.r, sampleColor.g, sampleColor.b) - Math.min(sampleColor.r, sampleColor.g, sampleColor.b);
   if (brightness > 222 && chroma < 36) {
-    mixed = mixMinecraftColors(fallback, sampleColor, role === "top" ? 0.24 : 0.18);
+    mixed = mixMinecraftColors(fallback, sampleColor, role === "top" ? 0.16 : 0.12);
   }
   const mixedBrightness = (mixed.r + mixed.g + mixed.b) / 3;
   if (role === "side" && mixedBrightness > 196) {
