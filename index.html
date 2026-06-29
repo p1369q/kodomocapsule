@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v267</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v268</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1982,7 +1982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v267",
+        app_version: "v268",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7110,7 +7110,20 @@ function buildMinecraftStableUuid(seed) {
   return `${joined.slice(0, 8)}-${joined.slice(8, 12)}-${joined.slice(12, 16)}-${joined.slice(16, 20)}-${joined.slice(20, 32)}`;
 }
 
-function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle) {
+function buildMinecraftAddonOptionSeed(addonStyle) {
+  const stylePart = addonStyle === "voxel" ? "mob" : (addonStyle === "solid" ? "solid" : "wall");
+  const grid = [16, 24, 32].includes(Number(currentMinecraftVoxelGridSize)) ? Number(currentMinecraftVoxelGridSize) : 24;
+  const display = ["standard", "large", "huge"].includes(currentMinecraftVoxelDisplaySize) ? currentMinecraftVoxelDisplaySize : "large";
+  const cut = ["soft", "normal", "strong"].includes(currentMinecraftVoxelBackgroundCutMode) ? currentMinecraftVoxelBackgroundCutMode : "normal";
+  const relief = ["standard", "clear", "real"].includes(currentMinecraftVoxelReliefMode) ? currentMinecraftVoxelReliefMode : "real";
+  const textureSize = Number(currentMinecraftResolvedTextureSize) || 128;
+  const options = addonStyle === "voxel" || addonStyle === "solid"
+    ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
+    : [`texture:${textureSize}`];
+  return [`app:v268`, `style:${stylePart}`, ...options].join("|");
+}
+
+function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const base = String(baseSlug || "frame_art")
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, "_")
@@ -7118,29 +7131,17 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle) {
     .replace(/^_+|_+$/g, "")
     .slice(0, 20) || "frame_art";
   const stylePart = addonStyle === "voxel" ? "mob" : (addonStyle === "solid" ? "solid" : "wall");
-  const workPart = buildMinecraftStableHash(work?.id || work?.title || base).slice(0, 10);
-  return `${base}_${stylePart}_${workPart}`
+  const workPart = buildMinecraftStableHash(work?.id || work?.title || base).slice(0, 8);
+  const optionPart = buildMinecraftStableHash(optionSeed).slice(0, 8);
+  return `${base}_${stylePart}_${workPart}_${optionPart}`
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "")
-    .slice(0, 48) || `frame_art_${stylePart}_${workPart}`;
+    .slice(0, 48) || `frame_art_${stylePart}_${workPart}_${optionPart}`;
 }
 
-function buildMinecraftAddonVersion(addonStyle) {
-  const styleCode = addonStyle === "voxel" ? 1 : (addonStyle === "solid" ? 2 : 0);
-  const grid = Number(currentMinecraftVoxelGridSize) || 16;
-  const displayMap = { standard: 1, large: 2, huge: 3 };
-  const displayCode = displayMap[currentMinecraftVoxelDisplaySize] || 1;
-  const cutCodeMap = { soft: 1, normal: 2, strong: 3 };
-  const reliefCodeMap = { simple: 1, clear: 2, real: 3 };
-  const optionSeed = [
-    `style:${styleCode}`,
-    `grid:${grid}`,
-    `display:${displayCode}`,
-    `cut:${cutCodeMap[currentMinecraftVoxelBackgroundCutMode] || 2}`,
-    `relief:${reliefCodeMap[currentMinecraftVoxelReliefMode] || 3}`
-  ].join("|");
+function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 67, optionCode];
+  return [2, 68, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8420,17 +8421,20 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
     const resolvedAddonStyle = forcedAddonStyle || resolveMinecraftAddonStyle(work);
-    const blockSlug = buildMinecraftAddonStableSlug(baseBlockSlug, work, resolvedAddonStyle);
+    const addonOptionSeed = buildMinecraftAddonOptionSeed(resolvedAddonStyle);
+    const blockSlug = buildMinecraftAddonStableSlug(baseBlockSlug, work, resolvedAddonStyle, addonOptionSeed);
     const isSolidExhibit = resolvedAddonStyle === "solid" || resolvedAddonStyle === "voxel";
     const isVoxelExhibit = resolvedAddonStyle === "voxel";
-    const addonVersion = buildMinecraftAddonVersion(resolvedAddonStyle);
+    const addonVersion = buildMinecraftAddonVersion(resolvedAddonStyle, addonOptionSeed);
     const addonOptionLabel = isVoxelExhibit
       ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} / ${getMinecraftVoxelDisplaySizeMeta().label}`
       : `壁画用 / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
-    const packKindLabel = isVoxelExhibit ? "コドモカプセルモブ風" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
+    const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
+    const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label}` : "";
+    const packManifestName = `${packKindLabel} ${packOptionName} v268`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v267 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v267 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v267 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v268 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v268 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v268 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8443,9 +8447,8 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const shortId = blockSlug.slice(-8);
     // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
     const voxelDisplayLabelShort = isVoxelExhibit ? getMinecraftVoxelDisplaySizeMeta().label : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v267モブ風${voxelDisplayLabelShort}` : (isSolidExhibit ? "v267立体" : "v267壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v268モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v268立体" : "v268壁画用")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8454,7 +8457,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
     const frameItemTextureBlob = await buildMinecraftFrameItemTextureBlob(currentMinecraftSpriteCanvas);
 
-    const stablePackSeed = `kodomo:${work?.id || title}:${resolvedAddonStyle}`;
+    const stablePackSeed = `kodomo:${work?.id || title}:${addonOptionSeed}`;
     const rpHeaderUuid = buildMinecraftStableUuid(`${stablePackSeed}:resource:header`);
     const rpModuleUuid = buildMinecraftStableUuid(`${stablePackSeed}:resource:module`);
     const bpHeaderUuid = buildMinecraftStableUuid(`${stablePackSeed}:behavior:header`);
@@ -8466,7 +8469,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const bp = zip.folder(`KodomoFrameArt_${shortId}_BP`);
 
     rp.file("manifest.json", JSON.stringify(buildMinecraftPackManifest(
-      `${packKindLabel} RP - ${packTitle}`,
+      `${packManifestName} RP - ${packTitle}`.slice(0, 64),
       packDescription,
       rpHeaderUuid,
       rpModuleUuid,
@@ -8485,7 +8488,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     rp.file("pack_icon.png", frameItemTextureBlob);
 
     bp.file("manifest.json", JSON.stringify(buildMinecraftBehaviorScriptPackManifest(
-      `${packKindLabel} BP - ${packTitle}`,
+      `${packManifestName} BP - ${packTitle}`.slice(0, 64),
       packDescription,
       bpHeaderUuid,
       bpDataModuleUuid,
