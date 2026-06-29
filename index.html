@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v255</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v256</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1703,6 +1703,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
                 <button id="minecraftVoxelBgCutStrongBtn" type="button" class="minecraft-mode-chip">強め</button>
               </div>
               <p id="minecraftVoxelBackgroundCutDescription" class="text-[11px] text-slate-500 leading-relaxed">標準で出力します。背景が残るときは強め、作品が欠けるときはやさしめを選んでください。</p>
+              <p id="minecraftVoxelBackgroundCutRecommend" class="hidden text-[11px] font-bold text-emerald-700 bg-white/80 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed"></p>
             </div>
             <div id="minecraftVoxelReliefPanel" class="border-t border-slate-200 pt-3 space-y-2">
               <div class="text-[11px] font-bold text-slate-500">立体感</div>
@@ -1972,7 +1973,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v255",
+        app_version: "v256",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5427,6 +5428,72 @@ function setMinecraftVoxelReliefMode(mode = "standard") {
   }
 }
 
+function getMinecraftVoxelBackgroundCutRecommendation(spriteCanvas = currentMinecraftSpriteCanvas) {
+  if (!spriteCanvas) return null;
+  try {
+    const sampleSize = 32;
+    const sample = document.createElement("canvas");
+    sample.width = sampleSize;
+    sample.height = sampleSize;
+    const ctx = sample.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
+    const data = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+    const edgeSamples = [];
+    const allSamples = [];
+    const readPixel = (x, y) => {
+      const idx = (y * sampleSize + x) * 4;
+      const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
+      const brightness = (r + g + b) / 3;
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      return { r, g, b, a, brightness, chroma };
+    };
+    for (let y = 0; y < sampleSize; y++) {
+      for (let x = 0; x < sampleSize; x++) {
+        const p = readPixel(x, y);
+        if (p.a < 24) continue;
+        allSamples.push(p);
+        if (x < 3 || x >= sampleSize - 3 || y < 3 || y >= sampleSize - 3) edgeSamples.push(p);
+      }
+    }
+    if (!allSamples.length) return null;
+    const lightBgCount = allSamples.filter(p => p.brightness > 218 && p.chroma < 54).length;
+    const edgeLightCount = edgeSamples.filter(p => p.brightness > 206 && p.chroma < 62).length;
+    const colorCount = allSamples.filter(p => p.chroma > 66 || p.brightness < 178).length;
+    const lightRatio = lightBgCount / allSamples.length;
+    const edgeLightRatio = edgeSamples.length ? edgeLightCount / edgeSamples.length : 0;
+    const colorRatio = colorCount / allSamples.length;
+    const isMostlyPale = lightRatio > 0.62 && colorRatio < 0.2;
+    if (isMostlyPale || (edgeLightRatio > 0.55 && lightRatio > 0.38)) {
+      return { mode: "strong", label: "強め", reason: "背景や余白が明るめに見えるため、背景カットは強めがおすすめです。" };
+    }
+    if (colorRatio > 0.48 && lightRatio < 0.28) {
+      return { mode: "soft", label: "やさしめ", reason: "作品本体の色が多く、削りすぎると欠けやすいため、やさしめがおすすめです。" };
+    }
+    return { mode: "normal", label: "標準", reason: "作品と背景のバランスが取れているため、標準がおすすめです。" };
+  } catch (err) {
+    console.warn("Minecraft background cut recommendation skipped:", err);
+    return null;
+  }
+}
+
+function updateMinecraftVoxelBackgroundCutRecommendationUi(forceVisible = null) {
+  const el = document.getElementById("minecraftVoxelBackgroundCutRecommend");
+  if (!el) return;
+  const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
+  const visible = forceVisible === null ? resolvedStyle === "voxel" : !!forceVisible;
+  const rec = visible ? getMinecraftVoxelBackgroundCutRecommendation() : null;
+  if (!rec) {
+    el.classList.add("hidden");
+    el.textContent = "";
+    return;
+  }
+  const currentMeta = getMinecraftVoxelBackgroundCutMeta(currentMinecraftVoxelBackgroundCutMode);
+  const prefix = currentMinecraftVoxelBackgroundCutMode === rec.mode ? "おすすめ設定を使用中" : `おすすめ：${rec.label}`;
+  el.textContent = `${prefix}。${rec.reason} 現在は「${currentMeta.label}」です。`;
+  el.classList.remove("hidden");
+}
+
 function updateMinecraftVoxelBackgroundCutUi(forceVisible = null) {
   const panelEl = document.getElementById("minecraftVoxelBackgroundCutPanel");
   const softBtn = document.getElementById("minecraftVoxelBgCutSoftBtn");
@@ -5443,6 +5510,7 @@ function updateMinecraftVoxelBackgroundCutUi(forceVisible = null) {
     const meta = getMinecraftVoxelBackgroundCutMeta(currentMinecraftVoxelBackgroundCutMode);
     descEl.textContent = `${meta.label}で出力します。${meta.description}`;
   }
+  updateMinecraftVoxelBackgroundCutRecommendationUi(visible);
 }
 
 function setMinecraftVoxelBackgroundCutMode(mode = "normal") {
@@ -6686,6 +6754,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
       drawMinecraftWallPreview(ctx, framePreviewCanvas, spriteCanvas);
     }
   }
+  updateMinecraftVoxelBackgroundCutRecommendationUi();
 }
 
 function drawMinecraftPixelPreview(sourceUrl) {
@@ -8137,7 +8206,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v255ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v255立体" : "v255壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v256ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v256立体" : "v256壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
