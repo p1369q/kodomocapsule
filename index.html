@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v257</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v258</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1973,7 +1973,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v257",
+        app_version: "v258",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5308,10 +5308,35 @@ function getMinecraftVoxelTallShapeMeta(mask, sampleSize) {
   return { active: true, xScale, bounds };
 }
 
+function isMinecraftVoxelProtectedPixel(data, sampleSize, x, y, bgColor, cutMeta) {
+  if (!isMinecraftVoxelVisiblePixel(data, sampleSize, x, y)) return false;
+  const idx = (y * sampleSize + x) * 4;
+  const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+  const brightness = (r + g + b) / 3;
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  const bgDistance = bgColor ? Math.abs(r - bgColor.r) + Math.abs(g - bgColor.g) + Math.abs(b - bgColor.b) : 255;
+  if (brightness < 188 || chroma >= 58 || bgDistance >= Math.max(86, (cutMeta?.bgDistance || 62) + 20)) return true;
+  const neighbors = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
+  let edgeContrast = 0;
+  for (const [nx, ny] of neighbors) {
+    if (!isMinecraftVoxelVisiblePixel(data, sampleSize, nx, ny)) {
+      edgeContrast = Math.max(edgeContrast, 72);
+      continue;
+    }
+    const nidx = (ny * sampleSize + nx) * 4;
+    const nr = data[nidx], ng = data[nidx + 1], nb = data[nidx + 2];
+    const nbri = (nr + ng + nb) / 3;
+    const diff = Math.abs(r - nr) + Math.abs(g - ng) + Math.abs(b - nb);
+    edgeContrast = Math.max(edgeContrast, Math.abs(brightness - nbri), diff / 3);
+  }
+  return edgeContrast >= 54 && (brightness < 222 || chroma >= 38);
+}
+
 function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
   const cutMeta = getMinecraftVoxelBackgroundCutMeta();
   const total = sampleSize * sampleSize;
   const visible = new Uint8Array(total);
+  const protectedMask = new Uint8Array(total);
   let visibleCount = 0;
   let minX = sampleSize, minY = sampleSize, maxX = -1, maxY = -1;
   const readColor = (x, y) => {
@@ -5339,6 +5364,7 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
       if (!isMinecraftVoxelVisiblePixel(data, sampleSize, x, y)) continue;
       const pos = y * sampleSize + x;
       visible[pos] = 1;
+      if (isMinecraftVoxelProtectedPixel(data, sampleSize, x, y, bgColor, cutMeta)) protectedMask[pos] = 1;
       visibleCount++;
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
@@ -5347,6 +5373,18 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
     }
   }
   if (!visibleCount) return visible;
+
+  // v258: 濃い線・顔・飾りなど作品らしい画素の周辺を少しだけ保護し、背景カットで輪郭が欠けすぎないようにする。
+  for (let y = 0; y < sampleSize; y++) {
+    for (let x = 0; x < sampleSize; x++) {
+      if (!protectedMask[y * sampleSize + x]) continue;
+      [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].forEach(([nx, ny]) => {
+        if (nx < 0 || ny < 0 || nx >= sampleSize || ny >= sampleSize) return;
+        const npos = ny * sampleSize + nx;
+        if (visible[npos] && !isCloseToEdgeBackground(data[npos * 4], data[npos * 4 + 1], data[npos * 4 + 2])) protectedMask[npos] = 1;
+      });
+    }
+  }
 
   const trimmed = new Uint8Array(visible);
   const bottomKeepY = Math.max(minY, maxY - Math.max(1, Math.floor(sampleSize * cutMeta.bottomKeepRatio)));
@@ -5375,7 +5413,7 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
     const r = data[idx], g = data[idx + 1], b = data[idx + 2];
     const brightness = (r + g + b) / 3;
     const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-    if (y < bottomKeepY || (brightness > Math.max(202, cutMeta.brightness - 2) && chroma < 46)) trimmed[pos] = 0;
+    if (!protectedMask[pos] && (y < bottomKeepY || (brightness > Math.max(202, cutMeta.brightness - 2) && chroma < 46))) trimmed[pos] = 0;
     [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].forEach(([nx, ny]) => {
       if (nx < minX || ny < minY || nx > maxX || ny > maxY) return;
       const npos = ny * sampleSize + nx;
@@ -5414,7 +5452,7 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
       const isThinNoise = neighborCount <= 1 || orthCount === 0;
       const isLooseEdge = touchesBounds && neighborCount <= cutMeta.looseEdgeNeighbor && orthCount <= 2;
       const keepBottomSupport = y >= bottomKeepY && neighborCount >= 2 && !isCloseToEdgeBackground(r, g, b);
-      const keepStrongColor = chroma >= 62 && neighborCount >= 1;
+      const keepStrongColor = (chroma >= 62 || protectedMask[pos]) && neighborCount >= 1;
       const keepDenseArea = neighborCount >= 5 || orthCount >= 3;
       if (!keepBottomSupport && !keepStrongColor && !keepDenseArea) {
         if ((isThinNoise && (touchesBounds || isLikelyBackground || isCloseToEdgeBackground(r, g, b))) || (isLooseEdge && (isLikelyBackground || isCloseToEdgeBackground(r, g, b))) || (cutMeta.trimLightInner && isLikelyBackground && neighborCount <= 4 && !keepStrongColor)) {
@@ -6683,7 +6721,7 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   const tallMeta = getMinecraftVoxelTallShapeMeta(silhouetteMask, sampleSize);
   const xScale = tallMeta.xScale || 1;
 
-  // v257: 縦長作品は横幅を少し補正し、細い板に見えにくい立体展示にする。
+  // v258: 縦長作品は横幅を少し補正し、細い板に見えにくい立体展示にする。
   const reliefMaxSize = 174;
   const block = Math.max(4, Math.floor(reliefMaxSize / sampleSize));
   const totalSize = block * sampleSize;
@@ -7562,7 +7600,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
     uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
   });
   if (tallMeta.active) {
-    // v257: 縦長作品は安定した展示に見えるよう、背面の支えと台座を少し強める。
+    // v258: 縦長作品は安定した展示に見えるよう、背面の支えと台座を少し強める。
     cubes.push({
       origin: [-3.2, 0.9, -5.35],
       size: [6.4, 1.05, 0.9],
@@ -8261,7 +8299,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v257ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v257立体" : "v257壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v258ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v258立体" : "v258壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
