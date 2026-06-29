@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v259</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v260</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1973,7 +1973,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v259",
+        app_version: "v260",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6697,7 +6697,7 @@ function drawMinecraftSolidExhibitPreview(ctx, canvas, spriteCanvas) {
   ctx.drawImage(spriteCanvas, frameX + artMargin, frameY + artMargin - 2, frameW - artMargin * 2, frameH - artMargin * 2);
 }
 
-function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
+function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo = currentMinecraftVoxelTextureInfo) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
   bg.addColorStop(0, "#f8fafc");
@@ -6724,7 +6724,7 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   sctx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
   const pixels = sctx.getImageData(0, 0, sampleSize, sampleSize).data;
   const silhouetteMask = buildMinecraftVoxelSilhouetteMask(pixels, sampleSize);
-  const previewPalette = getMinecraftVoxelPreviewPalette(pixels, sampleSize, silhouetteMask);
+  const previewPalette = getMinecraftVoxelPreviewPalette(pixels, sampleSize, silhouetteMask, textureInfo);
   const tallMeta = getMinecraftVoxelTallShapeMeta(silhouetteMask, sampleSize);
   const xScale = tallMeta.xScale || 1;
 
@@ -6832,7 +6832,7 @@ function renderMinecraftPreviewCanvases(spriteCanvas) {
     ctx.imageSmoothingEnabled = false;
     const addonStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
     if (addonStyle === "voxel") {
-      drawMinecraftVoxelExhibitPreview(ctx, framePreviewCanvas, spriteCanvas);
+      drawMinecraftVoxelExhibitPreview(ctx, framePreviewCanvas, spriteCanvas, currentMinecraftVoxelTextureInfo);
     } else if (addonStyle === "solid") {
       drawMinecraftSolidExhibitPreview(ctx, framePreviewCanvas, spriteCanvas);
     } else {
@@ -6849,7 +6849,7 @@ function drawMinecraftPixelPreview(sourceUrl) {
 
   const img = new Image();
   img.crossOrigin = "anonymous";
-  img.onload = function() {
+  img.onload = async function() {
     try {
       const analysisSize = 448;
       const analysisCanvas = document.createElement("canvas");
@@ -6939,6 +6939,12 @@ function drawMinecraftPixelPreview(sourceUrl) {
       const spriteCanvas = detectedArtworkMode === "line"
         ? buildLineArtSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle, resolvedTextureSize)
         : buildColorSprite(analysisCanvas, srcX, srcY, srcW, srcH, bgR, bgG, bgB, selectedStyle, resolvedTextureSize);
+      const targetWork = getMinecraftAddonTargetWork();
+      if (resolveMinecraftAddonStyle(targetWork) === "voxel") {
+        currentMinecraftVoxelTextureInfo = await buildMinecraftVoxelTextureInfo(targetWork, spriteCanvas);
+      } else {
+        currentMinecraftVoxelTextureInfo = null;
+      }
       renderMinecraftPreviewCanvases(spriteCanvas);
 
       if (currentMinecraftArtworkMode === "auto") {
@@ -8303,7 +8309,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v259ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v259立体" : "v259壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v260ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v260立体" : "v260壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8434,21 +8440,40 @@ async function getMinecraftAverageColorFromMedia(media) {
       b: Math.round(cornerPixels.reduce((sum, p) => sum + p.b, 0) / cornerPixels.length)
     } : null;
     let sumR = 0, sumG = 0, sumB = 0, count = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      const a = data[i + 3];
-      if (a < 24) continue;
-      const r = data[i], g = data[i + 1], b = data[i + 2];
-      const brightness = (r + g + b) / 3;
-      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-      const bgDistance = bg ? Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b) : 999;
-      if (brightness > 246 && chroma < 10) continue;
-      if (bg && bgDistance < 44 && brightness > 182) continue;
-      sumR += r;
-      sumG += g;
-      sumB += b;
-      count++;
+    let weightedR = 0, weightedG = 0, weightedB = 0, weightedCount = 0;
+    for (let y = 0; y < 32; y++) {
+      for (let x = 0; x < 32; x++) {
+        const i = (y * 32 + x) * 4;
+        const a = data[i + 3];
+        if (a < 24) continue;
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const brightness = (r + g + b) / 3;
+        const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+        const bgDistance = bg ? Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b) : 999;
+        const centerDistance = Math.hypot(x - 15.5, y - 15.5) / 22;
+        if (brightness > 238 && chroma < 18) continue;
+        if (bg && bgDistance < 54 && brightness > 170) continue;
+        if (bg && bgDistance < 32) continue;
+        sumR += r;
+        sumG += g;
+        sumB += b;
+        count++;
+        const objectWeight = Math.max(0.15, 1 - centerDistance * 0.55)
+          * Math.max(0.35, Math.min(1.8, (bgDistance + chroma * 1.8) / 92));
+        weightedR += r * objectWeight;
+        weightedG += g * objectWeight;
+        weightedB += b * objectWeight;
+        weightedCount += objectWeight;
+      }
     }
     if (!count) return null;
+    if (weightedCount > 0) {
+      return {
+        r: Math.round(weightedR / weightedCount),
+        g: Math.round(weightedG / weightedCount),
+        b: Math.round(weightedB / weightedCount)
+      };
+    }
     return {
       r: Math.round(sumR / count),
       g: Math.round(sumG / count),
@@ -8506,7 +8531,7 @@ function isMinecraftLowChromaLightColor(r, g, b) {
   return brightness > 216 && chroma < 42;
 }
 
-function getMinecraftVoxelPreviewPalette(data, sampleSize, silhouetteMask) {
+function getMinecraftVoxelPreviewPalette(data, sampleSize, silhouetteMask, textureInfo = null) {
   let sumR = 0, sumG = 0, sumB = 0, count = 0;
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
@@ -8536,8 +8561,8 @@ function getMinecraftVoxelPreviewPalette(data, sampleSize, silhouetteMask) {
   } : { r: 156, g: 126, b: 92 };
   return {
     frontColor,
-    sideColor: normalizeMinecraftPseudoFaceColor(null, frontColor, "side"),
-    topColor: normalizeMinecraftPseudoFaceColor(null, frontColor, "top")
+    sideColor: textureInfo?.sideColor || normalizeMinecraftPseudoFaceColor(null, frontColor, "side"),
+    topColor: textureInfo?.topColor || normalizeMinecraftPseudoFaceColor(null, frontColor, "top")
   };
 }
 
@@ -8584,6 +8609,9 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
     frontSize: size,
     hasSide: !!sideMedia,
     hasTop: !!topMedia,
+    frontColor,
+    sideColor,
+    topColor,
     topUv: { uv: [stripX + Math.floor(size * 0.25), Math.floor(half * 0.5)], uv_size: [1, 1] },
     sideUv: { uv: [stripX + Math.floor(size * 0.25), half + Math.floor((size - half) * 0.5)], uv_size: [1, 1] }
   };
