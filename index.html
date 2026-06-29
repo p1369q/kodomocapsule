@@ -612,7 +612,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 }
 
 
-/* v224: 立体作品の切替を壁画用/ボクセル風立体の2択に整理し、PCでもプレビュー画像が十分見えるようにする。 */
+/* v224: 立体作品の切替を壁画用/モブ風作品の2択に整理し、PCでもプレビュー画像が十分見えるようにする。 */
 @media (min-width:641px){
   #minecraftPreviewDrawer .drawer-panel{
     max-height:calc(100dvh - 32px);
@@ -652,7 +652,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 }
 
 
-/* v225: 壁画用・ボクセル風立体とも、変換後画像カードを表示せずMinecraftでの見え方だけにする。 */
+/* v225: 壁画用・モブ風作品とも、変換後画像カードを表示せずMinecraftでの見え方だけにする。 */
 #minecraftPreviewDrawer .minecraft-preview-grid{
   grid-template-columns:minmax(0,1fr);
   max-width:520px;
@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v262</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v263</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1551,9 +1551,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="text-[11px] font-bold text-slate-500">立体作品の出力形式</div>
         <div class="flex flex-wrap gap-2">
           <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画用</button>
-          <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">ボクセル風立体</button>
+          <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">モブ風作品</button>
         </div>
-        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">壁画用とボクセル風立体を切り替えると、下のプレビューと保存内容がそのまま切り替わります。</p>
+        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">壁画用とモブ風作品を切り替えると、下のプレビューと保存内容がそのまま切り替わります。</p>
 
       </div>
     </div>
@@ -1611,7 +1611,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="mt-3 grid sm:grid-cols-2 gap-2 text-[11px] text-amber-900/90 leading-relaxed">
           <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
             <div class="font-extrabold text-amber-950 mb-1">背景をすっきり</div>
-            <p>白い紙や無地の壁の前で、机や周りの物が写りすぎないように撮ると、余分なボクセルが減ります。</p>
+            <p>白い紙や無地の壁の前で、机や周りの物が写りすぎないように撮ると、余分な背景が減ります。</p>
           </div>
           <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
             <div class="font-extrabold text-amber-950 mb-1">明るく中央に</div>
@@ -1685,15 +1685,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="mt-3 space-y-3">
           <p class="text-[11px] text-slate-500">必要なときだけ開いて、見た目やサイズを調整できます。</p>
           <div id="minecraftVoxelSizePanel" class="hidden rounded-2xl bg-emerald-50/60 border border-emerald-100 p-3 space-y-3">
-            <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧊</span><span>ボクセル風立体の設定</span></div>
+            <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧸</span><span>モブ風作品の設定</span></div>
             <div class="space-y-2">
-              <div class="text-[11px] font-bold text-slate-500">ボクセルの細かさ</div>
+              <div class="text-[11px] font-bold text-slate-500">表情の細かさ</div>
               <div class="flex flex-wrap gap-2">
                 <button id="minecraftVoxel16Btn" type="button" class="minecraft-mode-chip">16×16</button>
                 <button id="minecraftVoxel24Btn" type="button" class="minecraft-mode-chip">24×24</button>
                 <button id="minecraftVoxel32Btn" type="button" class="minecraft-mode-chip">32×32</button>
               </div>
-              <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">24×24をおすすめ初期値にしています。16×16は軽量、32×32は高精細です。</p>
+              <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">正面写真から頭・胴体・土台の色を拾う細かさです。通常は24×24がおすすめです。</p>
             </div>
             <div id="minecraftVoxelDisplaySizePanel" class="border-t border-slate-200 pt-3 space-y-2">
               <div class="text-[11px] font-bold text-slate-500">展示サイズ</div>
@@ -1704,7 +1704,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               </div>
               <p id="minecraftVoxelDisplaySizeDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値は大きめです。Minecraft内で何ブロック分くらいの大きさで飾るかを選びます。</p>
             </div>
-            <div id="minecraftVoxelBackgroundCutPanel" class="border-t border-slate-200 pt-3 space-y-2">
+            <div id="minecraftVoxelBackgroundCutPanel" class="hidden border-t border-slate-200 pt-3 space-y-2">
               <div class="text-[11px] font-bold text-slate-500">背景カット</div>
               <div class="flex flex-wrap gap-2">
                 <button id="minecraftVoxelBgCutSoftBtn" type="button" class="minecraft-mode-chip">やさしめ</button>
@@ -1714,8 +1714,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <p id="minecraftVoxelBackgroundCutDescription" class="text-[11px] text-slate-500 leading-relaxed">標準で出力します。背景が残るときは強め、作品が欠けるときはやさしめを選んでください。</p>
               <p id="minecraftVoxelBackgroundCutRecommend" class="hidden text-[11px] font-bold text-emerald-700 bg-white/80 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed"></p>
             </div>
-            <div id="minecraftVoxelReliefPanel" class="border-t border-slate-200 pt-3 space-y-2">
-              <div class="text-[11px] font-bold text-slate-500">立体感</div>
+            <div id="minecraftVoxelReliefPanel" class="hidden border-t border-slate-200 pt-3 space-y-2">
+              <div class="text-[11px] font-bold text-slate-500">モブ感</div>
               <div class="flex flex-wrap gap-2">
                 <button id="minecraftVoxelReliefStandardBtn" type="button" class="minecraft-mode-chip">標準</button>
                 <button id="minecraftVoxelReliefClearBtn" type="button" class="minecraft-mode-chip">くっきり</button>
@@ -1982,7 +1982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v262",
+        app_version: "v263",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5179,7 +5179,7 @@ function getMinecraftVoxelGridMeta(size = currentMinecraftVoxelGridSize) {
     },
     32: {
       label: "32×32",
-      description: "より細かく立体感を出しやすい高精細サイズです。PC向けの確認に向いています。"
+      description: "より細かくモブ感を出しやすい高精細サイズです。PC向けの確認に向いています。"
     }
   };
   return map[normalized] || map[24];
@@ -5321,7 +5321,7 @@ function getMinecraftVoxelGeometryDepth(reliefHeight, cubeStep, reliefMeta) {
 }
 
 function getMinecraftVoxelFrontVisibilityDepth(depth) {
-  // v261: ボクセル風立体は正面写真の顔・線・絵柄を優先して見せるため、
+  // v261: モブ風作品は正面写真の顔・線・絵柄を優先して見せるため、
   // レリーフの奥行きを少し控えめにし、側面・上面が正面へ重なりすぎないようにする。
   return Math.max(0.01, depth * 0.82);
 }
@@ -5522,7 +5522,7 @@ function updateMinecraftVoxelReliefUi(forceVisible = null) {
   const realBtn = document.getElementById("minecraftVoxelReliefRealBtn");
   const descEl = document.getElementById("minecraftVoxelReliefDescription");
   const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
-  const visible = forceVisible === null ? resolvedStyle === "voxel" : !!forceVisible;
+  const visible = false;
   if (panelEl) panelEl.classList.toggle("hidden", !visible);
   if (standardBtn) standardBtn.classList.toggle("active", currentMinecraftVoxelReliefMode === "standard");
   if (clearBtn) clearBtn.classList.toggle("active", currentMinecraftVoxelReliefMode === "clear");
@@ -5595,7 +5595,7 @@ function updateMinecraftVoxelBackgroundCutRecommendationUi(forceVisible = null) 
   const el = document.getElementById("minecraftVoxelBackgroundCutRecommend");
   if (!el) return;
   const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
-  const visible = forceVisible === null ? resolvedStyle === "voxel" : !!forceVisible;
+  const visible = false;
   const rec = visible ? getMinecraftVoxelBackgroundCutRecommendation() : null;
   if (!rec) {
     el.classList.add("hidden");
@@ -5615,7 +5615,7 @@ function updateMinecraftVoxelBackgroundCutUi(forceVisible = null) {
   const strongBtn = document.getElementById("minecraftVoxelBgCutStrongBtn");
   const descEl = document.getElementById("minecraftVoxelBackgroundCutDescription");
   const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
-  const visible = forceVisible === null ? resolvedStyle === "voxel" : !!forceVisible;
+  const visible = false;
   if (panelEl) panelEl.classList.toggle("hidden", !visible);
   if (softBtn) softBtn.classList.toggle("active", currentMinecraftVoxelBackgroundCutMode === "soft");
   if (normalBtn) normalBtn.classList.toggle("active", currentMinecraftVoxelBackgroundCutMode === "normal");
@@ -5703,8 +5703,8 @@ function getMinecraftAddonStyleMeta(mode = "wall") {
       description: "床や棚に置く展示台として出力します。プレビューも展示台として表示します。"
     },
     voxel: {
-      label: "ボクセル風立体",
-      description: `登録写真を${getMinecraftVoxelGridMeta().label}の小さな立方体に変換し、${getMinecraftVoxelDisplaySizeMeta().label}サイズ・${getMinecraftVoxelReliefMeta().label}の立体感で飾れるボクセル風レリーフとして出力します。`
+      label: "モブ風作品",
+      description: `正面写真から頭・帽子・胴体・土台の色を拾い、${getMinecraftVoxelDisplaySizeMeta().label}サイズの小さなモブ風の置物として出力します。`
     }
   };
   return map[mode] || map.wall;
@@ -5759,10 +5759,8 @@ function updateMinecraftVoxelPreviewMetaUi(work = getMinecraftAddonTargetWork(),
   const displayLabelEl = document.getElementById("minecraftPreviewDisplayLabel");
   if (displayLabelEl) {
     if (resolved === "voxel") {
-      const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
-      const reliefMeta = getMinecraftVoxelReliefMeta(currentMinecraftVoxelReliefMode);
       const displaySizeMeta = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize);
-      displayLabelEl.textContent = `マイクラでの見え方（ボクセル風立体 ${voxelMeta.label} / ${displaySizeMeta.label} / ${reliefMeta.label}）`;
+      displayLabelEl.textContent = `マイクラでの見え方（モブ風作品 / ${displaySizeMeta.label}）`;
     } else {
       displayLabelEl.textContent = "マイクラでの見え方（壁画）";
     }
@@ -5847,7 +5845,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
       ? `${meta.description} 上で切り替えた内容が、そのまま保存されます。`
       : "平面作品は壁画用として出力します。";
   }
-  if (spriteLabelEl) spriteLabelEl.textContent = resolved === "voxel" ? `ボクセル化の元画像（${voxelMeta.label}）` : "変換後の絵";
+  if (spriteLabelEl) spriteLabelEl.textContent = resolved === "voxel" ? `モブ化の元画像（${voxelMeta.label}）` : "変換後の絵";
   updateMinecraftPlacementGuideUi(work, resolved);
   updateMinecraftVoxelPreviewMetaUi(work, resolved);
   if (currentMinecraftSpriteCanvas) {
@@ -6890,6 +6888,136 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
   });
 }
 
+function sampleMinecraftMobRegionColor(spriteCanvas, y0, y1, fallback = { r: 160, g: 128, b: 96 }) {
+  try {
+    const sampleSize = 32;
+    const c = document.createElement("canvas");
+    c.width = sampleSize;
+    c.height = sampleSize;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
+    const data = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+    const startY = Math.max(0, Math.floor(sampleSize * y0));
+    const endY = Math.min(sampleSize, Math.ceil(sampleSize * y1));
+    let r = 0, g = 0, b = 0, count = 0;
+    for (let y = startY; y < endY; y++) {
+      for (let x = 4; x < sampleSize - 4; x++) {
+        const idx = (y * sampleSize + x) * 4;
+        const a = data[idx + 3];
+        const pr = data[idx], pg = data[idx + 1], pb = data[idx + 2];
+        const brightness = (pr + pg + pb) / 3;
+        const chroma = Math.max(pr, pg, pb) - Math.min(pr, pg, pb);
+        if (a < 24 || (brightness > 246 && chroma < 12)) continue;
+        r += pr; g += pg; b += pb; count++;
+      }
+    }
+    if (!count) return fallback;
+    return { r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) };
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function drawMinecraftMobPart(ctx, x, y, w, h, depth, color, frontCanvas, sx, sy, sw, sh) {
+  const side = shadeMinecraftColor(color, 0.72);
+  const top = shadeMinecraftColor(color, 1.13);
+  ctx.fillStyle = `rgb(${side.r},${side.g},${side.b})`;
+  ctx.beginPath();
+  ctx.moveTo(x + w, y);
+  ctx.lineTo(x + w + depth, y - depth * 0.45);
+  ctx.lineTo(x + w + depth, y + h - depth * 0.45);
+  ctx.lineTo(x + w, y + h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = `rgb(${top.r},${top.g},${top.b})`;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + depth, y - depth * 0.45);
+  ctx.lineTo(x + w + depth, y - depth * 0.45);
+  ctx.lineTo(x + w, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+  ctx.fillRect(x, y, w, h);
+  if (frontCanvas) ctx.drawImage(frontCanvas, sx, sy, sw, sh, x, y, w, h);
+  ctx.fillStyle = "rgba(255,255,255,0.10)";
+  ctx.fillRect(x + 3, y + 3, Math.max(2, w - 6), 3);
+  ctx.strokeStyle = "rgba(15,23,42,0.16)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+}
+
+function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo = currentMinecraftVoxelTextureInfo) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  bg.addColorStop(0, "#f8fafc");
+  bg.addColorStop(1, "#e8eef5");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let y = canvas.height * 0.70; y < canvas.height; y += 24) {
+    for (let x = -20; x < canvas.width + 20; x += 34) {
+      ctx.fillStyle = ((Math.floor((x + 20) / 34) + Math.floor((y - canvas.height * 0.70) / 24)) % 2 === 0) ? "#d9d0ba" : "#cfc4aa";
+      ctx.fillRect(x, y, 34, 24);
+    }
+  }
+  const scale = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize).previewScale || 1;
+  const cx = canvas.width / 2;
+  const baseY = 258;
+  const bodyColor = sampleMinecraftMobRegionColor(spriteCanvas, 0.38, 0.75, textureInfo?.frontColor);
+  const headColor = sampleMinecraftMobRegionColor(spriteCanvas, 0.14, 0.42, bodyColor);
+  const hatColor = sampleMinecraftMobRegionColor(spriteCanvas, 0.02, 0.18, headColor);
+  const baseColor = sampleMinecraftMobRegionColor(spriteCanvas, 0.74, 0.98, { r: 150, g: 112, b: 70 });
+  ctx.fillStyle = "rgba(15,23,42,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(cx + 12, baseY + 10, 82 * scale, 20 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  drawMinecraftMobPart(ctx, cx - 72 * scale, baseY - 20 * scale, 144 * scale, 24 * scale, 24 * scale, baseColor, null, 0, 0, 1, 1);
+  drawMinecraftMobPart(ctx, cx - 46 * scale, baseY - 102 * scale, 92 * scale, 86 * scale, 28 * scale, bodyColor, spriteCanvas, 0, spriteCanvas.height * 0.38, spriteCanvas.width, spriteCanvas.height * 0.38);
+  drawMinecraftMobPart(ctx, cx - 54 * scale, baseY - 180 * scale, 108 * scale, 78 * scale, 30 * scale, headColor, spriteCanvas, 0, spriteCanvas.height * 0.08, spriteCanvas.width, spriteCanvas.height * 0.34);
+  drawMinecraftMobPart(ctx, cx - 62 * scale, baseY - 202 * scale, 124 * scale, 24 * scale, 32 * scale, hatColor, spriteCanvas, 0, 0, spriteCanvas.width, spriteCanvas.height * 0.16);
+}
+
+function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
+  const textureInfo = (textureInfoOrSize && typeof textureInfoOrSize === "object") ? textureInfoOrSize : null;
+  const textureSize = textureInfo?.frontSize || Number(textureInfoOrSize) || currentMinecraftResolvedTextureSize || 128;
+  const textureWidth = textureInfo?.textureWidth || textureSize;
+  const textureHeight = textureInfo?.textureHeight || textureSize;
+  const sideUv = textureInfo?.sideUv || { uv: [0, 0], uv_size: [1, 1] };
+  const topUv = textureInfo?.topUv || sideUv;
+  const scale = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize).geometryScale || 1;
+  const uv = (y, h) => ({ uv: [0, Math.max(0, Math.round(textureSize * y))], uv_size: [textureSize, Math.max(1, Math.round(textureSize * h))] });
+  const headUv = uv(0.10, 0.34);
+  const hatUv = uv(0, 0.16);
+  const bodyUv = uv(0.38, 0.38);
+  const baseUv = uv(0.74, 0.24);
+  const cube = (origin, size, frontUv) => ({
+    origin: origin.map(v => Number((v * scale).toFixed(3))),
+    size: size.map(v => Number((v * scale).toFixed(3))),
+    uv: { north: frontUv, south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv }
+  });
+  const cubes = [
+    cube([-7.5, 0, -5.4], [15, 1.2, 10.8], baseUv),
+    cube([-4.6, 1.2, -3.6], [9.2, 7.6, 7.2], bodyUv),
+    cube([-5.4, 8.5, -4.2], [10.8, 6.4, 8.4], headUv),
+    cube([-6.2, 14.6, -4.8], [12.4, 1.8, 9.6], hatUv)
+  ];
+  return {
+    format_version: "1.12.0",
+    "minecraft:geometry": [{
+      description: {
+        identifier: geometryId,
+        texture_width: textureWidth,
+        texture_height: textureHeight,
+        visible_bounds_width: Number((2.2 * scale).toFixed(3)),
+        visible_bounds_height: Number((2.2 * scale).toFixed(3)),
+        visible_bounds_offset: [0, 0.75, 0]
+      },
+      bones: [{ name: "mob_work_entity", pivot: [0, 0, 0], cubes }]
+    }]
+  };
+}
+
 
 function renderMinecraftPreviewCanvases(spriteCanvas) {
   currentMinecraftSpriteCanvas = spriteCanvas || null;
@@ -7635,7 +7763,7 @@ function buildMinecraftSolidExhibitGeometry(geometryId, textureSize = currentMin
   };
 }
 
-function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
+function buildMinecraftVoxelExhibitGeometryLegacy(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
   const textureInfo = (textureInfoOrSize && typeof textureInfoOrSize === "object") ? textureInfoOrSize : null;
   const textureSize = textureInfo?.frontSize || Number(textureInfoOrSize) || currentMinecraftResolvedTextureSize || 128;
   const textureWidth = textureInfo?.textureWidth || textureSize;
@@ -8372,9 +8500,9 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const resolvedAddonStyle = forcedAddonStyle || resolveMinecraftAddonStyle(work);
     const isSolidExhibit = resolvedAddonStyle === "solid" || resolvedAddonStyle === "voxel";
     const isVoxelExhibit = resolvedAddonStyle === "voxel";
-    const packKindLabel = isVoxelExhibit ? "コドモカプセルボクセル" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
+    const packKindLabel = isVoxelExhibit ? "コドモカプセルモブ風" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の${getMinecraftVoxelGridMeta().label}ボクセル風立体作品パックです。展示サイズは${getMinecraftVoxelDisplaySizeMeta().label}、立体感は${getMinecraftVoxelReliefMeta().label}、背景カットは${getMinecraftVoxelBackgroundCutMeta().label}です。`
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v263 です。展示サイズは${getMinecraftVoxelDisplaySizeMeta().label}です。`
       : (isSolidExhibit ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。" : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。");
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
@@ -8386,11 +8514,11 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v224: ボクセル風立体はサイズ違いの3パターンに対応。
+    // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
     const voxelDisplayLabelShort = isVoxelExhibit ? getMinecraftVoxelDisplaySizeMeta().label : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v262ボクセル立体${voxelLabelShort}${voxelDisplayLabelShort}` : (isSolidExhibit ? "v262立体" : "v262壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v263モブ風${voxelDisplayLabelShort}` : (isSolidExhibit ? "v263立体" : "v263壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8441,7 +8569,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v224: ボクセル風立体は16×16/24×24/32×32から選べる直立レリーフとして出力する。README.txtは含めない。
+    // v224: モブ風作品は16×16/24×24/32×32から選べる直立レリーフとして出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
