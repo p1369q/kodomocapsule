@@ -698,6 +698,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 /* v238: 立体作品の置き方を子どもにも分かるように、床置き/壁貼りガイドを追加する。 */
 #minecraftPlacementGuide strong{font-weight:800;}
 #minecraftPlacementGuide .minecraft-placement-badge{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;border-radius:14px;background:white;border:1px solid rgba(125,211,252,.55);}
+/* v251: Minecraftプレビューの補足説明カードは必要な場面だけに絞る。 */
+#minecraftPlacementGuide,#minecraftPseudo3dGuide{display:none!important;}
+#minecraftPreviewDrawer.minecraft-share-unavailable .minecraft-adult-details{display:none!important;}
 
 </style>
 </head>
@@ -953,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v250</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v252</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1551,33 +1554,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">ボクセル風立体</button>
         </div>
         <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">壁画用とボクセル風立体を切り替えると、下のプレビューと保存内容がそのまま切り替わります。</p>
-        <div id="minecraftVoxelSizePanel" class="hidden border-t border-slate-200 pt-3 space-y-2">
-          <div class="text-[11px] font-bold text-slate-500">ボクセルの細かさ</div>
-          <div class="flex flex-wrap gap-2">
-            <button id="minecraftVoxel16Btn" type="button" class="minecraft-mode-chip">16×16</button>
-            <button id="minecraftVoxel24Btn" type="button" class="minecraft-mode-chip">24×24</button>
-            <button id="minecraftVoxel32Btn" type="button" class="minecraft-mode-chip">32×32</button>
-          </div>
-          <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">24×24をおすすめ初期値にしています。16×16は軽量、32×32は高精細です。</p>
-          <div id="minecraftVoxelReliefPanel" class="border-t border-slate-200 pt-3 space-y-2">
-            <div class="text-[11px] font-bold text-slate-500">立体感</div>
-            <div class="flex flex-wrap gap-2">
-              <button id="minecraftVoxelReliefStandardBtn" type="button" class="minecraft-mode-chip">標準</button>
-              <button id="minecraftVoxelReliefClearBtn" type="button" class="minecraft-mode-chip">くっきり</button>
-              <button id="minecraftVoxelReliefRealBtn" type="button" class="minecraft-mode-chip">レリーフ風</button>
-            </div>
-            <p id="minecraftVoxelReliefDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はレリーフ風です。輪郭や影を少し手前に出して、立体作品らしい厚みを出します。</p>
-          </div>
-          <div id="minecraftVoxelBackgroundCutPanel" class="border-t border-slate-200 pt-3 space-y-2">
-            <div class="text-[11px] font-bold text-slate-500">背景カット</div>
-            <div class="flex flex-wrap gap-2">
-              <button id="minecraftVoxelBgCutSoftBtn" type="button" class="minecraft-mode-chip">やさしめ</button>
-              <button id="minecraftVoxelBgCutNormalBtn" type="button" class="minecraft-mode-chip">標準</button>
-              <button id="minecraftVoxelBgCutStrongBtn" type="button" class="minecraft-mode-chip">強め</button>
-            </div>
-            <p id="minecraftVoxelBackgroundCutDescription" class="text-[11px] text-slate-500 leading-relaxed">標準で出力します。背景が残るときは強め、作品が欠けるときはやさしめを選んでください。</p>
-          </div>
-        </div>
+
       </div>
     </div>
     <div class="minecraft-preview-stage bg-slate-100 flex items-center justify-center p-5">
@@ -1587,6 +1564,33 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="w-full aspect-square rounded-2xl bg-white border border-slate-200 overflow-hidden">
             <canvas id="minecraftPixelCanvas" width="320" height="320" class="w-full h-full"></canvas>
           </div>
+        <div id="minecraftVoxelSizePanel" class="hidden mt-3 rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-2">
+          <div class="text-[11px] font-bold text-slate-500">ボクセルの細かさ</div>
+          <div class="flex flex-wrap gap-2">
+            <button id="minecraftVoxel16Btn" type="button" class="minecraft-mode-chip">16×16</button>
+            <button id="minecraftVoxel24Btn" type="button" class="minecraft-mode-chip">24×24</button>
+            <button id="minecraftVoxel32Btn" type="button" class="minecraft-mode-chip">32×32</button>
+          </div>
+          <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">24×24をおすすめ初期値にしています。16×16は軽量、32×32は高精細です。</p>
+          <div id="minecraftVoxelBackgroundCutPanel" class="border-t border-slate-200 pt-3 space-y-2">
+            <div class="text-[11px] font-bold text-slate-500">背景カット</div>
+            <div class="flex flex-wrap gap-2">
+              <button id="minecraftVoxelBgCutSoftBtn" type="button" class="minecraft-mode-chip">やさしめ</button>
+              <button id="minecraftVoxelBgCutNormalBtn" type="button" class="minecraft-mode-chip">標準</button>
+              <button id="minecraftVoxelBgCutStrongBtn" type="button" class="minecraft-mode-chip">強め</button>
+            </div>
+            <p id="minecraftVoxelBackgroundCutDescription" class="text-[11px] text-slate-500 leading-relaxed">標準で出力します。背景が残るときは強め、作品が欠けるときはやさしめを選んでください。</p>
+          </div>
+          <div id="minecraftVoxelReliefPanel" class="border-t border-slate-200 pt-3 space-y-2">
+            <div class="text-[11px] font-bold text-slate-500">立体感</div>
+            <div class="flex flex-wrap gap-2">
+              <button id="minecraftVoxelReliefStandardBtn" type="button" class="minecraft-mode-chip">標準</button>
+              <button id="minecraftVoxelReliefClearBtn" type="button" class="minecraft-mode-chip">くっきり</button>
+              <button id="minecraftVoxelReliefRealBtn" type="button" class="minecraft-mode-chip">レリーフ風</button>
+            </div>
+            <p id="minecraftVoxelReliefDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はレリーフ風です。輪郭や影を少し手前に出して、立体作品らしい厚みを出します。</p>
+          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -1646,7 +1650,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
         </div>
       </div>
-      <details class="rounded-2xl bg-white border border-slate-200 p-3 text-left">
+      <details class="minecraft-adult-details rounded-2xl bg-white border border-slate-200 p-3 text-left">
         <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
           <span>👨‍👩‍👧</span><span>大人向けのくわしい手順を開く</span>
         </summary>
@@ -1941,7 +1945,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v250",
+        app_version: "v252",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -8104,7 +8108,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v250ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v250立体" : "v250壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v252ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v252立体" : "v252壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
