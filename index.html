@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v266</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v267</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1982,7 +1982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v266",
+        app_version: "v267",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6848,13 +6848,12 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
   ctx.beginPath();
   ctx.ellipse(cx + 10, baseY + 8, 66 * scale, 16 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
-  // v266: 大きな背面板ではなく、頭・帽子・胴体・土台を少し離した
-  // キューブパーツとして見せる。奥行き差で横や斜めからの箱感を減らす。
-  drawMinecraftMobPart(ctx, cx - 20 * scale, baseY - 112 * scale, 40 * scale, 96 * scale, 7 * scale, shadeMinecraftColor(bodyColor, 0.58), null, 0, 0, 1, 1);
-  drawMinecraftMobPart(ctx, cx - 56 * scale, baseY - 18 * scale, 112 * scale, 20 * scale, 14 * scale, baseColor, spriteCanvas, 0, spriteCanvas.height * 0.76, spriteCanvas.width, spriteCanvas.height * 0.20);
-  drawMinecraftMobPart(ctx, cx - 42 * scale, baseY - 102 * scale, 84 * scale, 78 * scale, 18 * scale, bodyColor, spriteCanvas, 0, spriteCanvas.height * 0.44, spriteCanvas.width, spriteCanvas.height * 0.30);
-  drawMinecraftMobPart(ctx, cx - 52 * scale, baseY - 186 * scale, 104 * scale, 76 * scale, 26 * scale, headColor, spriteCanvas, 0, spriteCanvas.height * 0.14, spriteCanvas.width, spriteCanvas.height * 0.30);
-  drawMinecraftMobPart(ctx, cx - 58 * scale, baseY - 208 * scale, 116 * scale, 18 * scale, 18 * scale, hatColor, spriteCanvas, 0, 0, spriteCanvas.width, spriteCanvas.height * 0.15);
+  // v267: 骨組み状に分裂して見えないよう、背面支柱なしの
+  // 帽子・頭・胴体・薄い土台だけで構成するシンプルなモブ像にする。
+  drawMinecraftMobPart(ctx, cx - 58 * scale, baseY - 16 * scale, 116 * scale, 16 * scale, 10 * scale, baseColor, spriteCanvas, 0, spriteCanvas.height * 0.78, spriteCanvas.width, spriteCanvas.height * 0.18);
+  drawMinecraftMobPart(ctx, cx - 38 * scale, baseY - 98 * scale, 76 * scale, 76 * scale, 16 * scale, bodyColor, spriteCanvas, 0, spriteCanvas.height * 0.44, spriteCanvas.width, spriteCanvas.height * 0.30);
+  drawMinecraftMobPart(ctx, cx - 48 * scale, baseY - 178 * scale, 96 * scale, 72 * scale, 18 * scale, headColor, spriteCanvas, 0, spriteCanvas.height * 0.14, spriteCanvas.width, spriteCanvas.height * 0.30);
+  drawMinecraftMobPart(ctx, cx - 52 * scale, baseY - 198 * scale, 104 * scale, 16 * scale, 12 * scale, hatColor, spriteCanvas, 0, 0, spriteCanvas.width, spriteCanvas.height * 0.15);
 }
 
 function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
@@ -6883,13 +6882,12 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
     }
   });
   const cubes = [
-    // v266: 白い背面箱に見えないよう、背面板は細い支柱だけにし、
-    // 頭・帽子・胴体・土台を別パーツかつ異なる奥行きで配置する。
-    cube([-1.05, 0.95, 2.75], [2.1, 9.5, 1.05], bodyUv, { south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv }),
-    cube([-5.8, 0, -3.7], [11.6, 1.05, 7.4], baseUv, { up: baseUv, down: baseUv }),
-    cube([-4.25, 1.25, -2.85], [8.5, 6.95, 5.7], bodyUv, { up: bodyUv, down: bodyUv }),
-    cube([-5.25, 8.75, -3.55], [10.5, 6.25, 7.1], headUv, { up: hatUv, down: headUv }),
-    cube([-5.85, 15.25, -3.1], [11.7, 1.45, 6.2], hatUv, { up: hatUv, down: hatUv })
+    // v267: 背面支柱や大きな背面板を使わず、写真は主に正面へ貼る。
+    // 側面・背面・上下は代表色の小さなUVを使い、骨組み状の回り込みを防ぐ。
+    cube([-5.8, 0, -3.2], [11.6, 0.9, 6.4], baseUv, { south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv }),
+    cube([-3.9, 1.15, -2.65], [7.8, 6.65, 5.3], bodyUv, { south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv }),
+    cube([-4.9, 8.35, -3.15], [9.8, 6.15, 6.3], headUv, { south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv }),
+    cube([-5.25, 14.85, -2.85], [10.5, 1.25, 5.7], hatUv, { south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv })
   ];
   return {
     format_version: "1.12.0",
@@ -7087,26 +7085,62 @@ function sanitizeMinecraftDownloadName(name) {
     .slice(0, 48) || "kodomo_frame_art";
 }
 
-function buildMinecraftAddonUniqueSlug(baseSlug, work) {
+function buildMinecraftStableHash(input) {
+  const text = String(input || "kodomo_capsule");
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function buildMinecraftStableUuid(seed) {
+  const parts = [];
+  let text = String(seed || "kodomo_capsule");
+  for (let i = 0; i < 5; i++) {
+    const h = buildMinecraftStableHash(`${text}:${i}`);
+    parts.push(h);
+    text += `:${h}`;
+  }
+  const hex = parts.join("").slice(0, 32).split("");
+  hex[12] = "5";
+  hex[16] = ((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16);
+  const joined = hex.join("");
+  return `${joined.slice(0, 8)}-${joined.slice(8, 12)}-${joined.slice(12, 16)}-${joined.slice(16, 20)}-${joined.slice(20, 32)}`;
+}
+
+function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle) {
   const base = String(baseSlug || "frame_art")
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "")
-    .slice(0, 24) || "frame_art";
-  const workPart = String(work?.id || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")
-    .slice(-8);
-  const randomPart = (crypto?.randomUUID?.().replace(/-/g, "") || Math.random().toString(36).slice(2))
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")
-    .slice(0, 8);
-  const timePart = Date.now().toString(36).slice(-6);
-  return `${base}_${workPart || timePart}_${randomPart}`
+    .slice(0, 20) || "frame_art";
+  const stylePart = addonStyle === "voxel" ? "mob" : (addonStyle === "solid" ? "solid" : "wall");
+  const workPart = buildMinecraftStableHash(work?.id || work?.title || base).slice(0, 10);
+  return `${base}_${stylePart}_${workPart}`
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "")
-    .slice(0, 48) || `frame_art_${timePart}`;
+    .slice(0, 48) || `frame_art_${stylePart}_${workPart}`;
+}
+
+function buildMinecraftAddonVersion(addonStyle) {
+  const styleCode = addonStyle === "voxel" ? 1 : (addonStyle === "solid" ? 2 : 0);
+  const grid = Number(currentMinecraftVoxelGridSize) || 16;
+  const displayMap = { standard: 1, large: 2, huge: 3 };
+  const displayCode = displayMap[currentMinecraftVoxelDisplaySize] || 1;
+  const cutCodeMap = { soft: 1, normal: 2, strong: 3 };
+  const reliefCodeMap = { simple: 1, clear: 2, real: 3 };
+  const optionSeed = [
+    `style:${styleCode}`,
+    `grid:${grid}`,
+    `display:${displayCode}`,
+    `cut:${cutCodeMap[currentMinecraftVoxelBackgroundCutMode] || 2}`,
+    `relief:${reliefCodeMap[currentMinecraftVoxelReliefMode] || 3}`
+  ].join("|");
+  const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
+  return [2, 67, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -7202,21 +7236,21 @@ function getMinecraftAddonTargetWork() {
     : null;
 }
 
-function buildMinecraftPackManifest(name, description, uuid1, uuid2, moduleType = "resources", dependencies = []) {
+function buildMinecraftPackManifest(name, description, uuid1, uuid2, moduleType = "resources", dependencies = [], version = [1, 0, 0]) {
   const manifest = {
     format_version: 2,
     header: {
       name,
       description,
       uuid: uuid1,
-      version: [1, 0, 0],
+      version,
       min_engine_version: [1, 20, 50]
     },
     modules: [
       {
         type: moduleType,
         uuid: uuid2,
-        version: [1, 0, 0]
+        version
       }
     ]
   };
@@ -7509,32 +7543,32 @@ function buildMinecraftBlockDefinition(blockId, displayName, textureKey, geometr
 }
 
 
-function buildMinecraftBehaviorScriptPackManifest(name, description, uuid1, dataModuleUuid, scriptModuleUuid, resourcePackUuid) {
+function buildMinecraftBehaviorScriptPackManifest(name, description, uuid1, dataModuleUuid, scriptModuleUuid, resourcePackUuid, behaviorVersion = [1, 0, 0], resourceVersion = [1, 0, 0]) {
   return {
     format_version: 2,
     header: {
       name,
       description,
       uuid: uuid1,
-      version: [1, 0, 0],
+      version: behaviorVersion,
       min_engine_version: [1, 20, 50]
     },
     modules: [
       {
         type: "data",
         uuid: dataModuleUuid,
-        version: [1, 0, 0]
+        version: behaviorVersion
       },
       {
         type: "script",
         language: "javascript",
         uuid: scriptModuleUuid,
-        version: [1, 0, 0],
+        version: behaviorVersion,
         entry: "scripts/main.js"
       }
     ],
     dependencies: [
-      { uuid: resourcePackUuid, version: [1, 0, 0] },
+      { uuid: resourcePackUuid, version: resourceVersion },
       { module_name: "@minecraft/server", version: "1.9.0" }
     ]
   };
@@ -8385,14 +8419,18 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const title = work?.title || "kodomo_frame_art";
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
-    const blockSlug = buildMinecraftAddonUniqueSlug(baseBlockSlug, work);
     const resolvedAddonStyle = forcedAddonStyle || resolveMinecraftAddonStyle(work);
+    const blockSlug = buildMinecraftAddonStableSlug(baseBlockSlug, work, resolvedAddonStyle);
     const isSolidExhibit = resolvedAddonStyle === "solid" || resolvedAddonStyle === "voxel";
     const isVoxelExhibit = resolvedAddonStyle === "voxel";
+    const addonVersion = buildMinecraftAddonVersion(resolvedAddonStyle);
+    const addonOptionLabel = isVoxelExhibit
+      ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} / ${getMinecraftVoxelDisplaySizeMeta().label}`
+      : `壁画用 / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセルモブ風" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v266 です。展示サイズは${getMinecraftVoxelDisplaySizeMeta().label}です。`
-      : (isSolidExhibit ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。" : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。");
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v267 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v267 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v267 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8407,7 +8445,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
     const voxelDisplayLabelShort = isVoxelExhibit ? getMinecraftVoxelDisplaySizeMeta().label : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v266モブ風${voxelDisplayLabelShort}` : (isSolidExhibit ? "v266立体" : "v266壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v267モブ風${voxelDisplayLabelShort}` : (isSolidExhibit ? "v267立体" : "v267壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8416,11 +8454,12 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
     const frameItemTextureBlob = await buildMinecraftFrameItemTextureBlob(currentMinecraftSpriteCanvas);
 
-    const rpHeaderUuid = crypto.randomUUID();
-    const rpModuleUuid = crypto.randomUUID();
-    const bpHeaderUuid = crypto.randomUUID();
-    const bpDataModuleUuid = crypto.randomUUID();
-    const bpScriptModuleUuid = crypto.randomUUID();
+    const stablePackSeed = `kodomo:${work?.id || title}:${resolvedAddonStyle}`;
+    const rpHeaderUuid = buildMinecraftStableUuid(`${stablePackSeed}:resource:header`);
+    const rpModuleUuid = buildMinecraftStableUuid(`${stablePackSeed}:resource:module`);
+    const bpHeaderUuid = buildMinecraftStableUuid(`${stablePackSeed}:behavior:header`);
+    const bpDataModuleUuid = buildMinecraftStableUuid(`${stablePackSeed}:behavior:data_module`);
+    const bpScriptModuleUuid = buildMinecraftStableUuid(`${stablePackSeed}:behavior:script_module`);
 
     const zip = new JSZip();
     const rp = zip.folder(`KodomoFrameArt_${shortId}_RP`);
@@ -8431,7 +8470,9 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       packDescription,
       rpHeaderUuid,
       rpModuleUuid,
-      "resources"
+      "resources",
+      [],
+      addonVersion
     ), null, 2));
     rp.file("textures/entity/" + entityTextureKey + ".png", isVoxelExhibit ? spriteBlob : wallArtTextureBlob);
     rp.file("textures/items/" + itemTextureKey + ".png", frameItemTextureBlob);
@@ -8449,7 +8490,9 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       bpHeaderUuid,
       bpDataModuleUuid,
       bpScriptModuleUuid,
-      rpHeaderUuid
+      rpHeaderUuid,
+      addonVersion,
+      addonVersion
     ), null, 2));
     bp.file("entities/" + blockSlug + "_" + entitySuffix + ".json", JSON.stringify(isSolidExhibit ? buildMinecraftSolidBehaviorEntity(entityId, displayName) : buildMinecraftBehaviorEntity(entityId, displayName), null, 2));
     bp.file("items/" + blockSlug + "_" + itemSuffix + ".json", JSON.stringify(buildMinecraftFramePlacerItem(itemId, itemTextureKey, itemDisplayName), null, 2));
