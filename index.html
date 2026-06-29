@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v256</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v257</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1973,7 +1973,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v256",
+        app_version: "v257",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5279,6 +5279,35 @@ function getMinecraftVoxelPixelRelief(data, sampleSize, x, y, reliefMeta) {
   return Math.max(1, Math.min(10, height * Math.max(0.8, reliefScale * 0.75)));
 }
 
+function getMinecraftVoxelMaskBounds(mask, sampleSize) {
+  if (!mask || !sampleSize) return null;
+  let minX = sampleSize, minY = sampleSize, maxX = -1, maxY = -1, count = 0;
+  for (let y = 0; y < sampleSize; y++) {
+    for (let x = 0; x < sampleSize; x++) {
+      if (!mask[y * sampleSize + x]) continue;
+      count++;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (!count) return null;
+  const width = maxX - minX + 1;
+  const height = maxY - minY + 1;
+  return { minX, minY, maxX, maxY, width, height, count, aspect: height / Math.max(1, width), widthRatio: width / sampleSize, heightRatio: height / sampleSize };
+}
+
+function getMinecraftVoxelTallShapeMeta(mask, sampleSize) {
+  const bounds = getMinecraftVoxelMaskBounds(mask, sampleSize);
+  if (!bounds) return { active: false, xScale: 1, bounds: null };
+  const active = bounds.aspect >= 1.45 && bounds.heightRatio >= 0.48 && bounds.widthRatio <= 0.58;
+  if (!active) return { active: false, xScale: 1, bounds };
+  const targetWidthRatio = bounds.aspect >= 2.2 ? 0.46 : 0.42;
+  const xScale = Math.max(1, Math.min(1.75, targetWidthRatio / Math.max(0.18, bounds.widthRatio)));
+  return { active: true, xScale, bounds };
+}
+
 function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
   const cutMeta = getMinecraftVoxelBackgroundCutMeta();
   const total = sampleSize * sampleSize;
@@ -6651,8 +6680,10 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   const pixels = sctx.getImageData(0, 0, sampleSize, sampleSize).data;
   const silhouetteMask = buildMinecraftVoxelSilhouetteMask(pixels, sampleSize);
   const previewPalette = getMinecraftVoxelPreviewPalette(pixels, sampleSize, silhouetteMask);
+  const tallMeta = getMinecraftVoxelTallShapeMeta(silhouetteMask, sampleSize);
+  const xScale = tallMeta.xScale || 1;
 
-  // v244: 側面・上面は作品全体の色味に寄せて、白い段差が目立ちにくい表示にする。
+  // v257: 縦長作品は横幅を少し補正し、細い板に見えにくい立体展示にする。
   const reliefMaxSize = 174;
   const block = Math.max(4, Math.floor(reliefMaxSize / sampleSize));
   const totalSize = block * sampleSize;
@@ -6675,6 +6706,14 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
   ctx.fillRect(startX, startY, totalSize, totalSize);
   ctx.fillStyle = "rgba(255,255,255,0.18)";
   ctx.fillRect(startX + 2, startY + 2, totalSize - 4, Math.max(2, Math.round(totalSize * 0.08)));
+  if (tallMeta.active) {
+    const supportW = Math.max(36, Math.round(totalSize * 0.36));
+    const supportX = Math.round(startX + (totalSize - supportW) / 2);
+    ctx.fillStyle = "rgba(107,77,45,0.72)";
+    ctx.fillRect(supportX, startY + totalSize - Math.max(8, block * 2), supportW, Math.max(8, block * 2));
+    ctx.fillStyle = "#8a6438";
+    ctx.fillRect(supportX - 10, startY + totalSize + 10, supportW + 20, Math.max(6, block));
+  }
 
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
@@ -6687,20 +6726,21 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
       const reliefHeight = isLightPixel ? Math.max(1, reliefHeightBase * 0.8) : reliefHeightBase;
       const side = Math.max(1, Math.round(reliefHeight * 0.48));
       const rise = Math.max(0.5, Math.min(block * 0.85, reliefHeight * 0.55));
-      const px = startX + x * block;
+      const blockW = block * xScale;
+      const px = startX + totalSize / 2 + (x + 0.5 - sampleSize / 2) * blockW - blockW / 2;
       const py = startY + y * block - rise;
       const sideFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.sideColor, pixelColor, isLightPixel ? 0.06 : 0.22), isLightPixel ? 0.9 : 0.94);
       const topFace = shadeMinecraftColor(mixMinecraftColors(previewPalette.topColor, pixelColor, isLightPixel ? 0.08 : 0.26), isLightPixel ? 0.97 : 1.02);
 
       ctx.fillStyle = "rgba(15,23,42,0.18)";
-      ctx.fillRect(px + depthX, py + depthY + Math.max(1, side * 0.25), block, block);
+      ctx.fillRect(px + depthX, py + depthY + Math.max(1, side * 0.25), blockW, block);
 
       ctx.fillStyle = `rgb(${sideFace.r},${sideFace.g},${sideFace.b})`;
       ctx.beginPath();
-      ctx.moveTo(px + block, py);
-      ctx.lineTo(px + block + side, py + depthY * 0.35);
-      ctx.lineTo(px + block + side, py + block + depthY * 0.35);
-      ctx.lineTo(px + block, py + block);
+      ctx.moveTo(px + blockW, py);
+      ctx.lineTo(px + blockW + side, py + depthY * 0.35);
+      ctx.lineTo(px + blockW + side, py + block + depthY * 0.35);
+      ctx.lineTo(px + blockW, py + block);
       ctx.closePath();
       ctx.fill();
 
@@ -6708,17 +6748,17 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas) {
       ctx.beginPath();
       ctx.moveTo(px, py);
       ctx.lineTo(px + side, py + depthY * 0.35);
-      ctx.lineTo(px + block + side, py + depthY * 0.35);
-      ctx.lineTo(px + block, py);
+      ctx.lineTo(px + blockW + side, py + depthY * 0.35);
+      ctx.lineTo(px + blockW, py);
       ctx.closePath();
       ctx.fill();
 
       ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fillRect(px, py, block, block);
+      ctx.fillRect(px, py, blockW, block);
       ctx.fillStyle = "rgba(255,255,255,0.20)";
-      ctx.fillRect(px, py, block, Math.max(1, Math.round(block * 0.18)));
+      ctx.fillRect(px, py, blockW, Math.max(1, Math.round(block * 0.18)));
       ctx.fillStyle = "rgba(0,0,0,0.14)";
-      ctx.fillRect(px + block - 1, py, 1, block);
+      ctx.fillRect(px + blockW - 1, py, 1, block);
       if (reliefHeight > 5.5) {
         ctx.fillStyle = "rgba(255,255,255,0.10)";
         ctx.fillRect(px + 1, py + 1, Math.max(1, block - 3), 1);
@@ -7482,8 +7522,10 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
   sampleCtx.drawImage(spriteCanvas, 0, 0, sampleSize, sampleSize);
   const data = sampleCtx.getImageData(0, 0, sampleSize, sampleSize).data;
   const silhouetteMask = buildMinecraftVoxelSilhouetteMask(data, sampleSize);
+  const tallMeta = getMinecraftVoxelTallShapeMeta(silhouetteMask, sampleSize);
   const cubes = [];
   const cubeStep = 12 / sampleSize;
+  const cubeStepX = cubeStep * (tallMeta.xScale || 1);
   const baseX = -6;
   const baseY = 1.25;
   const faceZ = -4.2;
@@ -7519,6 +7561,19 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
     size: [12.1, 11.85, 0.25],
     uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
   });
+  if (tallMeta.active) {
+    // v257: 縦長作品は安定した展示に見えるよう、背面の支えと台座を少し強める。
+    cubes.push({
+      origin: [-3.2, 0.9, -5.35],
+      size: [6.4, 1.05, 0.9],
+      uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+    });
+    cubes.push({
+      origin: [-2.35, 1.2, -5.25],
+      size: [4.7, 2.6, 0.35],
+      uv: { north: woodUv, south: woodUv, east: woodUv, west: woodUv, up: woodUv, down: woodUv }
+    });
+  }
 
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
@@ -7527,7 +7582,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
       const reliefHeight = getMinecraftVoxelPixelRelief(data, sampleSize, x, y, reliefMeta);
       const d = Math.max(1, Math.min(maxDepth, Math.round(reliefHeight * reliefScale * 0.7)));
       const depth = cubeStep * (0.75 + d * 0.36);
-      const originX = baseX + x * cubeStep;
+      const originX = (x + 0.5 - sampleSize / 2) * cubeStepX - cubeStepX / 2;
       const originY = baseY + (sampleSize - 1 - y) * cubeStep;
       const originZ = faceZ - depth;
       const uv = makeUv(x, y);
@@ -7535,7 +7590,7 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
       const topFaceUv = topUv || uv;
       cubes.push({
         origin: [Number(originX.toFixed(3)), Number(originY.toFixed(3)), Number(originZ.toFixed(3))],
-        size: [Number(cubeStep.toFixed(3)), Number(cubeStep.toFixed(3)), Number(depth.toFixed(3))],
+        size: [Number(cubeStepX.toFixed(3)), Number(cubeStep.toFixed(3)), Number(depth.toFixed(3))],
         uv: { north: uv, south: uv, east: sideFaceUv, west: sideFaceUv, up: topFaceUv, down: sideFaceUv }
       });
     }
@@ -8206,7 +8261,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v256ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v256立体" : "v256壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v257ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v257立体" : "v257壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
