@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v271</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v272</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1982,7 +1982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v271",
+        app_version: "v272",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5760,7 +5760,8 @@ function updateMinecraftVoxelPreviewMetaUi(work = getMinecraftAddonTargetWork(),
   if (displayLabelEl) {
     if (resolved === "voxel") {
       const displaySizeMeta = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize);
-      displayLabelEl.textContent = `マイクラでの見え方（モブ風作品 / ${displaySizeMeta.label}）`;
+      const templateMeta = getMinecraftMobTemplate(currentMinecraftVoxelTextureInfo);
+      displayLabelEl.textContent = `マイクラでの見え方（モブ風作品 / ${displaySizeMeta.label} / ${templateMeta.label}）`;
     } else {
       displayLabelEl.textContent = "マイクラでの見え方（壁画）";
     }
@@ -6895,6 +6896,35 @@ function getMinecraftMobPartColor(textureInfo, name, fallback) {
   return color;
 }
 
+
+function estimateMinecraftMobTemplateFromCanvas(frontCanvas, sideCanvas = null, topCanvas = null) {
+  const fallback = { type: "tall", label: "縦長", score: 0 };
+  if (!frontCanvas) return fallback;
+  const crop = getMinecraftMobPhotoCrop(frontCanvas)?.crop || { sx: 0, sy: 0, sw: frontCanvas.width || 1, sh: frontCanvas.height || 1 };
+  const aspect = crop.sh / Math.max(1, crop.sw);
+  const widthRatio = crop.sw / Math.max(1, frontCanvas.width || crop.sw);
+  let boxScore = 0;
+  if (aspect < 1.34) boxScore += 2;
+  if (widthRatio > 0.72) boxScore += 1;
+  if (sideCanvas) {
+    const sideCrop = getMinecraftMobPhotoCrop(sideCanvas)?.crop;
+    if (sideCrop && sideCrop.sw / Math.max(1, sideCanvas.width) > 0.68) boxScore += 1;
+  }
+  if (topCanvas) {
+    const topCrop = getMinecraftMobPhotoCrop(topCanvas)?.crop;
+    if (topCrop) {
+      const topAspect = topCrop.sw / Math.max(1, topCrop.sh);
+      if (topAspect > 1.15 || topCrop.sw / Math.max(1, topCanvas.width) > 0.70) boxScore += 1;
+    }
+  }
+  return boxScore >= 3 ? { type: "box", label: "箱型", score: boxScore } : { type: "tall", label: "縦長", score: boxScore };
+}
+
+function getMinecraftMobTemplate(textureInfo) {
+  const type = textureInfo?.mobTemplate?.type === "box" ? "box" : "tall";
+  return { type, label: type === "box" ? "箱型" : "縦長" };
+}
+
 function drawMinecraftMobPart(ctx, x, y, w, h, depth, color, frontCanvas, sx, sy, sw, sh, sideCanvas = null, sideRegion = null, topCanvas = null, topRegion = null) {
   const side = shadeMinecraftColor(color, 0.72);
   const top = shadeMinecraftColor(color, 1.13);
@@ -6990,12 +7020,27 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
   ctx.beginPath();
   ctx.ellipse(cx + 10, baseY + 8, 66 * scale, 16 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
-  // v267: 骨組み状に分裂して見えないよう、背面支柱なしの
-  // 帽子・頭・胴体・薄い土台だけで構成するシンプルなモブ像にする。
-  drawMinecraftMobPart(ctx, cx - 58 * scale, baseY - 16 * scale, 116 * scale, 16 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh, sideCanvas, sideRegions.base, topCanvas, topRegions.base);
-  drawMinecraftMobPart(ctx, cx - 35 * scale, baseY - 98 * scale, 70 * scale, 76 * scale, 15 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
-  drawMinecraftMobPart(ctx, cx - 43 * scale, baseY - 178 * scale, 86 * scale, 72 * scale, 16 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
-  drawMinecraftMobPart(ctx, cx - 47 * scale, baseY - 198 * scale, 94 * scale, 16 * scale, 11 * scale, hatColor, frontCanvas, hatRegion.sx, hatRegion.sy, hatRegion.sw, hatRegion.sh, sideCanvas, sideRegions.hat, topCanvas, topRegions.hat);
+  const template = getMinecraftMobTemplate(textureInfo);
+  if (template.type === "box") {
+    const armRegion = rect("arm", 0.50, 0.24);
+    const legRegion = rect("leg", 0.72, 0.20);
+    const armColor = getMinecraftMobPartColor(textureInfo, "arm", bodyColor);
+    const legColor = getMinecraftMobPartColor(textureInfo, "leg", baseColor);
+    drawMinecraftMobPart(ctx, cx - 64 * scale, baseY - 16 * scale, 128 * scale, 14 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh, sideCanvas, sideRegions.base, topCanvas, topRegions.base);
+    drawMinecraftMobPart(ctx, cx - 72 * scale, baseY - 104 * scale, 28 * scale, 64 * scale, 12 * scale, armColor, frontCanvas, armRegion.sx, armRegion.sy, armRegion.sw, armRegion.sh, sideCanvas, sideRegions.arm || sideRegions.body, topCanvas, topRegions.arm || topRegions.body);
+    drawMinecraftMobPart(ctx, cx + 44 * scale, baseY - 104 * scale, 28 * scale, 64 * scale, 12 * scale, armColor, frontCanvas, armRegion.sx, armRegion.sy, armRegion.sw, armRegion.sh, sideCanvas, sideRegions.arm || sideRegions.body, topCanvas, topRegions.arm || topRegions.body);
+    drawMinecraftMobPart(ctx, cx - 40 * scale, baseY - 106 * scale, 80 * scale, 76 * scale, 15 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
+    drawMinecraftMobPart(ctx, cx - 38 * scale, baseY - 30 * scale, 30 * scale, 22 * scale, 10 * scale, legColor, frontCanvas, legRegion.sx, legRegion.sy, legRegion.sw, legRegion.sh, sideCanvas, sideRegions.leg || sideRegions.base, topCanvas, topRegions.leg || topRegions.base);
+    drawMinecraftMobPart(ctx, cx + 8 * scale, baseY - 30 * scale, 30 * scale, 22 * scale, 10 * scale, legColor, frontCanvas, legRegion.sx, legRegion.sy, legRegion.sw, legRegion.sh, sideCanvas, sideRegions.leg || sideRegions.base, topCanvas, topRegions.leg || topRegions.base);
+    drawMinecraftMobPart(ctx, cx - 45 * scale, baseY - 182 * scale, 90 * scale, 74 * scale, 16 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
+    drawMinecraftMobPart(ctx, cx - 48 * scale, baseY - 202 * scale, 96 * scale, 16 * scale, 11 * scale, hatColor, frontCanvas, hatRegion.sx, hatRegion.sy, hatRegion.sw, hatRegion.sh, sideCanvas, sideRegions.hat, topCanvas, topRegions.hat);
+  } else {
+    // 縦長タイプはv267以降の帽子・頭・縦長胴体・薄い土台の方針を維持する。
+    drawMinecraftMobPart(ctx, cx - 52 * scale, baseY - 16 * scale, 104 * scale, 16 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh, sideCanvas, sideRegions.base, topCanvas, topRegions.base);
+    drawMinecraftMobPart(ctx, cx - 31 * scale, baseY - 106 * scale, 62 * scale, 84 * scale, 14 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
+    drawMinecraftMobPart(ctx, cx - 39 * scale, baseY - 178 * scale, 78 * scale, 66 * scale, 15 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
+    drawMinecraftMobPart(ctx, cx - 43 * scale, baseY - 198 * scale, 86 * scale, 16 * scale, 10 * scale, hatColor, frontCanvas, hatRegion.sx, hatRegion.sy, hatRegion.sw, hatRegion.sh, sideCanvas, sideRegions.hat, topCanvas, topRegions.hat);
+  }
 }
 
 function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
@@ -7014,6 +7059,8 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
   const hatUv = uv("hat", 0, 0.20);
   const bodyUv = uv("body", 0.42, 0.42);
   const baseUv = uv("base", 0.76, 0.24);
+  const armUv = uv("arm", 0.50, 0.24);
+  const legUv = uv("leg", 0.72, 0.20);
   const cube = (origin, size, frontUv, extraFaces = {}) => ({
     origin: origin.map(v => Number((v * scale).toFixed(3))),
     size: size.map(v => Number((v * scale).toFixed(3))),
@@ -7026,13 +7073,29 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
       down: extraFaces.down || frontUv
     }
   });
-  const cubes = [
-    // v267: 背面支柱や大きな背面板を使わず、写真は主に正面へ貼る。
-    // 側面は横写真、上面は上写真を控えめに使い、背面は代表色UVで回り込みを防ぐ。
-    cube([-5.8, 0, -3.2], [11.6, 0.9, 6.4], baseUv, { south: partBackUvs.base || partSideUvs.base || sideUv, east: partSideUvs.base || sideUv, west: partSideUvs.base || sideUv, up: partTopUvs.base || topUv, down: partBackUvs.base || sideUv }),
-    cube([-3.4, 1.15, -2.45], [6.8, 6.65, 4.9], bodyUv, { south: partBackUvs.body || partSideUvs.body || sideUv, east: partSideUvs.body || sideUv, west: partSideUvs.body || sideUv, up: partTopUvs.body || topUv, down: partBackUvs.body || sideUv }),
-    cube([-4.3, 8.35, -2.9], [8.6, 6.15, 5.8], headUv, { south: partBackUvs.head || partSideUvs.head || sideUv, east: partSideUvs.head || sideUv, west: partSideUvs.head || sideUv, up: partTopUvs.head || topUv, down: partBackUvs.head || sideUv }),
-    cube([-4.65, 14.85, -2.65], [9.3, 1.25, 5.3], hatUv, { south: partBackUvs.hat || partSideUvs.hat || sideUv, east: partSideUvs.hat || sideUv, west: partSideUvs.hat || sideUv, up: partTopUvs.hat || topUv, down: partBackUvs.hat || sideUv })
+  const template = getMinecraftMobTemplate(textureInfo);
+  const face = (name, fallbackName = name) => ({
+    south: partBackUvs[name] || partBackUvs[fallbackName] || partSideUvs[fallbackName] || sideUv,
+    east: partSideUvs[name] || partSideUvs[fallbackName] || sideUv,
+    west: partSideUvs[name] || partSideUvs[fallbackName] || sideUv,
+    up: partTopUvs[name] || partTopUvs[fallbackName] || topUv,
+    down: partBackUvs[name] || partBackUvs[fallbackName] || sideUv
+  });
+  const cubes = template.type === "box" ? [
+    cube([-6.4, 0, -3.2], [12.8, 0.8, 6.4], baseUv, face("base")),
+    cube([-7.2, 2.2, -2.35], [2.4, 5.9, 4.7], armUv, face("arm", "body")),
+    cube([4.8, 2.2, -2.35], [2.4, 5.9, 4.7], armUv, face("arm", "body")),
+    cube([-3.8, 1.2, -2.55], [7.6, 7.0, 5.1], bodyUv, face("body")),
+    cube([-3.5, 0.85, -2.35], [2.8, 2.1, 4.7], legUv, face("leg", "base")),
+    cube([0.7, 0.85, -2.35], [2.8, 2.1, 4.7], legUv, face("leg", "base")),
+    cube([-4.4, 8.9, -2.85], [8.8, 6.2, 5.7], headUv, face("head")),
+    cube([-4.7, 15.45, -2.65], [9.4, 1.2, 5.3], hatUv, face("hat"))
+  ] : [
+    // 縦長タイプは、写真は主に正面、側面は横写真、上面は上写真、背面は代表色UVで回り込みを防ぐ。
+    cube([-5.2, 0, -3.0], [10.4, 0.9, 6.0], baseUv, face("base")),
+    cube([-3.05, 1.15, -2.25], [6.1, 7.3, 4.5], bodyUv, face("body")),
+    cube([-3.9, 9.0, -2.75], [7.8, 5.8, 5.5], headUv, face("head")),
+    cube([-4.25, 15.15, -2.5], [8.5, 1.25, 5.0], hatUv, face("hat"))
   ];
   return {
     format_version: "1.12.0",
@@ -7265,7 +7328,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`];
-  return [`app:v271`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v272`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7286,7 +7349,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 69, optionCode];
+  return [2, 72, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8571,15 +8634,18 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const isSolidExhibit = resolvedAddonStyle === "solid" || resolvedAddonStyle === "voxel";
     const isVoxelExhibit = resolvedAddonStyle === "voxel";
     const addonVersion = buildMinecraftAddonVersion(resolvedAddonStyle, addonOptionSeed);
+    const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
+    currentMinecraftVoxelTextureInfo = voxelTextureInfo;
+    const mobTemplateMeta = isVoxelExhibit ? getMinecraftMobTemplate(voxelTextureInfo) : null;
     const addonOptionLabel = isVoxelExhibit
-      ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} / ${getMinecraftVoxelDisplaySizeMeta().label}`
+      ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} / ${getMinecraftVoxelDisplaySizeMeta().label} / ${mobTemplateMeta.label}`
       : `壁画用 / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
-    const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label}` : "";
-    const packManifestName = `${packKindLabel} ${packOptionName} v271`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : "";
+    const packManifestName = `${packKindLabel} ${packOptionName} v272`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v271 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v271 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v271 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v272 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v272 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v272 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8592,12 +8658,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const shortId = blockSlug.slice(-8);
     // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
-    const voxelDisplayLabelShort = isVoxelExhibit ? getMinecraftVoxelDisplaySizeMeta().label : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v271モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v271立体" : "v271壁画用")}`.slice(0, 34);
+    const voxelDisplayLabelShort = isVoxelExhibit ? `${getMinecraftVoxelDisplaySizeMeta().label}${mobTemplateMeta.label}` : "";
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v272モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v272立体" : "v272壁画用")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
-    const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
-    currentMinecraftVoxelTextureInfo = voxelTextureInfo;
     const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
     const wallArtTextureBlob = await buildMinecraftWallArtTextureBlob(currentMinecraftSpriteCanvas);
     const frameItemTextureBlob = await buildMinecraftFrameItemTextureBlob(currentMinecraftSpriteCanvas);
@@ -8919,6 +8983,8 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
     hat: { sx: 0, sy: 0, sw: size, sh: Math.max(1, Math.round(size * 0.20)) },
     head: { sx: 0, sy: Math.round(size * 0.20), sw: size, sh: Math.max(1, Math.round(size * 0.32)) },
     body: { sx: 0, sy: Math.round(size * 0.52), sw: size, sh: Math.max(1, Math.round(size * 0.30)) },
+    arm: { sx: Math.round(size * 0.08), sy: Math.round(size * 0.54), sw: Math.max(1, Math.round(size * 0.84)), sh: Math.max(1, Math.round(size * 0.24)) },
+    leg: { sx: Math.round(size * 0.22), sy: Math.round(size * 0.72), sw: Math.max(1, Math.round(size * 0.56)), sh: Math.max(1, Math.round(size * 0.20)) },
     base: { sx: 0, sy: Math.round(size * 0.82), sw: size, sh: Math.max(1, size - Math.round(size * 0.82)) }
   };
   const sourceRect = (name, fallbackY, fallbackH) => sourceRegions?.[name] || {
@@ -8940,6 +9006,8 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
   drawRegion("body", 0.44, 0.30, { r: 156, g: 126, b: 92 });
   drawRegion("head", 0.14, 0.30, partColors.body);
   drawRegion("hat", 0, 0.15, partColors.head);
+  drawRegion("arm", 0.48, 0.26, partColors.body);
+  drawRegion("leg", 0.70, 0.22, partColors.body);
   drawRegion("base", 0.78, 0.18, { r: 150, g: 112, b: 70 });
 
   const sideMedia = getMinecraftSolidViewMedia(work, "side");
@@ -8953,6 +9021,7 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
   const topCanvas = topMedia ? await loadMinecraftMediaToCanvas(topMedia, size) : null;
   const sideSourceRegions = sideCanvas ? getMinecraftMobPhotoCrop(sideCanvas) : null;
   const topSourceRegions = topCanvas ? getMinecraftMobPhotoCrop(topCanvas) : null;
+  const mobTemplate = estimateMinecraftMobTemplateFromCanvas(frontCanvas, sideCanvas, topCanvas);
   const sideX = size;
   const topX = size * 2;
   const sideRegions = {};
@@ -8960,22 +9029,23 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
   const partSideUvs = {};
   const partTopUvs = {};
   const partBackUvs = {};
-  ["hat", "head", "body", "base"].forEach((name) => {
+  ["hat", "head", "body", "arm", "leg", "base"].forEach((name) => {
     const dst = atlasRegions[name];
     const sideDst = { sx: sideX, sy: dst.sy, sw: dst.sw, sh: dst.sh };
     const topDst = { sx: topX, sy: dst.sy, sw: dst.sw, sh: dst.sh };
     const color = partColors[name] || frontColor;
     fillMinecraftAtlasSwatch(ctx, sideDst.sx, sideDst.sy, sideDst.sw, sideDst.sh, normalizeMinecraftPseudoFaceColor(sideColor, color, "side"), 0.92);
-    if (sideCanvas && sideSourceRegions?.[name]) {
-      const src = sideSourceRegions[name];
+    const sourceName = (name === "arm") ? "body" : (name === "leg" ? "base" : name);
+    if (sideCanvas && sideSourceRegions?.[sourceName]) {
+      const src = sideSourceRegions[sourceName];
       ctx.globalAlpha = 0.64;
       ctx.drawImage(sideCanvas, src.sx, src.sy, src.sw, src.sh, sideDst.sx, sideDst.sy, sideDst.sw, sideDst.sh);
       ctx.globalAlpha = 1;
       replaceMinecraftLightMarginWithColor(ctx, sideDst, normalizeMinecraftPseudoFaceColor(sideColor, color, "side"));
     }
     fillMinecraftAtlasSwatch(ctx, topDst.sx, topDst.sy, topDst.sw, topDst.sh, normalizeMinecraftPseudoFaceColor(topColor, color, "top"), 1.04);
-    if (topCanvas && topSourceRegions?.[name]) {
-      const src = topSourceRegions[name];
+    if (topCanvas && topSourceRegions?.[sourceName]) {
+      const src = topSourceRegions[sourceName];
       ctx.globalAlpha = 0.58;
       ctx.drawImage(topCanvas, src.sx, src.sy, src.sw, src.sh, topDst.sx, topDst.sy, topDst.sw, topDst.sh);
       ctx.globalAlpha = 1;
@@ -9006,7 +9076,9 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
       hat: { uv: [atlasRegions.hat.sx, atlasRegions.hat.sy], uv_size: [atlasRegions.hat.sw, atlasRegions.hat.sh] },
       head: { uv: [atlasRegions.head.sx, atlasRegions.head.sy], uv_size: [atlasRegions.head.sw, atlasRegions.head.sh] },
       body: { uv: [atlasRegions.body.sx, atlasRegions.body.sy], uv_size: [atlasRegions.body.sw, atlasRegions.body.sh] },
-      base: { uv: [atlasRegions.base.sx, atlasRegions.base.sy], uv_size: [atlasRegions.base.sw, atlasRegions.base.sh] }
+      base: { uv: [atlasRegions.base.sx, atlasRegions.base.sy], uv_size: [atlasRegions.base.sw, atlasRegions.base.sh] },
+      arm: { uv: [atlasRegions.arm.sx, atlasRegions.arm.sy], uv_size: [atlasRegions.arm.sw, atlasRegions.arm.sh] },
+      leg: { uv: [atlasRegions.leg.sx, atlasRegions.leg.sy], uv_size: [atlasRegions.leg.sw, atlasRegions.leg.sh] }
     },
     topUv: { uv: [topX + Math.floor(size * 0.5), Math.floor(size * 0.25)], uv_size: [1, 1] },
     sideUv: { uv: [sideX + Math.floor(size * 0.5), Math.floor(size * 0.5)], uv_size: [1, 1] },
@@ -9014,7 +9086,8 @@ async function buildMinecraftVoxelTextureInfo(work, frontCanvas) {
     topRegions,
     partTopUvs,
     partSideUvs,
-    partBackUvs
+    partBackUvs,
+    mobTemplate
   };
 }
 
