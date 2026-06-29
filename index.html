@@ -953,7 +953,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v248</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v250</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1568,6 +1568,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </div>
             <p id="minecraftVoxelReliefDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はレリーフ風です。輪郭や影を少し手前に出して、立体作品らしい厚みを出します。</p>
           </div>
+          <div id="minecraftVoxelBackgroundCutPanel" class="border-t border-slate-200 pt-3 space-y-2">
+            <div class="text-[11px] font-bold text-slate-500">背景カット</div>
+            <div class="flex flex-wrap gap-2">
+              <button id="minecraftVoxelBgCutSoftBtn" type="button" class="minecraft-mode-chip">やさしめ</button>
+              <button id="minecraftVoxelBgCutNormalBtn" type="button" class="minecraft-mode-chip">標準</button>
+              <button id="minecraftVoxelBgCutStrongBtn" type="button" class="minecraft-mode-chip">強め</button>
+            </div>
+            <p id="minecraftVoxelBackgroundCutDescription" class="text-[11px] text-slate-500 leading-relaxed">標準で出力します。背景が残るときは強め、作品が欠けるときはやさしめを選んでください。</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1932,7 +1941,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v248",
+        app_version: "v250",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5062,6 +5071,7 @@ let currentMinecraftResolvedTextureSize = 128;
 let currentMinecraftAddonStyleSelection = "auto";
 let currentMinecraftVoxelGridSize = 24;
 let currentMinecraftVoxelReliefMode = "real";
+let currentMinecraftVoxelBackgroundCutMode = "normal";
 let currentMinecraftVoxelTextureInfo = null;
 const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
 
@@ -5160,6 +5170,45 @@ function getMinecraftVoxelReliefMeta(mode = currentMinecraftVoxelReliefMode) {
   return map[mode] || map.real;
 }
 
+function getMinecraftVoxelBackgroundCutMeta(mode = currentMinecraftVoxelBackgroundCutMode) {
+  const map = {
+    soft: {
+      label: "やさしめ",
+      description: "作品本体を残すことを優先します。背景が少し残る場合があります。",
+      bgDistance: 50,
+      brightness: 236,
+      outerBandRatio: 0.09,
+      minKeepRatio: 0.62,
+      bottomKeepRatio: 0.18,
+      looseEdgeNeighbor: 2,
+      trimLightInner: false
+    },
+    normal: {
+      label: "標準",
+      description: "作品の形と背景カットのバランスを取ります。",
+      bgDistance: 62,
+      brightness: 224,
+      outerBandRatio: 0.12,
+      minKeepRatio: 0.54,
+      bottomKeepRatio: 0.14,
+      looseEdgeNeighbor: 3,
+      trimLightInner: false
+    },
+    strong: {
+      label: "強め",
+      description: "白い余白や背景をより削り、作品の輪郭を出しやすくします。",
+      bgDistance: 82,
+      brightness: 210,
+      outerBandRatio: 0.18,
+      minKeepRatio: 0.42,
+      bottomKeepRatio: 0.1,
+      looseEdgeNeighbor: 4,
+      trimLightInner: true
+    }
+  };
+  return map[mode] || map.normal;
+}
+
 function isMinecraftVoxelVisiblePixel(data, sampleSize, x, y) {
   if (!data || x < 0 || y < 0 || x >= sampleSize || y >= sampleSize) return false;
   const idx = (y * sampleSize + x) * 4;
@@ -5199,10 +5248,31 @@ function getMinecraftVoxelPixelRelief(data, sampleSize, x, y, reliefMeta) {
 }
 
 function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
+  const cutMeta = getMinecraftVoxelBackgroundCutMeta();
   const total = sampleSize * sampleSize;
   const visible = new Uint8Array(total);
   let visibleCount = 0;
   let minX = sampleSize, minY = sampleSize, maxX = -1, maxY = -1;
+  const readColor = (x, y) => {
+    const idx = (y * sampleSize + x) * 4;
+    return { r: data[idx], g: data[idx + 1], b: data[idx + 2], a: data[idx + 3] };
+  };
+  const edgeSamples = [];
+  for (let i = 0; i < sampleSize; i++) {
+    edgeSamples.push(readColor(i, 0), readColor(i, sampleSize - 1), readColor(0, i), readColor(sampleSize - 1, i));
+  }
+  const usableEdgeSamples = edgeSamples.filter(p => p.a >= 24);
+  const bgColor = usableEdgeSamples.length ? {
+    r: Math.round(usableEdgeSamples.reduce((sum, p) => sum + p.r, 0) / usableEdgeSamples.length),
+    g: Math.round(usableEdgeSamples.reduce((sum, p) => sum + p.g, 0) / usableEdgeSamples.length),
+    b: Math.round(usableEdgeSamples.reduce((sum, p) => sum + p.b, 0) / usableEdgeSamples.length)
+  } : { r: 255, g: 255, b: 255 };
+  const isCloseToEdgeBackground = (r, g, b) => {
+    const brightness = (r + g + b) / 3;
+    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+    const bgDistance = Math.abs(r - bgColor.r) + Math.abs(g - bgColor.g) + Math.abs(b - bgColor.b);
+    return (bgDistance < cutMeta.bgDistance && brightness > 176) || (brightness > cutMeta.brightness && chroma < 48);
+  };
   for (let y = 0; y < sampleSize; y++) {
     for (let x = 0; x < sampleSize; x++) {
       if (!isMinecraftVoxelVisiblePixel(data, sampleSize, x, y)) continue;
@@ -5218,11 +5288,49 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
   if (!visibleCount) return visible;
 
   const trimmed = new Uint8Array(visible);
-  const bottomKeepY = Math.max(minY, maxY - Math.max(1, Math.floor(sampleSize * 0.14)));
+  const bottomKeepY = Math.max(minY, maxY - Math.max(1, Math.floor(sampleSize * cutMeta.bottomKeepRatio)));
+  const outerBand = Math.max(1, Math.floor(sampleSize * cutMeta.outerBandRatio));
+  const edgeQueue = [];
+  const visitedBg = new Uint8Array(total);
+
   for (let y = minY; y <= maxY; y++) {
     for (let x = minX; x <= maxX; x++) {
       const pos = y * sampleSize + x;
       if (!visible[pos]) continue;
+      const idx = pos * 4;
+      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+      const touchesOuter = x <= minX + outerBand || x >= maxX - outerBand || y <= minY + outerBand || y >= maxY - outerBand;
+      if (touchesOuter && isCloseToEdgeBackground(r, g, b)) {
+        visitedBg[pos] = 1;
+        edgeQueue.push([x, y]);
+      }
+    }
+  }
+
+  while (edgeQueue.length) {
+    const [x, y] = edgeQueue.shift();
+    const pos = y * sampleSize + x;
+    const idx = pos * 4;
+    const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+    const brightness = (r + g + b) / 3;
+    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+    if (y < bottomKeepY || (brightness > Math.max(202, cutMeta.brightness - 2) && chroma < 46)) trimmed[pos] = 0;
+    [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].forEach(([nx, ny]) => {
+      if (nx < minX || ny < minY || nx > maxX || ny > maxY) return;
+      const npos = ny * sampleSize + nx;
+      if (!visible[npos] || visitedBg[npos]) return;
+      const nidx = npos * 4;
+      const nr = data[nidx], ng = data[nidx + 1], nb = data[nidx + 2];
+      if (!isCloseToEdgeBackground(nr, ng, nb)) return;
+      visitedBg[npos] = 1;
+      edgeQueue.push([nx, ny]);
+    });
+  }
+
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const pos = y * sampleSize + x;
+      if (!trimmed[pos]) continue;
       let neighborCount = 0;
       let orthCount = 0;
       for (let dy = -1; dy <= 1; dy++) {
@@ -5231,7 +5339,7 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
           const nx = x + dx;
           const ny = y + dy;
           if (nx < 0 || ny < 0 || nx >= sampleSize || ny >= sampleSize) continue;
-          if (!visible[ny * sampleSize + nx]) continue;
+          if (!trimmed[ny * sampleSize + nx]) continue;
           neighborCount++;
           if (!dx || !dy) orthCount++;
         }
@@ -5241,14 +5349,14 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
       const brightness = (r + g + b) / 3;
       const chroma = Math.max(r, g, b) - Math.min(r, g, b);
       const touchesBounds = x === minX || x === maxX || y === minY || y === maxY;
-      const isLikelyBackground = brightness > 216 && chroma < 58;
+      const isLikelyBackground = brightness > (cutMeta.trimLightInner ? 202 : 216) && chroma < 58;
       const isThinNoise = neighborCount <= 1 || orthCount === 0;
-      const isLooseEdge = touchesBounds && neighborCount <= 3 && orthCount <= 2;
-      const keepBottomSupport = y >= bottomKeepY && neighborCount >= 1;
+      const isLooseEdge = touchesBounds && neighborCount <= cutMeta.looseEdgeNeighbor && orthCount <= 2;
+      const keepBottomSupport = y >= bottomKeepY && neighborCount >= 2 && !isCloseToEdgeBackground(r, g, b);
       const keepStrongColor = chroma >= 62 && neighborCount >= 1;
       const keepDenseArea = neighborCount >= 5 || orthCount >= 3;
       if (!keepBottomSupport && !keepStrongColor && !keepDenseArea) {
-        if ((isThinNoise && (touchesBounds || isLikelyBackground)) || (isLooseEdge && isLikelyBackground)) {
+        if ((isThinNoise && (touchesBounds || isLikelyBackground || isCloseToEdgeBackground(r, g, b))) || (isLooseEdge && (isLikelyBackground || isCloseToEdgeBackground(r, g, b))) || (cutMeta.trimLightInner && isLikelyBackground && neighborCount <= 4 && !keepStrongColor)) {
           trimmed[pos] = 0;
         }
       }
@@ -5257,7 +5365,7 @@ function buildMinecraftVoxelSilhouetteMask(data, sampleSize) {
 
   let keptCount = 0;
   for (let i = 0; i < trimmed.length; i++) keptCount += trimmed[i] ? 1 : 0;
-  if (keptCount < Math.max(visibleCount * 0.58, 12)) return visible;
+  if (keptCount < Math.max(visibleCount * cutMeta.minKeepRatio, 12)) return visible;
   return trimmed;
 }
 
@@ -5288,6 +5396,32 @@ function setMinecraftVoxelReliefMode(mode = "standard") {
   }
 }
 
+function updateMinecraftVoxelBackgroundCutUi(forceVisible = null) {
+  const panelEl = document.getElementById("minecraftVoxelBackgroundCutPanel");
+  const softBtn = document.getElementById("minecraftVoxelBgCutSoftBtn");
+  const normalBtn = document.getElementById("minecraftVoxelBgCutNormalBtn");
+  const strongBtn = document.getElementById("minecraftVoxelBgCutStrongBtn");
+  const descEl = document.getElementById("minecraftVoxelBackgroundCutDescription");
+  const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
+  const visible = forceVisible === null ? resolvedStyle === "voxel" : !!forceVisible;
+  if (panelEl) panelEl.classList.toggle("hidden", !visible);
+  if (softBtn) softBtn.classList.toggle("active", currentMinecraftVoxelBackgroundCutMode === "soft");
+  if (normalBtn) normalBtn.classList.toggle("active", currentMinecraftVoxelBackgroundCutMode === "normal");
+  if (strongBtn) strongBtn.classList.toggle("active", currentMinecraftVoxelBackgroundCutMode === "strong");
+  if (descEl) {
+    const meta = getMinecraftVoxelBackgroundCutMeta(currentMinecraftVoxelBackgroundCutMode);
+    descEl.textContent = `${meta.label}で出力します。${meta.description}`;
+  }
+}
+
+function setMinecraftVoxelBackgroundCutMode(mode = "normal") {
+  currentMinecraftVoxelBackgroundCutMode = ["soft", "normal", "strong"].includes(mode) ? mode : "normal";
+  updateMinecraftVoxelBackgroundCutUi();
+  if (currentMinecraftSpriteCanvas) {
+    renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
+  }
+}
+
 function updateMinecraftVoxelSizeUi(forceVisible = null) {
   const size16Btn = document.getElementById("minecraftVoxel16Btn");
   const size24Btn = document.getElementById("minecraftVoxel24Btn");
@@ -5305,6 +5439,7 @@ function updateMinecraftVoxelSizeUi(forceVisible = null) {
     descEl.textContent = `${meta.label}で出力します。${meta.description}`;
   }
   updateMinecraftVoxelReliefUi(visible);
+  updateMinecraftVoxelBackgroundCutUi(visible);
 }
 
 function setMinecraftVoxelGridSize(size = 24) {
@@ -7954,7 +8089,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const isVoxelExhibit = resolvedAddonStyle === "voxel";
     const packKindLabel = isVoxelExhibit ? "コドモカプセルボクセル" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の${getMinecraftVoxelGridMeta().label}ボクセル風立体作品パックです。立体感は${getMinecraftVoxelReliefMeta().label}です。`
+      ? `コドモカプセルで作成したMinecraft用の${getMinecraftVoxelGridMeta().label}ボクセル風立体作品パックです。立体感は${getMinecraftVoxelReliefMeta().label}、背景カットは${getMinecraftVoxelBackgroundCutMeta().label}です。`
       : (isSolidExhibit ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。" : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。");
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
@@ -7969,7 +8104,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: ボクセル風立体はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v248ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v248立体" : "v248壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v250ボクセル立体${voxelLabelShort}` : (isSolidExhibit ? "v250立体" : "v250壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
@@ -8370,6 +8505,9 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const voxelReliefStandardBtn = document.getElementById("minecraftVoxelReliefStandardBtn");
   const voxelReliefClearBtn = document.getElementById("minecraftVoxelReliefClearBtn");
   const voxelReliefRealBtn = document.getElementById("minecraftVoxelReliefRealBtn");
+  const voxelBgCutSoftBtn = document.getElementById("minecraftVoxelBgCutSoftBtn");
+  const voxelBgCutNormalBtn = document.getElementById("minecraftVoxelBgCutNormalBtn");
+  const voxelBgCutStrongBtn = document.getElementById("minecraftVoxelBgCutStrongBtn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -8405,6 +8543,9 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (voxelReliefStandardBtn) voxelReliefStandardBtn.onclick = function() { setMinecraftVoxelReliefMode("standard"); };
   if (voxelReliefClearBtn) voxelReliefClearBtn.onclick = function() { setMinecraftVoxelReliefMode("clear"); };
   if (voxelReliefRealBtn) voxelReliefRealBtn.onclick = function() { setMinecraftVoxelReliefMode("real"); };
+  if (voxelBgCutSoftBtn) voxelBgCutSoftBtn.onclick = function() { setMinecraftVoxelBackgroundCutMode("soft"); };
+  if (voxelBgCutNormalBtn) voxelBgCutNormalBtn.onclick = function() { setMinecraftVoxelBackgroundCutMode("normal"); };
+  if (voxelBgCutStrongBtn) voxelBgCutStrongBtn.onclick = function() { setMinecraftVoxelBackgroundCutMode("strong"); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
