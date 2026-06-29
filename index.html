@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v264</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v265</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1982,7 +1982,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v264",
+        app_version: "v265",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6846,12 +6846,14 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
   const baseColor = sampleMinecraftMobRegionColor(spriteCanvas, 0.74, 0.98, { r: 150, g: 112, b: 70 });
   ctx.fillStyle = "rgba(15,23,42,0.18)";
   ctx.beginPath();
-  ctx.ellipse(cx + 12, baseY + 10, 82 * scale, 20 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + 10, baseY + 8, 66 * scale, 16 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
-  drawMinecraftMobPart(ctx, cx - 72 * scale, baseY - 20 * scale, 144 * scale, 24 * scale, 24 * scale, baseColor, null, 0, 0, 1, 1);
-  drawMinecraftMobPart(ctx, cx - 46 * scale, baseY - 102 * scale, 92 * scale, 86 * scale, 28 * scale, bodyColor, spriteCanvas, 0, spriteCanvas.height * 0.38, spriteCanvas.width, spriteCanvas.height * 0.38);
-  drawMinecraftMobPart(ctx, cx - 54 * scale, baseY - 180 * scale, 108 * scale, 78 * scale, 30 * scale, headColor, spriteCanvas, 0, spriteCanvas.height * 0.08, spriteCanvas.width, spriteCanvas.height * 0.34);
-  drawMinecraftMobPart(ctx, cx - 62 * scale, baseY - 202 * scale, 124 * scale, 24 * scale, 32 * scale, hatColor, spriteCanvas, 0, 0, spriteCanvas.width, spriteCanvas.height * 0.16);
+  // v265: 外枠・支えになる土台や屋根の張り出しを控えめにし、
+  // 頭・帽子・胴体が正面から目立つ小さなモブ風置物に寄せる。
+  drawMinecraftMobPart(ctx, cx - 58 * scale, baseY - 18 * scale, 116 * scale, 20 * scale, 16 * scale, baseColor, null, 0, 0, 1, 1);
+  drawMinecraftMobPart(ctx, cx - 48 * scale, baseY - 106 * scale, 96 * scale, 88 * scale, 22 * scale, bodyColor, spriteCanvas, 0, spriteCanvas.height * 0.38, spriteCanvas.width, spriteCanvas.height * 0.38);
+  drawMinecraftMobPart(ctx, cx - 56 * scale, baseY - 184 * scale, 112 * scale, 80 * scale, 24 * scale, headColor, spriteCanvas, 0, spriteCanvas.height * 0.08, spriteCanvas.width, spriteCanvas.height * 0.34);
+  drawMinecraftMobPart(ctx, cx - 60 * scale, baseY - 202 * scale, 120 * scale, 20 * scale, 24 * scale, hatColor, spriteCanvas, 0, 0, spriteCanvas.width, spriteCanvas.height * 0.16);
 }
 
 function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInfoOrSize = currentMinecraftResolvedTextureSize || 128) {
@@ -6873,10 +6875,11 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
     uv: { north: frontUv, south: sideUv, east: sideUv, west: sideUv, up: topUv, down: sideUv }
   });
   const cubes = [
-    cube([-7.5, 0, -5.4], [15, 1.2, 10.8], baseUv),
-    cube([-4.6, 1.2, -3.6], [9.2, 7.6, 7.2], bodyUv),
-    cube([-5.4, 8.5, -4.2], [10.8, 6.4, 8.4], headUv),
-    cube([-6.2, 14.6, -4.8], [12.4, 1.8, 9.6], hatUv)
+    // v265: プレビューと同じ方向で、土台・支え・屋根の張り出しを控えめにし、作品本体を少し前へ出す。
+    cube([-6.4, 0, -4.3], [12.8, 1.05, 8.6], baseUv),
+    cube([-4.8, 1.05, -3.05], [9.6, 7.8, 6.4], bodyUv),
+    cube([-5.6, 8.55, -3.55], [11.2, 6.6, 7.2], headUv),
+    cube([-6.0, 14.85, -4.0], [12.0, 1.55, 8.0], hatUv)
   ];
   return {
     format_version: "1.12.0",
@@ -8378,7 +8381,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const isVoxelExhibit = resolvedAddonStyle === "voxel";
     const packKindLabel = isVoxelExhibit ? "コドモカプセルモブ風" : (isSolidExhibit ? "コドモカプセル立体" : "コドモカプセル壁画");
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v264 です。展示サイズは${getMinecraftVoxelDisplaySizeMeta().label}です。`
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v265 です。展示サイズは${getMinecraftVoxelDisplaySizeMeta().label}です。`
       : (isSolidExhibit ? "コドモカプセルで作成したMinecraft用の立体作品展示パックです。" : "コドモカプセルで作成したMinecraft用の壁貼り額縁パックです。");
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
@@ -8394,7 +8397,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelLabelShort = `${currentMinecraftVoxelGridSize}`;
     const voxelDisplayLabelShort = isVoxelExhibit ? getMinecraftVoxelDisplaySizeMeta().label : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v264モブ風${voxelDisplayLabelShort}` : (isSolidExhibit ? "v264立体" : "v264壁貼り")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v265モブ風${voxelDisplayLabelShort}` : (isSolidExhibit ? "v265立体" : "v265壁貼り")}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
