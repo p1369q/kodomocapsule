@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v273</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v274</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1999,7 +1999,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v273",
+        app_version: "v274",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7412,7 +7412,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v273`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v274`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7433,7 +7433,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 73, optionCode];
+  return [2, 74, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -7875,6 +7875,9 @@ function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraft
   const woodTile = Math.max(16, Math.round(textureSize * 0.25));
   const woodUv = { uv: [textureSize, 0], uv_size: [woodTile, woodTile] };
   const backUv = { uv: [textureSize, woodTile], uv_size: [textureSize, textureSize] };
+  const wallMeta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
+  const width = Math.max(1, wallMeta.blocksX || 1) * 16;
+  const height = Math.max(1, wallMeta.blocksY || 1) * 16;
   return {
     format_version: "1.12.0",
     "minecraft:geometry": [
@@ -7883,9 +7886,9 @@ function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraft
           identifier: geometryId,
           texture_width: atlasSize,
           texture_height: atlasSize,
-          visible_bounds_width: 2,
-          visible_bounds_height: 2,
-          visible_bounds_offset: [0, 0.5, 0]
+          visible_bounds_width: Math.max(2, wallMeta.blocksX || 1),
+          visible_bounds_height: Math.max(2, wallMeta.blocksY || 1),
+          visible_bounds_offset: [0, Math.max(0.5, (wallMeta.blocksY || 1) / 2), 0]
         },
         bones: [
           {
@@ -7893,10 +7896,10 @@ function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraft
             pivot: [0, 8, 0],
             cubes: [
               {
-                // v199: 実機ではsouth面が壁側を向いていたため、north面を作品の正面として使う。
-                // これにより、中央ブロックを壊した時にも絵が外側を向く。
-                origin: [-8, 0, -0.5],
-                size: [16, 16, 1],
+                // v274: 壁画サイズ選択を実物ジオメトリへ反映し、1×1〜4×3の差が見えるようにする。
+                // north面を作品の正面として使う既存方針は維持する。
+                origin: [-width / 2, 0, -0.5],
+                size: [width, height, 1],
                 uv: {
                   north: artUv,
                   south: backUv,
@@ -8157,6 +8160,7 @@ function buildMinecraftFrameRenderController(renderControllerId) {
 }
 
 function buildMinecraftBehaviorEntity(entityId, displayName) {
+  const wallMeta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
   return {
     format_version: "1.20.50",
     "minecraft:entity": {
@@ -8181,8 +8185,8 @@ function buildMinecraftBehaviorEntity(entityId, displayName) {
         // v201: iPad/iPhoneでタップや長押しが壁ブロックへ抜けにくいよう、選択しやすい当たり判定にする。
         // 物理衝突は無効のままなので、プレイヤー移動の邪魔にはなりにくい。
         "minecraft:collision_box": {
-          width: 0.95,
-          height: 0.95
+          width: Math.max(0.95, wallMeta.blocksX || 1),
+          height: Math.max(0.95, wallMeta.blocksY || 1)
         },
         "minecraft:physics": {
           has_collision: false,
@@ -8729,10 +8733,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v273`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v274`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v273 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v273 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v273 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v274 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v274 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v274 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8746,7 +8750,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelDisplayLabelShort = isVoxelExhibit ? `${getMinecraftVoxelDisplaySizeMeta().label}${mobTemplateMeta.label}` : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v273モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v273立体" : `v273壁画${wallSizeMeta.key}`)}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v274モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v274立体" : `v274壁画${wallSizeMeta.key}`)}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
