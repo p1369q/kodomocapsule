@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v274</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v275</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1697,6 +1697,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
                 <button id="minecraftWallSize2x3Btn" type="button" class="minecraft-mode-chip">大きめ縦 2×3</button>
                 <button id="minecraftWallSize3x2Btn" type="button" class="minecraft-mode-chip">大きめ横 3×2</button>
                 <button id="minecraftWallSize4x3Btn" type="button" class="minecraft-mode-chip">大きめ 4×3</button>
+                <button id="minecraftWallSize3x3Btn" type="button" class="minecraft-mode-chip">大きめ正方形 3×3</button>
+                <button id="minecraftWallSize4x4Btn" type="button" class="minecraft-mode-chip">特大正方形 4×4</button>
               </div>
               <p id="minecraftWallSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はおまかせです。画像の縦横比に近い壁画サイズで出力します。</p>
             </div>
@@ -1999,7 +2001,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v274",
+        app_version: "v275",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5720,7 +5722,9 @@ function getMinecraftWallSizeOptions() {
     "2x2": { label: "正方形 2×2", blocksX: 2, blocksY: 2 },
     "2x3": { label: "大きめ縦 2×3", blocksX: 2, blocksY: 3 },
     "3x2": { label: "大きめ横 3×2", blocksX: 3, blocksY: 2 },
-    "4x3": { label: "大きめ 4×3", blocksX: 4, blocksY: 3 }
+    "4x3": { label: "大きめ 4×3", blocksX: 4, blocksY: 3 },
+    "3x3": { label: "大きめ正方形 3×3", blocksX: 3, blocksY: 3 },
+    "4x4": { label: "特大正方形 4×4", blocksX: 4, blocksY: 4 }
   };
 }
 
@@ -5729,7 +5733,12 @@ function resolveMinecraftWallSizeKey(spriteCanvas = currentMinecraftSpriteCanvas
   const ratio = Number(currentMinecraftWallAutoAspectRatio) || ((spriteCanvas?.width || 1) / Math.max(1, spriteCanvas?.height || 1));
   if (ratio < 0.72) return "1x2";
   if (ratio < 0.92) return "2x3";
-  if (ratio <= 1.12) return "2x2";
+  if (ratio <= 1.12) {
+    const textureSize = Number(currentMinecraftResolvedTextureSize) || Math.max(spriteCanvas?.width || 0, spriteCanvas?.height || 0);
+    if (textureSize >= 512) return "4x4";
+    if (textureSize >= 256) return "3x3";
+    return "2x2";
+  }
   if (ratio <= 1.55) return "4x3";
   return "3x2";
 }
@@ -7412,7 +7421,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v274`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v275`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7896,7 +7905,7 @@ function buildMinecraftEntityGeometry(geometryId, textureSize = currentMinecraft
             pivot: [0, 8, 0],
             cubes: [
               {
-                // v274: 壁画サイズ選択を実物ジオメトリへ反映し、1×1〜4×3の差が見えるようにする。
+                // v275: 壁画サイズ選択を実物ジオメトリへ反映し、1×1〜4×4の差が見えるようにする。
                 // north面を作品の正面として使う既存方針は維持する。
                 origin: [-width / 2, 0, -0.5],
                 size: [width, height, 1],
@@ -8733,10 +8742,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v274`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v275`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v274 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v274 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v274 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v275 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v275 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v275 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8750,7 +8759,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelDisplayLabelShort = isVoxelExhibit ? `${getMinecraftVoxelDisplaySizeMeta().label}${mobTemplateMeta.label}` : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v274モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v274立体" : `v274壁画${wallSizeMeta.key}`)}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v275モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v275立体" : `v275壁画${wallSizeMeta.key}`)}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
@@ -9311,6 +9320,8 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const wallSize2x3Btn = document.getElementById("minecraftWallSize2x3Btn");
   const wallSize3x2Btn = document.getElementById("minecraftWallSize3x2Btn");
   const wallSize4x3Btn = document.getElementById("minecraftWallSize4x3Btn");
+  const wallSize3x3Btn = document.getElementById("minecraftWallSize3x3Btn");
+  const wallSize4x4Btn = document.getElementById("minecraftWallSize4x4Btn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -9360,6 +9371,8 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (wallSize2x3Btn) wallSize2x3Btn.onclick = function() { setMinecraftWallSizeSelection("2x3"); };
   if (wallSize3x2Btn) wallSize3x2Btn.onclick = function() { setMinecraftWallSizeSelection("3x2"); };
   if (wallSize4x3Btn) wallSize4x3Btn.onclick = function() { setMinecraftWallSizeSelection("4x3"); };
+  if (wallSize3x3Btn) wallSize3x3Btn.onclick = function() { setMinecraftWallSizeSelection("3x3"); };
+  if (wallSize4x4Btn) wallSize4x4Btn.onclick = function() { setMinecraftWallSizeSelection("4x4"); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
