@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v272</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v273</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1684,6 +1684,23 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </summary>
         <div class="mt-3 space-y-3">
           <p class="text-[11px] text-slate-500">必要なときだけ開いて、見た目やサイズを調整できます。</p>
+          <div id="minecraftWallSizePanelWrap" class="rounded-2xl bg-amber-50/60 border border-amber-100 p-3 space-y-3">
+            <div class="flex items-center gap-1.5 text-xs font-extrabold text-amber-900"><span>🖼️</span><span>壁画用の設定</span></div>
+            <div id="minecraftWallSizePanel" class="border-t border-slate-200 pt-3 space-y-2">
+              <div class="text-[11px] font-bold text-slate-500">壁画サイズ</div>
+              <div class="flex flex-wrap gap-2">
+                <button id="minecraftWallSizeAutoBtn" type="button" class="minecraft-mode-chip">おまかせ</button>
+                <button id="minecraftWallSize1x1Btn" type="button" class="minecraft-mode-chip">小さめ 1×1</button>
+                <button id="minecraftWallSize1x2Btn" type="button" class="minecraft-mode-chip">縦長 1×2</button>
+                <button id="minecraftWallSize2x1Btn" type="button" class="minecraft-mode-chip">横長 2×1</button>
+                <button id="minecraftWallSize2x2Btn" type="button" class="minecraft-mode-chip">正方形 2×2</button>
+                <button id="minecraftWallSize2x3Btn" type="button" class="minecraft-mode-chip">大きめ縦 2×3</button>
+                <button id="minecraftWallSize3x2Btn" type="button" class="minecraft-mode-chip">大きめ横 3×2</button>
+                <button id="minecraftWallSize4x3Btn" type="button" class="minecraft-mode-chip">大きめ 4×3</button>
+              </div>
+              <p id="minecraftWallSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はおまかせです。画像の縦横比に近い壁画サイズで出力します。</p>
+            </div>
+          </div>
           <div id="minecraftVoxelSizePanel" class="hidden rounded-2xl bg-emerald-50/60 border border-emerald-100 p-3 space-y-3">
             <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧸</span><span>モブ風作品の設定</span></div>
             <div class="space-y-2">
@@ -1982,7 +1999,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v272",
+        app_version: "v273",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5115,6 +5132,8 @@ let currentMinecraftVoxelReliefMode = "real";
 let currentMinecraftVoxelBackgroundCutMode = "normal";
 let currentMinecraftVoxelDisplaySize = "large";
 let currentMinecraftVoxelTextureInfo = null;
+let currentMinecraftWallSizeSelection = "auto";
+let currentMinecraftWallAutoAspectRatio = 1;
 const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
 
 function getMinecraftPencilModeMeta(mode = "crisp") {
@@ -5692,6 +5711,59 @@ function setMinecraftVoxelGridSize(size = 24) {
   }
 }
 
+function getMinecraftWallSizeOptions() {
+  return {
+    auto: { label: "おまかせ", blocksX: 0, blocksY: 0 },
+    "1x1": { label: "小さめ 1×1", blocksX: 1, blocksY: 1 },
+    "1x2": { label: "縦長 1×2", blocksX: 1, blocksY: 2 },
+    "2x1": { label: "横長 2×1", blocksX: 2, blocksY: 1 },
+    "2x2": { label: "正方形 2×2", blocksX: 2, blocksY: 2 },
+    "2x3": { label: "大きめ縦 2×3", blocksX: 2, blocksY: 3 },
+    "3x2": { label: "大きめ横 3×2", blocksX: 3, blocksY: 2 },
+    "4x3": { label: "大きめ 4×3", blocksX: 4, blocksY: 3 }
+  };
+}
+
+function resolveMinecraftWallSizeKey(spriteCanvas = currentMinecraftSpriteCanvas) {
+  if (currentMinecraftWallSizeSelection !== "auto") return getMinecraftWallSizeOptions()[currentMinecraftWallSizeSelection] ? currentMinecraftWallSizeSelection : "1x1";
+  const ratio = Number(currentMinecraftWallAutoAspectRatio) || ((spriteCanvas?.width || 1) / Math.max(1, spriteCanvas?.height || 1));
+  if (ratio < 0.72) return "1x2";
+  if (ratio < 0.92) return "2x3";
+  if (ratio <= 1.12) return "2x2";
+  if (ratio <= 1.55) return "4x3";
+  return "3x2";
+}
+
+function getMinecraftWallSizeMeta(key = currentMinecraftWallSizeSelection, spriteCanvas = currentMinecraftSpriteCanvas) {
+  const options = getMinecraftWallSizeOptions();
+  const resolvedKey = key === "auto" ? resolveMinecraftWallSizeKey(spriteCanvas) : (options[key] ? key : "1x1");
+  const meta = options[resolvedKey] || options["1x1"];
+  return { ...meta, key: resolvedKey, selection: key, selectionLabel: key === "auto" ? `おまかせ（${meta.label}）` : meta.label };
+}
+
+function updateMinecraftWallSizeUi(forceVisible = null) {
+  const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
+  const visible = forceVisible === null ? resolvedStyle === "wall" : !!forceVisible;
+  const wrap = document.getElementById("minecraftWallSizePanelWrap");
+  if (wrap) wrap.classList.toggle("hidden", !visible);
+  Object.keys(getMinecraftWallSizeOptions()).forEach(key => {
+    const btn = document.getElementById(`minecraftWallSize${key === "auto" ? "Auto" : key.replace("x", "x")}Btn`);
+    if (btn) btn.classList.toggle("active", currentMinecraftWallSizeSelection === key);
+  });
+  const desc = document.getElementById("minecraftWallSizeDescription");
+  if (desc) {
+    const meta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
+    desc.textContent = `${meta.selectionLabel}で出力します。壁画サイズはプレビューと.mcaddonに反映されます。`;
+  }
+}
+
+function setMinecraftWallSizeSelection(key = "auto") {
+  currentMinecraftWallSizeSelection = getMinecraftWallSizeOptions()[key] ? key : "auto";
+  updateMinecraftWallSizeUi();
+  updateMinecraftVoxelPreviewMetaUi();
+  if (currentMinecraftSpriteCanvas) renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
+}
+
 function getMinecraftAddonStyleMeta(mode = "wall") {
   const map = {
     wall: {
@@ -5763,7 +5835,8 @@ function updateMinecraftVoxelPreviewMetaUi(work = getMinecraftAddonTargetWork(),
       const templateMeta = getMinecraftMobTemplate(currentMinecraftVoxelTextureInfo);
       displayLabelEl.textContent = `マイクラでの見え方（モブ風作品 / ${displaySizeMeta.label} / ${templateMeta.label}）`;
     } else {
-      displayLabelEl.textContent = "マイクラでの見え方（壁画）";
+      const wallMeta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
+      displayLabelEl.textContent = `マイクラでの見え方（壁画 / ${wallMeta.selectionLabel}）`;
     }
   }
   updateMinecraftDeliveryUi(work);
@@ -5841,6 +5914,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const reliefMeta = getMinecraftVoxelReliefMeta(currentMinecraftVoxelReliefMode);
   if (voxelPanelEl) voxelPanelEl.classList.toggle("hidden", !(isSolidWork && resolved === "voxel"));
   updateMinecraftVoxelSizeUi(isSolidWork && resolved === "voxel");
+  updateMinecraftWallSizeUi(resolved === "wall");
   if (descEl) {
     descEl.textContent = isSolidWork
       ? `${meta.description} 上で切り替えた内容が、そのまま保存されます。`
@@ -6693,21 +6767,29 @@ function drawMinecraftWallPreview(ctx, canvas, spriteCanvas) {
       ctx.fillRect(x, y, wallTile, wallTile);
     }
   }
-  const frameSize = Math.round(canvas.width * 0.66);
-  const fx = Math.round((canvas.width - frameSize) / 2);
-  const fy = Math.round((canvas.height - frameSize) / 2);
+  const wallMeta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection, spriteCanvas);
+  const maxW = canvas.width * 0.74;
+  const maxH = canvas.height * 0.68;
+  const wallRatio = wallMeta.blocksX / Math.max(1, wallMeta.blocksY);
+  let frameW = maxW;
+  let frameH = frameW / wallRatio;
+  if (frameH > maxH) { frameH = maxH; frameW = frameH * wallRatio; }
+  const frameSize = Math.round(Math.min(frameW, frameH));
+  const fx = Math.round((canvas.width - frameW) / 2);
+  const fy = Math.round((canvas.height - frameH) / 2);
   ctx.fillStyle = "#6b4d2d";
-  ctx.fillRect(fx, fy, frameSize, frameSize);
+  ctx.fillRect(fx, fy, Math.round(frameW), Math.round(frameH));
   ctx.fillStyle = "#8a6438";
-  ctx.fillRect(fx + 10, fy + 10, frameSize - 20, frameSize - 20);
+  ctx.fillRect(fx + 10, fy + 10, Math.round(frameW) - 20, Math.round(frameH) - 20);
   ctx.fillStyle = "#b98a54";
-  ctx.fillRect(fx + 18, fy + 18, frameSize - 36, frameSize - 36);
+  ctx.fillRect(fx + 18, fy + 18, Math.round(frameW) - 36, Math.round(frameH) - 36);
   ctx.fillStyle = "#111827";
   ctx.fillRect(fx + Math.round(frameSize / 2) - 3, fy - 8, 6, 10);
-  const artSize = Math.round(frameSize * 0.68);
-  const ax = Math.round((canvas.width - artSize) / 2);
-  const ay = Math.round((canvas.height - artSize) / 2);
-  ctx.drawImage(spriteCanvas, ax, ay, artSize, artSize);
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  for (let ix = 1; ix < wallMeta.blocksX; ix++) ctx.fillRect(fx + Math.round(frameW * ix / wallMeta.blocksX), fy + 14, 2, Math.round(frameH) - 28);
+  for (let iy = 1; iy < wallMeta.blocksY; iy++) ctx.fillRect(fx + 14, fy + Math.round(frameH * iy / wallMeta.blocksY), Math.round(frameW) - 28, 2);
+  const artPad = Math.max(18, Math.round(Math.min(frameW, frameH) * 0.16));
+  ctx.drawImage(spriteCanvas, fx + artPad, fy + artPad, Math.max(1, Math.round(frameW) - artPad * 2), Math.max(1, Math.round(frameH) - artPad * 2));
 }
 
 function drawMinecraftSolidExhibitPreview(ctx, canvas, spriteCanvas) {
@@ -7027,9 +7109,9 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
     const armColor = getMinecraftMobPartColor(textureInfo, "arm", bodyColor);
     const legColor = getMinecraftMobPartColor(textureInfo, "leg", baseColor);
     drawMinecraftMobPart(ctx, cx - 64 * scale, baseY - 16 * scale, 128 * scale, 14 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh, sideCanvas, sideRegions.base, topCanvas, topRegions.base);
-    drawMinecraftMobPart(ctx, cx - 72 * scale, baseY - 104 * scale, 28 * scale, 64 * scale, 12 * scale, armColor, frontCanvas, armRegion.sx, armRegion.sy, armRegion.sw, armRegion.sh, sideCanvas, sideRegions.arm || sideRegions.body, topCanvas, topRegions.arm || topRegions.body);
-    drawMinecraftMobPart(ctx, cx + 44 * scale, baseY - 104 * scale, 28 * scale, 64 * scale, 12 * scale, armColor, frontCanvas, armRegion.sx, armRegion.sy, armRegion.sw, armRegion.sh, sideCanvas, sideRegions.arm || sideRegions.body, topCanvas, topRegions.arm || topRegions.body);
-    drawMinecraftMobPart(ctx, cx - 40 * scale, baseY - 106 * scale, 80 * scale, 76 * scale, 15 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
+    drawMinecraftMobPart(ctx, cx - 78 * scale, baseY - 106 * scale, 32 * scale, 68 * scale, 15 * scale, armColor, frontCanvas, armRegion.sx, armRegion.sy, armRegion.sw, armRegion.sh, sideCanvas, sideRegions.arm || sideRegions.body, topCanvas, topRegions.arm || topRegions.body);
+    drawMinecraftMobPart(ctx, cx + 46 * scale, baseY - 106 * scale, 32 * scale, 68 * scale, 15 * scale, armColor, frontCanvas, armRegion.sx, armRegion.sy, armRegion.sw, armRegion.sh, sideCanvas, sideRegions.arm || sideRegions.body, topCanvas, topRegions.arm || topRegions.body);
+    drawMinecraftMobPart(ctx, cx - 39 * scale, baseY - 108 * scale, 78 * scale, 78 * scale, 17 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
     drawMinecraftMobPart(ctx, cx - 38 * scale, baseY - 30 * scale, 30 * scale, 22 * scale, 10 * scale, legColor, frontCanvas, legRegion.sx, legRegion.sy, legRegion.sw, legRegion.sh, sideCanvas, sideRegions.leg || sideRegions.base, topCanvas, topRegions.leg || topRegions.base);
     drawMinecraftMobPart(ctx, cx + 8 * scale, baseY - 30 * scale, 30 * scale, 22 * scale, 10 * scale, legColor, frontCanvas, legRegion.sx, legRegion.sy, legRegion.sw, legRegion.sh, sideCanvas, sideRegions.leg || sideRegions.base, topCanvas, topRegions.leg || topRegions.base);
     drawMinecraftMobPart(ctx, cx - 45 * scale, baseY - 182 * scale, 90 * scale, 74 * scale, 16 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
@@ -7037,8 +7119,8 @@ function drawMinecraftVoxelExhibitPreview(ctx, canvas, spriteCanvas, textureInfo
   } else {
     // 縦長タイプはv267以降の帽子・頭・縦長胴体・薄い土台の方針を維持する。
     drawMinecraftMobPart(ctx, cx - 52 * scale, baseY - 16 * scale, 104 * scale, 16 * scale, 10 * scale, baseColor, frontCanvas, baseRegion.sx, baseRegion.sy, baseRegion.sw, baseRegion.sh, sideCanvas, sideRegions.base, topCanvas, topRegions.base);
-    drawMinecraftMobPart(ctx, cx - 31 * scale, baseY - 106 * scale, 62 * scale, 84 * scale, 14 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
-    drawMinecraftMobPart(ctx, cx - 39 * scale, baseY - 178 * scale, 78 * scale, 66 * scale, 15 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
+    drawMinecraftMobPart(ctx, cx - 28 * scale, baseY - 112 * scale, 56 * scale, 92 * scale, 13 * scale, bodyColor, frontCanvas, bodyRegion.sx, bodyRegion.sy, bodyRegion.sw, bodyRegion.sh, sideCanvas, sideRegions.body, topCanvas, topRegions.body);
+    drawMinecraftMobPart(ctx, cx - 35 * scale, baseY - 176 * scale, 70 * scale, 60 * scale, 14 * scale, headColor, frontCanvas, headRegion.sx, headRegion.sy, headRegion.sw, headRegion.sh, sideCanvas, sideRegions.head, topCanvas, topRegions.head);
     drawMinecraftMobPart(ctx, cx - 43 * scale, baseY - 198 * scale, 86 * scale, 16 * scale, 10 * scale, hatColor, frontCanvas, hatRegion.sx, hatRegion.sy, hatRegion.sw, hatRegion.sh, sideCanvas, sideRegions.hat, topCanvas, topRegions.hat);
   }
 }
@@ -7083,9 +7165,9 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
   });
   const cubes = template.type === "box" ? [
     cube([-6.4, 0, -3.2], [12.8, 0.8, 6.4], baseUv, face("base")),
-    cube([-7.2, 2.2, -2.35], [2.4, 5.9, 4.7], armUv, face("arm", "body")),
-    cube([4.8, 2.2, -2.35], [2.4, 5.9, 4.7], armUv, face("arm", "body")),
-    cube([-3.8, 1.2, -2.55], [7.6, 7.0, 5.1], bodyUv, face("body")),
+    cube([-7.8, 2.0, -2.55], [2.9, 6.4, 5.1], armUv, face("arm", "body")),
+    cube([4.9, 2.0, -2.55], [2.9, 6.4, 5.1], armUv, face("arm", "body")),
+    cube([-3.7, 1.2, -2.75], [7.4, 7.3, 5.5], bodyUv, face("body")),
     cube([-3.5, 0.85, -2.35], [2.8, 2.1, 4.7], legUv, face("leg", "base")),
     cube([0.7, 0.85, -2.35], [2.8, 2.1, 4.7], legUv, face("leg", "base")),
     cube([-4.4, 8.9, -2.85], [8.8, 6.2, 5.7], headUv, face("head")),
@@ -7093,8 +7175,8 @@ function buildMinecraftVoxelExhibitGeometry(geometryId, spriteCanvas, textureInf
   ] : [
     // 縦長タイプは、写真は主に正面、側面は横写真、上面は上写真、背面は代表色UVで回り込みを防ぐ。
     cube([-5.2, 0, -3.0], [10.4, 0.9, 6.0], baseUv, face("base")),
-    cube([-3.05, 1.15, -2.25], [6.1, 7.3, 4.5], bodyUv, face("body")),
-    cube([-3.9, 9.0, -2.75], [7.8, 5.8, 5.5], headUv, face("head")),
+    cube([-2.8, 1.15, -2.15], [5.6, 8.1, 4.3], bodyUv, face("body")),
+    cube([-3.45, 9.6, -2.55], [6.9, 5.3, 5.1], headUv, face("head")),
     cube([-4.25, 15.15, -2.5], [8.5, 1.25, 5.0], hatUv, face("hat"))
   ];
   return {
@@ -7234,6 +7316,8 @@ function drawMinecraftPixelPreview(sourceUrl) {
 
       // v180: 線画も作品領域に寄せて高精細化する。ただし背景は透明化せず、紙色として自然に残す。
 
+      currentMinecraftWallAutoAspectRatio = srcW / Math.max(1, srcH);
+      updateMinecraftWallSizeUi();
       const resolvedTextureSize = resolveMinecraftSpriteSize(detectedArtworkMode);
       currentMinecraftResolvedTextureSize = resolvedTextureSize;
       updateMinecraftTextureSizeUi(detectedArtworkMode);
@@ -7327,8 +7411,8 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const textureSize = Number(currentMinecraftResolvedTextureSize) || 128;
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
-    : [`texture:${textureSize}`];
-  return [`app:v272`, `style:${stylePart}`, ...options].join("|");
+    : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
+  return [`app:v273`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7349,7 +7433,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 72, optionCode];
+  return [2, 73, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -7616,8 +7700,10 @@ function buildMinecraftFrameItemTextureBlob(spriteCanvas) {
 }
 
 function getMinecraftWallArtGeometryShape(face = "south") {
-  // v196: 安定した1ブロック設置は維持しつつ、見た目は「額縁」に寄せる。
-  return { origin: [-8, 0, -8], size: [16, 16, 16] };
+  const meta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
+  const width = Math.max(1, meta.blocksX || 1) * 16;
+  const height = Math.max(1, meta.blocksY || 1) * 16;
+  return { origin: [-width / 2, 0, -8], size: [width, height, 16] };
 }
 
 function getMinecraftWallArtBoxComponents(face = "south") {
@@ -7664,8 +7750,8 @@ function buildMinecraftWallArtGeometry(geometryId, textureSize = currentMinecraf
           identifier: geometryId,
           texture_width: atlasSize,
           texture_height: atlasSize,
-          visible_bounds_width: 2,
-          visible_bounds_height: 2,
+          visible_bounds_width: Math.max(2, getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).blocksX),
+          visible_bounds_height: Math.max(2, getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).blocksY),
           visible_bounds_offset: [0, 0.5, 0]
         },
         bones: [
@@ -8637,15 +8723,16 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const voxelTextureInfo = isVoxelExhibit ? await buildMinecraftVoxelTextureInfo(work, currentMinecraftSpriteCanvas) : null;
     currentMinecraftVoxelTextureInfo = voxelTextureInfo;
     const mobTemplateMeta = isVoxelExhibit ? getMinecraftMobTemplate(voxelTextureInfo) : null;
+    const wallSizeMeta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
     const addonOptionLabel = isVoxelExhibit
       ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} / ${getMinecraftVoxelDisplaySizeMeta().label} / ${mobTemplateMeta.label}`
-      : `壁画用 / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
+      : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
-    const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : "";
-    const packManifestName = `${packKindLabel} ${packOptionName} v272`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
+    const packManifestName = `${packKindLabel} ${packOptionName} v273`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v272 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v272 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v272 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v273 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v273 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v273 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8659,7 +8746,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     // v224: モブ風作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelDisplayLabelShort = isVoxelExhibit ? `${getMinecraftVoxelDisplaySizeMeta().label}${mobTemplateMeta.label}` : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v272モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v272立体" : "v272壁画用")}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v273モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v273立体" : `v273壁画${wallSizeMeta.key}`)}`.slice(0, 34);
     const itemDisplayName = String(title || "コドモMinecraftアート").slice(0, 34);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
@@ -9212,6 +9299,14 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const voxelBgCutSoftBtn = document.getElementById("minecraftVoxelBgCutSoftBtn");
   const voxelBgCutNormalBtn = document.getElementById("minecraftVoxelBgCutNormalBtn");
   const voxelBgCutStrongBtn = document.getElementById("minecraftVoxelBgCutStrongBtn");
+  const wallSizeAutoBtn = document.getElementById("minecraftWallSizeAutoBtn");
+  const wallSize1x1Btn = document.getElementById("minecraftWallSize1x1Btn");
+  const wallSize1x2Btn = document.getElementById("minecraftWallSize1x2Btn");
+  const wallSize2x1Btn = document.getElementById("minecraftWallSize2x1Btn");
+  const wallSize2x2Btn = document.getElementById("minecraftWallSize2x2Btn");
+  const wallSize2x3Btn = document.getElementById("minecraftWallSize2x3Btn");
+  const wallSize3x2Btn = document.getElementById("minecraftWallSize3x2Btn");
+  const wallSize4x3Btn = document.getElementById("minecraftWallSize4x3Btn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -9253,6 +9348,14 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (voxelBgCutSoftBtn) voxelBgCutSoftBtn.onclick = function() { setMinecraftVoxelBackgroundCutMode("soft"); };
   if (voxelBgCutNormalBtn) voxelBgCutNormalBtn.onclick = function() { setMinecraftVoxelBackgroundCutMode("normal"); };
   if (voxelBgCutStrongBtn) voxelBgCutStrongBtn.onclick = function() { setMinecraftVoxelBackgroundCutMode("strong"); };
+  if (wallSizeAutoBtn) wallSizeAutoBtn.onclick = function() { setMinecraftWallSizeSelection("auto"); };
+  if (wallSize1x1Btn) wallSize1x1Btn.onclick = function() { setMinecraftWallSizeSelection("1x1"); };
+  if (wallSize1x2Btn) wallSize1x2Btn.onclick = function() { setMinecraftWallSizeSelection("1x2"); };
+  if (wallSize2x1Btn) wallSize2x1Btn.onclick = function() { setMinecraftWallSizeSelection("2x1"); };
+  if (wallSize2x2Btn) wallSize2x2Btn.onclick = function() { setMinecraftWallSizeSelection("2x2"); };
+  if (wallSize2x3Btn) wallSize2x3Btn.onclick = function() { setMinecraftWallSizeSelection("2x3"); };
+  if (wallSize3x2Btn) wallSize3x2Btn.onclick = function() { setMinecraftWallSizeSelection("3x2"); };
+  if (wallSize4x3Btn) wallSize4x3Btn.onclick = function() { setMinecraftWallSizeSelection("4x3"); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
@@ -9281,6 +9384,8 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   currentMinecraftVoxelReliefMode = "real";
   currentMinecraftVoxelBackgroundCutMode = "normal";
   currentMinecraftVoxelDisplaySize = "large";
+  currentMinecraftWallSizeSelection = "auto";
+  currentMinecraftWallAutoAspectRatio = 1;
   currentMinecraftAddonStyleSelection = "wall";
   setMinecraftOutputMode("auto", false);
   updateMinecraftOutputModeUi();
