@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v276</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v277</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2001,7 +2001,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v276",
+        app_version: "v277",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7421,7 +7421,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v276`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v277`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7442,7 +7442,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 76, optionCode];
+  return [2, 77, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8616,13 +8616,13 @@ function buildMinecraftItemDisplayName(title, addonStyle, wallMeta, mobGridMeta 
     const gridLabel = mobGridMeta?.label || `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize}`;
     const displayLabel = mobDisplayMeta?.label || getMinecraftVoxelDisplaySizeMeta().label;
     const templateLabel = mobTemplateMeta?.label || "";
-    return [baseTitle, "モブ", gridLabel, displayLabel, templateLabel, "v276"].filter(Boolean).join(" ").slice(0, 40);
+    return [baseTitle, "モブ", gridLabel, displayLabel, templateLabel].filter(Boolean).join(" ").slice(0, 40);
   }
   if (addonStyle === "solid") {
-    return [baseTitle, "立体", "v276"].join(" ").slice(0, 40);
+    return [baseTitle, "立体"].join(" ").slice(0, 40);
   }
   const sizeLabel = wallMeta?.key ? wallMeta.key.replace("x", "×") : "1×1";
-  return [baseTitle, "壁画", sizeLabel, "v276"].join(" ").slice(0, 40);
+  return [baseTitle, "壁画", sizeLabel].join(" ").slice(0, 40);
 }
 
 function buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName) {
@@ -8757,10 +8757,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v276`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v277`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v276 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v276 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v276 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品パック v277 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品展示パック v277 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁貼り額縁パック v277 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -8776,7 +8776,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const voxelGridMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
     const voxelDisplaySizeMeta = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize);
     const voxelDisplayLabelShort = isVoxelExhibit ? `${voxelDisplaySizeMeta.label}${mobTemplateMeta.label}` : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v276モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v276立体" : `v276壁画${wallSizeMeta.key}`)}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `v277モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "v277立体" : `v277壁画${wallSizeMeta.key}`)}`.slice(0, 34);
     const itemDisplayName = buildMinecraftItemDisplayName(title, resolvedAddonStyle, wallSizeMeta, voxelGridMeta, voxelDisplaySizeMeta, mobTemplateMeta);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
