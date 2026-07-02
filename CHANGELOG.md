@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v281
+
+* Minecraft出力画面に、無料でプレビューできることとプレミアムで .mcaddon 保存を便利に使えることの短い説明を追加
+* 壁画用を、サイズを選んでMinecraftの壁に作品ギャラリーを作れるプレミアム価値のある正式機能として案内
+* モブ風作品 βを、作品の雰囲気をもとにしたプレミアム向けβのおためし機能として整理
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v281 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v280
 
 * Minecraft出力画面に、壁画用の保存後手順と `.mcaddon` の短い説明を追加
