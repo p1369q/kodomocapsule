@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v282
+
+* 既存の `isPremiumUser` 判定とプレミアム案内導線を使い、Minecraft `.mcaddon` 保存・共有の実行前にプレミアム確認を追加
+* 無料ユーザーでもMinecraft出力画面のプレビュー、壁画サイズ選択、モブ風作品 βの設定、「見た目とサイズを調整」は使える方針を維持
+* 保存ボタン周辺の文言を、プレミアムで `.mcaddon` を保存・共有する導線として整理
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v282 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v281
 
 * Minecraft出力画面に、無料でプレビューできることとプレミアムで .mcaddon 保存を便利に使えることの短い説明を追加
