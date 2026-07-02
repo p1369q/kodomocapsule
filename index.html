@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v281</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v282</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1570,8 +1570,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
       <div id="minecraftAddonActionSingle" class="minecraft-primary-actions flex flex-col gap-2 pt-0">
         <div class="minecraft-addon-route-actions grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① この端末で実行</span></span></button>
-          <button id="minecraftPreviewShareBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="minecraft-share-addon-btn py-4 rounded-2xl bg-white border border-emerald-200 text-emerald-800 text-sm font-extrabold shadow-sm hover:bg-emerald-50 transition"><span class="inline-flex items-center justify-center gap-2"><span>📤</span><span id="minecraftPreviewShareBtnLabel">② アドオンを共有</span></span></button>
+          <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① プレミアムでこの端末に保存</span></span></button>
+          <button id="minecraftPreviewShareBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="minecraft-share-addon-btn py-4 rounded-2xl bg-white border border-emerald-200 text-emerald-800 text-sm font-extrabold shadow-sm hover:bg-emerald-50 transition"><span class="inline-flex items-center justify-center gap-2"><span>📤</span><span id="minecraftPreviewShareBtnLabel">② プレミアムで共有</span></span></button>
         </div>
         <div class="minecraft-secondary-actions grid grid-cols-2 gap-2">
           <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
@@ -1669,9 +1669,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
             <div class="font-extrabold text-slate-800 mb-1">iPhone/iPadでMinecraftが出ない場合</div>
             <p>緑のボタンを押すと、共有画面ではなくダウンロード確認を出します。ダウンロード後、画面右上のダウンロード一覧から .mcaddon を開き、右上のMinecraftボタンを押します。</p>
-            <p class="mt-2">家族や別端末へ送りたい場合は、上の「② アドオンを共有」から共有画面を開き、メッセージやメールに送ってください。</p>
+            <p class="mt-2">家族や別端末へ送りたい場合は、上の「② プレミアムで共有」から共有画面を開き、メッセージやメールに送ってください。</p>
             <p class="mt-2">届いた .mcaddon を開くと、右上にMinecraftボタンが出やすくなります。</p>
-            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">② アドオンを共有</button>
+            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">② プレミアムでアドオンを共有</button>
             <ol class="list-decimal pl-4 space-y-1">
               <li>共有画面でメッセージ、メール、AirDropなどを選びます。</li>
               <li>届いた .mcaddon を開き、右上のMinecraftボタンを押します。</li>
@@ -2016,7 +2016,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v281",
+        app_version: "v282",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5840,7 +5840,7 @@ function getMinecraftPrimaryActionLabel(work = getMinecraftAddonTargetWork(), re
   const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
   const meta = getMinecraftAddonStyleMeta(resolved);
   const suffix = isSolidWork ? `（${resolved === "voxel" ? `${voxelMeta.label}` : meta.label}）` : "";
-  return isMinecraftMobileShareDevice() ? `① この端末で実行${suffix}` : `① ファイルを保存${suffix}`;
+  return isMinecraftMobileShareDevice() ? `① プレミアムでこの端末に保存${suffix}` : `① プレミアムでファイル保存${suffix}`;
 }
 
 function getMinecraftShareActionLabel(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
@@ -5848,7 +5848,24 @@ function getMinecraftShareActionLabel(work = getMinecraftAddonTargetWork(), reso
   const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
   const meta = getMinecraftAddonStyleMeta(resolved);
   const suffix = isSolidWork ? `（${resolved === "voxel" ? `${voxelMeta.label}` : meta.label}）` : "";
-  return `② アドオンを共有${suffix}`;
+  return `② プレミアムで共有${suffix}`;
+}
+
+function showMinecraftPremiumRequiredNotice() {
+  setMinecraftPreviewStatus("Minecraftへの .mcaddon 保存はプレミアム機能です。無料でもプレビューや見た目とサイズの調整はできます。", "info");
+  alert("Minecraftへの保存はプレミアム機能です。\n無料でもプレビューで仕上がりを確認できます。\nプレミアムにすると、.mcaddonとして保存してMinecraftで作品を飾れます。");
+  if (typeof openPremiumPlanFromLimitNotice === "function") {
+    openPremiumPlanFromLimitNotice();
+  }
+}
+
+function requireMinecraftAddonPremium() {
+  if (isPremiumUser) return true;
+  trackEvent("minecraft_addon_premium_required", {
+    addon_style: resolveMinecraftAddonStyle(getMinecraftAddonTargetWork())
+  });
+  showMinecraftPremiumRequiredNotice();
+  return false;
 }
 
 function updateMinecraftVoxelPreviewMetaUi(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
@@ -5881,6 +5898,7 @@ function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
 }
 
 window.handleMinecraftPrimaryAddonAction = function(event) {
+  if (!requireMinecraftAddonPremium()) return;
   const isMobile = isMinecraftMobileShareDevice();
   if (isMobile) {
     setMinecraftPreviewStatus(".mcaddon 保存の準備をします。保存後、共有メニューや右上の一覧からMinecraftで開いてください。", "info");
@@ -5891,6 +5909,7 @@ window.handleMinecraftPrimaryAddonAction = function(event) {
 };
 
 window.shareMinecraftAddonFromFallback = function(event) {
+  if (!requireMinecraftAddonPremium()) return;
   setMinecraftPreviewStatus("共有画面を開きます。メッセージ・メール・AirDropなどで送り、届いた .mcaddon を開いてください。", "info");
   return window.downloadMinecraftAddon(event, null, false, true);
 };
@@ -7436,7 +7455,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v281`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v282`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7457,7 +7476,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 81, optionCode];
+  return [2, 82, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8741,6 +8760,7 @@ async function shareOrDownloadMinecraftAddon(blob, fileName, workId, forceDownlo
 
 window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, forceDownload = false, shareOnly = false) {
   if (event) event.stopPropagation();
+  if (!requireMinecraftAddonPremium()) return;
   if (!currentMinecraftSpriteCanvas) {
     alert("先にマイクラ用アートを作成してください。");
     return;
@@ -8783,10 +8803,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v281`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v282`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v281 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v281 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v281 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v282 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v282 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v282 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
