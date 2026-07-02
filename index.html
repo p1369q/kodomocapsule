@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v279</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v280</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1536,7 +1536,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
-        <p class="text-[11px] text-slate-400 mt-1">見え方と置き方を確認したら、緑のボタンで .mcaddon をダウンロードします。</p>
+        <p class="text-[11px] text-slate-400 mt-1">見え方と置き方を確認したら、緑のボタンで .mcaddon を保存します。保存したファイルをMinecraftで開くと、作品を壁画アイテムとして使えます。</p>
         <p id="minecraftSourcePhotoNote" class="hidden text-[11px] text-emerald-700 font-bold mt-1"></p>
         <div id="minecraftSolidViewUsageGuide" class="hidden mt-2 flex flex-wrap gap-1.5 text-[10px] font-extrabold">
           <span id="minecraftViewPillFront" class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">⬜ 正面</span>
@@ -1553,7 +1553,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画用</button>
           <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">モブ風作品 β</button>
         </div>
-        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">壁画用は正式機能、モブ風作品 βはおためし機能です。下のプレビューで見え方を確認できます。</p>
+        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">壁画用は、Minecraftの壁に作品を飾れる正式機能です。1×1〜4×4など飾るサイズを選べます。モブ風作品 βはおためし機能です。</p>
 
       </div>
     </div>
@@ -1583,24 +1583,29 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="w-9 h-9 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-lg shrink-0">🧭</div>
           <div>
             <div class="text-sm font-extrabold text-emerald-900">やりたい方法を選んでください</div>
-            <p id="minecraftMobileFlowText" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">この端末で入れるなら「① この端末で実行」。家族や別端末へ送るなら「② アドオンを共有」を選びます。</p><p id="minecraftPcFlowNote" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">この端末では、まずファイルを保存します。保存した .mcaddon を開くとMinecraftに入れられます。</p>
+            <p id="minecraftMobileFlowText" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">.mcaddon は、Minecraftに作品を追加するためのファイルです。iPhone / iPadでは保存後に共有メニューやダウンロード一覧からMinecraftで開きます。家族や別端末へ送るなら「② アドオンを共有」を選びます。</p><p id="minecraftPcFlowNote" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">.mcaddon は、Minecraftに作品を追加するためのファイルです。PCではまずファイルを保存し、保存した .mcaddon を開くとMinecraftにインポートできます。</p>
           </div>
         </div>
-        <div class="grid sm:grid-cols-3 gap-2 text-[11px] leading-relaxed">
+        <div class="grid sm:grid-cols-4 gap-2 text-[11px] leading-relaxed">
           <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 1</div>
             <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">ダウンロードする</span><span class="minecraft-pc-step hidden">ファイルを保存</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">確認画面で「ダウンロード」を押します。</span><span class="minecraft-pc-step hidden">ダウンロードされた .mcaddon を開きます。</span></p>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">確認画面で「ダウンロード」を押します。</span><span class="minecraft-pc-step hidden">保存した .mcaddon ファイルを開きます。</span></p>
           </div>
           <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 2</div>
-            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">ダウンロードを開く</span><span class="minecraft-pc-step hidden">完了まで待つ</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">右上のダウンロード一覧から .mcaddon を開きます。</span><span class="minecraft-pc-step hidden">Minecraftが開いたら「インポート完了」まで待ちます。</span></p>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">Minecraftで開く</span><span class="minecraft-pc-step hidden">インポート</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">共有メニューや右上の一覧からMinecraftで開きます。</span><span class="minecraft-pc-step hidden">Minecraftが開いたら「インポート完了」まで待ちます。</span></p>
           </div>
           <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
             <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 3</div>
-            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">Minecraftボタン</span><span class="minecraft-pc-step hidden">ワールドでON</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">ファイル画面の右上に出るMinecraftボタンを押します。</span><span class="minecraft-pc-step hidden">リソースパックとビヘイビアーパックをONにします。</span></p>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">パックを有効化</span><span class="minecraft-pc-step hidden">ワールドでON</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">ワールド設定でリソースパックとビヘイビアーパックをONにします。</span><span class="minecraft-pc-step hidden">リソースパックとビヘイビアーパックをONにします。</span></p>
+          </div>
+          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
+            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 4</div>
+            <div class="font-extrabold text-slate-800">壁に飾る</div>
+            <p class="text-slate-500 mt-1">インベントリから作品アイテムを選び、Minecraftの壁に設置します。</p>
           </div>
         </div>
       </div>
@@ -2001,7 +2006,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v279",
+        app_version: "v280",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5777,7 +5782,7 @@ function getMinecraftAddonStyleMeta(mode = "wall") {
   const map = {
     wall: {
       label: "壁画用",
-      description: "正式機能です。子どもの作品をMinecraftの壁に飾れるアドオンとして出力します。1×1〜4×4など、飾るサイズを選べます。"
+      description: "正式機能です。子どもの作品をMinecraftの壁に飾れる作品ギャラリー用アドオンとして出力します。1×1〜4×4など、飾るサイズを選べます。"
     },
     solid: {
       label: "モブ風作品 β",
@@ -5868,9 +5873,9 @@ function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
 window.handleMinecraftPrimaryAddonAction = function(event) {
   const isMobile = isMinecraftMobileShareDevice();
   if (isMobile) {
-    setMinecraftPreviewStatus("この端末に入れる準備をします。ダウンロード確認が出たら「ダウンロード」を押し、右上の一覧から .mcaddon を開いてください。", "info");
+    setMinecraftPreviewStatus("この端末に入れる準備をします。保存後、共有メニューや右上の一覧から .mcaddon をMinecraftで開いてください。", "info");
   } else {
-    setMinecraftPreviewStatus("PCでは .mcaddon ファイルを保存します。ダウンロードされたファイルを開くとMinecraftに入れられます。", "info");
+    setMinecraftPreviewStatus("PCでは .mcaddon ファイルを保存します。保存したファイルを開くとMinecraftにインポートできます。", "info");
   }
   return window.downloadMinecraftAddon(event, null, true);
 };
@@ -7421,7 +7426,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v279`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v280`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7442,7 +7447,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 79, optionCode];
+  return [2, 80, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8768,10 +8773,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v279`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v280`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v279 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v279 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v279 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v280 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v280 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v280 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
