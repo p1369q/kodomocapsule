@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v280</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v281</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1536,7 +1536,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div>
         <div class="text-[10px] font-bold tracking-widest text-emerald-600 mb-0.5">MINECRAFT STYLE PREVIEW</div>
         <h3 id="minecraftPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">マイクラ用アートプレビュー</h3>
-        <p class="text-[11px] text-slate-400 mt-1">見え方と置き方を確認したら、緑のボタンで .mcaddon を保存します。保存したファイルをMinecraftで開くと、作品を壁画アイテムとして使えます。</p>
+        <p class="text-[11px] text-slate-400 mt-1">無料でも仕上がりをプレビューできます。プレミアムでは .mcaddon 保存を使って、作品をMinecraftに飾る導線をより便利に使えます。</p>
         <p id="minecraftSourcePhotoNote" class="hidden text-[11px] text-emerald-700 font-bold mt-1"></p>
         <div id="minecraftSolidViewUsageGuide" class="hidden mt-2 flex flex-wrap gap-1.5 text-[10px] font-extrabold">
           <span id="minecraftViewPillFront" class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">⬜ 正面</span>
@@ -1553,7 +1553,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画用</button>
           <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">モブ風作品 β</button>
         </div>
-        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">壁画用は、Minecraftの壁に作品を飾れる正式機能です。1×1〜4×4など飾るサイズを選べます。モブ風作品 βはおためし機能です。</p>
+        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">無料でも仕上がりをプレビューできます。壁画用はプレミアム価値のある正式機能として、サイズを選んで家族だけのMinecraft作品ギャラリーを作れます。モブ風作品 βはプレミアム向けβのおためし機能です。</p>
 
       </div>
     </div>
@@ -1576,6 +1576,16 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="minecraft-secondary-actions grid grid-cols-2 gap-2">
           <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
           <button onclick="closeMinecraftPixelPreview()" type="button" class="py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
+        </div>
+      </div>
+      <div id="minecraftPremiumGuide" class="rounded-2xl bg-amber-50/90 border border-amber-100 p-3 text-left">
+        <div class="flex items-start gap-2">
+          <div class="w-9 h-9 rounded-2xl bg-white border border-amber-100 flex items-center justify-center text-lg shrink-0">⭐</div>
+          <div class="space-y-1">
+            <div class="text-sm font-extrabold text-amber-900">無料で試せること / プレミアムでできること</div>
+            <p class="text-[11px] text-amber-900/85 leading-relaxed">無料でも壁画プレビューで仕上がりや飾るイメージを確認できます。プレミアム機能として、作品をMinecraftの壁画アイテムにして保存し、サイズを選んで作品ギャラリーを作れる導線を用意しています。</p>
+            <p class="text-[11px] text-amber-900/85 leading-relaxed">モブ風作品 βは、作品の雰囲気をもとにしたプレミアム向けβのおためし機能です。作品によって見え方が変わるため、まずはプレビューで確認してください。</p>
+          </div>
         </div>
       </div>
       <div id="minecraftKidFlowGuide" class="rounded-2xl bg-emerald-50/90 border border-emerald-100 p-3 text-left space-y-3">
@@ -2006,7 +2016,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v280",
+        app_version: "v281",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5782,15 +5792,15 @@ function getMinecraftAddonStyleMeta(mode = "wall") {
   const map = {
     wall: {
       label: "壁画用",
-      description: "正式機能です。子どもの作品をMinecraftの壁に飾れる作品ギャラリー用アドオンとして出力します。1×1〜4×4など、飾るサイズを選べます。"
+      description: "プレミアム機能として、子どもの作品をMinecraftの壁に飾れる作品ギャラリー用アドオンとして保存できます。1×1〜4×4などサイズを選び、家族だけの作品ギャラリーを作れます。"
     },
     solid: {
       label: "モブ風作品 β",
-      description: "作品の雰囲気をもとにした小さな置物を作るおためし機能です。"
+      description: "作品の雰囲気をもとにした小さな置物を作る、プレミアム向けβのおためし機能です。"
     },
     voxel: {
       label: "モブ風作品 β",
-      description: `写真から、作品の雰囲気をもとにした${getMinecraftVoxelDisplaySizeMeta().label}サイズの小さな置物を作るおためし機能です。作品によって見え方が変わります。まずはプレビューで確認してください。`
+      description: `写真から、作品の雰囲気をもとにした${getMinecraftVoxelDisplaySizeMeta().label}サイズの小さな置物を作る、プレミアム向けβのおためし機能です。作品によって見え方が変わります。まずはプレビューで確認してください。`
     }
   };
   return map[mode] || map.wall;
@@ -5873,9 +5883,9 @@ function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
 window.handleMinecraftPrimaryAddonAction = function(event) {
   const isMobile = isMinecraftMobileShareDevice();
   if (isMobile) {
-    setMinecraftPreviewStatus("この端末に入れる準備をします。保存後、共有メニューや右上の一覧から .mcaddon をMinecraftで開いてください。", "info");
+    setMinecraftPreviewStatus(".mcaddon 保存の準備をします。保存後、共有メニューや右上の一覧からMinecraftで開いてください。", "info");
   } else {
-    setMinecraftPreviewStatus("PCでは .mcaddon ファイルを保存します。保存したファイルを開くとMinecraftにインポートできます。", "info");
+    setMinecraftPreviewStatus("PCでは .mcaddon ファイルを保存します。プレミアム価値のある壁画保存として、保存したファイルを開くとMinecraftにインポートできます。", "info");
   }
   return window.downloadMinecraftAddon(event, null, true);
 };
@@ -7426,7 +7436,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v280`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v281`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7447,7 +7457,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 80, optionCode];
+  return [2, 81, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8773,10 +8783,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v280`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v281`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v280 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v280 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v280 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v281 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v281 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v281 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
