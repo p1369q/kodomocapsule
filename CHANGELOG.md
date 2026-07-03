@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v284
+
+* Minecraft `.mcaddon` 保存・共有前のプレミアム案内から、既存のプレミアムプラン導線へ進む次アクションを分かりやすく調整
+* 無料でもプレビューで仕上がり確認でき、プレミアムでは `.mcaddon` 保存後にMinecraftで開いて作品を飾れることが分かる文言に整理
+* 既存の `isPremiumUser` 判定と保存実行関数側のガードを維持し、プレミアムユーザーの保存・共有処理は従来どおり維持
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v284 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v283
 
 * Minecraft `.mcaddon` 保存・共有前のプレミアム案内を、無料でもプレビュー確認できることとプレミアムで保存してMinecraftに飾れることが分かる文言に調整
