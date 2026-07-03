@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v286
+
+* Minecraft `.mcaddon` 保存・共有のプレミアム案内で、alert のOK後に既存のプレミアムプラン導線へ確実に進むよう修正
+* Minecraft出力画面を閉じてから既存のプラン画面へ切り替えることで、元のMinecraft出力画面へ戻るだけになる挙動を防止
+* 既存の `isPremiumUser` 判定を維持し、プレミアムユーザーの `.mcaddon` 保存・共有処理は従来どおり維持
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v286 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v285
 
 * プレミアムプラン画面に、Minecraft壁画保存をプレミアム機能として分かりやすく伝える価値説明を追加
