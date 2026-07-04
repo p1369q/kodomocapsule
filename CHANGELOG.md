@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v287
+
+* Stripe決済後の戻り先URLを本番URL `https://kodomocapsule.com/` に固定し、古いGitHub Pagesパスへ戻らないよう修正
+* 決済成功後の `session_id` と既存の `family_id` 付与を維持し、プレミアム反映確認の既存処理を壊さないよう調整
+* Stripe Price ID、Checkout URL、Cloud Functions名、Firebase設定、既存のプレミアム判定・登録導線は変更なし
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v287 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v286
 
 * Minecraft `.mcaddon` 保存・共有のプレミアム案内で、alert のOK後に既存のプレミアムプラン導線へ確実に進むよう修正
