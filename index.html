@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v287</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v288</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2026,7 +2026,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v287",
+        app_version: "v288",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2749,8 +2749,9 @@ window.redirectToStripeCheckout = async function() {
   try {
     if (!currentSession?.familyId) throw new Error("利用中の家族グループが確認できません。");
     const familyId = currentSession.familyId;
-    const successUrl = "https://kodomocapsule.com/?session_id={CHECKOUT_SESSION_ID}&family_id=" + encodeURIComponent(familyId);
-    const cancelUrl = "https://kodomocapsule.com/";
+    const STRIPE_RETURN_BASE_URL = "https://kodomocapsule.com/";
+    const successUrl = `${STRIPE_RETURN_BASE_URL}?session_id={CHECKOUT_SESSION_ID}&family_id=${encodeURIComponent(familyId)}`;
+    const cancelUrl = STRIPE_RETURN_BASE_URL;
 
     const response = await fetch("https://create-checkout-session-486206364077.us-central1.run.app", {
       method: "POST",
@@ -2761,7 +2762,9 @@ window.redirectToStripeCheckout = async function() {
         familyId: String(familyId),
         email: String(currentUser.email || ""),
         success_url: String(successUrl),
-        cancel_url: String(cancelUrl)
+        cancel_url: String(cancelUrl),
+        successUrl: String(successUrl),
+        cancelUrl: String(cancelUrl)
       })
     });
 
@@ -7468,7 +7471,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v287`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v288`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -8816,10 +8819,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v287`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v288`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v287 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v287 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v287 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v288 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v288 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v288 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");

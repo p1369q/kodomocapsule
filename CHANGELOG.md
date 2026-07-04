@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v288
+
+* Stripe Checkout Session作成APIへ送信するpayloadの戻り先URLを本番URL `https://kodomocapsule.com/` に統一
+* `success_url` / `cancel_url` と互換用の `successUrl` / `cancelUrl` に同じ本番URLを入れ、Cloud Functions側の受け取りキー差異でも古いGitHub Pages URLへ戻らないよう修正
+* Stripe Price ID、Checkout URL、Cloud Functions名、Firebase設定、既存のプレミアム判定・登録導線は変更なし
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v288 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v287
 
 * Stripe決済後の戻り先URLを本番URL `https://kodomocapsule.com/` に固定し、古いGitHub Pagesパスへ戻らないよう修正
