@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v289
+
+* 登録なし利用（ゲスト体験）のサンプルデータを、子どもの絵・テスト・おたよりPDF・工作・季節制作・算数プリントの6件に差し替え
+* ゲスト体験のサンプルカードでローカル静的ファイルの実画像を参照し、PDFは1ページ目サムネイル画像を表示できるよう調整
+* ゲスト体験の保存不可・共有不可導線、ログイン後の通常保存、Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジックは変更なし
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v289 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* JavaScript構文チェック済み
+
 ## v288
 
 * Stripe Checkout Session作成APIへ送信するpayloadの戻り先URLを本番URL `https://kodomocapsule.com/` に統一
