@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v290
+
+* 登録なし利用（ゲスト体験）のサンプルカードで参照していた画像拡張子を、Firebase Hosting上の実ファイルに合わせて `.png` へ修正
+* PDFカードのサムネイル参照を `kindergarten-notice-page1.png` に修正し、正常時は汎用PDFアイコンではなくおたより画像が表示されるよう調整
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v290 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、ログイン後機能、家族共有は変更なし
+* JavaScript構文チェック済み
+
 ## v289
 
 * 登録なし利用（ゲスト体験）のサンプルデータを、子どもの絵・テスト・おたよりPDF・工作・季節制作・算数プリントの6件に差し替え
