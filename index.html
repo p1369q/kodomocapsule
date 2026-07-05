@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v288</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v289</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2026,7 +2026,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v288",
+        app_version: "v289",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2116,9 +2116,10 @@ window.enterGuestMode = function() {
       category: "guest-cat-art",
       childId: "guest-child-1",
       date: "2023-04-05",
-      memo: "3歳のころにクレヨンで描いたサンプル作品です。",
-      mediaUrls: [{ type: "image", url: createGuestSvgDataUrl("🎨 はじめての絵", "作品サンプル", "#FFF1F2", "#FF6B6B") }],
-      createdAt: Date.now() - 3000,
+      memo: "はじめて描いた絵も、年齢と一緒に残せます。",
+      artworkShape: "flat",
+      mediaUrls: [{ type: "image", url: "assets/guest-samples/flat/first-drawing.jpg" }],
+      createdAt: Date.now() - 1000,
       isDeleted: false,
       isFavorite: true
     },
@@ -2128,8 +2129,9 @@ window.enterGuestMode = function() {
       category: "guest-cat-test",
       childId: "guest-child-1",
       date: "2025-02-14",
-      memo: "テストやプリントもカテゴリ分けして保管できます。",
-      mediaUrls: [{ type: "image", url: createGuestSvgDataUrl("あいうえお", "テストサンプル", "#FFFBEB", "#D6B25E") }],
+      memo: "テストや学習プリントも、カテゴリ分けして保管できます。",
+      artworkShape: "flat",
+      mediaUrls: [{ type: "image", url: "assets/guest-samples/flat/hiragana-test.jpg" }],
       createdAt: Date.now() - 2000,
       isDeleted: false,
       isFavorite: false
@@ -2140,9 +2142,54 @@ window.enterGuestMode = function() {
       category: "guest-cat-print",
       childId: "guest-child-1",
       date: "2024-09-01",
-      memo: "PDFのような書類も、タイムラインでまとめて振り返れます。",
-      mediaUrls: [{ type: "pdf", url: "guest-sample.pdf" }],
-      createdAt: Date.now() - 1000,
+      memo: "PDFのような書類も、あとで振り返りやすく残せます。",
+      artworkShape: "flat",
+      mediaUrls: [{
+        type: "pdf",
+        url: "assets/guest-samples/pdf/kindergarten-notice.pdf",
+        sourceFile: "assets/guest-samples/pdf/kindergarten-notice.pdf",
+        thumbnail: "assets/guest-samples/pdf/kindergarten-notice-page1.jpg"
+      }],
+      createdAt: Date.now() - 3000,
+      isDeleted: false,
+      isFavorite: false
+    },
+    {
+      id: "guest-work-4",
+      title: "紙コップ工作",
+      category: "guest-cat-art",
+      childId: "guest-child-1",
+      date: "2024-11-20",
+      memo: "工作や立体作品も、写真で成長記録として残せます。",
+      artworkShape: "solid",
+      mediaUrls: [{ type: "image", url: "assets/guest-samples/3d/paper-cup-craft.jpg" }],
+      createdAt: Date.now() - 4000,
+      isDeleted: false,
+      isFavorite: true
+    },
+    {
+      id: "guest-work-5",
+      title: "七夕かざり",
+      category: "guest-cat-art",
+      childId: "guest-child-1",
+      date: "2025-07-07",
+      memo: "季節の制作や園で作った作品も、思い出としてまとめられます。",
+      artworkShape: "solid",
+      mediaUrls: [{ type: "image", url: "assets/guest-samples/3d/tanabata-decoration.jpg" }],
+      createdAt: Date.now() - 5000,
+      isDeleted: false,
+      isFavorite: false
+    },
+    {
+      id: "guest-work-6",
+      title: "さんすうプリント No.9",
+      category: "guest-cat-print",
+      childId: "guest-child-1",
+      date: "2025-06-18",
+      memo: "学習の記録も、作品と一緒に見返せます。",
+      artworkShape: "flat",
+      mediaUrls: [{ type: "image", url: "assets/guest-samples/flat/math-print.jpg" }],
+      createdAt: Date.now() - 6000,
       isDeleted: false,
       isFavorite: false
     }
@@ -7471,7 +7518,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v288`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v289`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -8819,10 +8866,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v288`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v289`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v288 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v288 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v288 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v289 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v289 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v289 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -9842,7 +9889,10 @@ function renderGallery(){
       const isPdf = activeMedia.type === "pdf" || (typeof sourceUrl === 'string' && sourceUrl.includes('pdf'));
 
       if (isPdf) {
-        mediaPreview = `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
+        const thumbnailUrl = activeMedia.thumbnail || activeMedia.thumbnailUrl || activeMedia.previewUrl || "";
+        mediaPreview = thumbnailUrl
+          ? `<div class="relative w-full h-44 bg-slate-100 border-b cursor-pointer overflow-hidden" onclick="openEditWork('${w.id}')"><img src="${thumbnailUrl}" class="w-full h-full object-cover" alt="${w.title || 'PDF'}のサムネイル" onerror="this.parentElement.innerHTML='<div class=&quot;w-full h-full bg-slate-100 flex flex-col justify-center items-center&quot;><span class=&quot;text-4xl mb-1&quot;>📄</span><span class=&quot;text-xs text-slate-500 font-semibold&quot;>PDF (${currentIndex + 1}/${mediaCount})</span></div>'"/><div class="absolute left-2 bottom-2 px-2 py-1 rounded-full bg-white/90 text-[10px] text-slate-600 font-extrabold shadow-sm">📄 PDF (${currentIndex + 1}/${mediaCount})</div></div>`
+          : `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
       } else {
         mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"/>`;
         mediaDownloadButton = `<button onclick="downloadWorkMedia('${w.id}', ${currentIndex}, event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 text-slate-700 text-sm font-bold shadow backdrop-blur hover:bg-white z-10" title="写真をダウンロード">⬇</button>`;
