@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v290</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v291</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1038,15 +1038,37 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 </div>
 
 <main class="max-w-7xl mx-auto px-3 sm:px-5 pt-4 sm:pt-6 pb-32">
-  <div id="guestLoginBanner" class="hidden mb-5 p-4 rounded-3xl bg-white border border-rose-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-    <div class="flex items-start gap-3 text-left">
-      <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">🚀</div>
-      <div>
-        <div class="text-sm font-extrabold text-slate-800">これはサンプル体験です</div>
-        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">Googleログインすると、ご自身の家族データを実際に保存・共有できます。</p>
+  <div id="guestLoginBanner" class="hidden mb-5 p-4 rounded-3xl bg-white border border-rose-100 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-start gap-3 text-left">
+        <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">🚀</div>
+        <div>
+          <div class="text-sm font-extrabold text-slate-800">ゲスト体験中</div>
+          <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">サンプル作品で使い心地を試せます。保存・家族共有はログイン後に利用できます。</p>
+        </div>
+      </div>
+      <button onclick="startLoginFromGuestBanner()" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition whitespace-nowrap">Googleログインして保存をはじめる</button>
+    </div>
+    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+      <div class="rounded-2xl bg-rose-50/60 border border-rose-100 p-3">
+        <div class="text-xs font-extrabold text-slate-800">登録なしで試せること</div>
+        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">サンプルの絵・テスト・おたより・工作で、画面の雰囲気を確認できます。</p>
+        <div class="mt-2 flex flex-wrap gap-1.5 text-[10px] font-bold text-rose-700">
+          <span class="px-2 py-1 rounded-full bg-white border border-rose-100">サンプル作品を見る</span>
+          <span class="px-2 py-1 rounded-full bg-white border border-rose-100">お気に入り・絞り込み</span>
+          <span class="px-2 py-1 rounded-full bg-white border border-rose-100">詳細画面を確認</span>
+        </div>
+      </div>
+      <div class="rounded-2xl bg-amber-50/70 border border-amber-100 p-3">
+        <div class="text-xs font-extrabold text-slate-800">ログインするとできること</div>
+        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">自分の作品を保存して、成長の記録をあとから家族で見返せます。</p>
+        <div class="mt-2 flex flex-wrap gap-1.5 text-[10px] font-bold text-amber-800">
+          <span class="px-2 py-1 rounded-full bg-white border border-amber-100">自分の作品を保存</span>
+          <span class="px-2 py-1 rounded-full bg-white border border-amber-100">家族で共有</span>
+          <span class="px-2 py-1 rounded-full bg-white border border-amber-100">Minecraft用に保存</span>
+        </div>
       </div>
     </div>
-    <button onclick="startLoginFromGuestBanner()" class="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition whitespace-nowrap">Googleで始める</button>
   </div>
   <div id="currentPermissionBadge" class="hidden mb-5 inline-flex items-center rounded-full bg-white border border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-500 shadow-sm"></div>
   <div id="onboardingGuideBanner" class="hidden mb-5 p-4 sm:p-5 rounded-3xl bg-white border border-sky-100 shadow-sm">
@@ -2026,7 +2048,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v290",
+        app_version: "v291",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2142,7 +2164,7 @@ window.enterGuestMode = function() {
       category: "guest-cat-print",
       childId: "guest-child-1",
       date: "2024-09-01",
-      memo: "PDFのような書類も、あとで振り返りやすく残せます。",
+      memo: "園からのおたよりも、あとで振り返りやすく残せます。",
       artworkShape: "flat",
       mediaUrls: [{
         type: "pdf",
@@ -2160,7 +2182,7 @@ window.enterGuestMode = function() {
       category: "guest-cat-art",
       childId: "guest-child-1",
       date: "2024-11-20",
-      memo: "工作や立体作品も、写真で成長記録として残せます。",
+      memo: "工作や立体作品も、写真で記録できます。",
       artworkShape: "solid",
       mediaUrls: [{ type: "image", url: "assets/guest-samples/3d/paper-cup-craft.png" }],
       createdAt: Date.now() - 4000,
@@ -2173,7 +2195,7 @@ window.enterGuestMode = function() {
       category: "guest-cat-art",
       childId: "guest-child-1",
       date: "2025-07-07",
-      memo: "季節の制作や園で作った作品も、思い出としてまとめられます。",
+      memo: "季節の制作も、思い出としてまとめられます。",
       artworkShape: "solid",
       mediaUrls: [{ type: "image", url: "assets/guest-samples/3d/tanabata-decoration.png" }],
       createdAt: Date.now() - 5000,
@@ -2208,7 +2230,7 @@ window.enterGuestMode = function() {
 };
 
 function showGuestModeSaveAlert() {
-  alert("体験版です。\nGoogleログインすると実際に保存・家族共有できます。");
+  alert("この操作はログイン後に利用できます。\nGoogleログインすると、自分の作品を保存して家族で共有できます。");
 }
 
 function updateGuestLoginBanner() {
@@ -2371,7 +2393,7 @@ function getExportDateStamp() {
 
 window.exportCapsulesCsv = function() {
   if (isGuestMode) {
-    alert("ゲスト体験中はサンプルデータのため、エクスポートは利用できません。\nGoogleログイン後にご自身のデータでご利用ください。");
+    alert("この操作はログイン後に利用できます。\nGoogleログインすると、自分の作品を保存して家族で共有できます。");
     return;
   }
   const csv = buildCapsulesCsv();
@@ -2392,7 +2414,7 @@ function getExportMediaFileName(work, media, mediaIndex) {
 
 window.exportPremiumBackupZip = async function() {
   if (isGuestMode) {
-    alert("ゲスト体験中はサンプルデータのため、ZIPバックアップは利用できません。\nGoogleログイン後にご自身のデータでご利用ください。");
+    alert("この操作はログイン後に利用できます。\nGoogleログインすると、自分の作品を保存して家族で共有できます。");
     return;
   }
   if (!isPremiumUser) {
@@ -7518,7 +7540,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v290`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v291`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7539,7 +7561,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 87, optionCode];
+  return [2, 91, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8866,10 +8888,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v290`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v291`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v290 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v290 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v290 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v291 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v291 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v291 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
