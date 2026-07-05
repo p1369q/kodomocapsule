@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v291</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v292</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1099,7 +1099,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <span class="text-xl">👑</span>
       <div class="text-left">
         <div class="text-sm font-bold">プレミアムプランのご案内</div>
-        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品カプセル保存数がすべて無制限になります</div>
+        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品カプセル保存数を通常利用に十分な範囲でたっぷり使えます</div>
       </div>
     </div>
     <button onclick="openPremiumPlanFromPremiumBanner(event)" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
@@ -1293,12 +1293,12 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <tr>
                 <td class="p-2 border-b font-medium">登録できるお子様</td>
                 <td class="p-2 text-center border-b text-slate-500">1名まで</td>
-                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">無制限 ✨</td>
+                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">たっぷり ✨</td>
               </tr>
               <tr>
                 <td class="p-2 border-b font-medium">保存カプセル総数</td>
                 <td class="p-2 text-center border-b text-slate-500">10件まで</td>
-                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">無制限 ✨</td>
+                <td class="p-2 text-center border-b font-bold text-emerald-600 bg-amber-50/20">たっぷり ✨</td>
               </tr>
               <tr>
                 <td class="p-2 border-b font-medium">Minecraft壁画保存</td>
@@ -1312,7 +1312,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               </tr>
             </tbody>
           </table>
-          <p class="text-[10px] text-slate-400 mt-2">※プレミアムプランは一度アップグレードすると、保存容量や人数を気にせずすべての思い出をカプセル化できます。</p>
+          <p class="text-[10px] text-slate-400 mt-2">※プレミアムプランは一度アップグレードすると、通常利用に十分な保存容量で写真・作品・プリントをまとめて保存できます。</p>
         </div>
         
         <div class="mt-4 pt-3 border-t border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-[11px]">
@@ -1470,12 +1470,24 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <p>無料プランには登録可能な子ども数・保存カプセル数の上限があります。プレミアムプランでは、アプリ内で表示される条件に従って制限が緩和されます。決済にはStripeを利用します。</p>
       </div>
       <div>
-        <div class="font-bold text-slate-800 mb-1">5. 免責事項</div>
+        <div class="font-bold text-slate-800 mb-1">5. 退会時のデータの取扱い</div>
+        <p>利用者が退会した場合、本サービスは合理的な期間内に、保存された写真・画像・PDF・作品情報・家族グループ情報等を削除または利用できない状態にする場合があります。ただし、法令対応、決済・請求、問い合わせ対応、不正利用防止、セキュリティ対応等に必要な最小限の情報は、必要な範囲で一定期間保存する場合があります。</p>
+      </div>
+      <div>
+        <div class="font-bold text-slate-800 mb-1">6. サービス終了時のデータの取扱い</div>
+        <p>本サービスを終了する場合、合理的な期間を設けて、サービス上または登録メールアドレス等により事前に告知するよう努めます。利用者は、サービス終了日までに必要なデータをエクスポートまたはダウンロードすることを推奨します。サービス終了後、一定期間経過後に保存データを削除する場合があります。</p>
+      </div>
+      <div>
+        <div class="font-bold text-slate-800 mb-1">7. データのエクスポート・バックアップ</div>
+        <p>写真・PDF・作品情報など大切なデータは、利用者自身でも定期的にエクスポートまたは保存しておくことを推奨します。バックアップやログに含まれるデータは、通常の運用サイクルに従って順次削除されるため、即時に完全削除されない場合があります。</p>
+      </div>
+      <div>
+        <div class="font-bold text-slate-800 mb-1">8. 免責事項</div>
         <p>本サービスは、安定した提供に努めますが、通信環境、外部サービス、システム障害等により利用できない場合があります。重要なデータは利用者自身でもバックアップを行ってください。</p>
       </div>
       <div>
-        <div class="font-bold text-slate-800 mb-1">6. 規約の変更</div>
-        <p>本規約は、必要に応じて変更されることがあります。重要な変更がある場合は、アプリ内表示等によりお知らせします。</p>
+        <div class="font-bold text-slate-800 mb-1">9. 規約の変更</div>
+        <p>本規約は、法令やサービス内容の変更等に応じて必要に応じて見直し、変更されることがあります。重要な変更がある場合は、アプリ内表示等によりお知らせします。</p>
       </div>
       <p class="text-[10px] text-slate-400 border-t pt-3">制定日：2026年6月</p>
     </div>
@@ -1506,8 +1518,16 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <p>法令に基づく場合を除き、利用者の同意なく登録データを第三者へ販売・提供することはありません。ただし、Firebase、Google Analytics、Stripeなど、サービス提供に必要な外部サービスを利用します。</p>
       </div>
       <div>
-        <div class="font-bold text-slate-800 mb-1">6. 削除・お問い合わせ</div>
-        <p>登録データはアプリ内の編集・削除機能から削除できます。アカウントや家族グループ全体の削除、その他の問い合わせは、お問い合わせ先までご連絡ください。</p>
+        <div class="font-bold text-slate-800 mb-1">6. 退会・サービス終了時の個人情報の取扱い</div>
+        <p>利用者が退会した場合、または本サービスが終了した場合、法令上または運営上必要な場合を除き、個人情報および保存データを合理的な期間内に削除または匿名化します。</p>
+      </div>
+      <div>
+        <div class="font-bold text-slate-800 mb-1">7. 保存データの削除・保管期間</div>
+        <p>決済記録、問い合わせ履歴、アクセスログ、不正利用防止・セキュリティ対応に必要な情報は、必要最小限の範囲で一定期間保存する場合があります。バックアップデータやログは、通常の運用サイクルに従って順次削除されます。</p>
+      </div>
+      <div>
+        <div class="font-bold text-slate-800 mb-1">8. 削除・お問い合わせ</div>
+        <p>登録データはアプリ内の編集・削除機能から削除できます。アカウントや家族グループ全体の削除、保存データの確認、その他の問い合わせは、お問い合わせ先までご連絡ください。内容に応じて、可能な範囲で確認・削除に対応します。</p>
       </div>
       <p class="text-[10px] text-slate-400 border-t pt-3">制定日：2026年6月</p>
     </div>
@@ -2048,7 +2068,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v291",
+        app_version: "v292",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2906,7 +2926,7 @@ function updatePlanUI() {
   const testPlanToggleArea = document.getElementById("testPlanToggleArea");
   
   if (isPremiumUser) {
-    if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (無制限)";
+    if(currentPlanLabel) currentPlanLabel.innerHTML = "👑 プレミアムプラン (たっぷり保存)";
     if(currentPlanLabel) currentPlanLabel.className = "text-sm font-black text-amber-600 mt-1";
     if(premiumBannerArea) premiumBannerArea.classList.add("hidden");
     const pBtn = document.getElementById("stripePaymentBtn");
@@ -7540,7 +7560,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v291`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v292`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7561,7 +7581,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 91, optionCode];
+  return [2, 92, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8888,10 +8908,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v291`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v292`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v291 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v291 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v291 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v292 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v292 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v292 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
