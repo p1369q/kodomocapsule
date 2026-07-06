@@ -180,13 +180,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .icon-inline-svg.icon-22{width:22px;height:22px;}
 .icon-inline-svg.icon-24{width:24px;height:24px;}
 
-.auth-hero-title{font-size:clamp(2.05rem,9vw,3.45rem);line-height:1.12;overflow-wrap:anywhere;word-break:normal;}
+.auth-hero-title{font-size:clamp(2.05rem,9vw,3.45rem);line-height:1.12;overflow-wrap:normal;word-break:normal;}
 .auth-hero-nowrap{white-space:nowrap;}
 @media (max-width:640px){
   html,body{overflow-x:hidden;}
   #authGatescreen{overflow-x:hidden;}
   #authGatescreen .auth-hero-title{font-size:clamp(2rem,9.2vw,2.65rem);line-height:1.15;max-width:100%;}
-  #authGatescreen .auth-hero-nowrap{white-space:normal;overflow-wrap:anywhere;}
+  #authGatescreen .auth-hero-nowrap{white-space:normal;overflow-wrap:normal;word-break:keep-all;}
   #authHeroCopy,#authGateLayout,#authGatePanelWrap{min-width:0;max-width:100%;}
 }
 
@@ -755,7 +755,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
 
         <p class="text-sm font-bold text-[#e55b5b] mb-3 max-w-full break-words">子どもの作品・プリント・写真を、家族で残す。</p>
-        <h1 class="auth-hero-title font-extrabold tracking-tight text-[#253047]">
+        <h1 class="auth-hero-title block sm:hidden font-extrabold tracking-tight text-[#253047]">
+          <span class="auth-hero-nowrap">子どもの作品を、</span><br>
+          <span class="auth-hero-nowrap">家族の<span class="text-[#ff6b6b]">成長記録</span>に。</span>
+        </h1>
+        <h1 class="auth-hero-title hidden sm:block font-extrabold tracking-tight text-[#253047]">
           <span class="auth-hero-nowrap">子どもの作品・プリントを、</span><br>
           <span class="auth-hero-nowrap"><span class="text-[#ff6b6b]">成長の記録</span>として家族で。</span>
         </h1>
