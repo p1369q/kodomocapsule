@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v294
+
+* トップ画面のメインコピーを、子どもの作品・プリント・写真を成長記録として家族で残せるサービスだと分かる表現へ整理
+* 登録なしのサンプル体験とGoogleログイン後の保存・家族共有の違いが伝わるよう、初回導線の文言を調整
+* 機能紹介を「作品を残す」「プリントも整理」「家族で共有」「Minecraftで楽しむ」の4項目に整理し、Minecraftを追加の楽しみ方として案内
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v294 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v293
 
 * プレミアムプラン説明の保存容量・バックアップ表現を、過剰保証を避けつつ価値が伝わる文言へ調整
