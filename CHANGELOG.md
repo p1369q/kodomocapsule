@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v298
+
+* スマホ幅でトップ画面の横はみ出しを抑え、ヒーロー文言・CTA・機能カードの余白とタップ領域を微調整
+* 登録なし利用の案内・サンプルカード・ボタンがiPhone幅でも読みやすく押しやすいよう、CSS中心で微調整
+* 画像/PDFプレビュー画面の閉じるボタン、表示エリア、PDFフォールバック文言をスマホで扱いやすいサイズに調整
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v298 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v297
 
 * スマホ用ヒーロー見出しを短い専用コピーに出し分け、意図した位置で改行されるよう調整
