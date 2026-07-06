@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v295
+
+* ギャラリーの画像カードをタップしたとき、既存のプレビュー画面で大きく確認できる導線を維持
+* PDFカードをタップしたとき、1ページ目サムネイルがある場合はカードに表示し、プレビュー画面でPDFを確認できるよう改善
+* 詳細画面の画像/PDFプレビューからも大きく確認できるよう、追加済みメディアのタップ導線を追加
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v295 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、ログイン導線は変更なし
+* JavaScript構文チェック済み
+
 ## v294
 
 * トップ画面のメインコピーを、子どもの作品・プリント・写真を成長記録として家族で残せるサービスだと分かる表現へ整理

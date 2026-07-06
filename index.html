@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v294</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v295</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1269,7 +1269,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
         <div>
           <div class="font-bold text-indigo-950 mb-0.5">④ Minecraftで作品を飾る</div>
-          <p>作品の写真プレビューから「マイクラ用にする」を押すと、ドット絵風に変換できます。「マイクラ用ファイル保存」から、Minecraft統合版に入れるためのファイルを保存し、マイクラの世界で作品を展示できます。</p>
+          <p>作品のプレビューから「マイクラ用にする」を押すと、ドット絵風に変換できます。「マイクラ用ファイル保存」から、Minecraft統合版に入れるためのファイルを保存し、マイクラの世界で作品を展示できます。</p>
           <p class="mt-2 text-[11px] text-slate-500 leading-relaxed">※ Minecraft用ファイルは、iPad / iPhone / Windows版のMinecraft統合版での利用を想定しています。Android端末では、端末・Minecraftのバージョン・ファイル管理アプリの仕様により、インポートできない場合があります。</p>
           <ol class="list-decimal pl-5 mt-2 space-y-1 text-[11px] text-slate-600">
             <li>保存した <span class="font-mono">.mcaddon</span> ファイルを開き、Minecraftにインポートします。</li>
@@ -1560,13 +1560,14 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   <div class="drawer-panel max-w-4xl p-0 overflow-hidden bg-white">
     <div class="flex justify-between items-center px-5 py-4 border-b border-slate-100">
       <div>
-        <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-0.5">PHOTO PREVIEW</div>
-        <h3 id="photoPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">写真プレビュー</h3>
+        <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-0.5">MEDIA PREVIEW</div>
+        <h3 id="photoPreviewTitle" class="text-lg sm:text-xl font-extrabold text-slate-800">プレビュー</h3>
       </div>
       <button onclick="closePhotoPreview()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
     </div>
     <div class="photo-preview-stage bg-slate-950 flex items-center justify-center overflow-hidden">
       <img id="photoPreviewImage" src="" alt="" class="max-w-full object-contain" />
+      <iframe id="photoPreviewPdf" src="" title="PDFプレビュー" class="hidden w-full h-full min-h-[46dvh] bg-white"></iframe>
     </div>
     <div class="photo-preview-detail p-5 space-y-3">
       <div class="flex flex-wrap gap-2 text-[11px]" id="photoPreviewBadges"></div>
@@ -1574,6 +1575,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div class="photo-preview-actions flex flex-col sm:flex-row gap-2 pt-2">
         <button id="photoPreviewEditBtn" type="button" class="flex-1 py-3 rounded-2xl bg-[#ff6b6b] text-white text-xs font-bold shadow-sm hover:bg-[#ff5252] transition">編集する</button>
         <button id="photoPreviewDownloadBtn" type="button" class="flex-1 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">⬇ 保存</button>
+        <button id="photoPreviewOpenPdfBtn" type="button" class="hidden flex-1 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-bold shadow-sm hover:bg-indigo-700 transition">PDFを開く</button>
         <button id="photoPreviewMinecraftBtn" type="button" class="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span>マイクラ用にする</span></span></button>
         <button onclick="closePhotoPreview()" type="button" class="flex-1 py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
       </div>
@@ -2068,7 +2070,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v294",
+        app_version: "v295",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5152,19 +5154,71 @@ function renderMediaPreviews() {
   base64MediaArray.forEach((item, index) => {
     const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow z-10">✕</button>`;
     if(item.type === "pdf") {
-      const pdfCard = `<div class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDF</span></div>`;
+      const pdfCard = `<div role="button" tabindex="0" onclick="openSelectedMediaPreview(${index}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openSelectedMediaPreview(${index}, event)" class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner w-full cursor-pointer">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFを見る</span><span class="text-[9px] text-indigo-500 font-bold mt-1">タップして確認</span></div>`;
       previewHtml += isSolid ? `<div>${pdfCard}</div>` : pdfCard;
     } else {
       const cropBtn = canAddData() ? `<button type="button" onclick="openCropperForMedia(${index}, event)" class="absolute bottom-1.5 right-1.5 rounded-full bg-white/95 text-[10px] font-bold text-slate-600 px-2 py-1 shadow">✂</button>` : ``;
       const statusBadge = item.autoTrimApplied
         ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-black/65 text-white text-[9px] font-bold px-2 py-1">自動</div>`
         : (mediaItemHasOriginal(item) ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 text-slate-600 text-[9px] font-bold px-2 py-1 shadow">元あり</div>` : ``);
-      const imageCard = `<div class="relative aspect-square rounded-xl overflow-hidden border">${removeBtn}${cropBtn}${statusBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      const imageCard = `<div role="button" tabindex="0" onclick="openSelectedMediaPreview(${index}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openSelectedMediaPreview(${index}, event)" class="relative aspect-square rounded-xl overflow-hidden border w-full cursor-pointer">${removeBtn}${cropBtn}${statusBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
       previewHtml += isSolid ? `<div>${imageCard}${buildSolidMediaViewSelect(index, item)}</div>` : imageCard;
     }
   });
   document.getElementById("mediaResultContainer").innerHTML = previewHtml;
 }
+
+window.openSelectedMediaPreview = function(index, event) {
+  if(event) event.stopPropagation();
+  const item = base64MediaArray[index];
+  const sourceUrl = item?.url || item?.dataUrl || item;
+  if(!sourceUrl) return;
+  const isPdf = item?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
+  const title = document.getElementById("inputTitle")?.value || (isPdf ? "PDFプレビュー" : "画像プレビュー");
+  const titleEl = document.getElementById("photoPreviewTitle");
+  const imgEl = document.getElementById("photoPreviewImage");
+  const pdfEl = document.getElementById("photoPreviewPdf");
+  const badgesEl = document.getElementById("photoPreviewBadges");
+  const memoEl = document.getElementById("photoPreviewMemo");
+  const editBtn = document.getElementById("photoPreviewEditBtn");
+  const downloadBtn = document.getElementById("photoPreviewDownloadBtn");
+  const openPdfBtn = document.getElementById("photoPreviewOpenPdfBtn");
+  const minecraftBtn = document.getElementById("photoPreviewMinecraftBtn");
+  const drawer = document.getElementById("photoPreviewDrawer");
+  if(titleEl) titleEl.textContent = title;
+  if(imgEl) {
+    imgEl.src = isPdf ? "" : sourceUrl;
+    imgEl.alt = title;
+    imgEl.classList.toggle("hidden", isPdf);
+  }
+  if(pdfEl) {
+    pdfEl.src = isPdf ? sourceUrl : "";
+    pdfEl.classList.toggle("hidden", !isPdf);
+  }
+  if(badgesEl) badgesEl.innerHTML = `<span class="bg-slate-50 text-slate-600 border border-slate-200 px-2 py-1 rounded-full font-bold">${isPdf ? "📄 PDF" : "🖼️ 画像"}</span>`;
+  if(memoEl) memoEl.classList.add("hidden");
+  if(editBtn) editBtn.classList.add("hidden");
+  if(minecraftBtn) minecraftBtn.classList.add("hidden");
+  if(downloadBtn) {
+    downloadBtn.textContent = isPdf ? "⬇ PDF保存" : "⬇ 保存";
+    downloadBtn.onclick = function(e) {
+      if(e) e.stopPropagation();
+      const a = document.createElement("a");
+      a.href = sourceUrl;
+      a.download = isPdf ? "kodomocapsule.pdf" : "kodomocapsule-image.jpg";
+      a.click();
+    };
+  }
+  if(openPdfBtn) {
+    openPdfBtn.classList.toggle("hidden", !isPdf);
+    openPdfBtn.onclick = isPdf ? function(e) {
+      if(e) e.stopPropagation();
+      window.open(sourceUrl, "_blank", "noopener");
+    } : null;
+  }
+  if(drawer) drawer.classList.add("open");
+  trackEvent(isPdf ? "selected_pdf_preview_open" : "selected_image_preview_open", { media_index: index });
+};
 
 window.removeSelectedMedia = function(index, event) {
   if(event) event.stopPropagation(); base64MediaArray.splice(index, 1); renderMediaPreviews();
@@ -7560,7 +7614,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v294`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v295`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -8908,10 +8962,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v294`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v295`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v294 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v294 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v294 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v295 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v295 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v295 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -9588,7 +9642,9 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
 
 window.closePhotoPreview = function() {
   const drawer = document.getElementById("photoPreviewDrawer");
+  const pdfEl = document.getElementById("photoPreviewPdf");
   if(drawer) drawer.classList.remove("open");
+  if(pdfEl) pdfEl.src = "";
 };
 
 window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
@@ -9598,7 +9654,7 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
   const media = work.mediaUrls[mediaIndex];
   const sourceUrl = media?.url || media?.dataUrl || media;
   const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
-  if(!sourceUrl || isPdf) return;
+  if(!sourceUrl) return;
 
   const child = localChildren.find(c => c.id === work.childId);
   const totalMonths = child ? calculateAgeInMonths(child.birthday, work.date) : null;
@@ -9611,11 +9667,21 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
   const memoEl = document.getElementById("photoPreviewMemo");
   const editBtn = document.getElementById("photoPreviewEditBtn");
   const downloadBtn = document.getElementById("photoPreviewDownloadBtn");
+  const openPdfBtn = document.getElementById("photoPreviewOpenPdfBtn");
   const minecraftBtn = document.getElementById("photoPreviewMinecraftBtn");
+  const pdfEl = document.getElementById("photoPreviewPdf");
   const drawer = document.getElementById("photoPreviewDrawer");
 
-  if(titleEl) titleEl.textContent = work.title || "写真プレビュー";
-  if(imgEl) { imgEl.src = sourceUrl; imgEl.alt = work.title || "写真"; }
+  if(titleEl) titleEl.textContent = work.title || (isPdf ? "PDFプレビュー" : "プレビュー");
+  if(imgEl) {
+    imgEl.src = isPdf ? "" : sourceUrl;
+    imgEl.alt = work.title || "写真";
+    imgEl.classList.toggle("hidden", isPdf);
+  }
+  if(pdfEl) {
+    pdfEl.src = isPdf ? sourceUrl : "";
+    pdfEl.classList.toggle("hidden", !isPdf);
+  }
   if(badgesEl) {
     badgesEl.innerHTML = "";
     const badges = [];
@@ -9635,25 +9701,34 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
     memoEl.classList.toggle("hidden", !work.memo);
   }
   if(editBtn) {
+    editBtn.classList.remove("hidden");
     editBtn.onclick = function() {
       closePhotoPreview();
       openEditWork(workId);
     };
   }
   if(downloadBtn) {
+    downloadBtn.textContent = isPdf ? "⬇ PDF保存" : "⬇ 保存";
     downloadBtn.onclick = function(e) {
       downloadWorkMedia(workId, mediaIndex, e);
     };
   }
+  if(openPdfBtn) {
+    openPdfBtn.classList.toggle("hidden", !isPdf);
+    openPdfBtn.onclick = isPdf ? function(e) {
+      if(e) e.stopPropagation();
+      window.open(sourceUrl, "_blank", "noopener");
+    } : null;
+  }
   if(minecraftBtn) {
-    const canShowMinecraftBtn = isMinecraftPreviewEligibleWork(work);
+    const canShowMinecraftBtn = !isPdf && isMinecraftPreviewEligibleWork(work);
     minecraftBtn.classList.toggle("hidden", !canShowMinecraftBtn);
     minecraftBtn.onclick = canShowMinecraftBtn ? function(e) {
       openMinecraftPixelPreview(workId, mediaIndex, e);
     } : null;
   }
   if(drawer) drawer.classList.add("open");
-  trackEvent("photo_preview_open", { work_id: workId, media_index: mediaIndex });
+  trackEvent(isPdf ? "pdf_preview_open" : "photo_preview_open", { work_id: workId, media_index: mediaIndex });
 };
 
 window.openEditWork = function(id) {
@@ -9933,8 +10008,8 @@ function renderGallery(){
       if (isPdf) {
         const thumbnailUrl = activeMedia.thumbnail || activeMedia.thumbnailUrl || activeMedia.previewUrl || "";
         mediaPreview = thumbnailUrl
-          ? `<div class="relative w-full h-44 bg-slate-100 border-b cursor-pointer overflow-hidden" onclick="openEditWork('${w.id}')"><img src="${thumbnailUrl}" class="w-full h-full object-cover" alt="${w.title || 'PDF'}のサムネイル" onerror="this.parentElement.innerHTML='<div class=&quot;w-full h-full bg-slate-100 flex flex-col justify-center items-center&quot;><span class=&quot;text-4xl mb-1&quot;>📄</span><span class=&quot;text-xs text-slate-500 font-semibold&quot;>PDF (${currentIndex + 1}/${mediaCount})</span></div>'"/><div class="absolute left-2 bottom-2 px-2 py-1 rounded-full bg-white/90 text-[10px] text-slate-600 font-extrabold shadow-sm">📄 PDF (${currentIndex + 1}/${mediaCount})</div></div>`
-          : `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openEditWork('${w.id}')"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDF (${currentIndex + 1}/${mediaCount})</span></div>`;
+          ? `<div class="relative w-full h-44 bg-slate-100 border-b cursor-pointer overflow-hidden" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"><img src="${thumbnailUrl}" class="w-full h-full object-cover" alt="${w.title || 'PDF'}のサムネイル" onerror="this.parentElement.innerHTML='<div class=&quot;w-full h-full bg-slate-100 flex flex-col justify-center items-center&quot;><span class=&quot;text-4xl mb-1&quot;>📄</span><span class=&quot;text-xs text-slate-500 font-semibold&quot;>PDFを見る (${currentIndex + 1}/${mediaCount})</span></div>'"/><div class="absolute left-2 bottom-2 px-2 py-1 rounded-full bg-white/90 text-[10px] text-slate-600 font-extrabold shadow-sm">📄 PDFを見る (${currentIndex + 1}/${mediaCount})</div></div>`
+          : `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDFを見る (${currentIndex + 1}/${mediaCount})</span><span class="mt-1 text-[10px] text-indigo-500 font-bold">タップしてプレビュー</span></div>`;
       } else {
         mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"/>`;
         mediaDownloadButton = `<button onclick="downloadWorkMedia('${w.id}', ${currentIndex}, event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 text-slate-700 text-sm font-bold shadow backdrop-blur hover:bg-white z-10" title="写真をダウンロード">⬇</button>`;
