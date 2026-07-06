@@ -710,6 +710,41 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 #minecraftPlacementGuide,#minecraftPseudo3dGuide{display:none!important;}
 #minecraftPreviewDrawer.minecraft-share-unavailable .minecraft-adult-details{display:none!important;}
 
+/* v298: スマホ実機向けトップ・ゲスト体験・画像/PDFプレビューの最終UI微調整 */
+@media (max-width:640px){
+  #authGatescreen .relative.min-h-full{padding-left:14px;padding-right:14px;padding-top:24px;padding-bottom:24px;}
+  #authGatescreen #authHeroCopy .inline-flex{margin-bottom:18px;padding:8px 10px;gap:7px;}
+  #authGatescreen #authHeroCopy>p:first-of-type{font-size:13px;line-height:1.7;margin-bottom:10px;}
+  #authGatescreen .auth-hero-title{font-size:clamp(1.86rem,8.6vw,2.28rem);line-height:1.18;letter-spacing:-.04em;}
+  #authGatescreen .auth-hero-title+.mt-5{margin-top:16px;font-size:13px;line-height:1.9;}
+  #authGatescreen .grid.grid-cols-1.sm\:grid-cols-4{gap:10px;}
+  #authGatescreen .grid.grid-cols-1.sm\:grid-cols-4>div{padding:13px;border-radius:18px;}
+  #authGatescreen button,#authGatescreen a[role="button"]{min-height:44px;}
+
+  #guestLoginBanner{padding:14px;border-radius:22px;}
+  #guestLoginBanner .flex.items-start{gap:10px;min-width:0;}
+  #guestLoginBanner p{font-size:11px;line-height:1.65;}
+  #guestLoginBanner button{min-height:48px;white-space:normal;line-height:1.45;padding-left:14px;padding-right:14px;}
+  #guestLoginBanner .grid{gap:9px;}
+  #guestLoginBanner .rounded-2xl{border-radius:18px;}
+  #guestLoginBanner span{line-height:1.35;}
+  #mediaResultContainer{gap:10px;}
+  #mediaResultContainer [role="button"]{min-height:112px;border-radius:16px;}
+  #mediaResultContainer [role="button"] .absolute.inset-x-1{bottom:7px;padding-top:5px;padding-bottom:5px;font-size:10px;}
+
+  #photoPreviewDrawer{padding:8px;align-items:center;overflow-x:hidden;}
+  #photoPreviewDrawer .drawer-panel{width:100%;height:auto;max-height:calc(100dvh - 16px);border-radius:24px;overflow:hidden;}
+  #photoPreviewDrawer .drawer-panel>.flex.justify-between{padding:12px 14px;gap:10px;}
+  #photoPreviewDrawer .drawer-panel>.flex.justify-between h3{font-size:18px;line-height:1.3;}
+  #photoPreviewDrawer .drawer-panel>.flex.justify-between button{width:46px;height:46px;font-size:18px;}
+  #photoPreviewDrawer .photo-preview-stage{min-height:220px;max-height:48dvh;}
+  #photoPreviewDrawer .photo-preview-stage img{max-height:48dvh;}
+  #photoPreviewDrawer .photo-preview-stage iframe{min-height:48dvh;}
+  #photoPreviewDrawer .photo-preview-detail{padding:14px;min-height:0;-webkit-overflow-scrolling:touch;}
+  #photoPreviewDrawer .photo-preview-actions{gap:8px;padding-top:10px;}
+  #photoPreviewDrawer .photo-preview-actions button{min-height:46px;font-size:12px;line-height:1.35;}
+}
+
 </style>
 </head>
 <body>
@@ -968,7 +1003,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v297</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v298</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2082,7 +2117,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v297",
+        app_version: "v298",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7652,7 +7687,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v297`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v298`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9000,10 +9035,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v297`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v298`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v297 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v297 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v297 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v298 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v298 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v298 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
