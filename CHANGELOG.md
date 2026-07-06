@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v301
+
+* ログイン後ヘッダーから「使い方」ボタンを削除し、スマホ幅でロゴ表示が圧迫されにくいよう調整
+* トップ画面の「使い方をかんたんに見る」導線と使い方モーダル本体は維持
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v301 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics 設定、Stripe / Cloud Run URL、課金処理、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v300
 
 * スマホでも初めての使い方を確認しやすいよう、トップ画面とログイン後ヘッダーに控えめな「使い方」導線を追加
