@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v296
+
+* 画像カードのタップ領域を明確にし、ギャラリー一覧・写真一覧・詳細画面・追加済みメディアから画像拡大プレビューを開ける導線を補強
+* PDFカードのサムネイルURL判定を `thumbnail` / `thumbnailUrl` / `previewUrl` / `imageUrl` / `coverUrl` に拡張し、サムネイルがあるPDFは汎用PDFアイコンより優先して表示
+* PDFサムネイルがない場合も「PDFを見る」「タップしてプレビュー」「PDFを開く」導線を維持し、登録なし利用サンプルPDFの既存サムネイル参照を維持
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v296 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v295
 
 * ギャラリーの画像カードをタップしたとき、既存のプレビュー画面で大きく確認できる導線を維持

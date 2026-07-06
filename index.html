@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v295</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v296</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2070,7 +2070,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v295",
+        app_version: "v296",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5148,20 +5148,46 @@ function buildSolidMediaViewSelect(index, item) {
   return `<div class="mt-1.5"><select onchange="setSolidMediaView(${index}, this.value)" class="w-full rounded-xl border border-emerald-100 bg-emerald-50 px-2 py-1.5 text-[10px] font-bold text-emerald-800"><option value="front" ${value === "front" ? "selected" : ""}>⬜ 正面</option><option value="side" ${value === "side" ? "selected" : ""}>↔️ 横</option><option value="top" ${value === "top" ? "selected" : ""}>⬆️ 上</option><option value="other" ${value === "other" ? "selected" : ""}>📷 その他</option></select></div>`;
 }
 
+function getMediaSourceUrl(media) {
+  if (!media) return "";
+  if (typeof media === "string") return media;
+  return media.url || media.fileUrl || media.downloadUrl || media.dataUrl || media.sourceFile || "";
+}
+
+function getPdfThumbnailUrl(media) {
+  if (!media || typeof media === "string") return "";
+  return media.thumbnail || media.thumbnailUrl || media.previewUrl || media.imageUrl || media.coverUrl || "";
+}
+
+function isPdfMedia(media) {
+  const sourceUrl = getMediaSourceUrl(media);
+  const mimeType = typeof media === "object" ? (media.mimeType || media.contentType || "") : "";
+  const mediaType = typeof media === "object" ? (media.type || media.kind || "") : "";
+  return String(mediaType).toLowerCase() === "pdf" || String(mimeType).toLowerCase().includes("pdf") || String(sourceUrl).toLowerCase().includes(".pdf");
+}
+
+function buildPdfFallbackCard(label = "PDFを見る", subLabel = "タップしてプレビュー") {
+  return `<div class="w-full h-full bg-slate-100 flex flex-col justify-center items-center text-center p-2"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">${label}</span><span class="mt-1 text-[10px] text-indigo-500 font-bold">${subLabel}</span></div>`;
+}
+
 function renderMediaPreviews() {
   let previewHtml = "";
   const isSolid = getArtworkShapeValue() === "solid";
   base64MediaArray.forEach((item, index) => {
     const removeBtn = `<button type="button" onclick="removeSelectedMedia(${index}, event)" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow z-10">✕</button>`;
-    if(item.type === "pdf") {
-      const pdfCard = `<div role="button" tabindex="0" onclick="openSelectedMediaPreview(${index}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openSelectedMediaPreview(${index}, event)" class="relative aspect-square rounded-xl border bg-slate-100 flex flex-col justify-center items-center p-2 text-center shadow-inner w-full cursor-pointer">${removeBtn}<span class="text-2xl mb-1">📄</span><span class="text-[10px] text-slate-600 font-bold line-clamp-1">PDFを見る</span><span class="text-[9px] text-indigo-500 font-bold mt-1">タップして確認</span></div>`;
+    if(isPdfMedia(item)) {
+      const thumbnailUrl = getPdfThumbnailUrl(item);
+      const thumbHtml = thumbnailUrl
+        ? `<img src="${thumbnailUrl}" class="w-full h-full object-cover" alt="PDFサムネイル" onerror="this.parentElement.innerHTML=buildPdfFallbackCard('PDFを見る', 'タップしてプレビュー')"/><div class="absolute inset-x-1 bottom-1.5 rounded-full bg-white/90 text-[9px] text-slate-600 font-extrabold shadow-sm py-1">📄 PDFを見る</div>`
+        : buildPdfFallbackCard("PDFを見る", "タップしてプレビュー");
+      const pdfCard = `<div role="button" tabindex="0" onclick="openSelectedMediaPreview(${index}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openSelectedMediaPreview(${index}, event)" class="relative aspect-square rounded-xl border bg-slate-100 overflow-hidden text-center shadow-inner w-full cursor-pointer">${removeBtn}${thumbHtml}</div>`;
       previewHtml += isSolid ? `<div>${pdfCard}</div>` : pdfCard;
     } else {
       const cropBtn = canAddData() ? `<button type="button" onclick="openCropperForMedia(${index}, event)" class="absolute bottom-1.5 right-1.5 rounded-full bg-white/95 text-[10px] font-bold text-slate-600 px-2 py-1 shadow">✂</button>` : ``;
       const statusBadge = item.autoTrimApplied
         ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-black/65 text-white text-[9px] font-bold px-2 py-1">自動</div>`
         : (mediaItemHasOriginal(item) ? `<div class="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 text-slate-600 text-[9px] font-bold px-2 py-1 shadow">元あり</div>` : ``);
-      const imageCard = `<div role="button" tabindex="0" onclick="openSelectedMediaPreview(${index}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openSelectedMediaPreview(${index}, event)" class="relative aspect-square rounded-xl overflow-hidden border w-full cursor-pointer">${removeBtn}${cropBtn}${statusBadge}<img src="${item.dataUrl}" class="w-full h-full object-cover"/></div>`;
+      const imageCard = `<div role="button" tabindex="0" onclick="openSelectedMediaPreview(${index}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openSelectedMediaPreview(${index}, event)" class="relative aspect-square rounded-xl overflow-hidden border w-full cursor-pointer">${removeBtn}${cropBtn}${statusBadge}<img src="${getMediaSourceUrl(item)}" class="w-full h-full object-cover" alt="画像プレビュー"/><div class="absolute inset-x-1 bottom-1.5 rounded-full bg-black/55 text-white text-[9px] font-bold py-1 text-center pointer-events-none">画像を大きく見る</div></div>`;
       previewHtml += isSolid ? `<div>${imageCard}${buildSolidMediaViewSelect(index, item)}</div>` : imageCard;
     }
   });
@@ -5171,9 +5197,9 @@ function renderMediaPreviews() {
 window.openSelectedMediaPreview = function(index, event) {
   if(event) event.stopPropagation();
   const item = base64MediaArray[index];
-  const sourceUrl = item?.url || item?.dataUrl || item;
+  const sourceUrl = getMediaSourceUrl(item);
   if(!sourceUrl) return;
-  const isPdf = item?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
+  const isPdf = isPdfMedia(item);
   const title = document.getElementById("inputTitle")?.value || (isPdf ? "PDFプレビュー" : "画像プレビュー");
   const titleEl = document.getElementById("photoPreviewTitle");
   const imgEl = document.getElementById("photoPreviewImage");
@@ -7614,7 +7640,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v295`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v296`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -8962,10 +8988,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v295`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v296`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v295 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v295 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v295 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v296 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v296 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v296 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -9652,8 +9678,8 @@ window.openPhotoPreview = function(workId, mediaIndex = 0, event) {
   const work = localWorks.find(w => w.id === workId);
   if(!work || work.isDeleted || !work.mediaUrls?.length) return;
   const media = work.mediaUrls[mediaIndex];
-  const sourceUrl = media?.url || media?.dataUrl || media;
-  const isPdf = media?.type === "pdf" || (typeof sourceUrl === "string" && sourceUrl.toLowerCase().includes("pdf"));
+  const sourceUrl = getMediaSourceUrl(media);
+  const isPdf = isPdfMedia(media);
   if(!sourceUrl) return;
 
   const child = localChildren.find(c => c.id === work.childId);
@@ -10002,16 +10028,16 @@ function renderGallery(){
       if (!carouselIndices[w.id]) carouselIndices[w.id] = 0;
       const currentIndex = carouselIndices[w.id] >= mediaCount ? 0 : carouselIndices[w.id];
       const activeMedia = w.mediaUrls[currentIndex];
-      const sourceUrl = activeMedia.url || activeMedia.dataUrl || activeMedia;
-      const isPdf = activeMedia.type === "pdf" || (typeof sourceUrl === 'string' && sourceUrl.includes('pdf'));
+      const sourceUrl = getMediaSourceUrl(activeMedia);
+      const isPdf = isPdfMedia(activeMedia);
 
       if (isPdf) {
-        const thumbnailUrl = activeMedia.thumbnail || activeMedia.thumbnailUrl || activeMedia.previewUrl || "";
+        const thumbnailUrl = getPdfThumbnailUrl(activeMedia);
         mediaPreview = thumbnailUrl
-          ? `<div class="relative w-full h-44 bg-slate-100 border-b cursor-pointer overflow-hidden" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"><img src="${thumbnailUrl}" class="w-full h-full object-cover" alt="${w.title || 'PDF'}のサムネイル" onerror="this.parentElement.innerHTML='<div class=&quot;w-full h-full bg-slate-100 flex flex-col justify-center items-center&quot;><span class=&quot;text-4xl mb-1&quot;>📄</span><span class=&quot;text-xs text-slate-500 font-semibold&quot;>PDFを見る (${currentIndex + 1}/${mediaCount})</span></div>'"/><div class="absolute left-2 bottom-2 px-2 py-1 rounded-full bg-white/90 text-[10px] text-slate-600 font-extrabold shadow-sm">📄 PDFを見る (${currentIndex + 1}/${mediaCount})</div></div>`
-          : `<div class="w-full h-44 bg-slate-100 flex flex-col justify-center items-center border-b cursor-pointer" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"><span class="text-4xl mb-1">📄</span><span class="text-xs text-slate-500 font-semibold">PDFを見る (${currentIndex + 1}/${mediaCount})</span><span class="mt-1 text-[10px] text-indigo-500 font-bold">タップしてプレビュー</span></div>`;
+          ? `<div role="button" tabindex="0" class="relative w-full h-44 bg-slate-100 border-b cursor-pointer overflow-hidden" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openPhotoPreview('${w.id}', ${currentIndex}, event)"><img src="${thumbnailUrl}" class="w-full h-full object-cover" alt="${w.title || 'PDF'}のサムネイル" onerror="this.parentElement.innerHTML=buildPdfFallbackCard('PDFを見る (${currentIndex + 1}/${mediaCount})', 'タップしてプレビュー')"/><div class="absolute left-2 bottom-2 px-2 py-1 rounded-full bg-white/90 text-[10px] text-slate-600 font-extrabold shadow-sm">📄 PDFを見る (${currentIndex + 1}/${mediaCount})</div></div>`
+          : `<div role="button" tabindex="0" class="w-full h-44 bg-slate-100 border-b cursor-pointer" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openPhotoPreview('${w.id}', ${currentIndex}, event)">${buildPdfFallbackCard(`PDFを見る (${currentIndex + 1}/${mediaCount})`, 'タップしてプレビュー')}</div>`;
       } else {
-        mediaPreview = `<img src="${sourceUrl}" class="w-full h-44 object-cover cursor-pointer border-b" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)"/>`;
+        mediaPreview = `<div role="button" tabindex="0" class="relative w-full h-44 cursor-pointer border-b overflow-hidden" onclick="openPhotoPreview('${w.id}', ${currentIndex}, event)" onkeydown="if(event.key === 'Enter' || event.key === ' ') openPhotoPreview('${w.id}', ${currentIndex}, event)"><img src="${sourceUrl}" class="w-full h-full object-cover" alt="${w.title || '画像'}"/><div class="absolute left-2 bottom-2 px-2 py-1 rounded-full bg-black/55 text-white text-[10px] font-bold shadow-sm">画像を大きく見る</div></div>`;
         mediaDownloadButton = `<button onclick="downloadWorkMedia('${w.id}', ${currentIndex}, event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 text-slate-700 text-sm font-bold shadow backdrop-blur hover:bg-white z-10" title="写真をダウンロード">⬇</button>`;
       }
     } else {
