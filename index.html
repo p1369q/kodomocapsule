@@ -956,7 +956,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v292</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v293</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1099,7 +1099,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <span class="text-xl">👑</span>
       <div class="text-left">
         <div class="text-sm font-bold">プレミアムプランのご案内</div>
-        <div class="text-[11px] opacity-90">アップグレードすると子ども登録数・作品カプセル保存数を通常利用に十分な範囲でたっぷり使えます</div>
+        <div class="text-[11px] opacity-90">アップグレードすると、写真・作品・プリントを通常利用に十分な保存容量でたっぷり保存できます</div>
       </div>
     </div>
     <button onclick="openPremiumPlanFromPremiumBanner(event)" class="px-3 py-1.5 bg-white text-amber-700 text-xs font-bold rounded-xl shadow-sm whitespace-nowrap">詳しく見る</button>
@@ -1312,7 +1312,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               </tr>
             </tbody>
           </table>
-          <p class="text-[10px] text-slate-400 mt-2">※プレミアムプランは一度アップグレードすると、通常利用に十分な保存容量で写真・作品・プリントをまとめて保存できます。</p>
+          <p class="text-[10px] text-slate-400 mt-2">※プレミアムプランでは、通常利用に十分な保存容量で写真・作品・プリントをまとめて保存できます。</p>
         </div>
         
         <div class="mt-4 pt-3 border-t border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-[11px]">
@@ -1344,13 +1344,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">無料でも仕上がりのプレビューは確認できます。モブ風作品 βも、おためし機能としてプレビューしながら利用できます。</p>
       </div>
       <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/80 rounded-2xl p-4">
-        <div class="text-xs font-bold text-slate-700 flex items-center gap-1">📤 データバックアップ</div>
-        <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">保存しているカプセル情報を端末に保存できます。無料プランではCSV一覧、プレミアムではCSVと写真・PDFをまとめたZIPバックアップを利用できます。</p>
+        <div class="text-xs font-bold text-slate-700 flex items-center gap-1">📤 CSV + 写真一括バックアップ / ZIP出力</div>
+        <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">保存しているカプセル情報を端末に出力できます。無料プランではCSV一覧、プレミアムではCSVと写真・PDFをまとめたZIP出力を利用できます。</p>
         <div class="grid sm:grid-cols-2 gap-2 mt-3">
           <button onclick="exportCapsulesCsv()" class="py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold shadow-sm hover:bg-slate-50 transition">CSV一覧を出力</button>
-          <button onclick="exportPremiumBackupZip()" class="py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition">プレミアムZIPバックアップ</button>
+          <button onclick="exportPremiumBackupZip()" class="py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition">プレミアムZIP出力</button>
         </div>
-        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※CSVには写真・PDF本体は含まれません。ZIPバックアップはプレミアムプラン限定です。</p>
+        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※CSVには写真・PDF本体は含まれません。写真・PDFを含むZIP出力はプレミアムプラン限定です。</p>
       </div>
 
       <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/70 rounded-2xl p-4">
@@ -2068,7 +2068,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v292",
+        app_version: "v293",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2438,7 +2438,7 @@ window.exportPremiumBackupZip = async function() {
     return;
   }
   if (!isPremiumUser) {
-    alert("写真・PDFを含むZIPバックアップはプレミアムプラン限定です。\n無料プランではCSV一覧エクスポートをご利用いただけます。");
+    alert("写真・PDFを含むZIP出力はプレミアムプラン限定です。\n無料プランではCSV一覧エクスポートをご利用いただけます。");
     openDrawer('child');
     if (typeof switchSettingsTab === "function") switchSettingsTab('plan');
     trackEvent("export_zip_premium_required");
@@ -2451,7 +2451,7 @@ window.exportPremiumBackupZip = async function() {
 
   const activeWorks = localWorks.filter(w => !w.isDeleted);
   if (!activeWorks.length) {
-    alert("バックアップ対象のカプセルがありません。");
+    alert("ZIP出力の対象になるカプセルがありません。");
     return;
   }
 
@@ -2485,7 +2485,7 @@ window.exportPremiumBackupZip = async function() {
     }
 
     const readme = [
-      "コドモカプセル バックアップ",
+      "コドモカプセル ZIP出力",
       `作成日: ${new Date().toLocaleString("ja-JP")}`,
       `カプセル数: ${activeWorks.length}`,
       `保存できた写真・PDF数: ${mediaCount}`,
@@ -2499,13 +2499,13 @@ window.exportPremiumBackupZip = async function() {
     triggerAnchorDownload(blob, `kodomocapsule_backup_${getExportDateStamp()}.zip`);
     trackEvent("export_zip", { work_count: activeWorks.length, media_count: mediaCount, failed_count: failedCount });
     if (failedCount > 0) {
-      alert(`ZIPバックアップを作成しました。\n一部の写真・PDF（${failedCount}件）は取得できませんでした。CORS設定やURLの有効期限をご確認ください。`);
+      alert(`ZIP出力を作成しました。\n一部の写真・PDF（${failedCount}件）は取得できませんでした。CORS設定やURLの有効期限をご確認ください。`);
     } else {
-      alert("ZIPバックアップを作成しました。");
+      alert("ZIP出力を作成しました。");
     }
   } catch(e) {
     console.error("ZIP export failed:", e);
-    alert("ZIPバックアップの作成に失敗しました。\nデータ量が多い場合は、写真一覧の一括ダウンロードもお試しください。\n詳細: " + e.message);
+    alert("ZIP出力の作成に失敗しました。\nデータ量が多い場合は、写真一覧の一括ダウンロードもお試しください。\n詳細: " + e.message);
   }
 };
 
@@ -7560,7 +7560,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v292`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v293`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -8908,10 +8908,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v292`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v293`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v292 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v292 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v292 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v293 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v293 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v293 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -9854,7 +9854,7 @@ function renderGallery(){
       freePlanNoticeHtml += `<div class="col-span-full p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
         <div>
           <div class="text-xs font-extrabold text-amber-800">👑 無料プランの上限まであと${remainingFreeSlots}件です</div>
-          <p class="text-[11px] text-amber-700 mt-1 leading-relaxed">プレミアムにすると、お子さまの作品カプセルを件数を気にせず保存できます。</p>
+          <p class="text-[11px] text-amber-700 mt-1 leading-relaxed">プレミアムにすると、お子さまの作品カプセルをたっぷり保存できます。</p>
         </div>
         <button onclick="openPremiumPlanFromLimitNotice(event)" class="px-4 py-2.5 rounded-xl bg-amber-600 text-white text-xs font-bold shadow-sm hover:bg-amber-700 transition whitespace-nowrap">詳しく見る</button>
       </div>`;
