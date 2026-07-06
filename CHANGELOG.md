@@ -1,10 +1,18 @@
 # CHANGELOG
 
+## v293
+
+* プレミアムプラン説明の保存容量・バックアップ表現を、過剰保証を避けつつ価値が伝わる文言へ調整
+* 無料プランはCSV一覧、プレミアムはCSV + 写真一括バックアップ / ZIP出力と分かる説明に整理
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v293 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v292
 
 * 利用規約に、退会時・サービス終了時の保存データの取扱いと、エクスポート・ダウンロード・バックアップに関する説明を追加
 * プライバシーポリシーに、退会・サービス終了時の個人情報の削除または匿名化、決済記録・問い合わせ履歴・アクセスログ等の保管期間に関する説明を追加
-* プレミアム説明の「無制限」表現を、通常利用に十分な保存容量・たっぷり保存が伝わる文言へ調整
+* プレミアム説明の保存容量表現を、通常利用に十分な保存容量・たっぷり保存が伝わる文言へ調整
 * 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v292 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
 * Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、退会処理、家族共有、登録なし利用の画像参照パスは変更なし
 * JavaScript構文チェック済み
