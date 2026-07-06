@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v300
+
+* スマホでも初めての使い方を確認しやすいよう、トップ画面とログイン後ヘッダーに控えめな「使い方」導線を追加
+* 登録なし体験、Googleログイン、作品保存、家族共有、PDF/画像プレビュー、Minecraftを追加の楽しみ方として案内する短いガイドを追加
+* v299 は `SECURITY_REVIEW.md` 追加のみでアプリ本体は v298 のままだったため、今回の `index.html` 更新で画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v300 に更新
+* Firebase / Firestore / Storage / Authentication / Analytics 設定、Stripe / Cloud Run URL、課金処理、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v299
 
 * 海外アクセス・botアクセス・不正利用リスクの観点で、現在の構成を確認する `SECURITY_REVIEW.md` を追加
