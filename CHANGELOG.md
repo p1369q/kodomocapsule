@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v297
+
+* スマホ表示時にトップ画面のヒーロー見出しが右側に見切れないよう、見出しサイズと折り返し指定を調整
+* トップ画面のロゴ・タグ、補足文、機能紹介カード、ログイン導線に `min-w-0` / `max-w-full` / 折り返し指定を追加し、横スクロールを抑制
+* 画面表示・Analytics・`.mcaddon` 内のパック名・説明文・manifest version・option seed を v297 に更新し、Minecraftアイテム表示名にバージョンを含めない方針を維持
+* Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+* JavaScript構文チェック済み
+
 ## v296
 
 * 画像カードのタップ領域を明確にし、ギャラリー一覧・写真一覧・詳細画面・追加済みメディアから画像拡大プレビューを開ける導線を補強
