@@ -180,8 +180,16 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .icon-inline-svg.icon-22{width:22px;height:22px;}
 .icon-inline-svg.icon-24{width:24px;height:24px;}
 
-.auth-hero-title{font-size:clamp(2.15rem,9.6vw,3.45rem);line-height:1.12;}
+.auth-hero-title{font-size:clamp(2.05rem,9vw,3.45rem);line-height:1.12;overflow-wrap:anywhere;word-break:normal;}
 .auth-hero-nowrap{white-space:nowrap;}
+@media (max-width:640px){
+  html,body{overflow-x:hidden;}
+  #authGatescreen{overflow-x:hidden;}
+  #authGatescreen .auth-hero-title{font-size:clamp(2rem,9.2vw,2.65rem);line-height:1.15;max-width:100%;}
+  #authGatescreen .auth-hero-nowrap{white-space:normal;overflow-wrap:anywhere;}
+  #authHeroCopy,#authGateLayout,#authGatePanelWrap{min-width:0;max-width:100%;}
+}
+
 #authGatescreen.setup-mode #authHeroCopy{display:none;}
 #authGatescreen.setup-mode #authGateLayout{display:flex;justify-content:center;align-items:center;}
 #authGatescreen.setup-mode #authGatePanelWrap{width:min(640px,100%);}
@@ -735,57 +743,57 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <div class="absolute -bottom-32 right-1/3 w-80 h-80 rounded-full bg-amber-100/70 blur-3xl"></div>
   </div>
 
-  <div class="relative min-h-full max-w-6xl mx-auto px-5 py-7 sm:px-8 sm:py-10 lg:py-14 flex items-center">
-    <div id="authGateLayout" class="w-full grid lg:grid-cols-[1.08fr_.92fr] gap-8 lg:gap-14 items-center">
-      <div id="authHeroCopy" class="text-left">
-        <div class="inline-flex items-center gap-2 bg-white/80 border border-white px-3 py-2 rounded-full shadow-sm mb-6">
+  <div class="relative min-h-full w-full max-w-6xl mx-auto px-4 py-7 sm:px-8 sm:py-10 lg:py-14 flex items-center overflow-hidden sm:overflow-visible">
+    <div id="authGateLayout" class="w-full min-w-0 grid lg:grid-cols-[1.08fr_.92fr] gap-8 lg:gap-14 items-center">
+      <div id="authHeroCopy" class="text-left min-w-0 max-w-full">
+        <div class="inline-flex max-w-full min-w-0 flex-wrap items-center gap-2 bg-white/80 border border-white px-3 py-2 rounded-full shadow-sm mb-6">
           <svg class="app-icon w-9 h-9 shrink-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <use href="#icon-capsule"></use>
           </svg>
-          <span class="font-extrabold text-[#2b2d42] tracking-tight">コドモカプセル</span>
-          <span class="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full">家族の成長記録</span>
+          <span class="font-extrabold text-[#2b2d42] tracking-tight min-w-0">コドモカプセル</span>
+          <span class="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full whitespace-normal">家族の成長記録</span>
         </div>
 
-        <p class="text-sm font-bold text-[#e55b5b] mb-3">子どもの作品・プリント・写真を、家族で残す。</p>
+        <p class="text-sm font-bold text-[#e55b5b] mb-3 max-w-full break-words">子どもの作品・プリント・写真を、家族で残す。</p>
         <h1 class="auth-hero-title font-extrabold tracking-tight text-[#253047]">
           <span class="auth-hero-nowrap">子どもの作品・プリントを、</span><br>
           <span class="auth-hero-nowrap"><span class="text-[#ff6b6b]">成長の記録</span>として家族で。</span>
         </h1>
-        <p class="mt-5 text-sm sm:text-base text-slate-600 leading-8 max-w-xl">
+        <p class="mt-5 text-sm sm:text-base text-slate-600 leading-8 max-w-xl max-w-full break-words">
           子どもの絵・工作・プリント・写真を、成長の記録として家族で残せます。写真やPDFでひとつの場所にまとめて、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>。ログインすると自分の作品を保存して、家族で共有できます。
         </p>
 
-        <div class="mt-6 grid sm:grid-cols-4 gap-3 max-w-3xl">
-          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-3 max-w-3xl max-w-full min-w-0">
+          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm min-w-0 break-words">
             <div class="text-xl mb-2">🧺</div>
             <div class="text-xs font-extrabold text-slate-800">作品を残す</div>
             <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">絵・工作・写真を、年齢と一緒に保存。</p>
           </div>
-          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
+          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm min-w-0 break-words">
             <div class="text-xl mb-2">🎂</div>
             <div class="text-xs font-extrabold text-slate-800">プリントも整理</div>
             <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">テストや園のおたより、PDFもまとめて管理。</p>
           </div>
-          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
+          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm min-w-0 break-words">
             <div class="text-xl mb-2">👨‍👩‍👧</div>
             <div class="text-xs font-extrabold text-slate-800">家族で共有</div>
             <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">家族カプセルで、成長の記録を一緒に見返せます。</p>
           </div>
-          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm">
+          <div class="bg-white/70 border border-white rounded-2xl p-4 shadow-sm min-w-0 break-words">
             <svg class="icon-inline-svg icon-24 mb-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg>
             <div class="text-xs font-extrabold text-slate-800">Minecraftで楽しむ</div>
             <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">作品をMinecraftの壁に飾れる .mcaddon 保存にも対応。</p>
           </div>
         </div>
 
-        <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-slate-500">
+        <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-semibold text-slate-500 max-w-full break-words">
           <span>✓ 写真・PDF・複数枚対応</span>
           <span>✓ 年齢別ギャラリー</span>
           <span>✓ 家族で共有</span>
           <span>✓ Minecraft .mcaddon保存にも対応</span>
           <span>✓ サンプル体験</span>
         </div>
-        <div class="mt-7 max-w-3xl bg-white/75 border border-white rounded-3xl p-4 sm:p-5 shadow-sm">
+        <div class="mt-7 max-w-3xl max-w-full bg-white/75 border border-white rounded-3xl p-4 sm:p-5 shadow-sm">
           <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-2">FAQ</div>
           <h2 class="text-base sm:text-lg font-extrabold text-[#253047] mb-3">よくある不安</h2>
           <div class="grid sm:grid-cols-2 gap-3 text-xs leading-relaxed">
@@ -809,7 +817,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         </div>
       </div>
 
-      <div id="authGatePanelWrap">
+      <div id="authGatePanelWrap" class="min-w-0 max-w-full">
         <div class="relative bg-white/90 backdrop-blur border border-white rounded-[2rem] p-4 sm:p-5 shadow-[0_18px_50px_rgba(71,85,105,.12)]">
           <div class="text-center mb-4">
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-rose-50 text-2xl mb-3">🧺</div>
@@ -825,14 +833,14 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
 
           <div id="gateLoginArea" class="hidden space-y-3">
-            <button onclick="enterGuestMode()" class="w-full p-4 rounded-2xl bg-[#253047] text-white shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition text-left flex items-center gap-3">
+            <button onclick="enterGuestMode()" class="w-full p-4 rounded-2xl bg-[#253047] text-white shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition text-left flex items-center gap-3 min-w-0 break-words">
               <span class="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">🚀</span>
               <span class="min-w-0">
                 <span class="block text-sm font-extrabold">登録なしでサンプルを見る</span>
                 <span class="block text-[11px] text-white/75 mt-0.5">サンプルの絵・テスト・おたより・工作で保存イメージを体験できます。</span>
               </span>
             </button>
-            <button onclick="toggleAuth()" class="w-full p-4 rounded-2xl bg-[#ff6b6b] text-white shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition text-left flex items-center gap-3">
+            <button onclick="toggleAuth()" class="w-full p-4 rounded-2xl bg-[#ff6b6b] text-white shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition text-left flex items-center gap-3 min-w-0 break-words">
               <span class="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center text-xl shrink-0">🔐</span>
               <span class="min-w-0">
                 <span class="block text-sm font-extrabold">Googleログインして保存をはじめる</span>
@@ -956,7 +964,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v296</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v297</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2070,7 +2078,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v296",
+        app_version: "v297",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7640,7 +7648,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v296`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v297`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7661,7 +7669,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [2, 92, optionCode];
+  return [2, 97, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -8988,10 +8996,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v296`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v297`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v296 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v296 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v296 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v297 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v297 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v297 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
