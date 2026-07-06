@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v299
+
+* 海外アクセス・botアクセス・不正利用リスクの観点で、現在の構成を確認する `SECURITY_REVIEW.md` を追加
+* Firebase Hosting / Firestore Rules / Storage Rules の設定ファイルがこのリポジトリ内に存在しないことを明記し、Firebase Consoleまたはデプロイ元での確認ポイントを整理
+* 登録なし利用、Cloud Run / Stripe Checkout、GA4 / Firebase Console / Stripeで見るべき運用確認項目、App Checkの段階導入時の注意点を整理
+* アプリ本体の `index.html`、Firebase / Firestore / Storage / Authentication / Analytics / Stripe 設定、Minecraft生成ロジック、登録なし利用の画像参照パスは変更なし
+
 ## v298
 
 * スマホ幅でトップ画面の横はみ出しを抑え、ヒーロー文言・CTA・機能カードの余白とタップ領域を微調整
