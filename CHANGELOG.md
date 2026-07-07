@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v305
+
+* README.md のMinecraft関連文言を現行UI・運用方針に合わせて整理
+* Minecraft機能をメイン機能ではなく、作品を楽しむ追加の楽しみ方として扱う方針を明確化
+* 「立体展示用」は復活させていない
+* アプリ本体 `index.html` は変更なし
+* 画面表示バージョン、Analytics `app_version`、Minecraft `.mcaddon` 内の v301 表記は変更なし
+
 ## v304
 
 * GitHub管理上に残っていた古いバックアップHTML `index-backup.html` を削除した意図を記録
