@@ -112,6 +112,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   #minecraftAddonStylePanel .minecraft-mode-chip{height:30px;min-width:0;padding:0 10px;font-size:11px;line-height:1.1;}
   #minecraftAddonStylePanel .flex.flex-wrap.gap-2{gap:6px;}
   #minecraftAddonStyleDescription{display:none;}
+  #minecraftFrameStylePanel .minecraft-mode-chip{flex:1 1 calc(50% - 6px);min-height:30px;height:auto;padding-top:7px;padding-bottom:7px;}
   #minecraftVoxelSizePanel{padding-top:8px;margin-top:6px;}
   #minecraftVoxelSizePanel .minecraft-mode-chip{flex:1 1 0;text-align:center;padding:0 6px;}
   #minecraftVoxelSizeDescription{font-size:10.5px;line-height:1.45;}
@@ -1056,7 +1057,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v306</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v307</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1876,6 +1877,17 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               </div>
               <p id="minecraftWallSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はおまかせです。画像の縦横比に近い壁画サイズで出力します。</p>
             </div>
+            <div id="minecraftFrameStylePanel" class="border-t border-amber-100 pt-3 space-y-2">
+              <div class="text-[11px] font-bold text-slate-500">額縁デザイン</div>
+              <div class="flex flex-wrap gap-2">
+                <button id="minecraftFrameStyleSimpleBtn" type="button" class="minecraft-mode-chip">シンプル木枠</button>
+                <button id="minecraftFrameStyleNaturalBtn" type="button" class="minecraft-mode-chip">ナチュラル木目</button>
+                <button id="minecraftFrameStyleMuseumBtn" type="button" class="minecraft-mode-chip">白い美術館風</button>
+                <button id="minecraftFrameStyleDarkBtn" type="button" class="minecraft-mode-chip">ダークブラウン</button>
+                <button id="minecraftFrameStylePopBtn" type="button" class="minecraft-mode-chip">カラフルポップ</button>
+              </div>
+              <p id="minecraftFrameStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はシンプル木枠です。壁画用のプレビューと .mcaddon の額縁に反映します。</p>
+            </div>
           </div>
           <div id="minecraftVoxelSizePanel" class="hidden rounded-2xl bg-emerald-50/60 border border-emerald-100 p-3 space-y-3">
             <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧸</span><span>モブ風作品 βの設定</span></div>
@@ -2186,7 +2198,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v306",
+        app_version: "v307",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5510,7 +5522,42 @@ let currentMinecraftVoxelDisplaySize = "large";
 let currentMinecraftVoxelTextureInfo = null;
 let currentMinecraftWallSizeSelection = "auto";
 let currentMinecraftWallAutoAspectRatio = 1;
+let currentMinecraftFrameStyleSelection = "simple";
 const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
+
+function getMinecraftFrameStyleMeta(style = currentMinecraftFrameStyleSelection) {
+  const map = {
+    simple: { label: "シンプル木枠", description: "これまでに近い、作品を邪魔しにくい木の額縁です。", outer: "#6b4d2d", middle: "#8a6438", inner: "#b98a54", mat: "#eee4d1", side: "#7a532f", sideLine: "#8e6238", back: "#6f4a29", backLine: "#805735", hook: "#111827" },
+    natural: { label: "ナチュラル木目", description: "明るい木目で、やさしい雰囲気にします。", outer: "#8b6338", middle: "#c28b4a", inner: "#e0b46f", mat: "#f3ead7", side: "#a46f3a", sideLine: "#d19a55", back: "#916336", backLine: "#b98245", hook: "#3f2a16" },
+    museum: { label: "白い美術館風", description: "白い余白を広めに取り、すっきり飾れます。", outer: "#d8dee8", middle: "#f8fafc", inner: "#e2e8f0", mat: "#ffffff", side: "#cbd5e1", sideLine: "#f8fafc", back: "#dbe3ee", backLine: "#f8fafc", hook: "#64748b" },
+    dark: { label: "ダークブラウン", description: "落ち着いた濃い木枠で、作品を引き締めます。", outer: "#2f1f16", middle: "#4a2f20", inner: "#765039", mat: "#e8dcc8", side: "#3b2619", sideLine: "#5a3825", back: "#332116", backLine: "#4c3020", hook: "#111827" },
+    pop: { label: "カラフルポップ", description: "明るい色のアクセントで、楽しい雰囲気にします。", outer: "#f97316", middle: "#22c55e", inner: "#38bdf8", mat: "#fff7ed", side: "#f97316", sideLine: "#facc15", back: "#fb923c", backLine: "#22c55e", hook: "#7c3aed" }
+  };
+  return map[style] || map.simple;
+}
+
+function setMinecraftFrameStyleSelection(style = "simple") {
+  currentMinecraftFrameStyleSelection = ["simple", "natural", "museum", "dark", "pop"].includes(style) ? style : "simple";
+  updateMinecraftFrameStyleUi();
+  if (currentMinecraftSpriteCanvas) renderMinecraftPreviewCanvases(currentMinecraftSpriteCanvas);
+}
+
+function updateMinecraftFrameStyleUi(forceVisible = null) {
+  const resolvedStyle = resolveMinecraftAddonStyle(getMinecraftAddonTargetWork());
+  const visible = forceVisible === null ? resolvedStyle === "wall" : !!forceVisible;
+  const panel = document.getElementById("minecraftFrameStylePanel");
+  if (panel) panel.classList.toggle("hidden", !visible);
+  const buttons = {
+    simple: document.getElementById("minecraftFrameStyleSimpleBtn"),
+    natural: document.getElementById("minecraftFrameStyleNaturalBtn"),
+    museum: document.getElementById("minecraftFrameStyleMuseumBtn"),
+    dark: document.getElementById("minecraftFrameStyleDarkBtn"),
+    pop: document.getElementById("minecraftFrameStylePopBtn")
+  };
+  Object.entries(buttons).forEach(([key, btn]) => { if (btn) btn.classList.toggle("active", currentMinecraftFrameStyleSelection === key); });
+  const desc = document.getElementById("minecraftFrameStyleDescription");
+  if (desc) desc.textContent = getMinecraftFrameStyleMeta().description + " 壁画用の見た目に反映します。";
+}
 
 function getMinecraftPencilModeMeta(mode = "crisp") {
   const map = {
@@ -6320,6 +6367,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   if (voxelPanelEl) voxelPanelEl.classList.toggle("hidden", !(isSolidWork && resolved === "voxel"));
   updateMinecraftVoxelSizeUi(isSolidWork && resolved === "voxel");
   updateMinecraftWallSizeUi(resolved === "wall");
+  updateMinecraftFrameStyleUi(resolved === "wall");
   if (descEl) {
     descEl.textContent = isSolidWork
       ? `${meta.description} 上で切り替えた内容が、そのまま保存されます。`
@@ -7182,13 +7230,18 @@ function drawMinecraftWallPreview(ctx, canvas, spriteCanvas) {
   const frameSize = Math.round(Math.min(frameW, frameH));
   const fx = Math.round((canvas.width - frameW) / 2);
   const fy = Math.round((canvas.height - frameH) / 2);
-  ctx.fillStyle = "#6b4d2d";
+  const frameMeta = getMinecraftFrameStyleMeta();
+  ctx.fillStyle = frameMeta.outer;
   ctx.fillRect(fx, fy, Math.round(frameW), Math.round(frameH));
-  ctx.fillStyle = "#8a6438";
+  ctx.fillStyle = frameMeta.middle;
   ctx.fillRect(fx + 10, fy + 10, Math.round(frameW) - 20, Math.round(frameH) - 20);
-  ctx.fillStyle = "#b98a54";
+  ctx.fillStyle = frameMeta.inner;
   ctx.fillRect(fx + 18, fy + 18, Math.round(frameW) - 36, Math.round(frameH) - 36);
-  ctx.fillStyle = "#111827";
+  if (currentMinecraftFrameStyleSelection === "pop") {
+    ctx.fillStyle = "rgba(250,204,21,0.85)";
+    ctx.fillRect(fx + 18, fy + 18, Math.round(frameW) - 36, Math.max(4, Math.round(frameSize * 0.045)));
+  }
+  ctx.fillStyle = frameMeta.hook;
   ctx.fillRect(fx + Math.round(frameSize / 2) - 3, fy - 8, 6, 10);
   ctx.fillStyle = "rgba(255,255,255,0.16)";
   for (let ix = 1; ix < wallMeta.blocksX; ix++) ctx.fillRect(fx + Math.round(frameW * ix / wallMeta.blocksX), fy + 14, 2, Math.round(frameH) - 28);
@@ -7816,8 +7869,8 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const textureSize = Number(currentMinecraftResolvedTextureSize) || 128;
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
-    : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`];
-  return [`app:v306`, `style:${stylePart}`, ...options].join("|");
+    : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
+  return [`app:v307`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7998,21 +8051,26 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
       const artInset = Math.max(frameInsetInner + 2, Math.round(artSize * 0.15625));
 
       // 正面用の額縁テクスチャ
-      ctx.fillStyle = "#6b4d2d";
+      const frameMeta = getMinecraftFrameStyleMeta();
+      ctx.fillStyle = frameMeta.outer;
       ctx.fillRect(0, 0, artSize, artSize);
-      ctx.fillStyle = "#8a6438";
+      ctx.fillStyle = frameMeta.middle;
       ctx.fillRect(frameInsetOuter, frameInsetOuter, artSize - frameInsetOuter * 2, artSize - frameInsetOuter * 2);
-      ctx.fillStyle = "#b98a54";
+      ctx.fillStyle = frameMeta.inner;
       ctx.fillRect(frameInsetInner, frameInsetInner, artSize - frameInsetInner * 2, artSize - frameInsetInner * 2);
+      if (currentMinecraftFrameStyleSelection === "pop") {
+        ctx.fillStyle = "rgba(250,204,21,0.85)";
+        ctx.fillRect(frameInsetInner, frameInsetInner, artSize - frameInsetInner * 2, Math.max(2, Math.round(artSize * 0.035)));
+      }
       ctx.drawImage(spriteCanvas, artInset, artInset, artSize - artInset * 2, artSize - artInset * 2);
 
       // 側面用の木目タイル
       const woodX = artSize;
       const woodY = 0;
       const woodTile = Math.max(16, Math.round(artSize * 0.25));
-      ctx.fillStyle = "#7a532f";
+      ctx.fillStyle = frameMeta.side;
       ctx.fillRect(woodX, woodY, woodTile, woodTile);
-      ctx.fillStyle = "#8e6238";
+      ctx.fillStyle = frameMeta.sideLine;
       for (let y = 0; y < woodTile; y += Math.max(2, Math.round(woodTile / 8))) {
         ctx.fillRect(woodX, woodY + y, woodTile, 1);
       }
@@ -8023,9 +8081,9 @@ function buildMinecraftWallArtTextureBlob(spriteCanvas) {
       // 背面用の木板テクスチャ
       const backX = artSize;
       const backY = woodTile;
-      ctx.fillStyle = "#6f4a29";
+      ctx.fillStyle = frameMeta.back;
       ctx.fillRect(backX, backY, artSize, artSize);
-      ctx.fillStyle = "#805735";
+      ctx.fillStyle = frameMeta.backLine;
       const plank = Math.max(8, Math.round(artSize / 8));
       for (let y = 0; y < artSize; y += plank) {
         ctx.fillRect(backX, backY + y, artSize, Math.max(1, Math.round(plank * 0.18)));
@@ -8064,6 +8122,7 @@ function buildMinecraftFrameItemTextureBlob(spriteCanvas) {
       const middle = Math.max(outer + 2, Math.round(s * 0.145));
       const mat = Math.max(middle + 3, Math.round(s * 0.20));
 
+      const frameMeta = getMinecraftFrameStyleMeta();
       ctx.clearRect(0, 0, artSize, artSize);
 
       // v202: パック一覧やインベントリでも壁画に見える、正方形の額縁アイコンにする。
@@ -8071,19 +8130,19 @@ function buildMinecraftFrameItemTextureBlob(spriteCanvas) {
       ctx.fillRect(x + shadow, y + shadow, s, s);
 
       // 外枠
-      ctx.fillStyle = "#5f3f24";
+      ctx.fillStyle = frameMeta.outer;
       ctx.fillRect(x, y, s, s);
 
       // 木のフレーム
-      ctx.fillStyle = "#8a6438";
+      ctx.fillStyle = frameMeta.middle;
       ctx.fillRect(x + outer, y + outer, s - outer * 2, s - outer * 2);
 
       // 明るい縁
-      ctx.fillStyle = "#c58c4d";
+      ctx.fillStyle = frameMeta.inner;
       ctx.fillRect(x + middle, y + middle, s - middle * 2, s - middle * 2);
 
       // 台紙
-      ctx.fillStyle = "#eee4d1";
+      ctx.fillStyle = frameMeta.mat;
       ctx.fillRect(x + mat, y + mat, s - mat * 2, s - mat * 2);
 
       // 作品画像
@@ -9165,10 +9224,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v306`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v307`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v306 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v306 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v306 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v307 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v307 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v307 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -9747,6 +9806,11 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   const wallSize4x3Btn = document.getElementById("minecraftWallSize4x3Btn");
   const wallSize3x3Btn = document.getElementById("minecraftWallSize3x3Btn");
   const wallSize4x4Btn = document.getElementById("minecraftWallSize4x4Btn");
+  const frameStyleSimpleBtn = document.getElementById("minecraftFrameStyleSimpleBtn");
+  const frameStyleNaturalBtn = document.getElementById("minecraftFrameStyleNaturalBtn");
+  const frameStyleMuseumBtn = document.getElementById("minecraftFrameStyleMuseumBtn");
+  const frameStyleDarkBtn = document.getElementById("minecraftFrameStyleDarkBtn");
+  const frameStylePopBtn = document.getElementById("minecraftFrameStylePopBtn");
   const fidelityBtn = document.getElementById("minecraftModeFidelityBtn");
   const pixelBtn = document.getElementById("minecraftModePixelBtn");
   const vividBtn = document.getElementById("minecraftModeVividBtn");
@@ -9798,6 +9862,11 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   if (wallSize4x3Btn) wallSize4x3Btn.onclick = function() { setMinecraftWallSizeSelection("4x3"); };
   if (wallSize3x3Btn) wallSize3x3Btn.onclick = function() { setMinecraftWallSizeSelection("3x3"); };
   if (wallSize4x4Btn) wallSize4x4Btn.onclick = function() { setMinecraftWallSizeSelection("4x4"); };
+  if (frameStyleSimpleBtn) frameStyleSimpleBtn.onclick = function() { setMinecraftFrameStyleSelection("simple"); };
+  if (frameStyleNaturalBtn) frameStyleNaturalBtn.onclick = function() { setMinecraftFrameStyleSelection("natural"); };
+  if (frameStyleMuseumBtn) frameStyleMuseumBtn.onclick = function() { setMinecraftFrameStyleSelection("museum"); };
+  if (frameStyleDarkBtn) frameStyleDarkBtn.onclick = function() { setMinecraftFrameStyleSelection("dark"); };
+  if (frameStylePopBtn) frameStylePopBtn.onclick = function() { setMinecraftFrameStyleSelection("pop"); };
   if (fidelityBtn) fidelityBtn.onclick = function() { setMinecraftPreviewMode("fidelity"); };
   if (pixelBtn) pixelBtn.onclick = function() { setMinecraftPreviewMode("pixel"); };
   if (vividBtn) vividBtn.onclick = function() { setMinecraftPreviewMode("vivid"); };
@@ -9828,6 +9897,7 @@ window.openMinecraftPixelPreview = function(workId, mediaIndex = 0, event) {
   currentMinecraftVoxelDisplaySize = "large";
   currentMinecraftWallSizeSelection = "auto";
   currentMinecraftWallAutoAspectRatio = 1;
+  currentMinecraftFrameStyleSelection = "simple";
   currentMinecraftAddonStyleSelection = "wall";
   setMinecraftOutputMode("auto", false);
   updateMinecraftOutputModeUi();
