@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v306
+
+* 複数メディア作品の MEDIA PREVIEW で、前後ボタンから画像/PDF/メディアを切り替えできるように改善
+* プレビュー画面に現在位置表示（例: `1 / 4`）を追加
+* 1枚作品では前後ボタンと枚数表示を出さず、PDFプレビューや既存の拡大表示導線の挙動を維持
+* Firebase / Firestore / Storage / Auth / Analytics 設定、Stripe、Cloud Run、Minecraft生成ロジックは変更なし
+* JavaScript構文チェック済み
+
 ## v305
 
 * README.md のMinecraft関連文言を現行UI・運用方針に合わせて整理
