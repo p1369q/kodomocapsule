@@ -701,6 +701,19 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 
 
 
+
+/* v315: Minecraftプレビューの調整メニューを主要操作として押しやすくする。 */
+#minecraftPreviewDrawer .minecraft-adjust-details{background:#f0fdf4;border-color:#bbf7d0;}
+#minecraftPreviewDrawer .minecraft-adjust-summary{min-height:52px;padding:0 12px;border-radius:14px;background:linear-gradient(135deg,#ecfdf5,#f8fafc);box-shadow:inset 0 0 0 1px rgba(16,185,129,.12);list-style:none;}
+#minecraftPreviewDrawer .minecraft-adjust-summary::-webkit-details-marker{display:none;}
+#minecraftPreviewDrawer .minecraft-adjust-summary-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:12px;background:white;border:1px solid rgba(16,185,129,.18);}
+#minecraftPreviewDrawer .minecraft-adjust-summary-action{font-size:11px;color:#047857;background:white;border:1px solid rgba(16,185,129,.18);border-radius:999px;padding:4px 9px;}
+#minecraftPreviewDrawer .minecraft-adjust-details[open] .minecraft-adjust-summary-action{font-size:0;}
+#minecraftPreviewDrawer .minecraft-adjust-details[open] .minecraft-adjust-summary-action::after{content:"閉じる";font-size:11px;}
+@media (max-width:640px){
+  #minecraftPreviewDrawer .minecraft-adjust-summary{min-height:56px;padding:0 14px;}
+}
+
 /* v228: Minecraft導入動線を子どもでも分かりやすい順番に整理する。 */
 #minecraftKidFlowGuide strong{font-weight:800;}
 .minecraft-primary-addon-btn{min-height:54px;}
@@ -1082,7 +1095,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v314</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v315</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1753,9 +1766,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
-      <details class="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-left">
-        <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
-          <span>⚙️</span><span>見た目とサイズを調整</span>
+      <details class="minecraft-adjust-details rounded-2xl bg-slate-50 border border-slate-200 p-2 text-left">
+        <summary class="minecraft-adjust-summary cursor-pointer select-none text-sm font-extrabold text-emerald-900 flex items-center gap-3">
+          <span class="minecraft-adjust-summary-icon">⚙️</span>
+          <span class="flex-1">サイズや額縁を変える</span>
+          <span class="minecraft-adjust-summary-action">開く</span>
         </summary>
         <div class="mt-3 space-y-3">
           <p class="text-[11px] text-slate-500">必要に応じて、壁画サイズや見た目を調整できます。</p>
@@ -1874,8 +1889,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </details>
       <div id="minecraftAddonActionSingle" class="minecraft-primary-actions flex flex-col gap-2 pt-0">
         <div class="minecraft-addon-route-actions grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① Minecraftに保存</span></span></button>
-          <button id="minecraftPreviewShareBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="minecraft-share-addon-btn py-4 rounded-2xl bg-white border border-emerald-200 text-emerald-800 text-sm font-extrabold shadow-sm hover:bg-emerald-50 transition"><span class="inline-flex items-center justify-center gap-2"><span>📤</span><span id="minecraftPreviewShareBtnLabel">② アドオンを共有</span></span></button>
+          <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">Minecraftに保存</span></span></button>
+          <button id="minecraftPreviewShareBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="minecraft-share-addon-btn py-4 rounded-2xl bg-white border border-emerald-200 text-emerald-800 text-sm font-extrabold shadow-sm hover:bg-emerald-50 transition"><span class="inline-flex items-center justify-center gap-2"><span>📤</span><span id="minecraftPreviewShareBtnLabel">アドオンを共有</span></span></button>
         </div>
         <div class="minecraft-secondary-actions grid grid-cols-2 gap-2">
           <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
@@ -1896,7 +1911,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="w-9 h-9 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-lg shrink-0">🧭</span>
           <span>
             <span class="block text-sm font-extrabold text-emerald-900">手順を見る</span>
-            <span id="minecraftMobileFlowText" class="block text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">保存後、共有メニューやダウンロード一覧からMinecraftで開きます。共有する場合は「② アドオンを共有」を使います。</span><span id="minecraftPcFlowNote" class="block text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">PCでは .mcaddon を保存し、保存したファイルを開くとMinecraftにインポートできます。</span>
+            <span id="minecraftMobileFlowText" class="block text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">保存後、共有メニューやダウンロード一覧からMinecraftで開きます。共有する場合は「アドオンを共有」を使います。</span><span id="minecraftPcFlowNote" class="block text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">PCでは .mcaddon を保存し、保存したファイルを開くとMinecraftにインポートできます。</span>
           </span>
         </summary>
         <div class="mt-3 grid sm:grid-cols-4 gap-2 text-[11px] leading-relaxed">
@@ -1972,9 +1987,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
             <div class="font-extrabold text-slate-800 mb-1">iPhone/iPadでMinecraftが出ない場合</div>
             <p>緑のボタンを押すと、共有画面ではなくダウンロード確認を出します。ダウンロード後、画面右上のダウンロード一覧から .mcaddon を開き、右上のMinecraftボタンを押します。</p>
-            <p class="mt-2">家族や別端末へ送りたい場合は、上の「② アドオンを共有」から共有画面を開き、メッセージやメールに送ってください。</p>
+            <p class="mt-2">家族や別端末へ送りたい場合は、上の「アドオンを共有」から共有画面を開き、メッセージやメールに送ってください。</p>
             <p class="mt-2">届いた .mcaddon を開くと、右上にMinecraftボタンが出やすくなります。</p>
-            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">② アドオンを共有</button>
+            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">アドオンを共有</button>
             <ol class="list-decimal pl-4 space-y-1">
               <li>共有画面でメッセージ、メール、AirDropなどを選びます。</li>
               <li>届いた .mcaddon を開き、右上のMinecraftボタンを押します。</li>
@@ -2215,7 +2230,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v314",
+        app_version: "v315",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6261,11 +6276,11 @@ function canUseMinecraftFileShare() {
 }
 
 function getMinecraftPrimaryActionLabel(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
-  return isMinecraftMobileShareDevice() ? "① Minecraftに保存" : "① .mcaddonを保存";
+  return isMinecraftMobileShareDevice() ? "Minecraftに保存" : ".mcaddonを保存";
 }
 
 function getMinecraftShareActionLabel(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
-  return "② アドオンを共有";
+  return "アドオンを共有";
 }
 
 function showMinecraftPremiumRequiredNotice() {
@@ -7886,7 +7901,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v314`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v315`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9240,10 +9255,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v314`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v315`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v314 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v314 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v314 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v315 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v315 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v315 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
