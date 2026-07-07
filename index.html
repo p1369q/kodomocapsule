@@ -674,10 +674,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   margin-right:auto;
 }
 
-/* v313: プレビューを1つに統合し、調整中も上部に固定して確認しやすくする。 */
-#minecraftPreviewDrawer .drawer-panel{display:flex;flex-direction:column;overflow:hidden;}
+/* v314: タイトルや説明文はスクロールさせ、作品プレビューカードだけを上部に固定する。 */
+#minecraftPreviewDrawer .drawer-panel{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#minecraftPreviewDrawer .drawer-panel>div:first-child{position:relative;z-index:4;background:#fff;}
 #minecraftPreviewDrawer .minecraft-preview-stage{position:sticky;top:0;z-index:3;background:#f1f5f9;box-shadow:0 8px 20px rgba(15,23,42,.08);}
-#minecraftPreviewDrawer .minecraft-preview-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#minecraftPreviewDrawer .minecraft-preview-body{min-height:0;overflow:visible;-webkit-overflow-scrolling:touch;}
 @media (min-width:641px){
   #minecraftPreviewDrawer .drawer-panel{max-height:calc(100dvh - 32px);}
   #minecraftPreviewDrawer .minecraft-preview-stage{padding:12px 18px;}
@@ -685,16 +686,17 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   #minecraftPreviewDrawer .minecraft-preview-body{max-height:none;padding:14px 20px 20px;}
 }
 @media (max-width:640px){
-  #minecraftPreviewDrawer .drawer-panel{height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);display:flex;overflow:hidden;}
-  #minecraftPreviewDrawer .minecraft-preview-stage{padding:7px 10px;max-height:none;overflow:visible;}
-  #minecraftPreviewDrawer .minecraft-preview-card{padding:7px;border-radius:16px;gap:5px;}
-  #minecraftPreviewDrawer .minecraft-preview-card .preview-label{font-size:9.5px;line-height:1.15;}
-  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{height:22dvh;min-height:150px;max-height:190px;}
-  #minecraftPreviewDrawer .minecraft-preview-body{flex:1;min-height:0;overflow-y:auto;padding:10px 12px calc(44px + env(safe-area-inset-bottom));}
+  #minecraftPreviewDrawer .drawer-panel{height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);overflow-y:auto;}
+  #minecraftPreviewDrawer .drawer-panel>div:first-child{padding:12px 14px;}
+  #minecraftPreviewDrawer .minecraft-preview-stage{padding:6px 10px;max-height:none;overflow:visible;}
+  #minecraftPreviewDrawer .minecraft-preview-card{padding:6px;border-radius:16px;gap:4px;}
+  #minecraftPreviewDrawer .minecraft-preview-card .preview-label{font-size:9px;line-height:1.1;}
+  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{height:20dvh;min-height:140px;max-height:180px;}
+  #minecraftPreviewDrawer .minecraft-preview-body{padding:10px 12px calc(44px + env(safe-area-inset-bottom));}
   #minecraftPreviewDrawer .minecraft-primary-actions{position:static;}
 }
 @media (max-width:390px){
-  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{height:20dvh;min-height:145px;max-height:178px;}
+  #minecraftPreviewDrawer .minecraft-preview-card .aspect-square{height:19dvh;min-height:140px;max-height:168px;}
 }
 
 
@@ -1080,7 +1082,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v313</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v314</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2213,7 +2215,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v313",
+        app_version: "v314",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7884,7 +7886,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v313`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v314`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -7905,7 +7907,7 @@ function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = 
 
 function buildMinecraftAddonVersion(addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
   const optionCode = (parseInt(buildMinecraftStableHash(optionSeed).slice(0, 4), 16) % 9000) + 1;
-  return [3, 13, optionCode];
+  return [3, 14, optionCode];
 }
 
 function buildUniqueMinecraftAddonFileName(work, blockSlug) {
@@ -9238,10 +9240,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v313`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v314`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v313 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v313 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v313 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v314 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v314 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v314 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
