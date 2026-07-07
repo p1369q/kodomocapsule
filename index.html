@@ -1057,7 +1057,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v308</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v309</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1728,130 +1728,6 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       </div>
     </div>
     <div class="minecraft-preview-body p-5 space-y-3 overflow-auto">
-      <div id="minecraftAddonActionSingle" class="minecraft-primary-actions flex flex-col gap-2 pt-0">
-        <div class="minecraft-addon-route-actions grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① Minecraftに作品を保存（プレミアム）</span></span></button>
-          <button id="minecraftPreviewShareBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="minecraft-share-addon-btn py-4 rounded-2xl bg-white border border-emerald-200 text-emerald-800 text-sm font-extrabold shadow-sm hover:bg-emerald-50 transition"><span class="inline-flex items-center justify-center gap-2"><span>📤</span><span id="minecraftPreviewShareBtnLabel">② アドオンを共有（プレミアム）</span></span></button>
-        </div>
-        <div class="minecraft-secondary-actions grid grid-cols-2 gap-2">
-          <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
-          <button onclick="closeMinecraftPixelPreview()" type="button" class="py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
-        </div>
-      </div>
-      <div id="minecraftPremiumGuide" class="rounded-2xl bg-amber-50/90 border border-amber-100 p-3 text-left">
-        <div class="flex items-start gap-2">
-          <div class="w-9 h-9 rounded-2xl bg-white border border-amber-100 flex items-center justify-center text-lg shrink-0">⭐</div>
-          <div class="space-y-1">
-            <div class="text-sm font-extrabold text-amber-900">無料で試せること / プレミアムでできること</div>
-            <p class="text-[11px] text-amber-900/85 leading-relaxed">無料でも壁画プレビューで仕上がりや飾るイメージを確認できます。プレミアム機能として、作品をMinecraftの壁画アイテムにして保存し、サイズを選んで作品ギャラリーを作れる導線を用意しています。</p>
-          </div>
-        </div>
-      </div>
-      <div id="minecraftKidFlowGuide" class="rounded-2xl bg-emerald-50/90 border border-emerald-100 p-3 text-left space-y-3">
-        <div class="flex items-start gap-2">
-          <div class="w-9 h-9 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-lg shrink-0">🧭</div>
-          <div>
-            <div class="text-sm font-extrabold text-emerald-900">やりたい方法を選んでください</div>
-            <p id="minecraftMobileFlowText" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">.mcaddon は、Minecraftに作品を追加するためのファイルです。iPhone / iPadでは保存後に共有メニューやダウンロード一覧からMinecraftで開きます。家族や別端末へ送るなら「② アドオンを共有」を選びます。</p><p id="minecraftPcFlowNote" class="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">.mcaddon は、Minecraftに作品を追加するためのファイルです。PCではまずファイルを保存し、保存した .mcaddon を開くとMinecraftにインポートできます。</p>
-          </div>
-        </div>
-        <div class="grid sm:grid-cols-4 gap-2 text-[11px] leading-relaxed">
-          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
-            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 1</div>
-            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">ダウンロードする</span><span class="minecraft-pc-step hidden">ファイルを保存</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">確認画面で「ダウンロード」を押します。</span><span class="minecraft-pc-step hidden">保存した .mcaddon ファイルを開きます。</span></p>
-          </div>
-          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
-            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 2</div>
-            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">Minecraftで開く</span><span class="minecraft-pc-step hidden">インポート</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">共有メニューや右上の一覧からMinecraftで開きます。</span><span class="minecraft-pc-step hidden">Minecraftが開いたら「インポート完了」まで待ちます。</span></p>
-          </div>
-          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
-            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 3</div>
-            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">パックを有効化</span><span class="minecraft-pc-step hidden">ワールドでON</span></div>
-            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">ワールド設定でリソースパックとビヘイビアーパックをONにします。</span><span class="minecraft-pc-step hidden">リソースパックとビヘイビアーパックをONにします。</span></p>
-          </div>
-          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
-            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 4</div>
-            <div class="font-extrabold text-slate-800">壁に飾る</div>
-            <p class="text-slate-500 mt-1">インベントリから作品アイテムを選び、Minecraftの壁に設置します。</p>
-          </div>
-        </div>
-      </div>
-      <details id="minecraftPhotoGuide" class="hidden rounded-2xl bg-amber-50/90 border border-amber-100 p-3 text-left">
-        <summary class="cursor-pointer select-none text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-          <span>📸</span><span>きれいに作る撮影のコツ</span>
-        </summary>
-        <div class="mt-3 grid sm:grid-cols-2 gap-2 text-[11px] text-amber-900/90 leading-relaxed">
-          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
-            <div class="font-extrabold text-amber-950 mb-1">背景をすっきり</div>
-            <p>白い紙や無地の壁の前で、机や周りの物が写りすぎないように撮ると、余分な背景が減ります。</p>
-          </div>
-          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
-            <div class="font-extrabold text-amber-950 mb-1">明るく中央に</div>
-            <p>作品を画面の中央に置き、影が強く出ない明るい場所で撮ると、色と輪郭が残りやすくなります。</p>
-          </div>
-          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
-            <div class="font-extrabold text-amber-950 mb-1">正面を1枚</div>
-            <p>Minecraftの前面に使います。作品全体が切れないよう、少し余白を残して撮ってください。</p>
-          </div>
-          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
-            <div class="font-extrabold text-amber-950 mb-1">できれば横・上も</div>
-            <p>横写真と上写真にラベルを付けると、側面・上面の色味にも反映しやすくなります。</p>
-          </div>
-        </div>
-      </details>
-      <div id="minecraftPlacementGuide" class="hidden rounded-2xl bg-sky-50/90 border border-sky-100 p-3 text-left">
-        <div class="flex items-start gap-2">
-          <div id="minecraftPlacementGuideIcon" class="minecraft-placement-badge text-lg shrink-0">🧊</div>
-          <div>
-            <div id="minecraftPlacementGuideTitle" class="text-sm font-extrabold text-sky-900">置き方ガイド</div>
-            <p id="minecraftPlacementGuideText" class="text-[11px] text-sky-800/85 leading-relaxed mt-1"></p>
-            <p id="minecraftPlacementGuideSubText" class="text-[10px] text-slate-500 leading-relaxed mt-1"></p>
-          </div>
-        </div>
-      </div>
-      <div id="minecraftPseudo3dGuide" class="hidden rounded-2xl bg-violet-50/90 border border-violet-100 p-3 text-left">
-        <div class="flex items-start gap-2">
-          <div class="text-lg shrink-0">🧩</div>
-          <div>
-            <div id="minecraftPseudo3dGuideTitle" class="text-sm font-extrabold text-violet-900">立体作品用写真</div>
-            <p id="minecraftPseudo3dGuideText" class="text-[11px] text-violet-800/85 leading-relaxed mt-1"></p>
-          </div>
-        </div>
-      </div>
-      <details class="minecraft-adult-details rounded-2xl bg-white border border-slate-200 p-3 text-left">
-        <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
-          <span>👨‍👩‍👧</span><span>大人向けのくわしい手順を開く</span>
-        </summary>
-        <div class="mt-3 space-y-3 text-[11px] text-slate-600 leading-relaxed">
-          <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
-            <div class="font-extrabold text-slate-800 mb-1">iPhone/iPadでMinecraftが出ない場合</div>
-            <p>緑のボタンを押すと、共有画面ではなくダウンロード確認を出します。ダウンロード後、画面右上のダウンロード一覧から .mcaddon を開き、右上のMinecraftボタンを押します。</p>
-            <p class="mt-2">家族や別端末へ送りたい場合は、上の「② アドオンを共有（プレミアム）」から共有画面を開き、メッセージやメールに送ってください。</p>
-            <p class="mt-2">届いた .mcaddon を開くと、右上にMinecraftボタンが出やすくなります。</p>
-            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">② アドオンを共有（プレミアム）</button>
-            <ol class="list-decimal pl-4 space-y-1">
-              <li>共有画面でメッセージ、メール、AirDropなどを選びます。</li>
-              <li>届いた .mcaddon を開き、右上のMinecraftボタンを押します。</li>
-              <li>Minecraftで「インポート完了」が出るまで待ちます。</li>
-            </ol>
-          </div>
-          <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
-            <div class="font-extrabold text-slate-800 mb-1">ワールドで有効にする</div>
-            <ol class="list-decimal pl-4 space-y-1">
-              <li>使いたいワールドの「編集」または「設定」を開きます。</li>
-              <li>「リソースパック」→「マイパック」で、コドモカプセルの作品を有効化します。</li>
-              <li>「ビヘイビアーパック」→「マイパック」でも、同じ作品を有効化します。</li>
-              <li>ワールドを開き、クリエイティブのアイテム一覧から作品を探して設置します。</li>
-            </ol>
-          </div>
-          <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 text-amber-800">
-            <div class="font-extrabold mb-1">うまく出ないとき</div>
-            <p>リソースパックとビヘイビアーパックの両方が有効か確認してください。立体作品は、スクリプトAPIが利用できるワールド設定も必要です。</p>
-          </div>
-        </div>
-      </details>
       <details class="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-left">
         <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
           <span>⚙️</span><span>見た目とサイズを調整</span>
@@ -1949,6 +1825,130 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <button id="minecraftSize512Btn" type="button" class="minecraft-mode-chip">512px</button>
           </div>
           <p id="minecraftTextureSizeStatus" class="text-[11px] text-slate-500 leading-relaxed">プレビューと .mcaddon の両方で同じサイズを使用します。</p>
+          </div>
+        </div>
+      </details>
+      <div id="minecraftAddonActionSingle" class="minecraft-primary-actions flex flex-col gap-2 pt-0">
+        <div class="minecraft-addon-route-actions grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button id="minecraftPreviewAddonBtn" onclick="handleMinecraftPrimaryAddonAction(event)" type="button" class="minecraft-primary-addon-btn py-4 rounded-2xl bg-emerald-600 text-white text-sm font-extrabold shadow-sm hover:bg-emerald-700 transition"><span class="inline-flex items-center justify-center gap-2"><svg class="icon-inline-svg icon-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#icon-creeper"></use></svg><span id="minecraftPreviewAddonBtnLabel">① Minecraftに保存</span></span></button>
+          <button id="minecraftPreviewShareBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="minecraft-share-addon-btn py-4 rounded-2xl bg-white border border-emerald-200 text-emerald-800 text-sm font-extrabold shadow-sm hover:bg-emerald-50 transition"><span class="inline-flex items-center justify-center gap-2"><span>📤</span><span id="minecraftPreviewShareBtnLabel">② アドオンを共有</span></span></button>
+        </div>
+        <div class="minecraft-secondary-actions grid grid-cols-2 gap-2">
+          <button id="minecraftPreviewDownloadBtn" onclick="downloadMinecraftSpritePng(event)" type="button" class="py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-sm hover:bg-slate-700 transition">画像だけ保存</button>
+          <button onclick="closeMinecraftPixelPreview()" type="button" class="py-3 rounded-2xl bg-white border border-[#E7E1D7] text-slate-500 text-xs font-bold shadow-sm hover:bg-slate-50 transition">閉じる</button>
+        </div>
+      </div>
+      <div id="minecraftPremiumGuide" class="rounded-2xl bg-amber-50/90 border border-amber-100 p-3 text-left">
+        <div class="flex items-start gap-2">
+          <div class="w-9 h-9 rounded-2xl bg-white border border-amber-100 flex items-center justify-center text-lg shrink-0">⭐</div>
+          <div class="space-y-1">
+            <div class="text-sm font-extrabold text-amber-900">無料で試せること / プレミアムでできること</div>
+            <p class="text-[11px] text-amber-900/85 leading-relaxed">無料でも壁画プレビューで仕上がりや飾るイメージを確認できます。プレミアム機能として、作品をMinecraftの壁画アイテムにして保存し、サイズを選んで作品ギャラリーを作れる導線を用意しています。</p>
+          </div>
+        </div>
+      </div>
+      <details id="minecraftKidFlowGuide" class="rounded-2xl bg-emerald-50/90 border border-emerald-100 p-3 text-left space-y-3">
+        <summary class="cursor-pointer select-none flex items-start gap-2">
+          <span class="w-9 h-9 rounded-2xl bg-white border border-emerald-100 flex items-center justify-center text-lg shrink-0">🧭</span>
+          <span>
+            <span class="block text-sm font-extrabold text-emerald-900">手順を見る</span>
+            <span id="minecraftMobileFlowText" class="block text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">保存後、共有メニューやダウンロード一覧からMinecraftで開きます。共有する場合は「② アドオンを共有」を使います。</span><span id="minecraftPcFlowNote" class="block text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">PCでは .mcaddon を保存し、保存したファイルを開くとMinecraftにインポートできます。</span>
+          </span>
+        </summary>
+        <div class="mt-3 grid sm:grid-cols-4 gap-2 text-[11px] leading-relaxed">
+          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
+            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 1</div>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">ダウンロードする</span><span class="minecraft-pc-step hidden">ファイルを保存</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">確認画面で「ダウンロード」を押します。</span><span class="minecraft-pc-step hidden">保存した .mcaddon ファイルを開きます。</span></p>
+          </div>
+          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
+            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 2</div>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">Minecraftで開く</span><span class="minecraft-pc-step hidden">インポート</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">共有メニューや右上の一覧からMinecraftで開きます。</span><span class="minecraft-pc-step hidden">Minecraftが開いたら「インポート完了」まで待ちます。</span></p>
+          </div>
+          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
+            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 3</div>
+            <div class="font-extrabold text-slate-800"><span class="minecraft-mobile-step">パックを有効化</span><span class="minecraft-pc-step hidden">ワールドでON</span></div>
+            <p class="text-slate-500 mt-1"><span class="minecraft-mobile-step">ワールド設定でリソースパックとビヘイビアーパックをONにします。</span><span class="minecraft-pc-step hidden">リソースパックとビヘイビアーパックをONにします。</span></p>
+          </div>
+          <div class="rounded-xl bg-white/85 border border-emerald-100 p-3">
+            <div class="text-[10px] font-black text-emerald-600 mb-1">STEP 4</div>
+            <div class="font-extrabold text-slate-800">壁に飾る</div>
+            <p class="text-slate-500 mt-1">インベントリから作品アイテムを選び、Minecraftの壁に設置します。</p>
+          </div>
+        </div>
+      </details>
+      <details id="minecraftPhotoGuide" class="hidden rounded-2xl bg-amber-50/90 border border-amber-100 p-3 text-left">
+        <summary class="cursor-pointer select-none text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+          <span>📸</span><span>きれいに作る撮影のコツ</span>
+        </summary>
+        <div class="mt-3 grid sm:grid-cols-2 gap-2 text-[11px] text-amber-900/90 leading-relaxed">
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">背景をすっきり</div>
+            <p>白い紙や無地の壁の前で、机や周りの物が写りすぎないように撮ると、余分な背景が減ります。</p>
+          </div>
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">明るく中央に</div>
+            <p>作品を画面の中央に置き、影が強く出ない明るい場所で撮ると、色と輪郭が残りやすくなります。</p>
+          </div>
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">正面を1枚</div>
+            <p>Minecraftの前面に使います。作品全体が切れないよう、少し余白を残して撮ってください。</p>
+          </div>
+          <div class="rounded-xl bg-white/75 border border-amber-100 p-3">
+            <div class="font-extrabold text-amber-950 mb-1">できれば横・上も</div>
+            <p>横写真と上写真にラベルを付けると、側面・上面の色味にも反映しやすくなります。</p>
+          </div>
+        </div>
+      </details>
+      <div id="minecraftPlacementGuide" class="hidden rounded-2xl bg-sky-50/90 border border-sky-100 p-3 text-left">
+        <div class="flex items-start gap-2">
+          <div id="minecraftPlacementGuideIcon" class="minecraft-placement-badge text-lg shrink-0">🧊</div>
+          <div>
+            <div id="minecraftPlacementGuideTitle" class="text-sm font-extrabold text-sky-900">置き方ガイド</div>
+            <p id="minecraftPlacementGuideText" class="text-[11px] text-sky-800/85 leading-relaxed mt-1"></p>
+            <p id="minecraftPlacementGuideSubText" class="text-[10px] text-slate-500 leading-relaxed mt-1"></p>
+          </div>
+        </div>
+      </div>
+      <div id="minecraftPseudo3dGuide" class="hidden rounded-2xl bg-violet-50/90 border border-violet-100 p-3 text-left">
+        <div class="flex items-start gap-2">
+          <div class="text-lg shrink-0">🧩</div>
+          <div>
+            <div id="minecraftPseudo3dGuideTitle" class="text-sm font-extrabold text-violet-900">立体作品用写真</div>
+            <p id="minecraftPseudo3dGuideText" class="text-[11px] text-violet-800/85 leading-relaxed mt-1"></p>
+          </div>
+        </div>
+      </div>
+      <details class="minecraft-adult-details rounded-2xl bg-white border border-slate-200 p-3 text-left">
+        <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+          <span>👨‍👩‍👧</span><span>大人向けのくわしい手順を開く</span>
+        </summary>
+        <div class="mt-3 space-y-3 text-[11px] text-slate-600 leading-relaxed">
+          <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
+            <div class="font-extrabold text-slate-800 mb-1">iPhone/iPadでMinecraftが出ない場合</div>
+            <p>緑のボタンを押すと、共有画面ではなくダウンロード確認を出します。ダウンロード後、画面右上のダウンロード一覧から .mcaddon を開き、右上のMinecraftボタンを押します。</p>
+            <p class="mt-2">家族や別端末へ送りたい場合は、上の「② アドオンを共有」から共有画面を開き、メッセージやメールに送ってください。</p>
+            <p class="mt-2">届いた .mcaddon を開くと、右上にMinecraftボタンが出やすくなります。</p>
+            <button id="minecraftPreviewFileSaveBtn" onclick="shareMinecraftAddonFromFallback(event)" type="button" class="w-full py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm hover:bg-slate-50 transition">② アドオンを共有</button>
+            <ol class="list-decimal pl-4 space-y-1">
+              <li>共有画面でメッセージ、メール、AirDropなどを選びます。</li>
+              <li>届いた .mcaddon を開き、右上のMinecraftボタンを押します。</li>
+              <li>Minecraftで「インポート完了」が出るまで待ちます。</li>
+            </ol>
+          </div>
+          <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <div class="font-extrabold text-slate-800 mb-1">ワールドで有効にする</div>
+            <ol class="list-decimal pl-4 space-y-1">
+              <li>使いたいワールドの「編集」または「設定」を開きます。</li>
+              <li>「リソースパック」→「マイパック」で、コドモカプセルの作品を有効化します。</li>
+              <li>「ビヘイビアーパック」→「マイパック」でも、同じ作品を有効化します。</li>
+              <li>ワールドを開き、クリエイティブのアイテム一覧から作品を探して設置します。</li>
+            </ol>
+          </div>
+          <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 text-amber-800">
+            <div class="font-extrabold mb-1">うまく出ないとき</div>
+            <p>リソースパックとビヘイビアーパックの両方が有効か確認してください。立体作品は、スクリプトAPIが利用できるワールド設定も必要です。</p>
           </div>
         </div>
       </details>
@@ -2197,7 +2197,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v308",
+        app_version: "v309",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -6243,19 +6243,11 @@ function canUseMinecraftFileShare() {
 }
 
 function getMinecraftPrimaryActionLabel(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
-  const isSolidWork = work?.artworkShape === "solid";
-  const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
-  const meta = getMinecraftAddonStyleMeta(resolved);
-  const suffix = isSolidWork ? `（${resolved === "voxel" ? `${voxelMeta.label}` : meta.label}）` : "";
-  return isMinecraftMobileShareDevice() ? `① Minecraftに作品を保存（プレミアム）${suffix}` : `① .mcaddonを保存（プレミアム）${suffix}`;
+  return isMinecraftMobileShareDevice() ? "① Minecraftに保存" : "① .mcaddonを保存";
 }
 
 function getMinecraftShareActionLabel(work = getMinecraftAddonTargetWork(), resolved = resolveMinecraftAddonStyle(work)) {
-  const isSolidWork = work?.artworkShape === "solid";
-  const voxelMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
-  const meta = getMinecraftAddonStyleMeta(resolved);
-  const suffix = isSolidWork ? `（${resolved === "voxel" ? `${voxelMeta.label}` : meta.label}）` : "";
-  return `② アドオンを共有（プレミアム）${suffix}`;
+  return "② アドオンを共有";
 }
 
 function showMinecraftPremiumRequiredNotice() {
@@ -6305,6 +6297,8 @@ function updateMinecraftDeliveryUi(work = getMinecraftAddonTargetWork()) {
   }
   if (labelEl) labelEl.textContent = getMinecraftPrimaryActionLabel(work, resolved);
   if (shareLabelEl) shareLabelEl.textContent = getMinecraftShareActionLabel(work, resolved);
+  const premiumGuideEl = document.getElementById("minecraftPremiumGuide");
+  if (premiumGuideEl) premiumGuideEl.classList.toggle("hidden", isPremiumUser === true);
 }
 
 window.handleMinecraftPrimaryAddonAction = function(event) {
@@ -7874,7 +7868,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v308`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v309`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9228,10 +9222,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v308`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v309`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v308 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v308 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v308 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v309 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v309 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v309 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
