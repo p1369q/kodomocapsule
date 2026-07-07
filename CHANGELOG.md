@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v303
+
+* Firebase Hosting / Firestore Rules / Storage Rules の設定ファイルとして `firebase.json` をGitHub管理に追加
+* `firestore.rules` をGitHub管理に追加し、`familyInvites` は `get` のみ許可、`list` は禁止するRulesを明文化
+* `storage.rules` をGitHub管理に追加し、画像/PDFと25MB未満の制限を含む現行本番相当のルールを管理対象化
+* アプリ本体 `index.html` は変更なし。画面表示バージョン、Analytics `app_version`、Minecraft `.mcaddon` 内の v301 表記も変更なし
+
 ## v302
 
 * 手動Firebase Hostingデプロイ手順書 `DEPLOY_CHECKLIST.md` を追加

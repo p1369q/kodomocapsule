@@ -1,0 +1,173 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function familyPath(familyId) {
+      return /databases/$(database)/documents/families/$(familyId);
+    }
+
+    function familyExists(familyId) {
+      return exists(familyPath(familyId));
+    }
+
+    function familyData(familyId) {
+      return get(familyPath(familyId)).data;
+    }
+
+    function isFamilyCreator(familyId) {
+      return signedIn()
+        && familyExists(familyId)
+        && familyData(familyId).createdBy == request.auth.uid;
+    }
+
+    function isFamilyMember(familyId) {
+      return signedIn()
+        && familyExists(familyId)
+        && familyData(familyId).members[request.auth.uid] == true;
+    }
+
+    function hasPermissionMap(familyId) {
+      return 'memberPermissions' in familyData(familyId);
+    }
+
+    function hasExplicitPermission(familyId) {
+      return hasPermissionMap(familyId)
+        && request.auth.uid in familyData(familyId).memberPermissions;
+    }
+
+    function memberPermission(familyId) {
+      return familyData(familyId).memberPermissions[request.auth.uid];
+    }
+
+    // Legacy members that were approved before memberPermissions existed keep full access.
+    function hasLegacyFullPermission(familyId) {
+      return isFamilyMember(familyId) && !hasExplicitPermission(familyId);
+    }
+
+    function canReadFamilyData(familyId) {
+      return isFamilyCreator(familyId) || isFamilyMember(familyId);
+    }
+
+    function canAddFamilyData(familyId) {
+      return isFamilyCreator(familyId)
+        || hasLegacyFullPermission(familyId)
+        || (hasExplicitPermission(familyId) && memberPermission(familyId) in ['add', 'delete']);
+    }
+
+    function canEditDeleteFamilyData(familyId) {
+      return isFamilyCreator(familyId)
+        || hasLegacyFullPermission(familyId)
+        || (hasExplicitPermission(familyId) && memberPermission(familyId) == 'delete');
+    }
+
+    function isValidNewFamily() {
+      return signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.members[request.auth.uid] == true;
+    }
+
+    function isRequestUser() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function isNewRequestUser() {
+      return signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function isRequestFamilyCreator() {
+      return signedIn()
+        && resource.data.familyId is string
+        && isFamilyCreator(resource.data.familyId);
+    }
+
+    // User profile / current family selection / deletion reservation.
+    match /users/{uid} {
+      allow read, create, update, delete: if isOwner(uid);
+    }
+
+    // Family group root document.
+    match /families/{familyId} {
+      allow create: if isValidNewFamily();
+      allow read: if canReadFamilyData(familyId);
+
+      // Root document includes members, memberPermissions, plan, deletion settings.
+      // Only the family creator / parent user can change it.
+      allow update, delete: if isFamilyCreator(familyId);
+
+      match /children/{childId} {
+        allow read: if canReadFamilyData(familyId);
+        allow create: if canAddFamilyData(familyId);
+        allow update, delete: if canEditDeleteFamilyData(familyId);
+      }
+
+      match /categories/{categoryId} {
+        allow read: if canReadFamilyData(familyId);
+        allow create: if canAddFamilyData(familyId);
+        allow update, delete: if canEditDeleteFamilyData(familyId);
+      }
+
+      match /artworks/{artworkId} {
+        allow read: if canReadFamilyData(familyId);
+        allow create: if canAddFamilyData(familyId);
+        allow update, delete: if canEditDeleteFamilyData(familyId);
+      }
+
+      // Legacy / optional nested request path. Current app mostly uses top-level familyJoinRequests.
+      match /joinRequests/{requestId} {
+        allow read: if isFamilyCreator(familyId) || (signedIn() && resource.data.userId == request.auth.uid);
+        allow create: if signedIn()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.familyId == familyId;
+        allow update, delete: if isFamilyCreator(familyId);
+      }
+    }
+
+    // Invite code index. Document ID is the invite code.
+    match /familyInvites/{inviteCode} {
+      // Invite code lookup requires knowing the document ID.
+      // Listing all invite codes is not allowed.
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create: if signedIn()
+        && request.resource.data.familyId is string
+        && request.resource.data.createdBy == request.auth.uid
+        && isFamilyCreator(request.resource.data.familyId);
+
+      allow update: if signedIn()
+        && resource.data.familyId is string
+        && resource.data.createdBy == request.auth.uid
+        && isFamilyCreator(resource.data.familyId);
+
+      allow delete: if signedIn()
+        && resource.data.familyId is string
+        && resource.data.createdBy == request.auth.uid
+        && isFamilyCreator(resource.data.familyId);
+    }
+
+    // Family join request. ID format in app: {familyId}_{uid}.
+    match /familyJoinRequests/{requestId} {
+      allow create: if isNewRequestUser()
+        && request.resource.data.familyId is string
+        && request.resource.data.status == 'pending';
+
+      allow read: if isRequestUser() || isRequestFamilyCreator();
+
+      // The requester may not self-approve. Family creator handles approve/reject/revoke.
+      allow update: if isRequestFamilyCreator();
+
+      allow delete: if isRequestUser() || isRequestFamilyCreator();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

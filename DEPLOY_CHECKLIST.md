@@ -27,6 +27,24 @@ public/
   ogp.png
 ```
 
+## Firebase設定ファイルとRulesの運用
+
+- `firebase.json` / `firestore.rules` / `storage.rules` はGitHub管理対象です。
+- Rulesだけ更新する場合は、対象を明示して次のコマンドを使います。
+
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only storage
+```
+
+- Hostingだけ更新する場合は、次のコマンドを使います。
+
+```bash
+firebase deploy --only hosting
+```
+
+- 誤って全体デプロイする前に、デプロイ対象が Hosting / Firestore Rules / Storage Rules のどれかを必ず確認します。
+
 ## デプロイコマンド
 
 Firebase Hosting の本番反映は、PC上の Firebase Hosting 用フォルダで次のコマンドを実行します。
