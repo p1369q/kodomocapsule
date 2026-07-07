@@ -1,0 +1,76 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function familyDoc(familyId) {
+      return firestore.get(/databases/(default)/documents/families/$(familyId));
+    }
+
+    function isFamilyCreator(familyId) {
+      return signedIn()
+        && familyDoc(familyId).data.createdBy == request.auth.uid;
+    }
+
+    function isFamilyMember(familyId) {
+      return signedIn()
+        && familyDoc(familyId).data.members[request.auth.uid] == true;
+    }
+
+    function hasPermissionMap(familyId) {
+      return 'memberPermissions' in familyDoc(familyId).data;
+    }
+
+    function hasExplicitPermission(familyId) {
+      return hasPermissionMap(familyId)
+        && request.auth.uid in familyDoc(familyId).data.memberPermissions;
+    }
+
+    function memberPermission(familyId) {
+      return familyDoc(familyId).data.memberPermissions[request.auth.uid];
+    }
+
+    function hasLegacyFullPermission(familyId) {
+      return isFamilyMember(familyId) && !hasExplicitPermission(familyId);
+    }
+
+    function canReadFamilyData(familyId) {
+      return isFamilyCreator(familyId) || isFamilyMember(familyId);
+    }
+
+    function canAddFamilyData(familyId) {
+      return isFamilyCreator(familyId)
+        || hasLegacyFullPermission(familyId)
+        || (hasExplicitPermission(familyId) && memberPermission(familyId) in ['add', 'delete']);
+    }
+
+    function canEditDeleteFamilyData(familyId) {
+      return isFamilyCreator(familyId)
+        || hasLegacyFullPermission(familyId)
+        || (hasExplicitPermission(familyId) && memberPermission(familyId) == 'delete');
+    }
+
+    function isAllowedMediaType() {
+      return request.resource == null
+        || request.resource.contentType.matches('image/.*')
+        || request.resource.contentType == 'application/pdf';
+    }
+
+    function isReasonableSize() {
+      return request.resource == null
+        || request.resource.size < 25 * 1024 * 1024;
+    }
+
+    match /families/{familyId}/artworks/{artworkId}/{fileName} {
+      allow read: if canReadFamilyData(familyId);
+      allow create: if canAddFamilyData(familyId) && isAllowedMediaType() && isReasonableSize();
+      allow update, delete: if canEditDeleteFamilyData(familyId) && isAllowedMediaType() && isReasonableSize();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

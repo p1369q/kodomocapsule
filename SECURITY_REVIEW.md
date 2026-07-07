@@ -21,19 +21,19 @@ Google Analytics で海外からのアクセスが見えても、それだけで
 - `CHANGELOG.md`
 - `index.html`
 
-次の設定ファイルは、このリポジトリ内では見つかりませんでした。
+v303で次の設定ファイルをリポジトリ管理に追加しました。
 
 - `firebase.json`
 - `firestore.rules`
 - `storage.rules`
 
-そのため、Hosting / Firestore Rules / Storage Rules の最終判断は Firebase Console またはデプロイ元リポジトリの実ファイル確認が必要です。
+ただし、Hosting / Firestore Rules / Storage Rules の最終判断は、Firebase Console側の実設定とGitHub上のRulesがズレていないかを必ず確認してください。
 
 ## 1. Firebase Hosting 設定レビュー
 
 ### 確認結果
 
-このリポジトリには `firebase.json` が存在しませんでした。ルート直下には `index.html`、`README.md`、`CHANGELOG.md`、`AGENTS.md`、`index-backup.html`、`ogp.png` があり、`public/` ディレクトリも確認できませんでした。
+v303で `firebase.json` を追加し、Hosting の公開ディレクトリ、redirects、rewrites をGitHub管理対象にしました。
 
 ### 問題なしだった点
 
@@ -44,7 +44,7 @@ Google Analytics で海外からのアクセスが見えても、それだけで
 
 - Firebase Hosting をこのリポジトリ以外からデプロイしている場合、実際の `firebase.json` と公開ディレクトリを別途確認する必要があります。
 - `index-backup.html` はルート直下に存在します。Firebase Hosting や GitHub Pages でリポジトリルートをそのまま公開している場合は、バックアップHTMLが公開対象になっていないか運用側で確認してください。
-- セキュリティヘッダーやキャッシュ制御は `firebase.json` がないため、このリポジトリだけでは確認できません。
+- v303で追加した `firebase.json` にはセキュリティヘッダーやキャッシュ制御の `headers` 設定は含めていないため、必要に応じて別タスクで確認してください。
 
 ### 運用確認ポイント
 
@@ -57,7 +57,7 @@ Google Analytics で海外からのアクセスが見えても、それだけで
 
 ### 確認結果
 
-このリポジトリには Firestore Rules ファイルが存在しませんでした。したがって、Firestore Rules の厳密な安全性は Firebase Console またはデプロイ元のルールファイルで確認してください。
+v303で `firestore.rules` を追加し、Firestore Rules をGitHub管理対象にしました。厳密な安全性は、Firebase Console側の実設定とGitHub上のRulesがズレていないかを確認してください。
 
 `index.html` 側の実装を見る限り、通常保存はログイン済みユーザーと `currentSession.familyId` を前提に、`families/{familyId}` 配下の `children`、`categories`、`artworks` に書き込む構造です。ゲストモードでは保存系処理の先頭で保存不可アラートを出し、Firestore書き込みへ進まないガードがあります。
 
@@ -87,7 +87,7 @@ Google Analytics で海外からのアクセスが見えても、それだけで
 
 ### 確認結果
 
-このリポジトリには Storage Rules ファイルが存在しませんでした。したがって、Storage Rules の厳密な安全性は Firebase Console またはデプロイ元のルールファイルで確認してください。
+v303で `storage.rules` を追加し、Storage Rules をGitHub管理対象にしました。厳密な安全性は、Firebase Console側の実設定とGitHub上のRulesがズレていないかを確認してください。
 
 `index.html` 側では、ログイン後の作品保存時に `families/{familyId}/artworks/{artworkId}/...` へPDFまたは画像をアップロードします。ゲストモードでは作品保存処理に入る前に return するため、登録なし利用から Storage アップロードへ進まない構成です。
 
