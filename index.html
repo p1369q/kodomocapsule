@@ -1057,7 +1057,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v309</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v310</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1763,11 +1763,30 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               </div>
               <p id="minecraftFrameStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">初期値はシンプル木枠です。壁画用のプレビューと .mcaddon の額縁に反映します。</p>
             </div>
+            <div class="border-t border-amber-100 pt-3 space-y-2">
+              <div class="text-[11px] font-bold text-slate-500">色・雰囲気</div>
+              <div class="flex flex-wrap gap-2">
+                <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
+                <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
+                <button id="minecraftModeVividBtn" type="button" class="minecraft-mode-chip">色くっきり</button>
+                <button id="minecraftModeSoftBtn" type="button" class="minecraft-mode-chip">やさしい色合い</button>
+                <button id="minecraftModePosterBtn" type="button" class="minecraft-mode-chip">輪郭くっきり</button>
+                <button id="minecraftModeRetroBtn" type="button" class="minecraft-mode-chip">レトロ風</button>
+              </div>
+            </div>
+            <div class="border-t border-amber-100 pt-3 space-y-2">
+              <div class="text-[11px] font-bold text-slate-500">作品タイプ</div>
+              <div class="flex flex-wrap gap-2">
+                <button id="minecraftArtworkAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
+                <button id="minecraftArtworkColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
+                <button id="minecraftArtworkLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
+              </div>
+            </div>
           </div>
           <div id="minecraftVoxelSizePanel" class="hidden rounded-2xl bg-emerald-50/60 border border-emerald-100 p-3 space-y-3">
             <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧸</span><span>立体作品の内部設定</span></div>
             <div class="space-y-2">
-              <div class="text-[11px] font-bold text-slate-500">変換の細かさ</div>
+              <div class="text-[11px] font-bold text-slate-500">細かさ</div>
               <div class="flex flex-wrap gap-2">
                 <button id="minecraftVoxel16Btn" type="button" class="minecraft-mode-chip">16×16</button>
                 <button id="minecraftVoxel24Btn" type="button" class="minecraft-mode-chip">24×24</button>
@@ -1949,32 +1968,6 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="rounded-xl bg-amber-50 border border-amber-100 p-3 text-amber-800">
             <div class="font-extrabold mb-1">うまく出ないとき</div>
             <p>リソースパックとビヘイビアーパックの両方が有効か確認してください。立体作品は、スクリプトAPIが利用できるワールド設定も必要です。</p>
-          </div>
-        </div>
-      </details>
-      <details class="rounded-2xl bg-white border border-slate-200 p-3 text-left">
-        <summary class="cursor-pointer select-none text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
-          <span>🎛️</span><span>詳細な見た目調整を開く</span>
-        </summary>
-        <div class="pt-3 space-y-3">
-          <div class="space-y-2">
-            <div class="text-[11px] font-bold text-slate-500">色・雰囲気</div>
-            <div class="flex flex-wrap gap-2">
-              <button id="minecraftModeFidelityBtn" type="button" class="minecraft-mode-chip active">再現性重視</button>
-              <button id="minecraftModePixelBtn" type="button" class="minecraft-mode-chip">マイクラっぽさ重視</button>
-              <button id="minecraftModeVividBtn" type="button" class="minecraft-mode-chip">色くっきり</button>
-              <button id="minecraftModeSoftBtn" type="button" class="minecraft-mode-chip">やさしい色合い</button>
-              <button id="minecraftModePosterBtn" type="button" class="minecraft-mode-chip">輪郭くっきり</button>
-              <button id="minecraftModeRetroBtn" type="button" class="minecraft-mode-chip">レトロ風</button>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <div class="text-[11px] font-bold text-slate-500">作品タイプ</div>
-            <div class="flex flex-wrap gap-2">
-              <button id="minecraftArtworkAutoBtn" type="button" class="minecraft-mode-chip active">自動</button>
-              <button id="minecraftArtworkColorBtn" type="button" class="minecraft-mode-chip">色つき作品</button>
-              <button id="minecraftArtworkLineBtn" type="button" class="minecraft-mode-chip">えんぴつ線画</button>
-            </div>
           </div>
         </div>
       </details>
@@ -2197,7 +2190,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v309",
+        app_version: "v310",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7868,7 +7861,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v309`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v310`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9222,10 +9215,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v309`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v310`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v309 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v309 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v309 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v310 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v310 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v310 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
