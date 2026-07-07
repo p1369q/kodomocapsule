@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v302
+
+* 手動Firebase Hostingデプロイ手順書 `DEPLOY_CHECKLIST.md` を追加
+* GitHub `main` 反映と Firebase Hosting 本番反映を分離し、PCで手動確認後にデプロイする運用チェックを整理
+* アプリ本体 `index.html` は変更なし。画面表示バージョン、Analytics `app_version`、Minecraft `.mcaddon` 内の v301 表記も変更なし
+
 ## v301
 
 * ログイン後ヘッダーから「使い方」ボタンを削除し、スマホ幅でロゴ表示が圧迫されにくいよう調整
