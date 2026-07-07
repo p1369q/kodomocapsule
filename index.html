@@ -626,7 +626,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 }
 
 
-/* v224: 立体作品の切替を壁画用/モブ風作品の2択に整理し、PCでもプレビュー画像が十分見えるようにする。 */
+/* v224: 立体作品の切替を壁画用/立体作品の2択に整理し、PCでもプレビュー画像が十分見えるようにする。 */
 @media (min-width:641px){
   #minecraftPreviewDrawer .drawer-panel{
     max-height:calc(100dvh - 32px);
@@ -666,7 +666,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 }
 
 
-/* v225: 壁画用・モブ風作品とも、変換後画像カードを表示せずMinecraftでの見え方だけにする。 */
+/* v225: 壁画用・立体作品とも、変換後画像カードを表示せずMinecraftでの見え方だけにする。 */
 #minecraftPreviewDrawer .minecraft-preview-grid{
   grid-template-columns:minmax(0,1fr);
   max-width:520px;
@@ -1057,7 +1057,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v307</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v308</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1301,7 +1301,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <p class="field-help">まずは記録用の分類です。Minecraftへの立体展示は次の段階で少しずつ追加します。</p>
           <div id="solidArtworkPhotoGuide" class="hidden mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-[11px] text-emerald-800 leading-relaxed">
             <div class="font-extrabold mb-1">🧊 立体の撮影ガイド</div>
-            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。画像ごとに「正面・横・上」のラベルを付けておくと、Minecraftのモブ風作品 βで正面・側面・上面の雰囲気を反映しやすくなります。</p>
+            <p>正面・横・上からの写真を一緒に残すと、あとで見返しやすくなります。画像ごとに「正面・横・上」のラベルを付けておくと、Minecraft用の記録として正面・側面・上面の雰囲気を見返しやすくなります。</p>
             <p class="mt-1 text-emerald-700">写真一覧では、同じ作品の写真が何枚あっても1作品につき1枚だけ表示します。</p>
           </div>
         </div>
@@ -1442,7 +1442,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
       <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/80 rounded-2xl p-4">
         <div class="text-xs font-bold text-amber-800 flex items-center gap-1">🟩 Minecraft壁画保存</div>
         <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">プレミアムでは、作品を <span class="font-mono">.mcaddon</span> として保存し、Minecraftで開いて壁に飾れます。おうちやワールドの中に、家族だけのMinecraft作品ギャラリーを作れます。</p>
-        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">無料でも仕上がりのプレビューは確認できます。モブ風作品 βも、おためし機能としてプレビューしながら利用できます。</p>
+        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">無料でも仕上がりのプレビューは確認できます。公開時点では壁画用を中心に、シンプルに利用できます。</p>
       </div>
       <div class="mt-4 pt-4 border-t border-amber-200/70 bg-white/80 rounded-2xl p-4">
         <div class="text-xs font-bold text-slate-700 flex items-center gap-1">📤 CSV + 写真一括バックアップ / ZIP出力</div>
@@ -1711,9 +1711,9 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="text-[11px] font-bold text-slate-500">立体作品の出力形式</div>
         <div class="flex flex-wrap gap-2">
           <button id="minecraftAddonStyleWallBtn" type="button" class="minecraft-mode-chip">壁画用</button>
-          <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip">モブ風作品 β</button>
+          <button id="minecraftAddonStyleVoxelBtn" type="button" class="minecraft-mode-chip hidden" aria-hidden="true" tabindex="-1">立体作品</button>
         </div>
-        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">無料でも仕上がりをプレビューできます。壁画用はプレミアム価値のある正式機能として、サイズを選んで家族だけのMinecraft作品ギャラリーを作れます。モブ風作品 βはプレミアム向けβのおためし機能です。</p>
+        <p id="minecraftAddonStyleDescription" class="text-[11px] text-slate-500 leading-relaxed">無料でも仕上がりをプレビューできます。公開時点では壁画用を中心に、サイズを選んで家族だけのMinecraft作品ギャラリーを作れます。</p>
 
       </div>
     </div>
@@ -1744,7 +1744,6 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="space-y-1">
             <div class="text-sm font-extrabold text-amber-900">無料で試せること / プレミアムでできること</div>
             <p class="text-[11px] text-amber-900/85 leading-relaxed">無料でも壁画プレビューで仕上がりや飾るイメージを確認できます。プレミアム機能として、作品をMinecraftの壁画アイテムにして保存し、サイズを選んで作品ギャラリーを作れる導線を用意しています。</p>
-            <p class="text-[11px] text-amber-900/85 leading-relaxed">モブ風作品 βは、作品の雰囲気をもとにしたプレミアム向けβのおためし機能です。作品によって見え方が変わるため、まずはプレビューで確認してください。</p>
           </div>
         </div>
       </div>
@@ -1816,7 +1815,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <div class="flex items-start gap-2">
           <div class="text-lg shrink-0">🧩</div>
           <div>
-            <div id="minecraftPseudo3dGuideTitle" class="text-sm font-extrabold text-violet-900">モブ風作品用写真</div>
+            <div id="minecraftPseudo3dGuideTitle" class="text-sm font-extrabold text-violet-900">立体作品用写真</div>
             <p id="minecraftPseudo3dGuideText" class="text-[11px] text-violet-800/85 leading-relaxed mt-1"></p>
           </div>
         </div>
@@ -1890,15 +1889,15 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             </div>
           </div>
           <div id="minecraftVoxelSizePanel" class="hidden rounded-2xl bg-emerald-50/60 border border-emerald-100 p-3 space-y-3">
-            <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧸</span><span>モブ風作品 βの設定</span></div>
+            <div class="flex items-center gap-1.5 text-xs font-extrabold text-emerald-900"><span>🧸</span><span>立体作品の内部設定</span></div>
             <div class="space-y-2">
-              <div class="text-[11px] font-bold text-slate-500">表情の細かさ</div>
+              <div class="text-[11px] font-bold text-slate-500">変換の細かさ</div>
               <div class="flex flex-wrap gap-2">
                 <button id="minecraftVoxel16Btn" type="button" class="minecraft-mode-chip">16×16</button>
                 <button id="minecraftVoxel24Btn" type="button" class="minecraft-mode-chip">24×24</button>
                 <button id="minecraftVoxel32Btn" type="button" class="minecraft-mode-chip">32×32</button>
               </div>
-              <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">作品の雰囲気を小さな置物にまとめる細かさです。通常は24×24がおすすめです。</p>
+              <p id="minecraftVoxelSizeDescription" class="text-[11px] text-slate-500 leading-relaxed">作品の雰囲気を立体作品にまとめる細かさです。通常は24×24がおすすめです。</p>
             </div>
             <div id="minecraftVoxelDisplaySizePanel" class="border-t border-slate-200 pt-3 space-y-2">
               <div class="text-[11px] font-bold text-slate-500">展示サイズ</div>
@@ -1920,7 +1919,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
               <p id="minecraftVoxelBackgroundCutRecommend" class="hidden text-[11px] font-bold text-emerald-700 bg-white/80 border border-emerald-100 rounded-xl px-3 py-2 leading-relaxed"></p>
             </div>
             <div id="minecraftVoxelReliefPanel" class="hidden border-t border-slate-200 pt-3 space-y-2">
-              <div class="text-[11px] font-bold text-slate-500">モブ感</div>
+              <div class="text-[11px] font-bold text-slate-500">立体感</div>
               <div class="flex flex-wrap gap-2">
                 <button id="minecraftVoxelReliefStandardBtn" type="button" class="minecraft-mode-chip">標準</button>
                 <button id="minecraftVoxelReliefClearBtn" type="button" class="minecraft-mode-chip">くっきり</button>
@@ -2198,7 +2197,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v307",
+        app_version: "v308",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -5524,6 +5523,7 @@ let currentMinecraftWallSizeSelection = "auto";
 let currentMinecraftWallAutoAspectRatio = 1;
 let currentMinecraftFrameStyleSelection = "simple";
 const MINECRAFT_TEXTURE_SIZE_OPTIONS = [64, 128, 256, 512];
+const MINECRAFT_MOB_BETA_PUBLIC_ENABLED = false;
 
 function getMinecraftFrameStyleMeta(style = currentMinecraftFrameStyleSelection) {
   const map = {
@@ -5621,7 +5621,7 @@ function getMinecraftVoxelGridMeta(size = currentMinecraftVoxelGridSize) {
     },
     32: {
       label: "32×32",
-      description: "より細かくモブ感を出しやすい高精細サイズです。PC向けの確認に向いています。"
+      description: "より細かく立体感を出しやすい高精細サイズです。PC向けの確認に向いています。"
     }
   };
   return map[normalized] || map[24];
@@ -5763,7 +5763,7 @@ function getMinecraftVoxelGeometryDepth(reliefHeight, cubeStep, reliefMeta) {
 }
 
 function getMinecraftVoxelFrontVisibilityDepth(depth) {
-  // v261: モブ風作品は正面写真の顔・線・絵柄を優先して見せるため、
+  // v261: 立体作品は正面写真の顔・線・絵柄を優先して見せるため、
   // レリーフの奥行きを少し控えめにし、側面・上面が正面へ重なりすぎないようにする。
   return Math.max(0.01, depth * 0.82);
 }
@@ -6201,18 +6201,19 @@ function getMinecraftAddonStyleMeta(mode = "wall") {
       description: "プレミアム機能として、子どもの作品をMinecraftの壁に飾れる作品ギャラリー用アドオンとして保存できます。1×1〜4×4などサイズを選び、家族だけの作品ギャラリーを作れます。"
     },
     solid: {
-      label: "モブ風作品 β",
-      description: "作品の雰囲気をもとにした小さな置物を作る、プレミアム向けβのおためし機能です。"
+      label: "立体作品",
+      description: "作品の雰囲気をもとにした立体作品を作る、内部プレビューのおためし機能です。"
     },
     voxel: {
-      label: "モブ風作品 β",
-      description: `写真から、作品の雰囲気をもとにした${getMinecraftVoxelDisplaySizeMeta().label}サイズの小さな置物を作る、プレミアム向けβのおためし機能です。作品によって見え方が変わります。まずはプレビューで確認してください。`
+      label: "立体作品",
+      description: `写真から、作品の雰囲気をもとにした${getMinecraftVoxelDisplaySizeMeta().label}サイズの立体作品を作る、内部プレビューのおためし機能です。作品によって見え方が変わります。まずはプレビューで確認してください。`
     }
   };
   return map[mode] || map.wall;
 }
 
 function resolveMinecraftAddonStyle(work = getMinecraftAddonTargetWork()) {
+  if (!MINECRAFT_MOB_BETA_PUBLIC_ENABLED) return "wall";
   if (currentMinecraftAddonStyleSelection === "voxel") return "voxel";
   if (currentMinecraftAddonStyleSelection === "wall") return "wall";
   return "wall";
@@ -6283,7 +6284,7 @@ function updateMinecraftVoxelPreviewMetaUi(work = getMinecraftAddonTargetWork(),
     if (resolved === "voxel") {
       const displaySizeMeta = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize);
       const templateMeta = getMinecraftMobTemplate(currentMinecraftVoxelTextureInfo);
-      displayLabelEl.textContent = `マイクラでの見え方（モブ風作品 β / ${displaySizeMeta.label} / ${templateMeta.label}）`;
+      displayLabelEl.textContent = `マイクラでの見え方（立体作品 / ${displaySizeMeta.label} / ${templateMeta.label}）`;
     } else {
       const wallMeta = getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection);
       displayLabelEl.textContent = `マイクラでの見え方（壁画 / ${wallMeta.selectionLabel}）`;
@@ -6334,7 +6335,7 @@ function updateMinecraftPlacementGuideUi(work = getMinecraftAddonTargetWork(), r
   if (!isSolidWork) return;
   if (resolved === "voxel") {
     if (iconEl) iconEl.textContent = "🧊";
-    if (titleEl) titleEl.textContent = "置き方：床や棚の上に置くモブ風作品 β";
+    if (titleEl) titleEl.textContent = "置き方：床や棚の上に置く立体作品";
     if (textEl) textEl.innerHTML = "ワールドでは、作品アイテムを持って<strong>床・棚・台の上面</strong>をタップします。壁ではなく、上から置くタイプです。";
     if (subTextEl) subTextEl.textContent = "β版のため、作品によって見え方が変わります。置いたときの正面は、プレイヤーが向いている方向に合わせます。";
   } else {
@@ -6355,8 +6356,10 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
   const voxelPanelEl = document.getElementById("minecraftVoxelSizePanel");
   const spriteLabelEl = document.getElementById("minecraftPreviewSpriteLabel");
   const isSolidWork = work?.artworkShape === "solid";
-  if (panelEl) panelEl.classList.toggle("hidden", !isSolidWork);
-  if (photoGuideEl) photoGuideEl.classList.toggle("hidden", !isSolidWork);
+  const showMobBetaUi = MINECRAFT_MOB_BETA_PUBLIC_ENABLED && isSolidWork;
+  if (!MINECRAFT_MOB_BETA_PUBLIC_ENABLED && currentMinecraftAddonStyleSelection !== "wall") currentMinecraftAddonStyleSelection = "wall";
+  if (panelEl) panelEl.classList.toggle("hidden", !showMobBetaUi);
+  if (photoGuideEl) photoGuideEl.classList.toggle("hidden", !showMobBetaUi);
   if (wallBtn) wallBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "wall");
   if (solidBtn) solidBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "solid");
   if (voxelBtn) voxelBtn.classList.toggle("active", currentMinecraftAddonStyleSelection === "voxel");
@@ -6373,7 +6376,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
       ? `${meta.description} 上で切り替えた内容が、そのまま保存されます。`
       : "平面作品は壁画用として出力します。";
   }
-  if (spriteLabelEl) spriteLabelEl.textContent = resolved === "voxel" ? `モブ化の元画像（${voxelMeta.label}）` : "変換後の絵";
+  if (spriteLabelEl) spriteLabelEl.textContent = resolved === "voxel" ? `変換の元画像（${voxelMeta.label}）` : "変換後の絵";
   updateMinecraftPlacementGuideUi(work, resolved);
   updateMinecraftVoxelPreviewMetaUi(work, resolved);
   if (currentMinecraftSpriteCanvas) {
@@ -6382,6 +6385,7 @@ function updateMinecraftAddonStyleUi(work = getMinecraftAddonTargetWork()) {
 }
 
 function setMinecraftAddonStyleSelection(mode = "wall") {
+  if (!MINECRAFT_MOB_BETA_PUBLIC_ENABLED) mode = "wall";
   currentMinecraftAddonStyleSelection = ["wall", "voxel"].includes(mode) ? mode : "wall";
   updateMinecraftAddonStyleUi();
 }
@@ -7870,7 +7874,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v307`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v308`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9209,7 +9213,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const title = work?.title || "kodomo_frame_art";
     const safeName = sanitizeMinecraftDownloadName(title || "kodomo_frame_art").toLowerCase();
     const baseBlockSlug = safeName.replace(/[^a-z0-9_]/g, "_").replace(/^_+|_+$/g, "").slice(0, 28) || "frame_art";
-    const resolvedAddonStyle = forcedAddonStyle || resolveMinecraftAddonStyle(work);
+    const resolvedAddonStyle = MINECRAFT_MOB_BETA_PUBLIC_ENABLED ? (forcedAddonStyle || resolveMinecraftAddonStyle(work)) : "wall";
     const addonOptionSeed = buildMinecraftAddonOptionSeed(resolvedAddonStyle);
     const blockSlug = buildMinecraftAddonStableSlug(baseBlockSlug, work, resolvedAddonStyle, addonOptionSeed);
     const isSolidExhibit = resolvedAddonStyle === "solid" || resolvedAddonStyle === "voxel";
@@ -9222,12 +9226,12 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const addonOptionLabel = isVoxelExhibit
       ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} / ${getMinecraftVoxelDisplaySizeMeta().label} / ${mobTemplateMeta.label}`
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
-    const packKindLabel = isVoxelExhibit ? "コドモカプセル モブ風作品 β" : (isSolidExhibit ? "コドモカプセル モブ風作品 β" : "コドモカプセル 壁画用");
+    const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v307`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v308`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v307 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用のモブ風作品 βパック v307 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v307 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v308 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v308 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v308 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -9238,12 +9242,12 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     const entityGeometryId = `geometry.kodomo_${blockSlug}_${entitySuffix}`;
     const renderControllerId = `controller.render.kodomo_${blockSlug}_${entitySuffix}`;
     const shortId = blockSlug.slice(-8);
-    // v224: モブ風作品はサイズ違いの3パターンに対応。
+    // v224: 立体作品はサイズ違いの3パターンに対応。
     const displayNameBase = String(title || "コドモMinecraftアート").slice(0, 22);
     const voxelGridMeta = getMinecraftVoxelGridMeta(currentMinecraftVoxelGridSize);
     const voxelDisplaySizeMeta = getMinecraftVoxelDisplaySizeMeta(currentMinecraftVoxelDisplaySize);
     const voxelDisplayLabelShort = isVoxelExhibit ? `${voxelDisplaySizeMeta.label}${mobTemplateMeta.label}` : "";
-    const displayName = `${displayNameBase} ${isVoxelExhibit ? `モブ風${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "モブ風" : `壁画${wallSizeMeta.key}`)}`.slice(0, 34);
+    const displayName = `${displayNameBase} ${isVoxelExhibit ? `立体${currentMinecraftVoxelGridSize} ${voxelDisplayLabelShort}` : (isSolidExhibit ? "立体" : `壁画${wallSizeMeta.key}`)}`.slice(0, 34);
     const itemDisplayName = buildMinecraftItemDisplayName(title, resolvedAddonStyle, wallSizeMeta, voxelGridMeta, voxelDisplaySizeMeta, mobTemplateMeta);
     const packTitle = String(title || "作品").slice(0, 18);
     const spriteBlob = voxelTextureInfo?.blob || await getMinecraftSpriteBlob();
@@ -9297,7 +9301,7 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
     bp.file("texts/en_US.lang", buildMinecraftEntityLang(entityId, itemId, displayName, itemDisplayName));
     bp.file("pack_icon.png", frameItemTextureBlob);
 
-    // v224: モブ風作品は16×16/24×24/32×32から選べる直立レリーフとして出力する。README.txtは含めない。
+    // v224: 立体作品は16×16/24×24/32×32から選べる直立レリーフとして出力する。README.txtは含めない。
 
     const addonBlob = await zip.generateAsync({
       type: "blob",
@@ -9742,11 +9746,11 @@ function updateMinecraftSourcePhotoNote(work, requestedIndex, actualIndex) {
     noteEl.classList.remove("hidden");
   }
   if (pseudoGuideEl) pseudoGuideEl.classList.remove("hidden");
-  if (pseudoTitleEl) pseudoTitleEl.textContent = hasPseudo3d ? "モブ風作品用写真を使用中" : "正面写真のみで作成中";
+  if (pseudoTitleEl) pseudoTitleEl.textContent = hasPseudo3d ? "立体作品用写真を使用中" : "正面写真のみで作成中";
   if (pseudoTextEl) {
     pseudoTextEl.textContent = hasPseudo3d
       ? `正面写真を前面に使い、${hasSide && hasTop ? "横写真と上写真" : (hasSide ? "横写真" : "上写真")}の色味を側面・上面に少し反映します。`
-      : "正面写真だけでも作れます。あとから横・上ラベルの写真を追加すると、モブ風作品の雰囲気が増します。";
+      : "正面写真だけでも作れます。あとから横・上ラベルの写真を追加すると、立体作品の雰囲気が増します。";
   }
 }
 

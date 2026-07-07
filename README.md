@@ -20,13 +20,13 @@
 * 画像 / PDFプレビュー
 * 家族共有
 * Minecraft Bedrock Edition向け `.mcaddon` 生成
-* 作品をMinecraftで楽しむ追加機能
+* 作品をMinecraftの壁画として楽しむ追加機能
 * iPhone / iPad / PCでの操作
 
 ## Minecraft機能の注意点
 
 * Minecraft機能はメイン機能ではなく、作品を楽しむ追加の楽しみ方として扱う
-* 現行UIでは「モブ風作品 β」「見た目とサイズを調整」などの表現に合わせる
+* Minecraft機能は、作品をMinecraftの壁画として楽しむ追加機能として公開UIを整理する
 * Minecraftアイテム表示名にはバージョン番号を含めない
 * iPhone / iPad の `.mcaddon` ダウンロード・共有導線は壊さない
 * Minecraft生成ロジックは、明示的な依頼がない限り変更しない
