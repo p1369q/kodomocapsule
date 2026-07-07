@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v304
+
+* GitHub管理上に残っていた古いバックアップHTML `index-backup.html` を削除した意図を記録
+* 本番公開対象は `public/` であり、`index-backup.html` を `public/` に入れない運用を維持
+* Firebase Hosting では `/index-backup.html` を `/` へ301リダイレクトする設定を維持
+* アプリ本体 `index.html` は変更なし
+* 画面表示バージョン、Analytics `app_version`、Minecraft `.mcaddon` 内の v301 表記は変更なし
+
 ## v303
 
 * Firebase Hosting / Firestore Rules / Storage Rules の設定ファイルとして `firebase.json` をGitHub管理に追加

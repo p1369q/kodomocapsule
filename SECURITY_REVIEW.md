@@ -43,11 +43,14 @@ v303で `firebase.json` を追加し、Hosting の公開ディレクトリ、red
 ### 注意が必要な点
 
 - Firebase Hosting をこのリポジトリ以外からデプロイしている場合、実際の `firebase.json` と公開ディレクトリを別途確認する必要があります。
-- `index-backup.html` はルート直下に存在します。Firebase Hosting や GitHub Pages でリポジトリルートをそのまま公開している場合は、バックアップHTMLが公開対象になっていないか運用側で確認してください。
+- GitHub管理上の古い `index-backup.html` は削除済みです。本番公開対象 `public/` にバックアップHTMLを置かない運用を確認してください。
 - v303で追加した `firebase.json` にはセキュリティヘッダーやキャッシュ制御の `headers` 設定は含めていないため、必要に応じて別タスクで確認してください。
 
 ### 運用確認ポイント
 
+- GitHub管理上の古い `index-backup.html` は削除済みであること。
+- 本番公開対象 `public/` にバックアップHTMLを置かない運用を維持すること。
+- `/index-backup.html` はFirebase Hostingのredirectで `/` に飛ばす設定を維持すること。
 - Firebase Hosting の `public` ディレクトリが意図した場所か。
 - `rewrites` / `redirects` / `headers` に不自然な転送や過度に長いキャッシュがないか。
 - HTMLには短いキャッシュ、画像など静的アセットには適切なキャッシュが設定されているか。

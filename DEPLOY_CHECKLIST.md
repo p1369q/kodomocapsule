@@ -13,7 +13,10 @@
 - GitHub 上の `index.html` の `environmentBadge` が対象バージョンであること
 - ローカルPCの `public/index.html` を最新版に置き換えたこと
 - `public/assets/` が残っていること
+- `index-backup.html` はGitHub管理から削除済みであること
 - `public/` に `index-backup.html` を入れないこと
+- `/index-backup.html` はFirebase Hostingのredirectで `/` に飛ばすこと
+- 古いHTMLをバックアップとして残す場合でも、リポジトリ直下や `public/` には置かないこと
 - `public/` に不要な古いHTML、`.env`、秘密情報、メモファイルを入れないこと
 
 ## 推奨 public 構成
