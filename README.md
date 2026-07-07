@@ -11,6 +11,7 @@
 * Firebase / Firestore / Storage / Authentication / Analytics / Stripe 関連の仕様は、明示的な依頼がない限り変更しない
 * 大きなリファクタリングは行わず、小さな差分で安全に改修する
 * 変更後は必ずJavaScript構文チェックを行う
+* Firebase Hosting の本番反映は自動化せず、手動デプロイ手順は `DEPLOY_CHECKLIST.md` を参照する
 
 ## 重要な既存機能
 
