@@ -140,7 +140,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 .glass{backdrop-filter:blur(24px);background:rgba(255,255,255,.88);}
 .premium-card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:0 8px 24px rgba(15,23,42,.04);position:relative;transition:transform .2s ease,box-shadow .2s ease;}
 .premium-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(15,23,42,.07);}
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:82px;z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(30px);border-top:1px solid var(--border);box-shadow:0 -10px 30px rgba(15,23,42,.05);}
+.bottom-nav{display:none;}
 .nav-tab{min-width:88px;color:#94A3B8;transition:.25s;padding:8px 12px;border-radius:18px;}.nav-tab.active{color:var(--accent-dark);font-weight:700;background:#FFF1F2;}
 .fab{width:66px;height:66px;border:none;border-radius:23px;color:white;font-size:30px;line-height:1;background:linear-gradient(135deg,var(--accent),var(--accent-dark));box-shadow:0 12px 24px rgba(229,91,91,.28);transform:translateY(-8px);transition:.2s;}
 .fab:hover{transform:translateY(-10px) scale(1.03);}
@@ -760,6 +760,18 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 #helpGuideDrawer.open .drawer-panel{transform:translateY(0);}
 #helpGuideDrawer .drawer-panel>div:last-child{min-height:0;-webkit-overflow-scrolling:touch;}
 @media (max-width:640px){
+  body.mobile-bottom-nav-ready{padding-bottom:calc(92px + env(safe-area-inset-bottom));}
+  body.mobile-bottom-nav-ready main{padding-bottom:calc(128px + env(safe-area-inset-bottom));}
+  body.mobile-bottom-nav-ready:has(.drawer.open) .bottom-nav,
+  body.mobile-bottom-nav-ready:has(#authGatescreen:not(.hidden)) .bottom-nav{display:none;}
+  body.mobile-bottom-nav-ready .bottom-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));height:74px;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.95);backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:28px;box-shadow:0 -10px 30px rgba(15,23,42,.08);}
+  body.mobile-bottom-nav-ready .bottom-nav-inner{width:100%;display:grid;grid-template-columns:1fr 1fr 1.12fr 1fr 1fr;align-items:center;gap:2px;padding:0 8px;}
+  body.mobile-bottom-nav-ready .nav-tab{min-width:0;width:100%;min-height:54px;padding:7px 3px 6px;border-radius:18px;font-size:11px;line-height:1.1;}
+  body.mobile-bottom-nav-ready .nav-tab .nav-icon{font-size:18px;line-height:1;}
+  body.mobile-bottom-nav-ready .nav-tab .nav-label{font-size:10.5px;font-weight:800;white-space:nowrap;}
+  body.mobile-bottom-nav-ready .fab{width:58px;height:58px;border-radius:999px;font-size:26px;transform:translateY(-10px);justify-self:center;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;color:white;}
+  body.mobile-bottom-nav-ready .fab .nav-label{font-size:10.5px;font-weight:900;line-height:1;margin-top:-2px;}
+  body.mobile-bottom-nav-ready .fab:hover{transform:translateY(-11px) scale(1.02);}
   #authGatescreen .relative.min-h-full{padding-left:14px;padding-right:14px;padding-top:24px;padding-bottom:24px;}
   #authGatescreen #authHeroCopy .inline-flex{margin-bottom:18px;padding:8px 10px;gap:7px;}
   #authGatescreen #authHeroCopy>p:first-of-type{font-size:13px;line-height:1.7;margin-bottom:10px;}
@@ -1095,7 +1107,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v315</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v316</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1286,11 +1298,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   </section>
 </main>
 
-<div class="bottom-nav flex justify-center items-center">
-  <div class="w-full max-w-lg px-5 sm:px-8 flex items-center justify-between">
-    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center gap-0.5"><span class="text-lg leading-none">▦</span><span class="text-[10px]">ギャラリー</span></button>
-    <button onclick="handleFabClick()" class="fab" title="新しいカプセルを登録">＋</button>
-    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center gap-0.5"><span class="text-lg leading-none">▧</span><span class="text-[10px]">写真一覧</span></button>
+<div class="bottom-nav" aria-label="スマホ用主要ナビ">
+  <div class="bottom-nav-inner">
+    <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">▦</span><span class="nav-label">ギャラリー</span></button>
+    <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">▧</span><span class="nav-label">写真一覧</span></button>
+    <button onclick="handleFabClick()" id="nav-add" class="fab" title="新しいカプセルを登録" aria-label="追加"><span>＋</span><span class="nav-label">追加</span></button>
+    <button onclick="openMobileBottomNavFamily()" id="nav-family" class="nav-tab flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">🤝</span><span class="nav-label">家族</span></button>
+    <button onclick="openMobileBottomNavSettings()" id="nav-settings" class="nav-tab flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">⚙️</span><span class="nav-label">設定</span></button>
   </div>
 </div>
 
@@ -2190,6 +2204,10 @@ let base64MediaArray = [];
 let isPremiumUser = false; 
 let isGuestMode = false;
 
+function updateMobileBottomNavState() {
+  document.body.classList.toggle("mobile-bottom-nav-ready", Boolean(currentSession?.familyId && !isGuestMode));
+}
+
 let unsubscribeChildren = null;
 let unsubscribeWorks = null;
 let unsubscribeCategories = null;
@@ -2230,7 +2248,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v315",
+        app_version: "v316",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -3920,6 +3938,7 @@ async function activateFamilyGroup(familyId, user) {
   if (!familyId || !user) return;
   hasSelectedFamilyGroup = true;
   currentSession = { familyId, userId: user.uid };
+  updateMobileBottomNavState();
 
   let famSnap = await getDoc(doc(db, "families", familyId));
   if (!famSnap.exists()) throw new Error("カプセルが見つかりません。");
@@ -3932,6 +3951,7 @@ async function activateFamilyGroup(familyId, user) {
   if (!isFamilyOwner && !isApprovedMember) {
     hasSelectedFamilyGroup = false;
     currentSession = null;
+    updateMobileBottomNavState();
     throw new Error("この家族カプセルは親ユーザーの承認待ちです。");
   }
 
@@ -4712,6 +4732,7 @@ function stopRealtimeSync() {
 }
 
 function renderAll(){
+  updateMobileBottomNavState();
   renderChildList(); populateChildSelect(); populateGalleryChildFilter(); populateGalleryCategoryFilter(); renderAgeDetailFilter(); populateCategorySelect(); renderCategoryList(); renderGallery(); renderPhotoWall(); renderTrash(); updateGuestLoginBanner(); updateOnboardingGuideBanner(); renderAccountDeletionStatus();
 }
 
@@ -7901,7 +7922,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v315`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v316`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9255,10 +9276,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v315`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v316`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v315 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v315 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v315 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v316 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v316 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v316 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -10420,6 +10441,7 @@ window.openCapsuleSwitcher = function() {
   currentFamilyData = null;
   currentUserPermission = "none";
   isPremiumUser = false;
+  updateMobileBottomNavState();
   stopRealtimeSync();
   if (unsubscribeFamilyPlan) { unsubscribeFamilyPlan(); unsubscribeFamilyPlan = null; }
   if (unsubscribeJoinRequests) { unsubscribeJoinRequests(); unsubscribeJoinRequests = null; }
@@ -10463,12 +10485,28 @@ document.getElementById("inputDate").value = new Date().toISOString().split("T")
   const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
 };
 
+window.openMobileBottomNavFamily = function() {
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  const familyNav = document.getElementById("nav-family");
+  if (familyNav) familyNav.classList.add("active");
+  openDrawer('child');
+  setTimeout(() => switchSettingsTab('family'), 0);
+};
+
+window.openMobileBottomNavSettings = function() {
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  const settingsNav = document.getElementById("nav-settings");
+  if (settingsNav) settingsNav.classList.add("active");
+  openDrawer('child');
+};
+
 window.closeDrawer = function(t){ 
   if(t) { const el = document.getElementById(t+"Drawer"); if(el) el.classList.remove('open'); } 
   else { document.querySelectorAll('.drawer').forEach(el=>el.classList.remove('open')); }
 };
 
 window.switchPage = function(p){
+  updateMobileBottomNavState();
   if (auth.currentUser && currentSession?.familyId) rememberLastPage(auth.currentUser.uid, p);
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
