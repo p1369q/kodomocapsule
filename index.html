@@ -765,7 +765,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
   body.mobile-bottom-nav-ready:has(.drawer.open) .bottom-nav,
   body.mobile-bottom-nav-ready:has(#authGatescreen:not(.hidden)) .bottom-nav{display:none;}
   body.mobile-bottom-nav-ready .bottom-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));height:74px;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.95);backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:28px;box-shadow:0 -10px 30px rgba(15,23,42,.08);}
-  body.mobile-bottom-nav-ready .bottom-nav-inner{width:100%;display:grid;grid-template-columns:1fr 1fr 1.12fr 1fr 1fr;align-items:center;gap:2px;padding:0 8px;}
+  body.mobile-bottom-nav-ready .bottom-nav-inner{width:100%;display:grid;grid-template-columns:1fr 1fr 1.12fr 1fr;align-items:center;gap:4px;padding:0 10px;}
   body.mobile-bottom-nav-ready .nav-tab{min-width:0;width:100%;min-height:54px;padding:7px 3px 6px;border-radius:18px;font-size:11px;line-height:1.1;}
   body.mobile-bottom-nav-ready .nav-tab .nav-icon{font-size:18px;line-height:1;}
   body.mobile-bottom-nav-ready .nav-tab .nav-label{font-size:10.5px;font-weight:800;white-space:nowrap;}
@@ -1107,7 +1107,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v316</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v317</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -1276,12 +1276,6 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
         <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">写真一覧</h2>
         <p class="text-xs text-slate-500 mt-1.5">写真付きカプセルを、1作品1枚ずつアルバムのように表示します。</p>
       </div>
-      <button onclick="downloadDisplayedPhotos(event)" id="photoWallBulkDownloadBtn" class="hidden sm:flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition">
-        <span>⬇</span> 表示中の写真をまとめてDL
-      </button>
-    </div>
-    <div class="sm:hidden mb-4">
-      <button onclick="downloadDisplayedPhotos(event)" class="w-full py-3.5 rounded-2xl bg-slate-800 text-white text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition">⬇ 表示中の写真をまとめてDL</button>
     </div>
     <div id="photoWallGrid" class="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 space-y-3 sm:space-y-4"></div>
   </section>
@@ -1303,7 +1297,6 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
     <button onclick="switchPage('gallery')" id="nav-gallery" class="nav-tab active flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">▦</span><span class="nav-label">ギャラリー</span></button>
     <button onclick="switchPage('records')" id="nav-records" class="nav-tab flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">▧</span><span class="nav-label">写真一覧</span></button>
     <button onclick="handleFabClick()" id="nav-add" class="fab" title="新しいカプセルを登録" aria-label="追加"><span>＋</span><span class="nav-label">追加</span></button>
-    <button onclick="openMobileBottomNavFamily()" id="nav-family" class="nav-tab flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">🤝</span><span class="nav-label">家族</span></button>
     <button onclick="openMobileBottomNavSettings()" id="nav-settings" class="nav-tab flex flex-col items-center justify-center gap-0.5"><span class="nav-icon">⚙️</span><span class="nav-label">設定</span></button>
   </div>
 </div>
@@ -1384,13 +1377,13 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
 
 <div id="childDrawer" class="drawer">
   <div class="drawer-panel">
-    <div class="flex justify-between items-start mb-5 gap-3">
-      <div class="min-w-0">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-5 gap-3">
+      <div class="min-w-0 w-full">
         <div class="text-[10px] font-bold tracking-widest text-slate-400 mb-1">SETTINGS</div>
-        <h3 class="text-2xl font-extrabold text-slate-800">設定・家族管理</h3>
-        <p class="text-xs text-slate-400 mt-1">お子さま、カテゴリ、家族共有をここで管理できます。</p>
+        <h3 class="text-2xl font-extrabold text-slate-800">設定</h3>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">お子さま・カテゴリ・共有を管理できます。</p>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
+      <div class="flex items-center justify-end gap-2 shrink-0 w-full sm:w-auto">
         <button onclick="shareKodomoCapsule(event)" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-rose-100 hover:bg-rose-50 text-[11px] font-bold text-rose-500 hover:text-rose-600 transition shrink-0 shadow-sm" title="このアプリを家族や友達に教える"><span class="text-[12px]">📣</span><span>共有</span></button>
         <button onclick="openLegalModal('terms')" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition shrink-0 shadow-sm" title="利用規約・プライバシーポリシー・お問い合わせ"><span class="text-[12px]">🔐</span><span>安心・規約</span></button>
         <button onclick="closeDrawer('child')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 text-lg font-bold shrink-0">✕</button>
@@ -2248,7 +2241,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v316",
+        app_version: "v317",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -2685,7 +2678,7 @@ window.exportPremiumBackupZip = async function() {
     }
   } catch(e) {
     console.error("ZIP export failed:", e);
-    alert("ZIP出力の作成に失敗しました。\nデータ量が多い場合は、写真一覧の一括ダウンロードもお試しください。\n詳細: " + e.message);
+    alert("ZIP出力の作成に失敗しました。\nデータ量が多い場合は、時間をおいてからもう一度お試しください。\n詳細: " + e.message);
   }
 };
 
@@ -7922,7 +7915,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v316`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v317`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9276,10 +9269,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v316`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v317`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v316 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v316 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v316 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v317 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v317 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v317 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
@@ -10483,14 +10476,6 @@ document.getElementById("inputDate").value = new Date().toISOString().split("T")
   }
   if(t === 'child') { trackEvent("settings_open"); cancelChildEdit(); cancelCategoryEdit(); switchSettingsTab('children'); }
   const el = document.getElementById(t+"Drawer"); if(el) el.classList.add("open"); 
-};
-
-window.openMobileBottomNavFamily = function() {
-  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  const familyNav = document.getElementById("nav-family");
-  if (familyNav) familyNav.classList.add("active");
-  openDrawer('child');
-  setTimeout(() => switchSettingsTab('family'), 0);
 };
 
 window.openMobileBottomNavSettings = function() {
