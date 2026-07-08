@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v316
+
+* スマホ幅限定で下部固定ナビを追加
+* ギャラリー / 写真一覧 / ＋追加 / 家族 / 設定 にアクセスしやすくした
+* 中央の＋追加を目立つ丸ボタン風に調整
+* iPhoneの下部セーフエリアと本文下余白に配慮
+* PC表示は原則維持
+* Firebase / Firestore / Storage / Stripe / Cloud Run / 家族共有 / 保存処理は変更なし
+* Minecraft生成ロジックは変更なし
+* JavaScript構文チェック済み
+
 ## v315
 
 * Minecraftプレビュー画面の調整メニューを、iPhone幅でも押しやすい大きめのボタン風UIに整理
