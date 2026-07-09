@@ -859,7 +859,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="auth-hero-nowrap"><span class="text-[#ff6b6b]">成長の記録</span>として家族で。</span>
         </h1>
         <p class="mt-5 text-sm sm:text-base text-slate-600 leading-8 max-w-xl max-w-full break-words">
-          子どもの絵・工作・プリント・写真を、成長の記録として家族で残せます。写真やPDFでひとつの場所にまとめて、<strong class="text-slate-800">「何歳のころだったか」まで自動で整理</strong>。ログインすると自分の作品を保存して、家族で共有できます。
+          子どもの作品、捨てられない問題。写真で残して、年齢ごとに整理。<strong class="text-slate-800">家族で見返せるWebサービス</strong>です。まずは登録なしで雰囲気を見てから、無料で保存をはじめられます。
         </p>
 
         <div class="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-3 max-w-3xl max-w-full min-w-0">
@@ -921,8 +921,8 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <div class="text-center mb-4">
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-rose-50 text-2xl mb-3">🧺</div>
             <div class="text-[10px] font-bold tracking-widest text-[#e55b5b] mb-1">START</div>
-            <h2 class="text-xl font-extrabold text-[#253047]">はじめ方を選んでください</h2>
-            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">まずは体験するか、Googleログインで保存を開始できます。</p>
+            <h2 class="text-xl font-extrabold text-[#253047]">まずは安心してお試しください</h2>
+            <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">登録なしの体験を優先できます。保存をはじめる時だけGoogleアカウントでログインします。</p>
           </div>
 
           <div id="gateLoading" class="text-sm text-slate-400 py-7 flex flex-col items-center justify-center gap-2 w-full">
@@ -932,18 +932,18 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           </div>
 
           <div id="gateLoginArea" class="hidden space-y-3">
-            <button onclick="enterGuestMode()" class="w-full p-4 rounded-2xl bg-[#253047] text-white shadow-lg shadow-slate-900/10 hover:bg-slate-700 transition text-left flex items-center gap-3 min-w-0 break-words">
+            <button onclick="enterGuestMode()" class="w-full p-4 rounded-2xl bg-[#253047] text-white shadow-xl shadow-slate-900/15 ring-2 ring-slate-200 hover:bg-slate-700 transition text-left flex items-center gap-3 min-w-0 break-words">
               <span class="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">🚀</span>
               <span class="min-w-0">
-                <span class="block text-sm font-extrabold">登録なしでサンプルを見る</span>
-                <span class="block text-[11px] text-white/75 mt-0.5">サンプルの絵・テスト・おたより・工作で保存イメージを体験できます。</span>
+                <span class="block text-sm font-extrabold">まずは登録なしで体験する</span>
+                <span class="block text-[11px] text-white/75 mt-0.5">サンプル作品で雰囲気を確認できます。</span>
               </span>
             </button>
             <button onclick="toggleAuth()" class="w-full p-4 rounded-2xl bg-[#ff6b6b] text-white shadow-lg shadow-rose-900/10 hover:bg-[#ff5252] transition text-left flex items-center gap-3 min-w-0 break-words">
               <span class="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center text-xl shrink-0">🔐</span>
               <span class="min-w-0">
-                <span class="block text-sm font-extrabold">Googleログインして保存をはじめる</span>
-                <span class="block text-[11px] text-white/80 mt-0.5">自分の作品を保存して、家族で共有できます。</span>
+                <span class="block text-sm font-extrabold">無料で保存をはじめる</span>
+                <span class="block text-[11px] text-white/80 mt-0.5">Googleアカウントでログインします。</span>
               </span>
             </button>
             <div class="grid grid-cols-4 gap-2 pt-1">
@@ -967,11 +967,11 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <div class="rounded-2xl bg-emerald-50/70 border border-emerald-100 p-3 text-left">
               <div class="text-[10px] font-extrabold text-emerald-700 mb-1">安心して試せます</div>
               <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-slate-600 leading-relaxed">
-                <span>✓ サンプル体験</span>
+                <span>✓ 無料で10カプセルまで保存できます</span>
+                <span>✓ 勝手に課金されることはありません</span>
+                <span>✓ 共有した家族だけが見られます</span>
                 <span>✓ 登録なしでサンプル体験</span>
-                <span>✓ Googleログインで保存開始</span>
                 <span>✓ 写真/PDF対応</span>
-                <span>✓ 家族共有に対応</span>
                 <span>✓ データ削除に対応</span>
               </div>
             </div>
@@ -982,7 +982,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
             <button type="button" onclick="shareKodomoCapsule(event)" class="w-full py-3 rounded-2xl bg-white border border-rose-100 text-rose-600 text-xs font-extrabold shadow-sm hover:bg-rose-50 transition flex items-center justify-center gap-2">
               <span>📣</span><span>このアプリを家族や友達に教える</span>
             </button>
-            <p class="text-[10px] text-slate-400 text-center leading-relaxed pt-1">登録なしでは実保存されません。自分の作品保存・家族共有にはGoogleログインが必要です。</p>
+            <p class="text-[10px] text-slate-400 text-center leading-relaxed pt-1">登録なしでは実保存されません。無料保存や家族共有にはGoogleログインが必要です。</p>
           </div>
 
           <div id="gateSetupArea" class="hidden mt-5 space-y-5 w-full">
@@ -1107,7 +1107,7 @@ input[type="checkbox"],input[type="radio"]{width:auto;padding:0;border:none;bord
           <span class="text-left min-w-0">
             <span class="flex items-center gap-1.5 min-w-0">
               <span class="app-logo-title block sm:text-xl font-extrabold text-[#2b2d42] truncate whitespace-nowrap">コドモカプセル</span>
-              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v317</span>
+              <span id="environmentBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 bg-rose-50 text-rose-700 border border-rose-200">v318</span>
             </span>
             <span class="hidden sm:block text-[10px] text-slate-400 font-medium">家族の成長を、ひとつの場所に。</span>
           </span>
@@ -2241,7 +2241,7 @@ function trackEvent(name, params = {}) {
   try {
     if (analytics) {
       logEvent(analytics, name, {
-        app_version: "v317",
+        app_version: "v318",
         is_guest_mode: isGuestMode,
         ...params
       });
@@ -7915,7 +7915,7 @@ function buildMinecraftAddonOptionSeed(addonStyle) {
   const options = addonStyle === "voxel" || addonStyle === "solid"
     ? [`grid:${grid}`, `display:${display}`, `cut:${cut}`, `relief:${relief}`]
     : [`texture:${textureSize}`, `wall:${getMinecraftWallSizeMeta(currentMinecraftWallSizeSelection).key}`, `frame:${currentMinecraftFrameStyleSelection}`];
-  return [`app:v317`, `style:${stylePart}`, ...options].join("|");
+  return [`app:v318`, `style:${stylePart}`, ...options].join("|");
 }
 
 function buildMinecraftAddonStableSlug(baseSlug, work, addonStyle, optionSeed = buildMinecraftAddonOptionSeed(addonStyle)) {
@@ -9269,10 +9269,10 @@ window.downloadMinecraftAddon = async function(event, forcedAddonStyle = null, f
       : `壁画用 / ${wallSizeMeta.selectionLabel} / ${currentMinecraftResolvedTextureSize}×${currentMinecraftResolvedTextureSize}`;
     const packKindLabel = isVoxelExhibit ? "コドモカプセル 立体作品" : (isSolidExhibit ? "コドモカプセル 立体作品" : "コドモカプセル 壁画用");
     const packOptionName = isVoxelExhibit ? `${currentMinecraftVoxelGridSize}×${currentMinecraftVoxelGridSize} ${getMinecraftVoxelDisplaySizeMeta().label} ${mobTemplateMeta.label}` : wallSizeMeta.selectionLabel;
-    const packManifestName = `${packKindLabel} ${packOptionName} v317`.replace(/\s+/g, " ").trim().slice(0, 44);
+    const packManifestName = `${packKindLabel} ${packOptionName} v318`.replace(/\s+/g, " ").trim().slice(0, 44);
     const packDescription = isVoxelExhibit
-      ? `コドモカプセルで作成したMinecraft用の立体作品パック v317 / ${addonOptionLabel} です。`
-      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v317 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v317 / ${addonOptionLabel} です。`);
+      ? `コドモカプセルで作成したMinecraft用の立体作品パック v318 / ${addonOptionLabel} です。`
+      : (isSolidExhibit ? `コドモカプセルで作成したMinecraft用の立体作品パック v318 / ${addonOptionLabel} です。` : `コドモカプセルで作成したMinecraft用の壁画用パック v318 / ${addonOptionLabel} です。`);
     const textureKey = `kodomo_${blockSlug}`;
     const entitySuffix = isVoxelExhibit ? "voxel_exhibit" : (isSolidExhibit ? "solid_exhibit" : "wall_frame");
     const itemSuffix = isVoxelExhibit ? "voxel_item" : (isSolidExhibit ? "solid_item" : "frame_item");
